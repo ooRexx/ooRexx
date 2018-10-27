@@ -35,7 +35,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* ooDialog User Guide
-   Exercise 06: OrderMgrView.rex 				  v01-00 18Jan13
+   Exercise 06: OrderMgrView.rex 				  v01-00 30Jly13
 
    Contains: 	   class: "OrderMgrView", "HRSomv"
 
@@ -48,6 +48,8 @@
      v01-00 07Jun12: First Version (ooDialog 4.2.1) - used dlgArea for re-sizing.
             18Jan13: Second Version (ooDialog 4.2.2) - uses ResizingAdmin for
                      re-sizing.
+            30Jly14: Corrected .ImageList~create(...) statement in 
+                     createIconList method.
 ------------------------------------------------------------------------------*/
 
 -- Use the global .constDir for symbolic IDs - load them from OrderMgrView.h
@@ -118,7 +120,7 @@ call "OrderMgr\RequiresList.rex"
     self~lv = self~newListView(IDC_ORDMGR_ICONS)
 
     -- Add the Image List to the ListView:
-    self~lv~setImageList(iconList, .Image~toID(LVSIL_NORMAL))
+    self~lv~setImageList(iconList, NORMAL)
     -- Add icons (i.e. records) to the ListView:
     do i=1 to records~items
       self~lv~addRow(, i-1, records[i]~name)
@@ -142,7 +144,7 @@ call "OrderMgr\RequiresList.rex"
     imgProdList  = .Image~getImage("product\res\ProdList.bmp")
     imgOrderList = .Image~getImage("order\bmp\OrderList.bmp")
     imgOrderForm = .Image~getImage("order\bmp\OrderForm.bmp")
-    iconList = .ImageList~create(.Size~new(64, 64), .Image~toID(ILC_COLOR4), 4, 0)
+    iconList = .ImageList~create(.Size~new(64, 64), .Image~toId(ILC_COLOR4), 4, 0)
     -- Boldly assume no errors in creating the Image List or in the ~getImage statements.
     iconList~add(imgCustList)   -- item 0 in iconList (item 1 in records)
     iconList~add(imgProdList)   -- item 1 in iconList (item 2 in records)

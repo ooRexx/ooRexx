@@ -89,8 +89,7 @@ exit
     expose imageList sd
 
     size  = .Size~new(45, 41)
-    flags = .DlgUtil~or(.Image~toID(ILC_COLOR8), .Image~toID(ILC_MASK))
-    imageList = .ImageList~create(size, flags, 1)
+    imageList = .ImageList~create(size, 'COLOR8 MASK', 1)
 
     cRef  = .Image~colorRef(255, 255, 255)
     image = .Image~getImage(sd'add.bmp')

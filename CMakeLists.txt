@@ -75,7 +75,8 @@ else ()
 endif ()
 
 find_package(Subversion)
-if(SUBVERSION_FOUND AND (EXISTS ${PROJECT_SOURCE_DIR}/.svn))
+if(SUBVERSION_FOUND)
+  set(ORX_WC_REVISION 0)
   Subversion_WC_INFO(${PROJECT_SOURCE_DIR} ORX)
   set(ORX_BLD_LVL ${ORX_WC_REVISION})
 endif()
@@ -1300,44 +1301,80 @@ if (WIN32)
    install(PROGRAMS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/winsystm.cls COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
 endif ()
 
-#################### oodialog.dll ################
+#################### oodialog ################
 if (WIN32)
    set (OOD_MAJOR 4)
    set (OOD_MINOR 2)
-   set (OOD_MOD_LVL 3)
-   set (OOD_BLD_LVL 9606)
-   set (OOD_VER_STR "4.2.3.9606")
-   set (OOD_COPY_YEAR "2005-2013")
-   set (OOD_SVN_REVSION 9150)
+   set (OOD_MOD_LVL 4)
+   set (OOD_BLD_LVL 11506)
+   set (OOD_VER_STR "4.2.4.11506")
+   set (OOD_COPY_YEAR "2005-2018")
+   set (OOD_SVN_REVSION 11506)
 
-   # Sources for oodialog.dll
-   add_library(oodialog SHARED
-                ${build_extensions_oodialog_dir}/APICommon.cpp
-                ${build_extensions_oodialog_dir}/oodBarControls.cpp
-                ${build_extensions_oodialog_dir}/oodBaseDialog.cpp
-                ${build_extensions_oodialog_dir}/oodBasicControls.cpp
-                ${build_extensions_oodialog_dir}/oodCommon.cpp
-                ${build_extensions_oodialog_dir}/oodControl.cpp
-                ${build_extensions_oodialog_dir}/oodData.cpp
-                ${build_extensions_oodialog_dir}/oodDeviceGraphics.cpp
-                ${build_extensions_oodialog_dir}/ooDialog.cpp
-                ${build_extensions_oodialog_dir}/oodKeyboard.cpp
-                ${build_extensions_oodialog_dir}/oodListView.cpp
-                ${build_extensions_oodialog_dir}/oodMenu.cpp
-                ${build_extensions_oodialog_dir}/oodMessaging.cpp
-                ${build_extensions_oodialog_dir}/oodMouse.cpp
-                ${build_extensions_oodialog_dir}/oodPackageEntry.cpp
-                ${build_extensions_oodialog_dir}/oodPropertySheetDialog.cpp
-                ${build_extensions_oodialog_dir}/oodResizableDialog.cpp
-                ${build_extensions_oodialog_dir}/oodResources.cpp
-                ${build_extensions_oodialog_dir}/oodRoutines.cpp
-                ${build_extensions_oodialog_dir}/oodShared.cpp
-                ${build_extensions_oodialog_dir}/oodShellObjects.cpp
-                ${build_extensions_oodialog_dir}/oodToolTip.cpp
-                ${build_extensions_oodialog_dir}/oodTreeView.cpp
-                ${build_extensions_oodialog_dir}/oodUser.cpp
-                ${build_extensions_oodialog_dir}/oodUtilities.cpp
-                ${build_extensions_oodialog_dir}/oodViewControls.cpp
+   #################### ooshapes.dll ################
+   # Sources for ooshapes.dll                                          
+   add_library(ooshapes SHARED                                              
+                ${build_extensions_oodialog_dir}/APICommon.cpp              
+                ${build_extensions_oodialog_dir}/ooShapes.cpp
+                ${build_extensions_oodialog_dir}/ooShapesAid.cpp
+                ${build_extensions_oodialog_dir}/ooShapesPE.cpp
+                ${build_extensions_oodialog_dir}/ooShapes.def)
+   # Override the compile definitions with ooShapes-exclusive defines
+   set_property(TARGET ooshapes
+          PROPERTY COMPILE_DEFINITIONS
+          OOSHAPES_VER_MAJOR=${OOD_MAJOR}
+          OOSHAPES_VER_MINOR=${OOD_MINOR}
+          OOSHAPES_VER_LEVEL=${OOD_MOD_LVL}
+          OOSHAPES_VER_BUILD=${OOD_BLD_LVL}
+          OOSHAPES_COPYRIGHT_YEAR=${OOD_COPY_YEAR})
+
+   # Include file definition
+   target_include_directories(ooshapes PUBLIC
+                ${build_extensions_oodialog_dir})
+   # Extra link library definitions
+   target_link_libraries(rexx rexxapi)
+   install(TARGETS ooshapes RUNTIME COMPONENT Core DESTINATION ${INSTALL_LIB_DIR})
+
+   # Copy ooShapes.cls to the build directory
+   copy_build_file(ooShapes.cls ${build_extensions_oodialog_dir})
+   install(PROGRAMS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/ooShapes.cls COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
+   add_custom_target(ooshapes_cls ALL DEPENDS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/ooShapes.cls)
+
+
+   #################### oodialog.dll ################
+   # Sources for oodialog.dll                                               
+   add_library(oodialog SHARED                                              
+                ${build_extensions_oodialog_dir}/APICommon.cpp              
+                ${build_extensions_oodialog_dir}/oodBarControls.cpp         
+                ${build_extensions_oodialog_dir}/oodBaseDialog.cpp          
+                ${build_extensions_oodialog_dir}/oodBasicControls.cpp       
+                ${build_extensions_oodialog_dir}/oodCommon.cpp              
+                ${build_extensions_oodialog_dir}/oodControl.cpp             
+                ${build_extensions_oodialog_dir}/oodData.cpp                
+                ${build_extensions_oodialog_dir}/oodDeviceGraphics.cpp      
+                ${build_extensions_oodialog_dir}/ooDialog.cpp               
+                ${build_extensions_oodialog_dir}/oodKeyboard.cpp            
+                ${build_extensions_oodialog_dir}/oodListView.cpp            
+                ${build_extensions_oodialog_dir}/oodMenu.cpp                
+                ${build_extensions_oodialog_dir}/oodMessaging.cpp           
+                ${build_extensions_oodialog_dir}/oodMouse.cpp               
+                ${build_extensions_oodialog_dir}/oodPackageEntry.cpp        
+                ${build_extensions_oodialog_dir}/oodPropertySheetDialog.cpp 
+                ${build_extensions_oodialog_dir}/oodReBar.cpp               
+                ${build_extensions_oodialog_dir}/oodResizableDialog.cpp     
+                ${build_extensions_oodialog_dir}/oodResources.cpp           
+                ${build_extensions_oodialog_dir}/oodRoutines.cpp            
+                ${build_extensions_oodialog_dir}/oodShared.cpp              
+                ${build_extensions_oodialog_dir}/oodShellObjects.cpp        
+                ${build_extensions_oodialog_dir}/oodStatusBar.cpp           
+                ${build_extensions_oodialog_dir}/oodToolBar.cpp             
+                ${build_extensions_oodialog_dir}/oodToolTip.cpp             
+                ${build_extensions_oodialog_dir}/oodTreeView.cpp            
+                ${build_extensions_oodialog_dir}/oodUser.cpp                
+                ${build_extensions_oodialog_dir}/oodUtilities.cpp           
+                ${build_extensions_oodialog_dir}/oodViewControls.cpp        
+#               ${build_extensions_oodialog_dir}/ooShapes.cpp              
+#               ${build_extensions_oodialog_dir}/ooShapesAid.cpp              
                 ${build_extensions_oodialog_dir}/ooDialog.def
                 ${build_extensions_oodialog_dir}/ooDialog.rc)
    # Override the compile definitions with ooDialog-exclusive defines
@@ -1348,6 +1385,11 @@ if (WIN32)
           OOD_MOD=${OOD_MOD_LVL}
           OOD_BLD=${OOD_BLD_LVL}
           OOD_COPY_YEAR=${OOD_COPY_YEAR}
+          OOSHAPES_VER_MAJOR=${OOD_MAJOR}
+          OOSHAPES_VER_MINOR=${OOD_MINOR}
+          OOSHAPES_VER_LEVEL=${OOD_MOD_LVL}
+          OOSHAPES_VER_BUILD=${OOD_BLD_LVL}
+          OOSHAPES_COPYRIGHT_YEAR=${OOD_COPY_YEAR}
           OOD_VER_STR="ooDialog ${OOD_MAJOR}.${OOD_MINOR}.${OOD_MOD_LVL}.${OOD_BLD_LVL}"
           OOD_BIN_NAME="oodialog.dll")
 
@@ -1355,7 +1397,7 @@ if (WIN32)
    target_include_directories(oodialog PUBLIC
                 ${build_extensions_oodialog_dir})
    # Extra link library definitions
-   target_link_libraries(oodialog rexx rexxapi winmm comdlg32 comctl32 shlwapi oleacc uxtheme rpcrt4 propsys delayimp)
+   target_link_libraries(oodialog ooshapes rexx rexxapi winmm comdlg32 comctl32 shlwapi oleacc uxtheme rpcrt4 propsys delayimp)
    install(TARGETS oodialog RUNTIME COMPONENT Core DESTINATION ${INSTALL_LIB_DIR})
 
    #################### ooDialog.exe (executable) ##########################
@@ -1441,8 +1483,11 @@ if (WIN32)
       ${build_extensions_oodialog_dir}/ControlDialog.cls
       ${build_extensions_oodialog_dir}/DialogControls.cls
       ${build_extensions_oodialog_dir}/ListView.cls
-      ${build_extensions_oodialog_dir}/TreeView.cls
+      ${build_extensions_oodialog_dir}/ReBar.cls
+      ${build_extensions_oodialog_dir}/StatusBar.cls
+      ${build_extensions_oodialog_dir}/ToolBar.cls
       ${build_extensions_oodialog_dir}/ToolTip.cls
+      ${build_extensions_oodialog_dir}/TreeView.cls
       ${build_extensions_oodialog_dir}/DialogExtensions.cls
       ${build_extensions_oodialog_dir}/DynamicDialog.cls
       ${build_extensions_oodialog_dir}/EventNotification.cls

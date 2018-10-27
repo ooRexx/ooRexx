@@ -60,6 +60,15 @@ return 0
 
   self~connectMonthCalendarEvent(IDC_MC, "SELECT", onSelect)
 
+  mc = self~newMonthCalendar(IDC_MC)
+  r  = .Rect~new
+
+  mc~getMinRect(r)
+  w = mc~getMaxTodayWidth
+  r~right = max(r~right, w)
+
+  mc~resizeTo(r~right, r~bottom)
+
   dateText = self~newStatic(IDC_ST_BIRTHDATE)
 
 ::method onSelect unguarded

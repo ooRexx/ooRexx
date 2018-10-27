@@ -37,6 +37,10 @@
 
 #include <windows.h>
 
+#if 0
+CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST MANIFEST_FILE
+#endif
+
 100 ICON "AppIcon2.ico"
 
 1 VERSIONINFO

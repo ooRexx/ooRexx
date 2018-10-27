@@ -49,6 +49,7 @@
 #include <dlgs.h>
 #include <shlwapi.h>
 #include "APICommon.hpp"
+#include "ooShapes.hpp"
 #include "oodCommon.hpp"
 #include "oodShared.hpp"
 #include "oodControl.hpp"
@@ -1923,7 +1924,7 @@ RexxMethod3(RexxStringObject, wb_childWindowFromPoint, RexxObjectPtr, pt, OPTION
         goto err_out;
     }
 
-    PPOINT p = rxGetPoint(context, pt, 1);
+    PPOINT p = (PPOINT)rxGetPoint(context, pt, 1);
     if ( p == NULL )
     {
         goto err_out;
@@ -1980,7 +1981,7 @@ RexxMethod2(RexxObjectPtr, wb_clientRect, OPTIONAL_POINTERSTRING, _hwnd, CSELF, 
 
     RECT r = {0};
     oodGetClientRect(context, (HWND)hwnd, &r);
-    return rxNewRect(context, &r);
+    return rxNewRect(context, (PORXRECT)&r);
 }
 
 /** WindowBase::setRect()
@@ -2031,7 +2032,7 @@ RexxMethod2(RexxObjectPtr, wb_setRect, ARGLIST, args, CSELF, pCSelf)
     size_t countArgs;
     size_t argsUsed;
     RECT   rect;
-    if ( ! getRectFromArglist(context, args, &rect, false, 1, 5, &countArgs, &argsUsed) )
+    if ( ! getRectFromArglist(context, args, (PORXRECT)&rect, false, 1, 5, &countArgs, &argsUsed) )
     {
         return NULLOBJECT;
     }
@@ -2130,7 +2131,7 @@ RexxMethod3(RexxObjectPtr, wb_resizeMove, ARGLIST, args, NAME, method, CSELF, pC
     size_t countArgs;
     size_t argsUsed;
     POINT  point;
-    if ( ! getPointFromArglist(context, args, &point, 1, 3, &countArgs, &argsUsed) )
+    if ( ! getPointFromArglist(context, args, (PORXPOINT)&point, 1, 3, &countArgs, &argsUsed) )
     {
         return NULLOBJECT;
     }
@@ -2268,7 +2269,7 @@ RexxMethod3(RexxObjectPtr, wb_setWindowPos, RexxObjectPtr, _hwndBehind, ARGLIST,
     size_t countArgs;
     size_t    argsUsed;
     RECT   rect;
-    if ( ! getRectFromArglist(context, args, &rect, false, 2, 6, &countArgs, &argsUsed) )
+    if ( ! getRectFromArglist(context, args, (PORXRECT)&rect, false, 2, 6, &countArgs, &argsUsed) )
     {
         goto done_out;
     }
@@ -2379,7 +2380,7 @@ RexxMethod4(RexxObjectPtr, wb_moveSizeWindow, RexxObjectPtr, _hwndBehind, ARGLIS
     size_t countArgs;
     size_t argsUsed;
     POINT  point;
-    if ( ! getPointFromArglist(context, args, &point, 2, 4, &countArgs, &argsUsed) )
+    if ( ! getPointFromArglist(context, args, (PORXPOINT)&point, 2, 4, &countArgs, &argsUsed) )
     {
         goto done_out;
     }
@@ -2541,7 +2542,7 @@ RexxMethod4(logical_t, wb_screenClient, RexxObjectPtr, pt, NAME, method, OSELF, 
 
     if ( c->IsOfType(pt, "POINT") )
     {
-        POINT *p = rxGetPoint(context, pt, 1);
+        POINT *p = (PPOINT)rxGetPoint(context, pt, 1);
         if ( p != NULL )
         {
             if ( *method == 'S' )
@@ -2561,7 +2562,7 @@ RexxMethod4(logical_t, wb_screenClient, RexxObjectPtr, pt, NAME, method, OSELF, 
     }
     else if ( c->IsOfType(pt, "RECT") )
     {
-        RECT *r = rxGetRect(context, pt, 1);
+        RECT *r = (RECT *)rxGetRect(context, pt, 1);
         if ( r != NULL )
         {
             if ( *method == 'S' )
@@ -2612,7 +2613,7 @@ RexxMethod3(logical_t, wb_mapWindowPoints, POINTERSTRING, hwndTo, RexxObjectPtr,
         RexxMethodContext *c = context;
         if ( c->IsOfType(points, "POINT") )
         {
-            pts = rxGetPoint(context, points, 1);
+            pts = (PPOINT)rxGetPoint(context, points, 1);
             if ( pts == NULL )
             {
                 goto done_out;
@@ -2620,7 +2621,7 @@ RexxMethod3(logical_t, wb_mapWindowPoints, POINTERSTRING, hwndTo, RexxObjectPtr,
         }
         else if ( c->IsOfType(points, "RECT") )
         {
-            RECT *r = rxGetRect(context, points, 1);
+            RECT *r = (PRECT)rxGetRect(context, points, 1);
             if ( r == NULL )
             {
                 goto done_out;
@@ -3231,6 +3232,14 @@ RexxMethod6(RexxObjectPtr, pbdlg_init, CSTRING, library, RexxObjectPtr, resource
     pcpbd->interpreter = context->threadContext->instance;
     pcpbd->autoDetect  = (pcpbd->isPropSheetDlg ? FALSE : TRUE);
     pcpbd->rexxSelf    = self;
+
+    if ( context->IsOfType(self, "CREATEWINDOWS") )
+    {
+        if ( ! initCreateWindows(context, self, pcpbd) )
+        {
+            goto terminate_out;
+        }
+    }
 
     // Set our default font to the PlainBaseDialog class default font.
     pCPlainBaseDialogClass pcpbdc = dlgToClassCSelf(context);
@@ -5201,8 +5210,9 @@ RexxMethod2(int32_t, pbdlg_stopIt, OPTIONAL_RexxObjectPtr, caller, CSELF, pCSelf
  *
  *  Instantiates a dialog control object for the specified Windows control.  All
  *  dialog control objects are instantiated through one of the PlainBaseDialog
- *  new<DialogControl>() methods. In turn each of those methods filter through
- *  this function. newEdit(), newPushButton(), newListView(), etc..
+ *  new<DialogControl>() methods. In turn most, but not all, of those methods
+ *  filter through this function. newEdit(), newPushButton(), newListView(),
+ *  etc..
  *
  * @param  rxID  The resource ID of the control.
  *
@@ -5232,19 +5242,24 @@ RexxMethod2(int32_t, pbdlg_stopIt, OPTIONAL_RexxObjectPtr, caller, CSELF, pCSelf
 RexxMethod5(RexxObjectPtr, pbdlg_newControl, RexxObjectPtr, rxID, OPTIONAL_uint32_t, categoryPageID,
             NAME, msgName, OSELF, self, CSELF, pCSelf)
 {
-    RexxMethodContext *c = context;
     RexxObjectPtr result = TheNilObj;
 
+    pCPlainBaseDialog pcpbd = getPBDCSelf(context, pCSelf);
+    if ( pcpbd == NULL )
+    {
+        goto out;
+    }
+
     bool isCategoryDlg = false;
-    HWND hDlg = ((pCPlainBaseDialog)pCSelf)->hDlg;
+    HWND hDlg = pcpbd->hDlg;
 
     // If the underlying dialog is not created yet, just return.
     if ( hDlg == NULL )
     {
-        return result;
+        goto out;
     }
 
-    if ( c->IsOfType(self, "CATEGORYDIALOG") )
+    if ( context->IsOfType(self, "CATEGORYDIALOG") )
     {
         isCategoryDlg = true;
 
@@ -5271,19 +5286,25 @@ RexxMethod5(RexxObjectPtr, pbdlg_newControl, RexxObjectPtr, rxID, OPTIONAL_uint3
     }
 
     int32_t id;
-    if ( ! oodSafeResolveID(&id, c, self, rxID, -1, 1, true) )
+    if ( ! oodSafeResolveID(&id, context, self, rxID, -1, 1, true) )
     {
         goto out;
     }
 
+    // At this point, hDlg is either the HWND of the main dialog, or if it is a
+    // CategoryDialog, it could be the HWND of a page of the main dialog.
     HWND hControl = GetDlgItem(hDlg, (int)id);
     if ( isCategoryDlg && hControl == NULL )
     {
         // It could be that this is a control in the parent dialog of the
         // category dialog.  So, try once more.  If this still fails, then we
         // give up.
-        hDlg = ((pCPlainBaseDialog)pCSelf)->hDlg;
-        hControl = GetDlgItem(((pCPlainBaseDialog)pCSelf)->hDlg, (int)id);
+        //
+        // Note that, since it is a CategoryDialog, hDlg may have been reset to
+        // the HWND of a category page.  We make sure here that hDlg refers to
+        // the main dialog and not a category page.
+        hDlg = pcpbd->hDlg;
+        hControl = GetDlgItem(hDlg, (int)id);
     }
 
     if ( hControl == NULL )
@@ -5306,6 +5327,109 @@ RexxMethod5(RexxObjectPtr, pbdlg_newControl, RexxObjectPtr, rxID, OPTIONAL_uint3
     }
 
     result = createRexxControl(context->threadContext, hControl, hDlg, id, controlType, self, controlCls, isCategoryDlg, true);
+
+out:
+    return result;
+}
+
+/** PlainBaseDialog::new<DialogControl>Ex()
+ *
+ *  Instantiates a dialog control object for the specified Windows control.  All
+ *  dialog control objects are instantiated through one of the PlainBaseDialog
+ *  new<DialogControl>() methods. Many of those methods filter through the
+ *  pbdlg_newControl() method. newEdit(), newPushButton(), newListView(), etc..
+ *  However that method carries a lot of the old ooDialog CategoryDialog
+ *  baggage.
+ *
+ *  This function is intended for newer dialog controls that are not supported
+ *  by the CategoryDialog.
+ *
+ * @param  rxID  The resource ID of the control.
+ *
+ * @returns  The properly instantiated dialog control object on success, or the
+ *           nil object on failure.
+ *
+ * @remarks Either returns the control object asked for, or .nil.
+ *
+ *          The first time a Rexx object is instantiated for a specific Windows
+ *          control, the Rexx object is stored in the window words of the
+ *          control.  Before a Rexx object is instantiated, the window words are
+ *          checked to see if there is already an instantiated object. If so,
+ *          that object is returned rather than instantiating a new object.
+ */
+RexxMethod4(RexxObjectPtr, pbdlg_newControlEx, RexxObjectPtr, rxID, NAME, msgName, OSELF, self, CSELF, pCSelf)
+{
+    RexxObjectPtr result = TheNilObj;
+
+    pCPlainBaseDialog pcpbd = getPBDCSelf(context, pCSelf);
+    if ( pcpbd == NULL )
+    {
+        goto out;
+    }
+
+    HWND hDlg = pcpbd->hDlg;
+
+    // If the underlying dialog is not created yet, just return.
+    if ( hDlg == NULL )
+    {
+        return result;
+    }
+
+    int32_t id;
+    if ( ! oodSafeResolveID(&id, context, self, rxID, -1, 1, true) )
+    {
+        goto out;
+    }
+
+    HWND hControl = GetDlgItem(hDlg, (int)id);
+    if ( hControl == NULL )
+    {
+        goto out;
+    }
+
+    // Check that the underlying Windows control is the control type requested
+    // by the programmer.  Return .nil if this is not true.
+    oodControl_t controlType = oodName2controlType(msgName + 3);
+    if ( ! isControlMatch(hControl, controlType) )
+    {
+        goto out;
+    }
+
+    // Short circuit the creation of a new object.
+    RexxObjectPtr rxControl = (RexxObjectPtr)getWindowPtr(hControl, GWLP_USERDATA);
+    if ( rxControl != NULLOBJECT )
+    {
+        // Okay, this specific control has already had a control object
+        // instantiated to represent it.  We return this object.
+        result = rxControl;
+        goto out;
+    }
+
+    RexxClassObject controlCls = oodClass4controlType(context, controlType);
+    if ( controlCls == NULLOBJECT )
+    {
+        goto out;
+    }
+
+    result = createRexxControl(context->threadContext, hControl, hDlg, id, controlType, self, controlCls, false, true);
+
+    if ( result != TheNilObj && controlType == winToolBar )
+    {
+        // The first time a toolbar is instantiated we add some toolbar specific
+        // symbols to the .constDir
+        putToolBarSymbols(context, TheConstDir);
+
+        if ( TheConstDirUsage != globalOnly )
+        {
+            RexxDirectoryObject constDir = (RexxDirectoryObject)context->SendMessage0(self, "CONSTDIR");
+            putToolBarSymbols(context, constDir);
+        }
+
+        // We also do some set up for the toolbar so the user doesn't have to
+        // deal with it.
+        SendMessage(hControl, TB_BUTTONSTRUCTSIZE, sizeof(TBBUTTON), 0);
+        SendMessage(hControl, CCM_SETVERSION , 5, 0);
+    }
 
 out:
     return result;
@@ -5434,6 +5558,17 @@ RexxMethod2(RexxObjectPtr, pbdlg_dumpMessageTable, OPTIONAL_CSTRING, table, CSEL
     {
         printf("Wrong table option: notify, command, misc, or omit the argument\n");
     }
+
+    return NULLOBJECT;
+}
+
+
+RexxMethod1(RexxObjectPtr, pbdlg_test, CSELF, pCSelf)
+{
+    RexxMethodContext *c = context;
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
+
+    printf("BCN_DROPDOWN == 0x%x, %d\n", BCN_DROPDOWN, BCN_DROPDOWN);
 
     return NULLOBJECT;
 }

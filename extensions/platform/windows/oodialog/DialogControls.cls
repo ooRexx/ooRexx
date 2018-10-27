@@ -308,6 +308,7 @@
    use strict arg
    return self~sendWinIntMsg(self~CB_GETHORIZONTALEXTENT, 0, 0)
 
+::method getItemData unguarded external "LIBRARY oodialog cb_getItemData"
 ::method getItemHeight unguarded external "LIBRARY oodialog cb_getItemHeight"
 ::method getMinVisible unguarded external "LIBRARY oodialog cb_getMinVisible"
 ::method getText unguarded external "LIBRARY oodialog cb_getText"
@@ -335,6 +336,7 @@
    return self~sendWinIntMsg(self~CB_SHOWDROPDOWN, 1, 0)
 
 ::method removeFullColor unguarded external "LIBRARY oodialog cb_removeFullColor"
+::method removeItemData unguarded external "LIBRARY oodialog cb_removeItemData"
 ::method select unguarded external "LIBRARY oodialog cb_select"
 ::method selected unguarded
    use strict arg
@@ -363,6 +365,7 @@
    self~sendWinIntMsg(self~CB_SETHORIZONTALEXTENT, extent, 0)
    return 0
 
+::method setItemData unguarded external "LIBRARY oodialog cb_setItemData"
 ::method setItemHeight unguarded external "LIBRARY oodialog cb_setItemHeight"
 ::method setMinVisible unguarded external "LIBRARY oodialog cb_setMinVisible"
 
@@ -924,6 +927,17 @@
 ::class 'SliderControl' subclass DialogControl public
 ::class 'TrackBar' subclass SliderControl public
 
+-- TB_xx event notification reason codes
+::constant UP                   0
+::constant DOWN                 1
+::constant PAGEUP               2
+::constant PAGEDOWN             3
+::constant POSITION             4
+::constant DRAG                 5
+::constant TOP                  6
+::constant BOTTOM               7
+::constant ENDTRACK             8
+
 -- TBM_ messages are defined as WM_USER + x
 -- WM_USER == 0x0400
 
@@ -976,12 +990,12 @@
 ::method getPageStep unguarded
    return self~sendWinIntMsg(self~TBM_GETPAGESIZE, 0, 0)
 
-::method getRange unguarded external "LIBRARY oodialog tb_getRange"
+::method getRange unguarded external "LIBRARY oodialog trckbar_getRange"
 ::method getSelEnd unguarded
    use strict arg
    return self~sendWinIntMsg(self~TBM_GETSELEND, 0, 0)
 
-::method getSelRange unguarded external "LIBRARY oodialog tb_getSelRange"
+::method getSelRange unguarded external "LIBRARY oodialog trckbar_getSelRange"
 ::method getSelStart unguarded
    use strict arg
    return self~sendWinIntMsg(self~TBM_GETSELSTART, 0, 0)

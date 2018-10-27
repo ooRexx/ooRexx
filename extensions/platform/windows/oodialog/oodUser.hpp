@@ -55,6 +55,9 @@ extern bool startDialogTemplate(RexxThreadContext *c, DLGTEMPLATEEX **ppBase, pC
                                 int x, int y, int cx, int cy, const char *dlgClass, const char *title,
                                 const char *fontName, int fontSize, uint32_t style, uint32_t exStyle);
 
-
 extern void cleanUpDialogTemplate(void *pDlgTemplate, pCDynamicDialog pcdd);
+
+// Style parsing functions
+extern uint32_t getControlStyle(oodControl_t ctrl, CSTRING opts);
+
 #endif

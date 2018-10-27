@@ -65,6 +65,7 @@
 //#include <tmschema.h>
 
 #include "APICommon.hpp"
+#include "ooShapes.hpp"
 #include "oodCommon.hpp"
 #include "oodControl.hpp"
 #include "oodMessaging.hpp"
@@ -565,7 +566,7 @@ RexxObjectPtr oodGetWindowRect(RexxMethodContext *c, HWND hwnd)
     {
         oodSetSysErrCode(c->threadContext);
     }
-    return rxNewRect(c, &r);
+    return rxNewRect(c, (PORXRECT)&r);
 }
 
 /**
@@ -1950,7 +1951,7 @@ RexxMethod3(RexxObjectPtr, dlgext_clearRect, POINTERSTRING, hwnd, ARGLIST, args,
     size_t arraySize;
     size_t argsUsed;
 
-    if ( ! getRectFromArglist(context, args, &r, true, 2, 5, &arraySize, &argsUsed) )
+    if ( ! getRectFromArglist(context, args, (PORXRECT)&r, true, 2, 5, &arraySize, &argsUsed) )
     {
         return TheOneObj;
     }
@@ -2003,7 +2004,7 @@ RexxMethod3(RexxObjectPtr, dlgext_setWindowRect, POINTERSTRING, hwnd, ARGLIST, a
     size_t countArgs;
     size_t    argsUsed;
     RECT   rect;
-    if ( ! getRectFromArglist(context, args, &rect, false, 2, 6, &countArgs, &argsUsed) )
+    if ( ! getRectFromArglist(context, args, (PORXRECT)&rect, false, 2, 6, &countArgs, &argsUsed) )
     {
         return NULLOBJECT;
     }
@@ -2114,7 +2115,7 @@ RexxMethod3(RexxObjectPtr, dlgext_redrawRect, OPTIONAL_POINTERSTRING, _hwnd, ARG
     size_t arraySize;
     size_t argsUsed;
 
-    if ( ! getRectFromArglist(context, args, &r, true, 2, 6, &arraySize, &argsUsed) )
+    if ( ! getRectFromArglist(context, args, (PORXRECT)&r, true, 2, 6, &arraySize, &argsUsed) )
     {
         return TheOneObj;
     }
@@ -2242,7 +2243,7 @@ RexxMethod4(RexxObjectPtr, dlgext_resizeMoveControl, RexxObjectPtr, rxID, ARGLIS
     size_t arraySize;
     size_t argsUsed;
     POINT  point;
-    if ( ! getPointFromArglist(context, args, &point, 2, 4, &arraySize, &argsUsed) )
+    if ( ! getPointFromArglist(context, args, (PORXPOINT)&point, 2, 4, &arraySize, &argsUsed) )
     {
         return NULLOBJECT;
     }
@@ -2818,7 +2819,7 @@ RexxMethod9(RexxObjectPtr, dlgext_drawBitmap, OPTIONAL_RexxObjectPtr, ignored, R
  */
 RexxMethod3(RexxObjectPtr, dlgext_getBitmapPosition, RexxObjectPtr, rxID, RexxObjectPtr, pos, OSELF, self)
 {
-    PPOINT p = rxGetPoint(context, pos, 2);
+    PORXPOINT p = rxGetPoint(context, pos, 2);
     if ( p == NULL )
     {
         return TheFalseObj;
@@ -2854,7 +2855,7 @@ RexxMethod3(RexxObjectPtr, dlgext_setBitmapPosition, RexxObjectPtr, rxID, ARGLIS
     size_t arraySize;
     size_t argsUsed;
     POINT  point;
-    if ( ! getPointFromArglist(context, args, &point, 2, 3, &arraySize, &argsUsed) )
+    if ( ! getPointFromArglist(context, args, (PORXPOINT)&point, 2, 3, &arraySize, &argsUsed) )
     {
         return TheOneObj;
     }

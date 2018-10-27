@@ -150,7 +150,7 @@ static void setButtonIcons(HWND hDlg, HINSTANCE hInstance)
 static void reportError(HWND hwnd, CSTRING function, CSTRING title, HRESULT dw)
 {
     char  msgBuf[HUGE_BUF_SIZE];
-	void *formatMsgBuf;
+    char *formatMsgBuf;
 
     FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
                   NULL, dw, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR)&formatMsgBuf, 0, NULL);
@@ -158,8 +158,8 @@ static void reportError(HWND hwnd, CSTRING function, CSTRING title, HRESULT dw)
     _snprintf(msgBuf, HUGE_BUF_SIZE, "Error executing Windows API:\n\nFunction:\t\t%s\nError Code:\t%d\n\n%s",
               function, dw, formatMsgBuf);
 
-	internalErrorMsgBox(hwnd, msgBuf, title);
-	LocalFree(formatMsgBuf);
+    internalErrorMsgBox(hwnd, msgBuf, title);
+    LocalFree(formatMsgBuf);
 }
 
 /**
@@ -173,7 +173,7 @@ static void reportError(HWND hwnd, CSTRING function, CSTRING title, HRESULT dw)
 static void reportErrorPlus(HWND hwnd, CSTRING function, CSTRING title, CSTRING extraMsg, HRESULT dw)
 {
     char  msgBuf[HUGE_BUF_SIZE];
-	void *formatMsgBuf;
+    char *formatMsgBuf;
 
     FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
                   NULL, dw, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR)&formatMsgBuf, 0, NULL);
@@ -182,8 +182,8 @@ static void reportErrorPlus(HWND hwnd, CSTRING function, CSTRING title, CSTRING 
                                      "Error Code:\t%d\n\n%s\n\n%s",
               function, dw, formatMsgBuf, extraMsg);
 
-	internalErrorMsgBox(hwnd, msgBuf, title);
-	LocalFree(formatMsgBuf);
+    internalErrorMsgBox(hwnd, msgBuf, title);
+    LocalFree(formatMsgBuf);
 }
 
 /**
@@ -195,7 +195,7 @@ static void reportErrorPlus(HWND hwnd, CSTRING function, CSTRING title, CSTRING 
  */
 static void reportError(HWND hwnd, CSTRING msg, CSTRING title)
 {
-	internalErrorMsgBox(hwnd, msg, title);
+    internalErrorMsgBox(hwnd, msg, title);
 }
 
 /**
@@ -214,7 +214,7 @@ static void reportError(HWND hwnd, CSTRING fmtStr, CSTRING title, CSTRING functi
     char  msgBuf[HUGE_BUF_SIZE];
 
     _snprintf(msgBuf, HUGE_BUF_SIZE, fmtStr, function, rc);
-	internalErrorMsgBox(hwnd, msgBuf, title);
+    internalErrorMsgBox(hwnd, msgBuf, title);
 }
 
 /**
@@ -4306,17 +4306,17 @@ static intptr_t pbHelp(HWND hDlg)
 
     /*  Works:
     ShellExecute(NULL, "open", "\"C:\\Program Files (x86)\\Adobe\\Reader 10.0\\Reader\\AcroRd32.exe\"",
-				"/A page=97 \"C:\\Rexx\\ooRexx\\doc\\ooDialog.pdf\"", NULL, SW_SHOWNORMAL);
+                "/A page=97 \"C:\\Rexx\\ooRexx\\doc\\ooDialog.pdf\"", NULL, SW_SHOWNORMAL);
     */
 
     /* Also works:
     ShellExecute(NULL, "open", "\"AcroRd32.exe\"",
-	    		"/A page=97 \"C:\\Rexx\\ooRexx\\doc\\ooDialog.pdf\"", NULL, SW_SHOWNORMAL);
+                "/A page=97 \"C:\\Rexx\\ooRexx\\doc\\ooDialog.pdf\"", NULL, SW_SHOWNORMAL);
     */
 
     /* Example from Web:
     ShellExecute(NULL, "open", "\"D:\\program files\\Adobe Reader 9.exe\"",
-				"/A page=45 "
+                "/A page=45 "
                 "\"C:\\Documents and Settings\\Prabakar\\My Documents\\Downloads\\How to Do "
                 "Everything _ Ubuntu (McGraw-Hill).pdf\"", NULL, SW_SHOWNORMAL);
     */

@@ -134,7 +134,10 @@
  *  of a Windows message based on the tag.
  *
  *  The least significant byte is used to define the type of control.  This byte
- *  can be isolated using TAG_CTRLMASK.
+ *  can be isolated using TAG_CTRLMASK. The value of the byte is not a 'flag' in
+ *  the usual sense, but a constant value.  Thus, the control byte has 256
+ *  unique values. The lowest values are used for dialog controls.  Over time,
+ *  the higher values have beend added for uses unrelated to a dialog control.
  */
 #define TAG_CTRLMASK              0x000000FF
 
@@ -150,6 +153,11 @@
 #define TAG_DATETIMEPICKER        0x0000000B
 #define TAG_MONTHCALENDAR         0x0000000C
 #define TAG_TOOLTIP               0x0000000D
+#define TAG_REBAR                 0x0000000E
+#define TAG_MENU                  0x0000000F
+#define TAG_TOOLBAR               0x00000010
+#define TAG_STATUSBAR             0x00000011
+#define TAG_USERADDED             0x000000FE
 #define TAG_CUSTOMDRAW            0x000000FF
 
 /**
@@ -162,10 +170,6 @@
 #define TAG_FLAGMASK              0x00FFFF00
 
 #define TAG_HELP                  0x00000100
-#define TAG_CONTEXTMENU           0x00000200
-#define TAG_MENUCOMMAND           0x00000400
-#define TAG_SYSMENUCOMMAND        0x00000800
-#define TAG_MENUMESSAGE           0x00001000
 
 #define TAG_STATECHANGED          0x00000100
 #define TAG_CHECKBOXCHANGED       0x00000200
@@ -185,6 +189,13 @@
 // indicates the event handler should be invoked exactly the same as in old
 // ooDialog (pre 4.2.0.)
 #define TAG_PRESERVE_OLD          0x00100000
+
+// Indicates that, in genericInvoke(), if we have TAG_WILLREPLY we should use
+// the return value from the event handler as a reply to the notification
+// message.  This must be tested for as:
+//
+// if ( (TAG & TAG_USE_RETURN) == TAG_USE_RETURN )
+#define TAG_USE_RETURN            0x00200000
 
 /**
  * The last byte is for, well 'extra' information.  Use TAG_EXTRAMASK to
@@ -223,6 +234,8 @@
 // from the event handler. This is for backwards compatibility where it is
 // expected that existing programs have event handlers but don't return values.
 #define TAG_SYNC                  0x08000000
+
+#define TAG_INVALID               0xFFFFFFFF
 
 // Describes how a message searched for in the message table should be handled.
 typedef enum
@@ -285,9 +298,15 @@ typedef enum
     winUpDown              = 17,
     winToolTip             = 18,
     winComboLBox           = 19,
+    winReBar               = 20,
+    winToolBar             = 21,
+    winStatusBar           = 22,
 
     // A special value used by the data table / data table connection functions.
     winNotAControl         = 42,
+
+    // A special value used to indicate a dialog instead of a dialog control
+    winDialog              = 51,
 
     winUnknown             = 55
 } oodControl_t;
@@ -299,7 +318,8 @@ typedef enum
     oodPlainBaseDialog, oodCategoryDialog,    oodUserDialog,      oodRcDialog,         oodResDialog,
     oodControlDialog,   oodUserControlDialog, oodRcControlDialog, oodResControlDialog, oodUserPSPDialog,
     oodRcPSPDialog,     oodResPSPDialog,      oodDialogControl,   oodStaticControl,    oodButtonControl,
-    oodEditControl,     oodListBox,           oodProgressBar,     oodToolTip,          oodUnknown
+    oodEditControl,     oodListBox,           oodProgressBar,     oodToolBar,          oodToolTip,
+    oodReBar,           oodUnknown
 } oodClass_t;
 
 // How the Global constDir is to be used
@@ -631,7 +651,7 @@ typedef struct _enCSelf {
     size_t              cmNextIndex;
     size_t              mmSize;
     size_t              mmNextIndex;
-    RexxObjectPtr       rexxSelf;
+    RexxObjectPtr       rexxSelf;      // This is the dialog Rexx self, NOT the EventNotification::self
     HWND                hDlg;
     HHOOK               hHook;
     void               *pHookData;
@@ -656,6 +676,15 @@ typedef struct _weCSelf {
     RexxObjectPtr  rexxSelf;
 } CWindowExtensions;
 typedef CWindowExtensions *pCWindowExtensions;
+
+/* Struct for the CreateWindows object CSelf. */
+typedef struct _cwCSelf {
+    HINSTANCE      hinst;
+    pCWindowBase   wndBase;
+    HWND           hDlg;
+    RexxObjectPtr  rexxDlg;
+} CCreateWindows;
+typedef CCreateWindows *pCCreateWindows;
 
 /* Struct for the PlainBaseDialog object CSelf.  The struct itself is
  * allocated using interpreter memory and therefore garbage collected by the
@@ -1082,23 +1111,12 @@ extern CRITICAL_SECTION    ps_crit_sec;
 extern DWORD               ComCtl32Version;
 extern char                ComCtl32VersionStr[];
 
-extern RexxObjectPtr       TheTrueObj;
-extern RexxObjectPtr       TheFalseObj;
-extern RexxObjectPtr       TheNilObj;
-extern RexxObjectPtr       TheZeroObj;
-extern RexxObjectPtr       TheTwoObj;
-extern RexxObjectPtr       TheOneObj;
-extern RexxObjectPtr       TheNegativeOneObj;
-
 extern RexxObjectPtr       TheApplicationObj;
 extern RexxDirectoryObject TheConstDir;
 extern oodConstDir_t       TheConstDirUsage;
 extern HICON               TheDefaultSmallIcon;
 extern HICON               TheDefaultBigIcon;
 extern bool                DefaultIconIsShared;
-
-extern RexxDirectoryObject TheDotLocalObj;
-extern RexxPointerObject   TheNullPtrObj;
 
 extern RexxClassObject ThePlainBaseDialogClass;
 extern RexxClassObject TheDynamicDialogClass;
@@ -1113,6 +1131,8 @@ extern RexxClassObject TheTvCustomDrawSimpleClass;
 extern RexxClassObject TheLvFullRowClass;
 extern RexxClassObject TheLvItemClass;
 extern RexxClassObject TheLvSubItemClass;
+extern RexxClassObject TheReBarBandInfoClass;
+extern RexxClassObject TheTbButtonClass;
 
 extern HBRUSH searchForBrush(pCPlainBaseDialog pcpbd, size_t *index, uint32_t id);
 

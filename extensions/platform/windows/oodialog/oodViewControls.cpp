@@ -46,6 +46,7 @@
 #include <shlwapi.h>
 
 #include "APICommon.hpp"
+#include "ooShapes.hpp"
 #include "oodCommon.hpp"
 #include "oodMessaging.hpp"
 #include "oodControl.hpp"
@@ -506,10 +507,10 @@ RexxMethod1(RexxObjectPtr, dtp_getInfo, CSELF, pCSelf)
 
     DateTime_GetDateTimePickerInfo(hDTP, &info);
 
-    context->DirectoryPut(result, rxNewRect(context, &(info.rcCheck)), "CHECKRECT");
+    context->DirectoryPut(result, rxNewRect(context, (PORXRECT)&(info.rcCheck)), "CHECKRECT");
     context->DirectoryPut(result, objectStateToString(context, info.stateCheck), "CHECKSTATE");
 
-    context->DirectoryPut(result, rxNewRect(context, &(info.rcButton)), "BUTTONRECT");
+    context->DirectoryPut(result, rxNewRect(context, (PORXRECT)&(info.rcButton)), "BUTTONRECT");
     context->DirectoryPut(result, objectStateToString(context, info.stateButton), "BUTTONSTATE");
 
     RexxObjectPtr ctrl = createControlFromHwnd(context, (pCDialogControl)pCSelf, info.hwndDropDown, winMonthCalendar, false);
@@ -545,7 +546,7 @@ RexxMethod2(RexxObjectPtr, dtp_getIdealSize, RexxObjectPtr, _size, CSELF, pCSelf
         return TheZeroObj;
     }
 
-    PSIZE s = rxGetSize(context, _size, 1);
+    PSIZE s = (PSIZE)rxGetSize(context, _size, 1);
     if ( s != NULL )
     {
         DateTime_GetIdealSize(getDChCtrl(pCSelf), s);
@@ -1524,7 +1525,7 @@ RexxMethod2(RexxObjectPtr, mc_getGridInfo, RexxObjectPtr, _gridInfo, CSELF, pCSe
 
     if ( info.dwFlags & MCGIF_RECT )
     {
-        context->DirectoryPut(gridInfo, rxNewRect(context, &info.rc), "RECT");
+        context->DirectoryPut(gridInfo, rxNewRect(context, (PORXRECT)&info.rc), "RECT");
     }
 
     if ( (info.dwFlags & MCGIF_NAME) && (info.dwPart == MCGIP_CALENDAR || info.dwPart == MCGIP_CALENDARCELL || info.dwPart == MCGIP_CALENDARHEADER) )
@@ -1547,7 +1548,7 @@ RexxMethod2(RexxObjectPtr, mc_getMinRect, RexxObjectPtr, _rect, CSELF, pCSelf)
         return NULLOBJECT;
     }
 
-    PRECT r = rxGetRect(context, _rect, 1);
+    PRECT r = (PRECT)rxGetRect(context, _rect, 1);
     if ( r != NULL )
     {
         return (MonthCal_GetMinReqRect(hMC, r) == 0 ? TheFalseObj : TheTrueObj);
@@ -1741,7 +1742,7 @@ RexxMethod2(RexxObjectPtr, mc_hitTestInfo, RexxObjectPtr, _pt, CSELF, pCSelf)
         info.cbSize = sizeof(MCHITTESTINFO);
     }
 
-    PPOINT pt = rxGetPoint(context, _pt, 1);
+    PPOINT pt = (PPOINT)rxGetPoint(context, _pt, 1);
     if ( pt == NULL )
     {
         goto done_out;
@@ -1757,7 +1758,7 @@ RexxMethod2(RexxObjectPtr, mc_hitTestInfo, RexxObjectPtr, _pt, CSELF, pCSelf)
 
     if ( info.cbSize > MCHITTESTINFO_V1_SIZE && ! done )
     {
-        context->DirectoryPut(hitInfo, rxNewRect(context, &info.rc), "RECT");
+        context->DirectoryPut(hitInfo, rxNewRect(context, (PORXRECT)&info.rc), "RECT");
 
         context->DirectoryPut(hitInfo, context->WholeNumber(info.iOffset + 1), "OFFSET");
 
@@ -2128,7 +2129,7 @@ RexxMethod2(RexxObjectPtr, mc_sizeRectToMin, RexxObjectPtr, _rect, CSELF, pCSelf
         return NULLOBJECT;
     }
 
-    PRECT r = rxGetRect(context, _rect, 1);
+    PRECT r = (PRECT)rxGetRect(context, _rect, 1);
     if ( r != NULL )
     {
         MonthCal_SizeRectToMin(hMC, r);
@@ -2169,7 +2170,7 @@ RexxMethod2(RexxObjectPtr, tab_setItemSize, ARGLIST, args, CSELF, pCSelf)
     size_t sizeArray;
     size_t argsUsed;
     POINT  point;
-    if ( ! getPointFromArglist(context, args, &point, 1, 2, &sizeArray, &argsUsed) )
+    if ( ! getPointFromArglist(context, args, (PORXPOINT)&point, 1, 2, &sizeArray, &argsUsed) )
     {
         return NULLOBJECT;
     }
@@ -2206,7 +2207,7 @@ RexxMethod2(RexxObjectPtr, tab_setPadding, ARGLIST, args, CSELF, pCSelf)
     size_t sizeArray;
     size_t argsUsed;
     POINT  point;
-    if ( ! getPointFromArglist(context, args, &point, 1, 2, &sizeArray, &argsUsed) )
+    if ( ! getPointFromArglist(context, args, (PORXPOINT)&point, 1, 2, &sizeArray, &argsUsed) )
     {
         return NULLOBJECT;
     }
@@ -2469,7 +2470,7 @@ RexxMethod3(RexxObjectPtr, tab_getItemRect, uint32_t, item, RexxObjectPtr, rect,
 {
     HWND hwnd = getDChCtrl(pCSelf);
 
-    PRECT r = rxGetRect(context, rect, 2);
+    PRECT r = (PRECT)rxGetRect(context, rect, 2);
     if ( r == NULL )
     {
         return NULLOBJECT;
@@ -2519,7 +2520,7 @@ RexxMethod3(RexxObjectPtr, tab_calcRect, RexxObjectPtr, rect, NAME, method, CSEL
 {
     HWND hwnd = getDChCtrl(pCSelf);
 
-    PRECT r = rxGetRect(context, rect, 1);
+    PRECT r = (PRECT)rxGetRect(context, rect, 1);
     if ( r == NULL )
     {
         return NULLOBJECT;

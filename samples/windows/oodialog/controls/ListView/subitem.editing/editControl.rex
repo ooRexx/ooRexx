@@ -97,8 +97,8 @@ return 0
   self~createEdit(IDC_EDIT, 10, 10, 40, 11, 'AUTHSCROLLH NOTAB HIDDEN')
   self~createPushButton(IDOK, 280, 175, 35, 15, "DEFAULT", "Close")
 
-  self~connectListViewEvent(IDC_LISTVIEW, "CLICK", onClick)
-  self~connectListViewEvent(IDC_LISTVIEW, "BEGINSCROLL", onBeginScroll)
+  self~connectListViewEvent(IDC_LISTVIEW, "CLICK", onClick, sync)
+  self~connectListViewEvent(IDC_LISTVIEW, "BEGINSCROLL", onBeginScroll, .true)
   self~connectListViewEvent(IDC_LISTVIEW, "ENDSCROLL", onBeginScroll)
 
 
@@ -142,18 +142,18 @@ return 0
  *  the focus to the edti control.  And that's it.
  */
 ::method onClick unguarded
-  expose list edit editVisible lastIdx lastCol
-  use arg id, itemIndex, columnIndex, keyState
+  expose edit editVisible lastIdx lastCol
+  use arg id, itemIndex, columnIndex, keyState, , lv
 
   if lastIdx == itemIndex & lastCol == columnIndex then do
     if columnIndex > 0 then do
-        r = list~getSubitemRect(itemIndex, columnIndex, 'LABEL')
+        r = lv~getSubitemRect(itemIndex, columnIndex, 'LABEL')
 
         r~right  -= r~left
         r~bottom -= r~top
         flags = "SHOWWINDOW NOZORDERCHANGE"
 
-        edit~setWindowPos(list~hwnd, r, flags)
+        edit~setWindowPos(lv~hwnd, r, flags)
 
         editVisible = .true
         edit~assignFocus

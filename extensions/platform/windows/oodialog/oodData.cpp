@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -235,7 +235,7 @@ static bool getMultiListBoxSelections(HWND hDlg, uint32_t id, char * data)
 
 static bool setMultiListBoxSelections(HWND hDlg, ULONG id, const char * data)
 {
-    char buffer[NR_BUFFER];
+    char buffer[NR_BUFFER + 1];
     const char * p = data;
 
     // First set all items to not selected.

@@ -234,7 +234,7 @@ exit
                 end
         end
 
-    self~connectResize('onResize', .true)
+    self~connectResize('onResize', 'sync')
 
 -- Run menu option
 ::method RunIt
@@ -893,7 +893,7 @@ return 0
     a_title~setColor(5,10)
     d_title~setColor(5,10)
 
-    self~connectResize('onResize', .true)
+    self~connectResize('onResize', 'sync')
     self~connectSizeMoveEnded('onSizeMoveEnded')
 
 ::method help

@@ -130,7 +130,7 @@ callFailed:
   return InitRet
 
 ::method InitDialog
-  self~newListView(104)~setImageList(self~getImages, .Image~toID(LVSIL_SMALL))
+  self~newListView(104)~setImageList(self~getImages, SMALL)
   cb = self~newComboBox(100)
   default = .array~of("InternetExplorer.Application","Excel.Application","Freelance.Application",,
                       "Notes.NotesSession","Lotus123.Workbook","Outlook.Application",,
@@ -475,7 +475,7 @@ callFailed:
 
 ::method getImages private
   image = .Image~getImage(.application~srcDir"icons.bmp")
-  imageList = .ImageList~create(.Size~new(16, 12), .Image~toID(ILC_COLOR4), 6, 0)
+  imageList = .ImageList~create(.Size~new(16, 12), COLOR4, 6, 0)
   if \image~isNull,  \imageList~isNull then do
       imageList~add(image)
       image~release

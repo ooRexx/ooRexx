@@ -261,12 +261,14 @@
 ::method shiftRight class external "LIBRARY oodialog dlgutil_shiftRight_cls"
 ::method sHiWord class external "LIBRARY oodialog dlgutil_shiWord_cls"
 ::method signed class external "LIBRARY oodialog dlgutil_signed_cls"
+::method signed32 class external "LIBRARY oodialog dlgutil_signed32_cls"
 ::method sLoWord class external "LIBRARY oodialog dlgutil_sloWord_cls"
 ::method sShiftLeft class external "LIBRARY oodialog dlgutil_sShiftLeft_cls"
 ::method sShiftRight class external "LIBRARY oodialog dlgutil_sShiftRight_cls"
 ::method terminate class external "LIBRARY oodialog dlgutil_terminate_cls"
 ::method threadID class external "LIBRARY oodialog dlgutil_threadID_cls"
 ::method unsigned class external "LIBRARY oodialog dlgutil_unsigned_cls"
+::method unsigned32 class external "LIBRARY oodialog dlgutil_unsigned32_cls"
 ::method version class external "LIBRARY oodialog dlgutil_version_cls"
 ::method windowFromPoint class external "LIBRARY oodialog dlgutil_windowFromPoint_cls"
 
@@ -306,6 +308,7 @@
 ::attribute cxCursor get class external      "LIBRARY oodialog sm_cxCursor_cls"
 ::attribute cxDrag get class external        "LIBRARY oodialog sm_cxDrag_cls"
 ::attribute cxFixedFrame get class external  "LIBRARY oodialog sm_cxFixedFrame_cls"
+::attribute cxIcon get class external        "LIBRARY oodialog sm_cxIcon_cls"
 ::attribute cxScreen get class external      "LIBRARY oodialog sm_cxScreen_cls"
 ::attribute cxSize get class external        "LIBRARY oodialog sm_cxSize_cls"
 ::attribute cxSmIcon get class external      "LIBRARY oodialog sm_cxSmIcon_cls"
@@ -315,8 +318,11 @@
 ::attribute cyDrag get class external        "LIBRARY oodialog sm_cyDrag_cls"
 ::attribute cyFixedFrame get class external  "LIBRARY oodialog sm_cyFixedFrame_cls"
 ::attribute cyHscroll get class external     "LIBRARY oodialog sm_cyHScroll_cls"
+::attribute cyIcon get class external        "LIBRARY oodialog sm_cyIcon_cls"
 ::attribute cyMenu get class external        "LIBRARY oodialog sm_cyMenu_cls"
 ::attribute cyScreen get class external      "LIBRARY oodialog sm_cyScreen_cls"
+::attribute cySize get class external        "LIBRARY oodialog sm_cySize_cls"
+::attribute cySmIcon get class external      "LIBRARY oodialog sm_cySmIcon_cls"
 ::attribute menuDropAlignment get class external "LIBRARY oodialog sm_menuDropAlignment_cls"
 
 ::class 'OS' public
@@ -339,59 +345,6 @@
 ::method isAtLeastWindows7 class external "LIBRARY oodialog os_isVersion"
 ::method settingChanged class external "LIBRARY oodialog os_settingChanged"
 ::method shellChangeNotify class external "LIBRARY oodialog os_shellChangeNotify"
-
-
-::class 'Rect' public
-::method init class external "LIBRARY oodialog rect_init_cls"
-::method init external "LIBRARY oodialog rect_init"
-::attribute left get external "LIBRARY oodialog rect_left"
-::attribute left set external "LIBRARY oodialog rect_setLeft"
-::attribute top get external "LIBRARY oodialog rect_top"
-::attribute top set external "LIBRARY oodialog rect_setTop"
-::attribute right get external "LIBRARY oodialog rect_right"
-::attribute right set external "LIBRARY oodialog rect_setRight"
-::attribute bottom get external "LIBRARY oodialog rect_bottom"
-::attribute bottom set external "LIBRARY oodialog rect_setBottom"
-::method copy external "LIBRARY oodialog rect_copy"
-::method string external "LIBRARY oodialog rect_string"
-
-::class 'Point' public
-::method init class external "LIBRARY oodialog point_init_cls"
-::method init external "LIBRARY oodialog point_init"
-::attribute x get external "LIBRARY oodialog point_x"
-::attribute x set external "LIBRARY oodialog point_setX"
-::attribute y get external "LIBRARY oodialog point_y"
-::attribute y set external "LIBRARY oodialog point_setY"
-::method copy external "LIBRARY oodialog point_copy"
-::method '+' external "LIBRARY oodialog point_add"
-::method '-' external "LIBRARY oodialog point_subtract"
-::method incr external "LIBRARY oodialog point_incr"
-::method decr external "LIBRARY oodialog point_decr"
-::method inRect external "LIBRARY oodialog point_inRect"
-::method string external "LIBRARY oodialog point_string"
-
-::class 'Size' public
-::method init class external "LIBRARY oodialog size_init_cls"
-::method init external "LIBRARY oodialog size_init"
-::attribute width get external "LIBRARY oodialog size_cx"
-::attribute width set external "LIBRARY oodialog size_setCX"
-::attribute height get external "LIBRARY oodialog size_cy"
-::attribute height set external "LIBRARY oodialog size_setCY"
-::method string external "LIBRARY oodialog size_string"
-
-::method '=' external "LIBRARY oodialog size_compare"
-::method '==' external "LIBRARY oodialog size_compare"
-::method '\=' external "LIBRARY oodialog size_compare"
-::method '\==' external "LIBRARY oodialog size_compare"
-::method '<' external "LIBRARY oodialog size_compare"
-::method '<<' external "LIBRARY oodialog size_compare"
-::method '<=' external "LIBRARY oodialog size_compare"
-::method '<<=' external "LIBRARY oodialog size_compare"
-::method '>' external "LIBRARY oodialog size_compare"
-::method '>>' external "LIBRARY oodialog size_compare"
-::method '>=' external "LIBRARY oodialog size_compare"
-::method '>>=' external "LIBRARY oodialog size_compare"
-::method equateTo external "LIBRARY oodialog size_equateTo"
 
 
 ::class 'Mouse' public
@@ -853,6 +806,18 @@
 ::constant OIC_ERROR           32513
 ::constant OIC_INFORMATION     32516
 ::constant OIC_SHIELD          32518
+
+::constant IDI_APPLICATION     32512
+::constant IDI_HAND            32513
+::constant IDI_QUESTION        32514
+::constant IDI_EXCLAMATION     32515
+::constant IDI_ASTERISK        32516
+::constant IDI_WINLOGO         32517
+::constant IDI_SHIELD          32518
+::constant IDI_WARNING         32515
+::constant IDI_ERROR           32513
+::constant IDI_INFORMATION     32516
+
 
 /**
  * Standard Dialog Control Classes.  Some simple short cut dialogs.

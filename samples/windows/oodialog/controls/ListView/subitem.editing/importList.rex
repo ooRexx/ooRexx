@@ -315,17 +315,17 @@ return 0
 -- Used to process double click, and modify the list view if the double click
 -- was on column 2
 ::method onLVDClick unguarded
-   expose currentIndex currentColumn comboBox edit listView cbVisible editVisible
-   use arg id, itemIndex, columnIndex, keyState
+   expose currentIndex currentColumn comboBox edit cbVisible editVisible
+   use arg id, itemIndex, columnIndex, keyState, , lv
 
    currentIndex  = itemIndex
    currentColumn = columnIndex
 
    if columnIndex == 2 then do
-       text = listView~itemText(itemIndex, columnIndex)
+       text = lv~itemText(itemIndex, columnIndex)
 
-       r = listView~getSubitemRect(itemIndex, columnIndex, "BOUNDS")
-       edit~setWindowPos(listView~hwnd, r~left, r~top, r~right - r~left,      -
+       r = lv~getSubitemRect(itemIndex, columnIndex, "BOUNDS")
+       edit~setWindowPos(lv~hwnd, r~left, r~top, r~right - r~left,      -
                          r~bottom - r~top, "SHOWWINDOW NOZORDERCHANGE")
 
        edit~setText(text)
@@ -339,8 +339,8 @@ return 0
 -- Used to process single click, and modify the list view if the single click
 -- was on column 0
 ::method onLVSClick unguarded
-   expose currentIndex currentColumn comboBox edit listView cbVisible editVisible
-   use arg id, itemIndex, columnIndex, keyState
+   expose currentIndex currentColumn comboBox edit cbVisible editVisible
+   use arg id, itemIndex, columnIndex, keyState, , lv
 
    currentIndex = itemIndex
    currentColumn = columnIndex
@@ -351,14 +351,14 @@ return 0
        edit~hide
    end
 
-   if self~goodColumn0(itemIndex, columnIndex, listView) then do
+   if self~goodColumn0(itemIndex, columnIndex, lv) then do
        -- Set the combo box selection to match the current text of the list view
        -- item before it is shown.
-       curText = listView~itemText(itemIndex)
+       curText = lv~itemText(itemIndex)
        comboBox~select(curText)
 
-       r = listView~getSubitemRect(itemIndex, columnIndex, "LABEL")
-       comboBox~setWindowPos(listView~hwnd, r~left, r~top - 3, r~right - r~left, -
+       r = lv~getSubitemRect(itemIndex, columnIndex, "LABEL")
+       comboBox~setWindowPos(lv~hwnd, r~left, r~top - 3, r~right - r~left, -
                              4 * (r~bottom - r~top), "SHOWWINDOW NOZORDERCHANGE")
 
        cbVisible = .true

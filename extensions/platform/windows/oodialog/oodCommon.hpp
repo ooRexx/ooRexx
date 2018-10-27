@@ -115,13 +115,6 @@ extern int32_t           stopDialog(pCPlainBaseDialog, RexxThreadContext *c);
 extern int32_t           delDialog(pCPlainBaseDialog, RexxThreadContext *c);
 extern BOOL              getDialogIcons(pCPlainBaseDialog, INT, UINT, PHANDLE, PHANDLE);
 extern bool              isYes(const char *s);
-extern bool              isPointerString(const char *string);
-extern void *            string2pointer(const char *string);
-extern void *            string2pointer(RexxMethodContext *c, RexxStringObject string);
-extern void *            string2pointer(RexxThreadContext *c, RexxObjectPtr ptr);
-extern void              pointer2string(char *, void *pointer);
-extern RexxStringObject  pointer2string(RexxMethodContext *, void *);
-extern RexxStringObject  pointer2string(RexxThreadContext *c, void *pointer);
 extern RexxStringObject  dword2string(RexxMethodContext *, uint32_t);
 extern RexxObjectPtr     convertToTrueOrFalse(RexxThreadContext *c, RexxObjectPtr obj);
 extern char *            strdupupr(const char *str);
@@ -131,7 +124,7 @@ extern char *            strdup_2methodName(const char *str);
 extern void              checkModal(pCPlainBaseDialog previous, logical_t modeless);
 
 extern oodClass_t    oodClass(RexxMethodContext *, RexxObjectPtr, oodClass_t *, size_t);
-extern DWORD         oodGetSysErrCode(RexxThreadContext *);
+extern uint32_t      oodGetSysErrCode(RexxThreadContext *);
 extern void          oodSetSysErrCode(RexxThreadContext *, DWORD);
 extern void          oodResetSysErrCode(RexxThreadContext *context);
 extern bool          oodGetWParam(RexxMethodContext *, RexxObjectPtr, WPARAM *, size_t, bool);
@@ -153,18 +146,6 @@ extern bool       requiredOS(RexxMethodContext *context, os_name_t os, const cha
 extern bool       requiredComCtl32Version(RexxMethodContext *context, const char *methodName, DWORD minimum);
 extern bool       requiredComCtl32Version(RexxMethodContext *context, DWORD minimum, const char *msg);
 
-extern PPOINT        rxGetPoint(RexxMethodContext *context, RexxObjectPtr p, size_t argPos);
-extern RexxObjectPtr rxNewPoint(RexxThreadContext *c, long x, long y);
-extern RexxObjectPtr rxNewPoint(RexxMethodContext *c, long x, long y);
-extern PRECT         rxGetRect(RexxMethodContext *context, RexxObjectPtr r, size_t argPos);
-extern RexxObjectPtr rxNewRect(RexxMethodContext *context, long l, long t, long r, long b);
-extern RexxObjectPtr rxNewRect(RexxThreadContext *context, PRECT r);
-extern RexxObjectPtr rxNewRect(RexxMethodContext *context, PRECT r);
-extern PSIZE         rxGetSize(RexxMethodContext *context, RexxObjectPtr s, size_t argPos);
-extern RexxObjectPtr rxNewSize(RexxThreadContext *c, long cx, long cy);
-extern RexxObjectPtr rxNewSize(RexxMethodContext *c, long cx, long cy);
-extern RexxObjectPtr rxNewSize(RexxMethodContext *c, PSIZE s);
-
 extern bool rxGetWindowText(RexxMethodContext *c, HWND hwnd, RexxStringObject *pStringObj);
 extern bool rxDirectoryFromArray(RexxMethodContext *c, RexxArrayObject a, size_t index, RexxDirectoryObject *d, size_t argPos);
 extern bool rxLogicalFromDirectory(RexxMethodContext *, RexxDirectoryObject, CSTRING, BOOL *, int, bool);
@@ -176,9 +157,6 @@ extern bool              getFormattedErrMsg(char **errBuff, uint32_t errCode, ui
 
 extern RexxObjectPtr     setWindowStyle(RexxMethodContext *c, HWND hwnd, uint32_t style);
 extern int               getKeywordValue(String2Int *cMap, const char * str);
-extern bool              goodMinMaxArgs(RexxMethodContext *c, RexxArrayObject args, size_t min, size_t max, size_t *arraySize);
-extern bool              getRectFromArglist(RexxMethodContext *, RexxArrayObject, PRECT, bool, int, int, size_t *, size_t *);
-extern bool              getPointFromArglist(RexxMethodContext *, RexxArrayObject, PPOINT, int, int, size_t *, size_t *);
 
 // These functions are defined in oodUser.cpp.
 extern bool getCategoryHDlg(RexxMethodContext *, RexxObjectPtr, uint32_t *, HWND *, int);
@@ -202,6 +180,7 @@ extern void          ensureFinished(pCPlainBaseDialog pcpbd, RexxThreadContext *
 
 // These functions are defined in oodBaseDialog.cpp
 extern bool initWindowExtensions(RexxMethodContext *, RexxObjectPtr, HWND, pCWindowBase, pCPlainBaseDialog);
+extern bool initCreateWindows(RexxMethodContext *c, RexxObjectPtr self, pCPlainBaseDialog pcpbd);
 extern bool validControlDlg(RexxMethodContext *c, pCPlainBaseDialog pcpbd);
 extern bool processOwnedDialog(RexxMethodContext *c, pCPlainBaseDialog pcpbd);
 extern void setFontAttrib(RexxThreadContext *c, pCPlainBaseDialog pcpbd);
@@ -212,13 +191,19 @@ extern void abortPropertySheet(pCPropertySheetDialog pcpsd, HWND hDlg, DlgProcEr
 extern void abortPropertySheetPage(pCPropertySheetPage page, HWND hDlg, DlgProcErrType t);
 extern void abortOwnedDlg(pCPlainBaseDialog pcpbd, HWND hDlg, DlgProcErrType t);
 
-// This function is defined in oodControl.cpp.  TODO should be in
-// oodControl.hpp, but needed by oodCommon.cpp, need to straighten out all
-// theses extern declarations.
-extern const char *controlType2controlName(oodControl_t control);
+// These functions are defined in oodControl.cpp.  TODO should be in
+// oodControl.hpp, but the order of includes misses them.  Need to straighten
+// out all these extern declarations.
+extern const char     *controlType2controlName(oodControl_t control);
+extern RexxObjectPtr   createControlFromHwnd(RexxMethodContext *, pCDialogControl, HWND, oodControl_t, bool);
+extern RexxObjectPtr   createControlFromHwnd(RexxMethodContext *, pCPlainBaseDialog, HWND, oodControl_t, bool);
+extern RexxObjectPtr   createControlFromHwnd(RexxThreadContext *, pCPlainBaseDialog, HWND, oodControl_t, bool);
 
 // These functions are defined in oodViewControls.cpp
 extern bool isInReportView(HWND hList);
+
+// These functions are defined in oodToolBar.cpp
+extern void putToolBarSymbols(RexxMethodContext *c, RexxDirectoryObject constDir);
 
 // Shared button stuff.
 typedef enum {push, check, radio, group, owner, notButton} BUTTONTYPE, *PBUTTONTYPE;
@@ -398,6 +383,9 @@ extern RexxObjectPtr  invalidAttributeException(RexxMethodContext *c, RexxObject
 extern pCPlainBaseDialog requiredDlgCSelf(RexxMethodContext *c, RexxObjectPtr self, oodClass_t type, size_t argPos, pCDialogControl *ppcdc);
 extern pCDialogControl   requiredDlgControlCSelf(RexxMethodContext *c, RexxObjectPtr control, size_t argPos);
 extern pCPlainBaseDialog requiredPlainBaseDlg(RexxMethodContext *c, RexxObjectPtr dlg, size_t argPos);
+
+extern uint32_t          keyword2stateSystem(CSTRING flags);
+extern RexxStringObject  stateSystem2keyword(RexxMethodContext *c, uint32_t flags);
 
 /**
  *  93.900

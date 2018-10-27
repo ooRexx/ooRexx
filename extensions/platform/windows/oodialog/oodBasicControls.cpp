@@ -47,6 +47,7 @@
 
 #include <shlwapi.h>
 #include "APICommon.hpp"
+#include "ooShapes.hpp"
 #include "oodCommon.hpp"
 #include "oodControl.hpp"
 #include "oodMessaging.hpp"
@@ -432,7 +433,8 @@ RexxMethod2(RexxObjectPtr, stc_getImage, OPTIONAL_uint8_t, type, OSELF, self)
                              "TEXT, ICON, BITMAP, LEFT, RIGHT, HCENTER, TOP, BOTTOM, VCENTER, PUSHLIKE, "  \
                              "NOTPUSHLIKE, MULTILINE, NOTMULTILINE, NOTIFY, NOTNOTIFY, FLAT, NOTFLAT"
 
-#define BC_SETSTATE_OPTS     "CHECKED, UNCHECKED, INDETERMINATE, FOCUS, PUSH, NOTPUSHED"
+#define BC_SETSTATE_OPTS      "CHECKED, UNCHECKED, INDETERMINATE, FOCUS, PUSH, NOTPUSHED"
+#define BUTTON_ALIGNMENT_LIST "LEFT, RIGHT, TOP, BOTTOM, or CENTER"
 #define MIN_HALFHEIGHT_GB    12
 
 
@@ -482,6 +484,63 @@ static HWND changeDefPushButton(HWND hCtrl)
 }
 
 /**
+ * Gets the button image list alignment value from the specified argument
+ * object, where the object could be the numeric value, a string keyword, or
+ * omitted altogether.
+ *
+ * @param context
+ * @param _type
+ * @param defType   The value to use if the argument is omitted.
+ * @param argPos
+ *
+ * @return The alignment value or OOD_NO_VALUE on error.  An exception has been
+ *         raised on error.
+ */
+static uint32_t getButtonILAlignArg(RexxMethodContext *context, RexxObjectPtr _align, uint32_t defAlign, size_t argPos)
+{
+    uint32_t align = defAlign;
+
+    if ( argumentExists(argPos) )
+    {
+        if ( ! context->UnsignedInt32(_align, &align) )
+        {
+            CSTRING al = context->ObjectToStringValue(_align);
+            if (      StrCmpI("LEFT", al)   == 0 ) align = BUTTON_IMAGELIST_ALIGN_LEFT;
+            else if ( StrCmpI("RIGH", al)   == 0 ) align = BUTTON_IMAGELIST_ALIGN_RIGHT;
+            else if ( StrCmpI("TOP", al)    == 0 ) align = BUTTON_IMAGELIST_ALIGN_TOP;
+            else if ( StrCmpI("BOTTOM", al) == 0 ) align = BUTTON_IMAGELIST_ALIGN_BOTTOM;
+            else if ( StrCmpI("CENTER", al) == 0 ) align = BUTTON_IMAGELIST_ALIGN_CENTER;
+            else
+            {
+                wrongArgValueException(context->threadContext, argPos, BUTTON_ALIGNMENT_LIST, _align);
+                align = OOD_NO_VALUE;
+            }
+        }
+
+        if ( align != OOD_NO_VALUE && align > BUTTON_IMAGELIST_ALIGN_CENTER )
+        {
+            wrongRangeException(context->threadContext, argPos,
+                                BUTTON_IMAGELIST_ALIGN_LEFT, BUTTON_IMAGELIST_ALIGN_CENTER, align);
+            align = OOD_NO_VALUE;
+        }
+    }
+    return align;
+}
+
+static RexxStringObject align2keywords(RexxMethodContext *c, uint32_t align)
+{
+    CSTRING key = "Unknown";
+
+    if ( align == BUTTON_IMAGELIST_ALIGN_LEFT   ) key = "Left";
+    if ( align == BUTTON_IMAGELIST_ALIGN_RIGHT  ) key = "Right";
+    if ( align == BUTTON_IMAGELIST_ALIGN_TOP    ) key = "Top";
+    if ( align == BUTTON_IMAGELIST_ALIGN_BOTTOM ) key = "Bottom";
+    if ( align == BUTTON_IMAGELIST_ALIGN_CENTER ) key = "Center";
+
+    return c->String(key);
+}
+
+/**
  * Gets the button image list information for this button, which includes the
  * image list itself, the image alignment, and the margin around the image.
  *
@@ -522,6 +581,7 @@ static RexxObjectPtr bcGetImageList(RexxMethodContext *c, HWND hwnd)
             if ( alignment != NULLOBJECT )
             {
                 c->DirectoryPut(table, alignment, "ALIGNMENT");
+                c->DirectoryPut(table, align2keywords(c, biml.uAlign), "ALIGNMENTKEYWORD");
             }
             result = table;
         }
@@ -1078,7 +1138,7 @@ RexxMethod1(RexxObjectPtr, bc_getTextMargin, CSELF, pCSelf)
     HWND hwnd = getDChCtrl(pCSelf);
     RexxObjectPtr result = NULLOBJECT;
 
-    RECT r;
+    ORXRECT r;
     if ( Button_GetTextMargin(hwnd, &r) )
     {
         result = rxNewRect(context, &r);
@@ -1095,7 +1155,7 @@ RexxMethod2(logical_t, bc_setTextMargin, RexxObjectPtr, r, CSELF, pCSelf)
 
     HWND hwnd = getDChCtrl(pCSelf);
 
-    PRECT pRect = rxGetRect(context, r, 1);
+    PORXRECT pRect = rxGetRect(context, r, 1);
     if ( pRect != NULL )
     {
         if ( Button_SetTextMargin(hwnd, pRect) )
@@ -1213,7 +1273,9 @@ out:
  *
  *          d~imageList -> The .ImageList object set by setImageList().
  *          d~rect      -> A .Rect object containing the margins.
- *          d~alignment -> The image alignment in the button.
+ *          d~rect      -> A .Rect object containing the margins.
+ *          d~alignment -> The image alignment in the button, numeric.
+ *          d~alignmentKeyword -> The image alignment in the button, string.
  *
  * @requires  Common Controls version 6.0 or later.
  *
@@ -1262,7 +1324,7 @@ RexxMethod1(RexxObjectPtr, bc_getImageList, CSELF, pCSelf)
  * @see bcGetImageList() for the format of the returned image list information.
  */
 RexxMethod4(RexxObjectPtr, bc_setImageList, RexxObjectPtr, imageList, OPTIONAL_RexxObjectPtr, margin,
-            OPTIONAL_uint8_t, align, CSELF, pCSelf)
+            OPTIONAL_RexxObjectPtr, align, CSELF, pCSelf)
 {
     oodResetSysErrCode(context->threadContext);
     RexxObjectPtr result = NULLOBJECT;
@@ -1291,7 +1353,7 @@ RexxMethod4(RexxObjectPtr, bc_setImageList, RexxObjectPtr, imageList, OPTIONAL_R
     // Default would be a 0 margin
     if ( argumentExists(2) )
     {
-        PRECT pRect = rxGetRect(context, margin, 2);
+        PORXRECT pRect = rxGetRect(context, margin, 2);
         if ( pRect == NULL )
         {
             goto err_out;
@@ -1302,19 +1364,10 @@ RexxMethod4(RexxObjectPtr, bc_setImageList, RexxObjectPtr, imageList, OPTIONAL_R
         biml.margin.bottom = pRect->bottom;
     }
 
-    if ( argumentExists(3) )
+    biml.uAlign = getButtonILAlignArg(context, align, BUTTON_IMAGELIST_ALIGN_CENTER, 3);
+    if ( biml.uAlign == OOD_NO_VALUE )
     {
-        if ( align > BUTTON_IMAGELIST_ALIGN_CENTER )
-        {
-            wrongRangeException(context->threadContext, 3, BUTTON_IMAGELIST_ALIGN_LEFT,
-                                BUTTON_IMAGELIST_ALIGN_CENTER, align);
-            goto err_out;
-        }
-        biml.uAlign =  align;
-    }
-    else
-    {
-        biml.uAlign = BUTTON_IMAGELIST_ALIGN_CENTER;
+        goto err_out;
     }
 
     result = bcGetImageList(context, hwnd);
@@ -2244,7 +2297,7 @@ RexxMethod3(RexxObjectPtr, e_setRect, RexxObjectPtr, rect, OPTIONAL_logical_t, r
         redraw = TRUE;
     }
 
-    PRECT r = NULL;
+    PORXRECT r = NULL;
 
     if ( rect != TheZeroObj )
     {
@@ -2279,7 +2332,7 @@ done_out:
 RexxMethod1(RexxObjectPtr, e_getRect, CSELF, pCSelf)
 {
     HWND hwnd = getDChCtrl(pCSelf);
-    RECT r;
+    ORXRECT r;
 
     SendMessage(hwnd, EM_GETRECT, 0, (LPARAM)&r);
 
@@ -2703,7 +2756,7 @@ RexxMethod2(int32_t, lb_hitTestInfo, ARGLIST, args, CSELF, pCSelf)
     size_t sizeArray;
     size_t argsUsed;
     POINT  point;
-    if ( ! getPointFromArglist(context, args, &point, 1, 3, &sizeArray, &argsUsed) )
+    if ( ! getPointFromArglist(context, args, (PORXPOINT)&point, 1, 3, &sizeArray, &argsUsed) )
     {
         goto done_out;
     }
@@ -2962,6 +3015,32 @@ RexxMethod2(int32_t, lb_selectIndex, OPTIONAL_int32_t, index, CSELF, pCSelf)
 #define COMBOBOX_CLASS   "ComboBox"
 
 
+/**
+ * Returns the user data for the specified combo box item as a Rexx object
+ *
+ * @param hComboBox
+ * @param index
+ *
+ * @return The Rexx object set as the user data, or the .nil object if no user
+ *         data is set.  Returns NULLOBJECT on a combo box error.
+ */
+static RexxObjectPtr getCurrentComboBoxUserData(HWND hComboBox, uint32_t index)
+{
+    RexxObjectPtr result = TheNilObj;
+
+    LRESULT iData = SendMessage(hComboBox, CB_GETITEMDATA, index, 0);
+    if ( iData == CB_ERR )
+    {
+        result = NULLOBJECT;
+    }
+    else if ( iData != NULL )
+    {
+        result = (RexxObjectPtr)iData;
+    }
+    return result;
+}
+
+
 void freeComboBoxData(pSubClassData pSCData)
 {
     if ( pSCData )
@@ -3137,10 +3216,10 @@ RexxMethod1(RexxObjectPtr, cb_getComboBoxInfo, CSELF, pCSelf)
         temp = createControlFromHwnd(context, pcdc, cbi.hwndList, winComboLBox, true);
         context->DirectoryPut(d, temp, "LISTBOXOBJ");
 
-        temp = rxNewRect(context, &cbi.rcButton);
+        temp = rxNewRect(context, (PORXRECT)&cbi.rcButton);
         context->DirectoryPut(d, temp, "BUTTONRECT");
 
-        temp = rxNewRect(context, &cbi.rcItem);
+        temp = rxNewRect(context, (PORXRECT)&cbi.rcItem);
         context->DirectoryPut(d, temp, "TEXTRECT");
 
         CSTRING state = "error";
@@ -3214,6 +3293,36 @@ RexxMethod1(RexxObjectPtr, cb_getEditControl, CSELF, pCSelf)
     }
 
 done_out:
+    return result;
+}
+
+
+/** ComboBox::getItemData()
+ *
+ *  Returns the user data associated with the specified combo box item, or .nil
+ *  if there is no user data associated.
+ *
+ *  @param  index  [required]  The one-based index of the item whose user data
+ *                 is to be retrieved.
+ *
+ *  @return  Returns the associated user data, or .nil if there is no associated
+ *           data.
+ */
+RexxMethod2(RexxObjectPtr, cb_getItemData, uint32_t, index, CSELF, pCSelf)
+{
+    pCDialogControl pcdc = validateDCCSelf(context, pCSelf);
+    if ( pcdc == NULL )
+    {
+        return TheNilObj;
+    }
+
+    index--;
+    RexxObjectPtr result = getCurrentComboBoxUserData(pcdc->hCtrl, index);
+    if ( result == NULLOBJECT )
+    {
+        oodSetSysErrCode(context->threadContext, ERROR_SIGNAL_REFUSED);
+        return TheNilObj;
+    }
     return result;
 }
 
@@ -3423,6 +3532,43 @@ done_out:
     return result;
 }
 
+
+/** ComboBox::removeItemData()
+ *
+ */
+RexxMethod2(RexxObjectPtr, cb_removeItemData, uint32_t, index, CSELF, pCSelf)
+{
+    pCDialogControl pcdc = validateDCCSelf(context, pCSelf);
+    if ( pcdc == NULL )
+    {
+        return TheNilObj;
+    }
+
+    index--;
+    RexxObjectPtr result = getCurrentComboBoxUserData(pcdc->hCtrl, index);
+    if ( result == NULLOBJECT )
+    {
+        oodSetSysErrCode(context->threadContext, ERROR_SIGNAL_REFUSED);
+        return TheNilObj;
+    }
+
+    if ( result != TheNilObj )
+    {
+        LRESULT ret = SendMessage(pcdc->hCtrl, CB_SETITEMDATA, index, (LPARAM)NULL);
+        if ( ret != CB_ERR && ret != CB_ERRSPACE )
+        {
+            unProtectControlUserData(context, pcdc, result);
+        }
+        else
+        {
+            // Not removed, set result back to the .nil ojbect.
+            result = TheNilObj;
+            oodSetSysErrCode(context->threadContext, ERROR_SIGNAL_REFUSED);
+        }
+    }
+
+    return result;
+}
 
 /** ComboBox::select()
  *
@@ -3655,6 +3801,80 @@ RexxMethod4(RexxObjectPtr, cb_setFullColor, OPTIONAL_RexxObjectPtr, _bk, OPTIONA
 
 done_out:
     return result;
+}
+
+
+/** ComboBox::setItemData()
+ *
+ *  Assigns a user data value to the specified combo box item.
+ *
+ *  @param  index  [required]  The one-based index of the item whose user data
+ *                 is to be set.
+ *
+ *  @param  data   [optional]  The user data to be set. If this argument is
+ *                 omitted, the current user data, if any, is removed.
+ *
+ *  @return  Returns the previous user data object for the specified combo box
+ *           item, if there was a user data object, or .nil if there wasn't.
+ *
+ *           On error, .nil is returned.  An error is very unlikely.  An error
+ *           can be checked for by examining the .systemErrorCode object.
+ *
+ *  @notes  Sets the .systemErrorCode.  On error set to:
+ *
+ *          156  ERROR_SIGNAL_REFUSED The recipient process has refused the
+ *          signal.
+ *
+ *          This is not a system error, the code is just used here to indicate a
+ *          combo box error when setting the user data.  The combo box provides
+ *          no information on why it failed.
+ */
+RexxMethod3(RexxObjectPtr, cb_setItemData, uint32_t, index, OPTIONAL_RexxObjectPtr, data, CSELF, pCSelf)
+{
+    pCDialogControl pcdc = validateDCCSelf(context, pCSelf);
+    if ( pcdc == NULL )
+    {
+        return TheNilObj;
+    }
+
+    index--;
+    RexxObjectPtr oldUserData = getCurrentComboBoxUserData(pcdc->hCtrl, index);
+
+    if ( oldUserData == NULLOBJECT )
+    {
+        oodSetSysErrCode(context->threadContext, ERROR_SIGNAL_REFUSED);
+        return TheNilObj;
+    }
+
+    if ( argumentExists(2) )
+    {
+        LRESULT ret = SendMessage(pcdc->hCtrl, CB_SETITEMDATA, index, (LPARAM)data);
+        if ( ret != CB_ERR && ret != CB_ERRSPACE )
+        {
+            unProtectControlUserData(context, pcdc, oldUserData);
+            protectControlUserData(context, pcdc, data);
+        }
+        else
+        {
+            oldUserData = TheNilObj;
+            oodSetSysErrCode(context->threadContext, ERROR_SIGNAL_REFUSED);
+        }
+    }
+    else
+    {
+        LRESULT ret = SendMessage(pcdc->hCtrl, CB_SETITEMDATA, index, (LPARAM)NULL);
+        if ( ret != CB_ERR && ret != CB_ERRSPACE )
+        {
+            unProtectControlUserData(context, pcdc, oldUserData);
+        }
+        else
+        {
+            oldUserData = TheNilObj;
+            oodSetSysErrCode(context->threadContext, ERROR_SIGNAL_REFUSED);
+        }
+    }
+
+    return oldUserData;
 }
 
 

@@ -256,11 +256,11 @@
    size~width  -= size~width - 32
    size~height -= size~height - 32
 
-   flags = .DlgUtil~or(.Image~toID(ILC_COLOR24), .Image~toID(ILC_MASK))
-   type  = .Image~toID(IMAGE_BITMAP)
+   flags = 'COLOR24 MASK'
+   type  = 'BITMAP'
    cRef  = .Image~colorRef(0, 0, 0)
 
-   align  = .Image~toID(BUTTON_IMAGELIST_ALIGN_CENTER)
+   align  = 'CENTER'
    margin = .Rect~new(4)
 
    do i = 1 to buttonIDs~items

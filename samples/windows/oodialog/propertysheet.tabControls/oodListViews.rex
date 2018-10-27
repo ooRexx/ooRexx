@@ -425,7 +425,7 @@
   expose smallIcons normalIcons sd
 
   small = .Image~getImage(sd"rc\oodListViews1.bmp")
-  tmpIL = .ImageList~create(.Size~new(16, 12), .Image~toID(ILC_COLOR4), 4, 0)
+  tmpIL = .ImageList~create(.Size~new(16, 12), COLOR4, 4, 0)
   if \small~isNull,  \tmpIL~isNull then do
       tmpIL~add(small)
       small~release
@@ -436,7 +436,7 @@
   end
 
   normal = .Image~getImage(sd"rc\oodListViews2.bmp")
-  tmpIL = .ImageList~create(.Size~new(32, 32), .Image~toID(ILC_COLOR4), 4, 0)
+  tmpIL = .ImageList~create(.Size~new(32, 32), COLOR4, 4, 0)
   if \normal~isNull,  \tmpIL~isNull then do
       tmpIL~add(normal)
       normal~release
@@ -512,7 +512,8 @@
   use strict arg smallIcons, normalIcons, records
 
   self~connectListViewEvent(IDC_LISTVIEW, "COLUMNCLICK")
-  self~connectListViewEvent(IDC_LISTVIEW, "ACTIVATE", "onDoubleClick")
+  self~connectListViewEvent(IDC_LISTVIEW, "ACTIVATE", "onActivate", .true)
+  self~connectListViewEvent(IDC_LISTVIEW, "DBLCLK", "onDoubleClick", .true)
   self~connectListViewEvent(IDC_LISTVIEW, "BEGINDRAG", "DefListDragHandler")
   self~connectListViewEvent(IDC_LISTVIEW, "BEGINEDIT", "onBeginEdit", .true)
   self~connectListViewEvent(IDC_LISTVIEW, "ENDEDIT", , .true)
@@ -529,8 +530,8 @@
 
   lv = self~newListView(IDC_LISTVIEW)
 
-  if smallIcons <> .nil then lv~setImageList(smallIcons, .Image~toID(LVSIL_SMALL))
-  if normalIcons <> .nil then lv~setImageList(normalIcons, .Image~toID(LVSIL_NORMAL))
+  if smallIcons <> .nil then lv~setImageList(smallIcons, SMALL)
+  if normalIcons <> .nil then lv~setImageList(normalIcons, NORMAL)
 
   lv~insertColumn(0, "Name", 50)
   lv~insertColumn(1, "Street", 60)
@@ -641,6 +642,7 @@
 
   return
 
+
 /** onColumnClick()
  *
  * The event handler for a column click event, invoked when the user clicks on a
@@ -649,16 +651,15 @@
  * We use the event to demonstrate some of the list-view methods.
  */
 ::method onColumnClick unguarded
-  expose lv
-  use arg id, column
+  use arg id, column, listView
 
   -- Get the current width, in pixels, of the column clicked and then set its
   -- width to 10 pixels more.
-  lv~setColumnWidthPx(column, lv~columnWidthPx(column) + 10)
+  listView~setColumnWidthPx(column, listView~columnWidthPx(column) + 10)
 
   -- Display information about the column clicked.
   d = .Directory~new
-  if lv~getColumnInfo(column, d) then do
+  if listView~getColumnInfo(column, d) then do
     tab = '09'x
     msg = "Column Title:"tab d~text               || .endOfLine            ||  -
           "Subitem index:"tab d~subitem           || .endOfLine            ||  -
@@ -676,48 +677,92 @@
 
 /** onDoubleClick()
  *
- * The event handler for a double click, invoked when a list-view item is double
- * clicked.
+ * The event handler for a double clikc event, invoked when a list-view item is
+ * double clicked.
  *
- * We use the event to demonstrate some of the list-view methods.
+ * We use the event to demonstrate:
+ *
+ * 1.)  That a double click also activates an item and that the double click
+ *      comes first.  When you double click an item you will see a message box
+ *      displaying the arguments to this method, the 'age increase' message box,
+ *      and then a message box from the onActivate() method.
+ *
+ * 2.)  Some of the list-view methods.
+ *
  */
 ::method onDoubleClick unguarded
-  expose lv
-  use arg id
+  use arg id, item, subitem, state, isSingleClick, listView
+
+  tab  = '09'x
+  tab2 = tab~copies(2)
+  true = self~booleanToText(isSingleClick)
+  msg = 'onDoubleClick()'       || .endOfLine~copies(2) || -
+        'id:'tab2 id            || .endOfLine || -
+        'item:'tab2 item        || .endOfLine || -
+        'subitem:'tab2 subitem  || .endOfLine || -
+        'state:'tab2 state      || .endOfLine || -
+        'single click:'tab true || .endOfLine || -
+        'listView:'tab2 listView
+
+  ret = MessageDialog(msg, self~hwnd, "onDoubleClick Method Invoked", OK, INFORMATION)
 
   -- Get the index of the item with the focus, use the index to retrieve the
   -- item information and the text associated with it
-  index = lv~focused
+  index = listView~focused
 
   -- The item's information is returned in the .directory object passed in to
   -- the getItemInfo() method.
   d = .directory~new
-  lv~getItemInfo(index, d)
+  listView~getItemInfo(index, d)
 
   parse value d~text with lastName ', ' firstName
 
   pronoun = 'his'
   if d~image == 1 then pronoun = "her"
 
-  age = lv~itemText(index, 5)
+  age = listView~itemText(index, 5)
 
-  msg = "You have doubled clicked on" firstName lastName || "0d0a0d0a"x ,
+  msg = "You have double clicked on the item for" firstName lastName || "0d0a0d0a"x ,
         "Should" pronoun "age be increased by 1?"
 
   ret = MessageDialog(msg, self~hwnd, "Age Increment", YESNO, INFORMATION)
   if ret == self~IDYES then do
     age += 1
-    lv~setItemText(index, 5, age)
+    listView~setItemText(index, 5, age)
 
     -- Now we need to update the age in the record for this item. We retrieve
     -- the record from the user item data and update the age.
-    rec = lv~getItemData(index)
+    rec = listView~getItemData(index)
     rec~age = age
   end
 
   -- Deselect the focused item and move the focus to the first item
-  lv~deselect(index)
-  lv~focus(0)
+  listView~deselect(index)
+  listView~focus(0)
+  return 0
+
+
+/** onActivate()
+ *
+ * The event handler for an activate event, invoked when a list-view item is
+ * activated.
+ *
+ * We use the event to demonstrate that a double click event also generates an
+ * activate event.  We just print out the argument values here.
+ */
+::method onActivate unguarded
+  use arg id, ptr, nCode, listView
+
+  tab = '09'x
+  msg = 'onActivate()'     || .endOfLine~copies(2) || -
+        'id:'tab id        || .endOfLine || -
+        'ptr:'tab ptr      || .endOfLine || -
+        'nCode:'tab nCode  || .endOfLine || -
+        'listView:'tab listView
+
+  ret = MessageDialog(msg, self~hwnd, "onActivate Method Invoked", OK, INFORMATION)
+
+  return 0
 
 
 /** onGetInfoTip()
@@ -770,8 +815,8 @@
  * the newly selected item gaining the selection.
  */
 ::method onSelectChanged unguarded
-  expose haveSelection pbEdit lv
-  use arg id, itemIndex, state
+  expose haveSelection pbEdit
+  use arg id, itemIndex, state, lv
 
   if state == 'SELECTED' then haveSelection = .true
   else if state == 'UNSELECTED' & lv~selected == -1 then haveSelection = .false
@@ -785,6 +830,13 @@
     if rec~isEditable then pbEdit~enable
     else pbEdit~disable
   end
+
+
+::method booleanToText unguarded private
+  use strict arg boolean
+  if boolean == .true then return 'true'
+  else if boolean == .false then return 'false'
+  else return 'not a boolean'
 
 
 /** addRecord()

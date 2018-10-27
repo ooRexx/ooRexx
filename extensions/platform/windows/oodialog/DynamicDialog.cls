@@ -116,18 +116,21 @@
    return self~installBitmapButton(id, msgToRaise~space(0), bmp, focus, sel, disabl, opts)
 
 
-::method createEdit external "LIBRARY oodialog dyndlg_createEdit"
-::method createPasswordEdit external "LIBRARY oodialog dyndlg_createEdit"
-::method createScrollBar external "LIBRARY oodialog dyndlg_createScrollBar"
-::method createListBox external "LIBRARY oodialog dyndlg_createListBox"
 ::method createComboBox external "LIBRARY oodialog dyndlg_createComboBox"
-::method createTreeView external "LIBRARY oodialog dyndlg_createNamedControl"
-::method createListView external "LIBRARY oodialog dyndlg_createNamedControl"
-::method createProgressBar external "LIBRARY oodialog dyndlg_createProgressBar"
-::method createTrackBar external "LIBRARY oodialog dyndlg_createNamedControl"
-::method createTab external "LIBRARY oodialog dyndlg_createNamedControl"
 ::method createDateTimePicker external "LIBRARY oodialog dyndlg_createNamedControl"
+::method createEdit external "LIBRARY oodialog dyndlg_createEdit"
+::method createListBox external "LIBRARY oodialog dyndlg_createListBox"
+::method createListView external "LIBRARY oodialog dyndlg_createNamedControl"
 ::method createMonthCalendar external "LIBRARY oodialog dyndlg_createNamedControl"
+::method createPasswordEdit external "LIBRARY oodialog dyndlg_createEdit"
+::method createProgressBar external "LIBRARY oodialog dyndlg_createProgressBar"
+::method createReBar external "LIBRARY oodialog dyndlg_createNamedControl"
+::method createStatusBar external "LIBRARY oodialog dyndlg_createNamedControl"
+::method createScrollBar external "LIBRARY oodialog dyndlg_createScrollBar"
+::method createTab external "LIBRARY oodialog dyndlg_createNamedControl"
+::method createToolBar external "LIBRARY oodialog dyndlg_createNamedControl"
+::method createTrackBar external "LIBRARY oodialog dyndlg_createNamedControl"
+::method createTreeView external "LIBRARY oodialog dyndlg_createNamedControl"
 ::method createUpDown external "LIBRARY oodialog dyndlg_createNamedControl"
 
 ::method createRadioButtonGroup
@@ -630,6 +633,33 @@
                end
             end
 
+            when class = 'WC_COMBOBOX' | class = '"COMBOBOX"' then
+               self~createComboBox(id, x, y, w, h, self~getRCStyle(style, "CB"), name)
+
+            when class = 'DATETIMEPICK_CLASS' | class = '"SYSDATETIMEPICK32"' then
+               self~createDateTimePicker(id, x, y, w, h, self~getNamedCtrlStyle(style, "DTP"), name)
+
+            when class = 'WC_EDIT' | class = '"EDIT"' then
+               self~createEdit(id, x, y, w, h, self~getRCStyle(style, "EDIT"), name)
+
+            when class = 'WC_LISTBOX' | class = '"LISTBOX"' then
+               self~createListBox(id, x, y, w, h, self~getRCStyle(style, "LB"), name)
+
+            when class = 'WC_LISTVIEW' | class = '"SYSLISTVIEW32"' then
+               self~createListView(id, x, y, w, h, self~getNamedCtrlStyle(style, "LIST"), name)
+
+            when class = 'MONTHCAL_CLASS' | class = '"SYSMONTHCAL32"' then
+               self~createMonthCalendar(id, x, y, w, h, self~getNamedCtrlStyle(style, "MONTH"), name)
+
+            when class = 'PROGRESS_CLASS' | class = '"MSCTLS_PROGRESS32"' then
+               self~createProgressBar(id, x, y, w, h, self~getNamedCtrlStyle(style, "PROGRESS"))
+
+            when class = 'REBARCLASSNAME' then
+               self~createReBar(id, x, y, w, h, self~getNamedCtrlStyle(style, "REBAR"), name)
+
+            when class = 'WC_SCROLLBAR' | class = '"SCROLLBAR"' then
+               self~createScrollBar(id, x, y, w, h, self~getRCStyle(style, "SB"))
+
             when class = '"STATIC"' | class = WC_STATIC then do
                opts = self~getRCStyle(style, "ST")
                select
@@ -672,38 +702,21 @@
                                          '0d0a'x || f "("s")")
                end
             end
-            when class = 'WC_EDIT' | class = '"EDIT"' then
-               self~createEdit(id, x, y, w, h, self~getRCStyle(style, "EDIT"), name)
 
-            when class = 'WC_COMBOBOX' | class = '"COMBOBOX"' then
-               self~createComboBox(id, x, y, w, h, self~getRCStyle(style, "CB"), name)
-
-            when class = 'WC_LISTBOX' | class = '"LISTBOX"' then
-               self~createListBox(id, x, y, w, h, self~getRCStyle(style, "LB"), name)
-
-            when class = 'WC_SCROLLBAR' | class = '"SCROLLBAR"' then
-               self~createScrollBar(id, x, y, w, h, self~getRCStyle(style, "SB"))
-
-            when class = 'WC_TREEVIEW' | class = '"SYSTREEVIEW32"' then
-               self~createTreeView(id, x, y, w, h, self~getNamedCtrlStyle(style, "TREE"), name)
-
-            when class = 'WC_LISTVIEW' | class = '"SYSLISTVIEW32"' then
-               self~createListView(id, x, y, w, h, self~getNamedCtrlStyle(style, "LIST"), name)
-
-            when class = 'PROGRESS_CLASS' | class = '"MSCTLS_PROGRESS32"' then
-               self~createProgressBar(id, x, y, w, h, self~getNamedCtrlStyle(style, "PROGRESS"))
-
-            when class = 'TRACKBAR_CLASS' | class = '"MSCTLS_TRACKBAR32"' then
-               self~createTrackBar(id, x, y, w, h, self~getNamedCtrlStyle(style, "SLIDER"), name)
+            when class = 'STATUSCLASSNAME' then
+               self~createStatusBar(id, x, y, w, h, self~getNamedCtrlStyle(style, "STATUS"), name)
 
             when class = 'WC_TABCONTROL' | class = '"SYSTABCONTROL32"' then
                self~createTab(id, x, y, w, h, self~getNamedCtrlStyle(style, "TAB"), name)
 
-            when class = 'DATETIMEPICK_CLASS' | class = '"SYSDATETIMEPICK32"' then
-               self~createDateTimePicker(id, x, y, w, h, self~getNamedCtrlStyle(style, "DTP"), name)
+            when class = 'TOOLBARCLASSNAME' then
+               self~createToolBar(id, x, y, w, h, self~getNamedCtrlStyle(style, "TOOLBAR"), name)
 
-            when class = 'MONTHCAL_CLASS' | class = '"SYSMONTHCAL32"' then
-               self~createMonthCalendar(id, x, y, w, h, self~getNamedCtrlStyle(style, "MONTH"), name)
+            when class = 'TRACKBAR_CLASS' | class = '"MSCTLS_TRACKBAR32"' then
+               self~createTrackBar(id, x, y, w, h, self~getNamedCtrlStyle(style, "SLIDER"), name)
+
+            when class = 'WC_TREEVIEW' | class = '"SYSTREEVIEW32"' then
+               self~createTreeView(id, x, y, w, h, self~getNamedCtrlStyle(style, "TREE"), name)
 
             when class = 'UPDOWN_CLASS' | class = '"MSCTLS_UPDOWN32"' then
                self~createUpDown(id, x, y, w, h, self~getNamedCtrlStyle(style, "UPDOWN"), name)
@@ -909,32 +922,42 @@
 
    return ret
 
+-- Gets the Common Control style string
+::method getCcCtrlStyle private
+   use arg style
+   ret = ''
+
+   if style~wordpos("CCS_ADJUSTABLE") > 0 then ret = ret || " CCS_ADJUSTABLE"
+   if style~wordpos("CCS_BOTTOM") > 0 then ret = ret || " CCS_BOTTOM"
+   if style~wordpos("CCS_LEFT") > 0 then ret = ret || " CCS_LEFT"
+   if style~wordpos("CCS_NODIVIDER") > 0 then ret = ret || " CCS_NODIVIDER"
+   if style~wordpos("CCS_NOMOVEX") > 0 then ret = ret || " CCS_NOMOVEX"
+   if style~wordpos("CCS_NOMOVEY") > 0 then ret = ret || " CCS_NOMOVEY"
+   if style~wordpos("CCS_NOPARENTALIGN") > 0 then ret = ret || " CCS_NOPARENTALIGN"
+   if style~wordpos("CCS_NORESIZE") > 0 then ret = ret || " CCS_NORESIZE"
+   if style~wordpos("CCS_RIGHT") > 0 then ret = ret || " CCS_RIGHT"
+   if style~wordpos("CCS_TOP") > 0 then ret = ret || " CCS_TOP"
+   if style~wordpos("CCS_VERT") > 0 then ret = ret || " CCS_VERT"
+
+   return ret
+
 ::method getNamedCtrlStyle private
    use arg style, kind
    ret = ""
    if style~wordpos("NOT WS_VISIBLE") > 0 then ret = "HIDDEN"
    else if style~wordpos("WS_VISIBLE") > 0 then ret = "VISIBLE"
    if style~wordpos("WS_DISABLED") > 0 & style~wordpos("NOT WS_DISABLED") == 0 then ret = ret || " DISABLED"
-   if kind = "TREE" then do
-      if style~wordpos("TVS_CHECKBOXES") > 0 then ret = ret || " CHECKBOXES"
-      if style~wordpos("TVS_DISABLEDRAGDROP") > 0 then ret = ret || " NODRAG"
-      if style~wordpos("TVS_EDITLABELS") > 0 then ret = ret || " EDIT"
-      if style~wordpos("TVS_FULLROWSELECT") > 0 then ret = ret || " FULLROWSELECT"
-      if style~wordpos("TVS_HASBUTTONS") > 0 then ret = ret || " BUTTONS"
-      if style~wordpos("TVS_HASLINES") > 0 then ret = ret || " LINES"
-      if style~wordpos("TVS_INFOTIP") > 0 then ret = ret || " INFOTIP"
-      if style~wordpos("TVS_LINESATROOT") > 0 then ret = ret || " ATROOT"
-      if style~wordpos("TVS_NOHSCROLL") > 0 then ret = ret || " NOHSCROLL"
-      if style~wordpos("TVS_NONEVENHEIGHT") > 0 then ret = ret || " NONEVENHEIGHT"
-      if style~wordpos("TVS_NOSCROLL") > 0 then ret = ret || " NOSCROLL"
-      if style~wordpos("TVS_NOTOOLTIPS") > 0 then ret = ret || " NOTOOLTIPS"
-      if style~wordpos("TVS_RTLREADING") > 0 then ret = ret || " RTLREADING"
-      if style~wordpos("TVS_SHOWSELALWAYS") > 0 then ret = ret || " SHOWSELALWAYS"
-      if style~wordpos("TVS_SINGLEEXPAND") > 0 then ret = ret || " SINGLEEXPAND"
-      if style~wordpos("TVS_TRACKSELECT") > 0 then ret = ret || " TRACKSELECT"
-      if style~wordpos("WS_HSCROLL") > 0 then ret = ret || " HSCROLL"
-      if style~wordpos("WS_VSCROLL") > 0 then ret = ret || " VSCROLL"
-      if style~wordpos("WS_BORDER") = 0 then ret = ret || " NOBORDER"
+
+   if kind = "DTP" then do
+        if style~wordpos("DTS_APPCANPARSE") > 0 then ret = ret || " CANPARSE"
+        if style~wordpos("DTS_RIGHTALIGN") > 0 then ret = ret || " RIGHT"
+        if style~wordpos("DTS_SHOWNONE") > 0 then ret = ret || " SHOWNONE"
+        if style~wordpos("DTS_UPDOWN") > 0 then ret = ret || " UPDOWN"
+        if style~wordpos("DTS_LONGDATEFORMAT") > 0 then ret = ret || " LONG"
+        if style~wordpos("DTS_SHORTDATEFORMAT") > 0 then ret = ret || " SHORT"
+        if style~wordpos("DTS_SHORTDATECENTURYFORMAT") > 0 then ret = ret || " CENTURY"
+        if style~wordpos("DTS_TIMEFORMAT") > 0 then ret = ret || " TIME"
+        if style~wordpos("WS_BORDER") > 0 then ret = ret || " BORDER"
    end
    else if kind = "LIST" then do
       if style~wordpos("LVS_EDITLABELS") > 0 then ret = ret || " EDIT"
@@ -956,6 +979,33 @@
       if style~wordpos("LVS_SORTDESCENDING") > 0 then ret = ret || " DESCENDING"
       if style~wordpos("WS_BORDER") = 0 then ret = ret || " NOBORDER"
    end
+   else if kind = "MONTH" then do
+        if style~wordpos("MCS_DAYSTATE")  > 0 then ret = ret || " DAYSTATE"
+        if style~wordpos("MCS_MULTISELECT")  > 0 then ret = ret || " MULTI"
+        if style~wordpos("MCS_NOTODAY")  > 0 then ret = ret || " NOTODAY"
+        if style~wordpos("MCS_NOTODAYCIRCLE")  > 0 then ret = ret || " NOCIRCLE"
+        if style~wordpos("MCS_WEEKNUMBERS")  > 0 then ret = ret || " WEEKNUMBERS"
+        if style~wordpos("WS_BORDER")  > 0 then ret = ret || " BORDER"
+   end
+   else if kind = "PROGRESS" then do
+        if style~wordpos("PBS_VERTICAL") > 0 then ret = ret || " VERTICAL"
+        if style~wordpos("PBS_SMOOTH") > 0 then ret = ret || " SMOOTH"
+        if style~wordpos("PBS_MARQUEE") > 0 then ret = ret || " MARQUEE"
+        if style~wordpos("WS_BORDER") > 0 then ret = ret || " BORDER"
+        if style~wordpos("WS_TABSTOP") > 0 then ret = ret || " TAB"
+   end
+   else if kind = "REBAR" then do
+       ret = ret || self~getCcStyle(style)
+       if style~wordpos("RBS_AUTOSIZE") > 0 then ret = ret || " AUTOSIZE"
+       if style~wordpos("RBS_BANDBORDERS") > 0 then ret = ret || " BANDBORDERS"
+       if style~wordpos("RBS_DBLCLKTOGGLE") > 0 then ret = ret || " DBLCLKTOGGLE"
+       if style~wordpos("RBS_FIXEDORDER") > 0 then ret = ret || " FIXEDORDER"
+       if style~wordpos("RBS_REGISTERDROP") > 0 then ret = ret || " REGISTERDROP"
+       if style~wordpos("RBS_TOOLTIPS") > 0 then ret = ret || " TOOLTIPS"
+       if style~wordpos("RBS_VARHEIGHT") > 0 then ret = ret || " VARHEIGHT"
+       if style~wordpos("RBS_VERTICALGRIPPER") > 0 then ret = ret || " VERTICALGRIPPER"
+       if style~wordpos("WS_BORDER") > 0 then ret = ret || " BORDER"
+   end
    else if kind = "SLIDER" then do
        if style~wordpos("TBS_AUTOTICKS") > 0 then ret = ret || " AUTOTICKS"
        if style~wordpos("TBS_NOTICKS") > 0 then ret = ret || " NOTICKS"
@@ -967,6 +1017,13 @@
        if style~wordpos("TBS_RIGHT") > 0 then ret = ret || " RIGHT"
        if style~wordpos("TBS_BOTH") > 0 then ret = ret || " BOTH"
        if style~wordpos("TBS_ENABLESELRANGE") > 0 then ret = ret || " ENABLESELRANGE"
+       if style~wordpos("WS_BORDER") > 0 then ret = ret || " BORDER"
+   end
+   else if kind = "STATUS" then do
+       ret = ret || self~getCcStyle(style)
+       if style~wordpos("SBARS_SIZEGRIP") > 0 then ret = ret || " SIZEGRIP"
+       if style~wordpos("SBARS_TOOLTIPS") > 0 then ret = ret || " TOOLTIPS"
+       if style~wordpos("SBT_TOOLTIPS") > 0 then ret = ret || " TOOLTIPS"
        if style~wordpos("WS_BORDER") > 0 then ret = ret || " BORDER"
    end
    else if kind = "TAB" then do
@@ -981,31 +1038,38 @@
         if style~wordpos("TCS_RIGHTJUSTIFY") > 0 then ret = ret || " ALIGNRIGHT"
         if style~wordpos("WS_BORDER") > 0 then ret = ret || " BORDER"
    end
-   else if kind = "PROGRESS" then do
-        if style~wordpos("PBS_VERTICAL") > 0 then ret = ret || " VERTICAL"
-        if style~wordpos("PBS_SMOOTH") > 0 then ret = ret || " SMOOTH"
-        if style~wordpos("PBS_MARQUEE") > 0 then ret = ret || " MARQUEE"
-        if style~wordpos("WS_BORDER") > 0 then ret = ret || " BORDER"
-        if style~wordpos("WS_TABSTOP") > 0 then ret = ret || " TAB"
+   else if kind = "TOOLBAR" then do
+       ret = ret || self~getCcStyle(style)
+       if style~wordpos("TBSTYLE_TOOLTIPS") > 0 then ret = ret || " TOOLTIPS"
+       if style~wordpos("TBSTYLE_WRAPABLE") > 0 then ret = ret || " WRAPABLE"
+       if style~wordpos("TBSTYLE_ALTDRAG") > 0 then ret = ret || " ALTDRAG"
+       if style~wordpos("TBSTYLE_FLAT") > 0 then ret = ret || " FLAT"
+       if style~wordpos("TBSTYLE_LIST") > 0 then ret = ret || " LIST"
+       if style~wordpos("TBSTYLE_CUSTOMERASE") > 0 then ret = ret || " CUSTOMERASE"
+       if style~wordpos("TBSTYLE_REGISTERDROP") > 0 then ret = ret || " REGISTERDROP"
+       if style~wordpos("TBSTYLE_TRANSPARENT") > 0 then ret = ret || " TRANSPARENT"
+       if style~wordpos("WS_BORDER") > 0 then ret = ret || " BORDER"
    end
-   else if kind = "DTP" then do
-        if style~wordpos("DTS_APPCANPARSE") > 0 then ret = ret || " CANPARSE"
-        if style~wordpos("DTS_RIGHTALIGN") > 0 then ret = ret || " RIGHT"
-        if style~wordpos("DTS_SHOWNONE") > 0 then ret = ret || " SHOWNONE"
-        if style~wordpos("DTS_UPDOWN") > 0 then ret = ret || " UPDOWN"
-        if style~wordpos("DTS_LONGDATEFORMAT") > 0 then ret = ret || " LONG"
-        if style~wordpos("DTS_SHORTDATEFORMAT") > 0 then ret = ret || " SHORT"
-        if style~wordpos("DTS_SHORTDATECENTURYFORMAT") > 0 then ret = ret || " CENTURY"
-        if style~wordpos("DTS_TIMEFORMAT") > 0 then ret = ret || " TIME"
-        if style~wordpos("WS_BORDER") > 0 then ret = ret || " BORDER"
-   end
-   else if kind = "MONTH" then do
-        if style~wordpos("MCS_DAYSTATE")  > 0 then ret = ret || " DAYSTATE"
-        if style~wordpos("MCS_MULTISELECT")  > 0 then ret = ret || " MULTI"
-        if style~wordpos("MCS_NOTODAY")  > 0 then ret = ret || " NOTODAY"
-        if style~wordpos("MCS_NOTODAYCIRCLE")  > 0 then ret = ret || " NOCIRCLE"
-        if style~wordpos("MCS_WEEKNUMBERS")  > 0 then ret = ret || " WEEKNUMBERS"
-        if style~wordpos("WS_BORDER")  > 0 then ret = ret || " BORDER"
+   else if kind = "TREE" then do
+      if style~wordpos("TVS_CHECKBOXES") > 0 then ret = ret || " CHECKBOXES"
+      if style~wordpos("TVS_DISABLEDRAGDROP") > 0 then ret = ret || " NODRAG"
+      if style~wordpos("TVS_EDITLABELS") > 0 then ret = ret || " EDIT"
+      if style~wordpos("TVS_FULLROWSELECT") > 0 then ret = ret || " FULLROWSELECT"
+      if style~wordpos("TVS_HASBUTTONS") > 0 then ret = ret || " BUTTONS"
+      if style~wordpos("TVS_HASLINES") > 0 then ret = ret || " LINES"
+      if style~wordpos("TVS_INFOTIP") > 0 then ret = ret || " INFOTIP"
+      if style~wordpos("TVS_LINESATROOT") > 0 then ret = ret || " ATROOT"
+      if style~wordpos("TVS_NOHSCROLL") > 0 then ret = ret || " NOHSCROLL"
+      if style~wordpos("TVS_NONEVENHEIGHT") > 0 then ret = ret || " NONEVENHEIGHT"
+      if style~wordpos("TVS_NOSCROLL") > 0 then ret = ret || " NOSCROLL"
+      if style~wordpos("TVS_NOTOOLTIPS") > 0 then ret = ret || " NOTOOLTIPS"
+      if style~wordpos("TVS_RTLREADING") > 0 then ret = ret || " RTLREADING"
+      if style~wordpos("TVS_SHOWSELALWAYS") > 0 then ret = ret || " SHOWSELALWAYS"
+      if style~wordpos("TVS_SINGLEEXPAND") > 0 then ret = ret || " SINGLEEXPAND"
+      if style~wordpos("TVS_TRACKSELECT") > 0 then ret = ret || " TRACKSELECT"
+      if style~wordpos("WS_HSCROLL") > 0 then ret = ret || " HSCROLL"
+      if style~wordpos("WS_VSCROLL") > 0 then ret = ret || " VSCROLL"
+      if style~wordpos("WS_BORDER") = 0 then ret = ret || " NOBORDER"
    end
    else if kind = "UPDOWN" then do
         if style~wordpos("UDS_ALIGNLEFT")  > 0 then ret = ret || " LEFT"

@@ -186,10 +186,10 @@ return 0
 
     -- Set the image list for the tree-vies
     image = .Image~getImage(self~BMP_FILE)
-    imageList = .ImageList~create(.Size~new(16, 12), .Image~toID(ILC_COLOR8), 5, 2)
+    imageList = .ImageList~create(.Size~new(16, 12), 'COLOR8', 5, 2)
     if \image~isNull,  \imageList~isNull then do
          imageList~add(image)
-         tv~setImageList(imageList, .Image~toID(TVSIL_NORMAL))
+         tv~setImageList(imageList, 'NORMAL')
          image~release
     end
 

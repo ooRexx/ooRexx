@@ -165,7 +165,7 @@ return 0
   -- of the bitamp files in Explorer to see these values.
 
   -- We set the flags to create a 24 bit color, masked image list.
-  flags = .DlgUtil~or(.Image~toID(ILC_COLOR24), .Image~toID(ILC_MASK))
+  flags = 'COLOR24 MASK'
 
   -- Create an empty .ImageList object:
   imageList = .ImageList~create(.Size~new(61, 46), flags, 10, 10);
@@ -245,7 +245,7 @@ return 0
 
   -- Set up the alignment and margin around the image on the 'View Pictures'
   -- button.  Then set the image list in the button control
-  align = .Image~toID(BUTTON_IMAGELIST_ALIGN_LEFT)
+  align = 'LEFT'
   margin = .Rect~new(1)
 
   pbView~setImageList(imageList, margin, align)
@@ -284,7 +284,7 @@ return 0
     say '  image list:' d~imageList
     say '  handle:    ' d~imageList~handle
     say '  rect:      ' d~rect
-    say '  align:     ' self~alignment2text(d~alignment)
+    say '  align:     ' d~alignmentKeyword
     say 'Image margins:' d~rect~left',' d~rect~top',' d~rect~right',' d~rect~bottom
   end
   else do
@@ -294,7 +294,7 @@ return 0
 
   -- For the Add Pictures button, use the same image list created for the View
   -- Pictures button.  We just change the margins and the alignment.
-  align = .Image~toID(BUTTON_IMAGELIST_ALIGN_CENTER)
+  align = 'CENTER'
   margin~left = 10
   margin~right = 10
   margin~top = 30
@@ -336,7 +336,7 @@ return 0
     say '  image list:' d~imageList
     say '  handle:    ' d~imageList~handle
     say '  rect:      ' d~rect
-    say '  align:     ' self~alignment2text(d~alignment)
+    say '  align:     ' d~alignmentKeyword
     say 'Image margins:' d~rect~left',' d~rect~top',' d~rect~right',' d~rect~bottom
   end
   else do
@@ -431,11 +431,7 @@ return .true
 
   if \ imagesLoaded then return
 
-  -- The low word of the id argument is the button resource ID.  The high word
-  -- is the notification ID.  In this case, we know it will be:
-  --   BCN_HOTITEMCHANGE
-
-  isViewButton = (.DlgUtil~loWord(id) == self~constDir[IDC_PB_VIEW])
+  isViewButton = (id == .constDir[IDC_PB_VIEW])
 
   if entering then do
     text = "DEATH if you touch me"
@@ -515,14 +511,3 @@ return .true
 
   return self~ok:super
 
-::method alignment2text private
-  use strict arg alignment
-
-  select
-    when alignment == .Image~toID("BUTTON_IMAGELIST_ALIGN_LEFT") then return 'Left'
-    when alignment == .Image~toID("BUTTON_IMAGELIST_ALIGN_RIGHT") then return 'Right'
-    when alignment == .Image~toID("BUTTON_IMAGELIST_ALIGN_TOP") then return 'Top'
-    when alignment == .Image~toID("BUTTON_IMAGELIST_ALIGN_BOTTOM") then return 'Bottom'
-    when alignment == .Image~toID("BUTTON_IMAGELIST_ALIGN_CENTER") then return 'Center'
-    otherwise return 'Error'
-  end

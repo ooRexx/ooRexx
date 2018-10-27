@@ -475,7 +475,7 @@
     lv~insertColumn(3, "Year low", 50)
     lv~insertColumn(4, "Description", 120)
 
-    lv~setImageList(imageList, .Image~toID(LVSIL_SMALL))
+    lv~setImageList(imageList, SMALL)
 
     -- Fill the list-view with random data.
     do row over listData
@@ -560,7 +560,7 @@
     -- The list-view control is created without the SHAREIMAGES styles, so it
     -- takes care of releasing the image list when the program ends.
     image = .Image~getImage(.application~srcDir"rc\propertySheetDemoListView.bmp")
-    imageList = .ImageList~create(.Size~new(16, 16), .Image~toID(ILC_COLOR8), 4, 0)
+    imageList = .ImageList~create(.Size~new(16, 16), COLOR8, 4, 0)
     if \image~isNull,  \imageList~isNull then do
         imageList~add(image)
 
@@ -615,10 +615,10 @@
 
     -- Create and set the ImageList for the tree view items
     image = .Image~getImage(.application~srcDir"rc\propertySheetDemoTreeView.bmp")
-    imageList = .ImageList~create(.Size~new(32, 32), .Image~toID(ILC_COLOR8), 10, 0)
+    imageList = .ImageList~create(.Size~new(32, 32), COLOR8, 10, 0)
     if \image~isNull,  \imageList~isNull then do
           imageList~add(image)
-          tv~setImageList(imageList, .Image~toID(TVSIL_NORMAL))
+          tv~setImageList(imageList, NORMAL)
           image~release
     end
 
@@ -1141,7 +1141,7 @@
     image = .Image~getImage(.application~srcDir"rc\propertySheetDemoTab.bmp")
 
     -- Create our image list, as a masked image list.
-    flags = .DlgUtil~or(.Image~toID(ILC_COLOR24), .Image~toID(ILC_MASK))
+    flags = 'COLOR24 MASK'
     imageList = .ImageList~create(.Size~new(16, 16), flags, 10, 0)
     if \image~isNull,  \imageList~isNull then do
        -- The bitmap is added and the image list deduces the number of images

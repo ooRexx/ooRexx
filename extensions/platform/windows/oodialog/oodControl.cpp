@@ -48,6 +48,7 @@
 #include <OleAcc.h>
 #include <uxtheme.h>
 #include "APICommon.hpp"
+#include "ooShapes.hpp"
 #include "oodCommon.hpp"
 #include "oodMessaging.hpp"
 #include "oodDeviceGraphics.hpp"
@@ -60,24 +61,27 @@ const char *controlType2winName(oodControl_t control)
 {
     switch ( control )
     {
-        case winStatic :               return WC_STATIC;
+        case winCheckBox :             return WC_BUTTON;
+        case winComboBox :             return WC_COMBOBOX;
+        case winComboLBox :            return "ComboLBox";
+        case winDateTimePicker :       return DATETIMEPICK_CLASS;
+        case winEdit :                 return WC_EDIT;
+        case winGroupBox :             return WC_BUTTON;
+        case winListBox :              return WC_LISTBOX;
+        case winListView :             return WC_LISTVIEW;
+        case winMonthCalendar :        return MONTHCAL_CLASS;
+        case winProgressBar :          return PROGRESS_CLASS;
         case winPushButton :           return WC_BUTTON;
         case winRadioButton :          return WC_BUTTON;
-        case winCheckBox :             return WC_BUTTON;
-        case winGroupBox :             return WC_BUTTON;
-        case winEdit :                 return WC_EDIT;
-        case winListBox :              return WC_LISTBOX;
-        case winComboBox :             return WC_COMBOBOX;
+        case winReBar :                return REBARCLASSNAME;
         case winScrollBar :            return WC_SCROLLBAR;
-        case winTreeView :             return WC_TREEVIEW;
-        case winListView :             return WC_LISTVIEW;
+        case winStatic :               return WC_STATIC;
+        case winStatusBar :            return STATUSCLASSNAME ;
         case winTab :                  return WC_TABCONTROL;
-        case winProgressBar :          return PROGRESS_CLASS;
+        case winToolBar :              return TOOLBARCLASSNAME;
+        case winTreeView :             return WC_TREEVIEW;
         case winTrackBar :             return TRACKBAR_CLASS;
-        case winMonthCalendar :        return MONTHCAL_CLASS;
-        case winDateTimePicker :       return DATETIMEPICK_CLASS;
         case winUpDown :               return UPDOWN_CLASS;
-        case winComboLBox :            return "ComboLBox";
         default :                      return "";
     }
 }
@@ -87,25 +91,28 @@ const char *controlType2className(oodControl_t control)
 {
     switch ( control )
     {
-        case winStatic :               return "STATIC";
-        case winPushButton :           return "BUTTON";
-        case winRadioButton :          return "RADIOBUTTON";
         case winCheckBox :             return "CHECKBOX";
-        case winGroupBox :             return "GROUPBOX";
-        case winEdit :                 return "EDIT";
-        case winListBox :              return "LISTBOX";
         case winComboBox :             return "COMBOBOX";
         case winComboLBox :            return "LISTBOX";
-        case winScrollBar :            return "SCROLLBAR";
-        case winTreeView :             return "TREEVIEW";
-        case winListView :             return "LISTVIEW";
-        case winTab :                  return "TAB";
-        case winProgressBar :          return "PROGRESSBAR";
-        case winTrackBar :             return "TRACKBAR";
-        case winMonthCalendar :        return "MONTHCALENDAR";
         case winDateTimePicker :       return "DATETIMEPICKER";
-        case winUpDown :               return "UPDOWN";
+        case winEdit :                 return "EDIT";
+        case winGroupBox :             return "GROUPBOX";
+        case winListBox :              return "LISTBOX";
+        case winListView :             return "LISTVIEW";
+        case winMonthCalendar :        return "MONTHCALENDAR";
+        case winProgressBar :          return "PROGRESSBAR";
+        case winPushButton :           return "BUTTON";
+        case winRadioButton :          return "RADIOBUTTON";
+        case winReBar :                return "REBAR";
+        case winScrollBar :            return "SCROLLBAR";
+        case winStatic :               return "STATIC";
+        case winStatusBar :            return "STATUSBAR";
+        case winTab :                  return "TAB";
+        case winToolBar :              return "TOOLBAR";
         case winToolTip :              return "TOOLTIP";
+        case winTreeView :             return "TREEVIEW";
+        case winTrackBar :             return "TRACKBAR";
+        case winUpDown :               return "UPDOWN";
         default :                      return "";
     }
 }
@@ -115,25 +122,28 @@ const char *controlType2controlName(oodControl_t control)
 {
     switch ( control )
     {
-        case winStatic :               return "Static";
-        case winPushButton :           return "PushButton";
-        case winRadioButton :          return "RadioButton";
         case winCheckBox :             return "CheckBox";
-        case winGroupBox :             return "GroupBox";
-        case winEdit :                 return "Edit";
-        case winListBox :              return "ListBox";
         case winComboBox :             return "ComboBox";
         case winComboLBox :            return "ComboLBox";
-        case winScrollBar :            return "ScrollBar";
-        case winTreeView :             return "TreeView";
-        case winListView :             return "ListView";
-        case winTab :                  return "Tab";
-        case winProgressBar :          return "ProgressBar";
-        case winTrackBar :             return "TrackBar";
-        case winMonthCalendar :        return "MonthCalendar";
         case winDateTimePicker :       return "DateTimePicker";
-        case winUpDown :               return "UpDown";
+        case winEdit :                 return "Edit";
+        case winGroupBox :             return "GroupBox";
+        case winListBox :              return "ListBox";
+        case winListView :             return "ListView";
+        case winMonthCalendar :        return "MonthCalendar";
+        case winProgressBar :          return "ProgressBar";
+        case winPushButton :           return "PushButton";
+        case winRadioButton :          return "RadioButton";
+        case winReBar :                return "ReBar";
+        case winScrollBar :            return "ScrollBar";
+        case winStatic :               return "Static";
+        case winStatusBar :            return "StatusBar";
+        case winTab :                  return "Tab";
+        case winToolBar :              return "ToolBar";
         case winToolTip :              return "ToolTip";
+        case winTrackBar :             return "TrackBar";
+        case winTreeView :             return "TreeView";
+        case winUpDown :               return "UpDown";
         default :                      return "";
     }
 }
@@ -141,22 +151,26 @@ const char *controlType2controlName(oodControl_t control)
 
 oodControl_t winName2controlType(const char *className)
 {
-    if (      strcmp(className, WC_STATIC         ) == 0 ) return winStatic;
-    else if ( strcmp(className, WC_BUTTON         ) == 0 ) return winPushButton;
+    if      ( strcmp(className, WC_COMBOBOX       ) == 0 ) return winComboBox;
+    else if ( strcmp(className, "ComboLBox"       ) == 0 ) return winComboLBox;
+    else if ( strcmp(className, DATETIMEPICK_CLASS) == 0 ) return winDateTimePicker;
     else if ( strcmp(className, WC_EDIT           ) == 0 ) return winEdit;
     else if ( strcmp(className, WC_LISTBOX        ) == 0 ) return winListBox;
-    else if ( strcmp(className, WC_COMBOBOX       ) == 0 ) return winComboBox;
-    else if ( strcmp(className, WC_SCROLLBAR      ) == 0 ) return winScrollBar;
-    else if ( strcmp(className, WC_TREEVIEW       ) == 0 ) return winTreeView;
     else if ( strcmp(className, WC_LISTVIEW       ) == 0 ) return winListView;
-    else if ( strcmp(className, WC_TABCONTROL     ) == 0 ) return winTab;
-    else if ( strcmp(className, PROGRESS_CLASS    ) == 0 ) return winProgressBar;
-    else if ( strcmp(className, TRACKBAR_CLASS    ) == 0 ) return winTrackBar;
     else if ( strcmp(className, MONTHCAL_CLASS    ) == 0 ) return winMonthCalendar;
-    else if ( strcmp(className, DATETIMEPICK_CLASS) == 0 ) return winDateTimePicker;
-    else if ( strcmp(className, UPDOWN_CLASS      ) == 0 ) return winUpDown;
+    else if ( strcmp(className, PROGRESS_CLASS    ) == 0 ) return winProgressBar;
+    else if ( strcmp(className, WC_BUTTON         ) == 0 ) return winPushButton;
+    else if ( strcmp(className, REBARCLASSNAME    ) == 0 ) return winReBar;
+    else if ( strcmp(className, WC_SCROLLBAR      ) == 0 ) return winScrollBar;
+    else if ( strcmp(className, WC_STATIC         ) == 0 ) return winStatic;
+    else if ( strcmp(className, STATUSCLASSNAME   ) == 0 ) return winStatusBar;
+    else if ( strcmp(className, WC_TABCONTROL     ) == 0 ) return winTab;
+    else if ( strcmp(className, TOOLBARCLASSNAME  ) == 0 ) return winToolBar;
     else if ( strcmp(className, TOOLTIPS_CLASS    ) == 0 ) return winToolTip;
-    else if ( strcmp(className, "ComboLBox"       ) == 0 ) return winComboLBox;
+    else if ( strcmp(className, TRACKBAR_CLASS    ) == 0 ) return winTrackBar;
+    else if ( strcmp(className, WC_TREEVIEW       ) == 0 ) return winTreeView;
+    else if ( strcmp(className, UPDOWN_CLASS      ) == 0 ) return winUpDown;
+    else if ( strcmp(className, "#32770"          ) == 0 ) return winDialog;
     else
     {
         return winUnknown;
@@ -206,13 +220,16 @@ oodControl_t controlName2controlType(CSTRING name)
     else if ( StrCmpI(name, "PROGRESSBAR"   ) == 0 ) return winProgressBar;
     else if ( StrCmpI(name, "PUSHBUTTON"    ) == 0 ) return winPushButton;
     else if ( StrCmpI(name, "RADIOBUTTON"   ) == 0 ) return winRadioButton;
+    else if ( StrCmpI(name, "REBAR"         ) == 0 ) return winReBar;
     else if ( StrCmpI(name, "SCROLLBAR"     ) == 0 ) return winScrollBar;
     else if ( StrCmpI(name, "STATIC"        ) == 0 ) return winStatic;
+    else if ( StrCmpI(name, "STATUSBAR"     ) == 0 ) return winStatusBar;
     else if ( StrCmpI(name, "TAB"           ) == 0 ) return winTab;
+    else if ( StrCmpI(name, "TOOLBAR"       ) == 0 ) return winToolBar;
+    else if ( StrCmpI(name, "TOOLTIP"       ) == 0 ) return winToolTip;
     else if ( StrCmpI(name, "TRACKBAR"      ) == 0 ) return winTrackBar;
     else if ( StrCmpI(name, "TREEVIEW"      ) == 0 ) return winTreeView;
     else if ( StrCmpI(name, "UPDOWN"        ) == 0 ) return winUpDown;
-    else if ( StrCmpI(name, "TOOLTIP"       ) == 0 ) return winToolTip;
     else return winUnknown;
 }
 
@@ -327,10 +344,13 @@ oodControl_t oodName2controlType(CSTRING name)
     else if ( StrCmpN(name, "MONTHCALENDAR", 1 ) == 0 ) return winMonthCalendar;
     else if ( StrCmpN(name, "PROGRESSBAR", 2   ) == 0 ) return winProgressBar;
     else if ( StrCmpN(name, "PUSHBUTTON", 2    ) == 0 ) return winPushButton;
-    else if ( StrCmpN(name, "RADIOBUTTON", 1   ) == 0 ) return winRadioButton;
+    else if ( StrCmpN(name, "RADIOBUTTON", 2   ) == 0 ) return winRadioButton;
+    else if ( StrCmpN(name, "REBAR", 2         ) == 0 ) return winReBar;
     else if ( StrCmpN(name, "SCROLLBAR", 2     ) == 0 ) return winScrollBar;
-    else if ( StrCmpN(name, "STATIC", 2        ) == 0 ) return winStatic;
+    else if ( StrCmpN(name, "STATIC", 5        ) == 0 ) return winStatic;
+    else if ( StrCmpN(name, "STATUSBAR", 5     ) == 0 ) return winStatusBar;
     else if ( StrCmpN(name, "TAB", 3           ) == 0 ) return winTab;
+    else if ( StrCmpN(name, "TOOLB", 5         ) == 0 ) return winToolBar;
     else if ( StrCmpN(name, "TOOLT", 5         ) == 0 ) return winToolTip;
     else if ( StrCmpN(name, "TRACKBAR", 3      ) == 0 ) return winTrackBar;
     else if ( StrCmpN(name, "TREEVIEW", 3      ) == 0 ) return winTreeView;
@@ -418,7 +438,7 @@ RexxClassObject oodClass4controlType(RexxThreadContext *c, oodControl_t controlT
  * This function retrieves a localized string that describes an object's state,
  * exactly what that string will be for any given situation, I don't know.
  *
- * @remarks  In testing DateTimePicker::getInfo() I see the state is equla to 0
+ * @remarks  In testing DateTimePicker::getInfo() I see the state is equal to 0
  *           quite often.  Passing in 0 to the GetStateText() function returns a
  *           string -> "normal".  So, we will consider that valid.
  */
@@ -1177,9 +1197,7 @@ static LRESULT processControlMsg(HWND hwnd, uint32_t msg, WPARAM wParam, LPARAM 
         }
         else
         {
-            RexxStringObject mth = c->String(method);
-            invokeDispatch(c, pData->pcpbd->rexxSelf, mth, args);
-            c->ReleaseLocalReference(mth);
+            invokeDispatch(c, pData->pcpbd, method, args);
         }
 
         c->ReleaseLocalReference(_wP);
@@ -2091,7 +2109,7 @@ RexxMethod2(RexxObjectPtr, dlgctrl_clearRect, ARGLIST, args, CSELF, pCSelf)
     size_t arraySize;
     size_t argsUsed;
 
-    if ( ! getRectFromArglist(context, args, &r, true, 1, 4, &arraySize, &argsUsed) )
+    if ( ! getRectFromArglist(context, args, (PORXRECT)&r, true, 1, 4, &arraySize, &argsUsed) )
     {
         return TheOneObj;
     }
@@ -2128,7 +2146,7 @@ RexxMethod2(RexxObjectPtr, dlgctrl_redrawRect, ARGLIST, args, CSELF, pCSelf)
     size_t arraySize;
     size_t argsUsed;
 
-    if ( ! getRectFromArglist(context, args, &r, true, 1, 5, &arraySize, &argsUsed) )
+    if ( ! getRectFromArglist(context, args, (PORXRECT)&r, true, 1, 5, &arraySize, &argsUsed) )
     {
         return TheOneObj;
     }
@@ -2252,7 +2270,7 @@ RexxMethod3(RexxObjectPtr, dlgctrl_textSize, CSTRING, text, RexxObjectPtr, _size
     oodResetSysErrCode(context->threadContext);
     RexxObjectPtr result = TheFalseObj;
 
-    PSIZE size = rxGetSize(context, _size, 2);
+    PSIZE size = (PSIZE)rxGetSize(context, _size, 2);
     if ( size == NULL )
     {
         return result;
@@ -2596,10 +2614,11 @@ RexxMethod2(RexxObjectPtr, dlgctrl_putInBag, RexxObjectPtr, object, CSELF, pCSel
 
 
 /** ListView::getToolTips()
+ *  ReBar::getToolTips()
  *  TreeView::getToolTips()
  *
- *
- *  Retrieves the child ToolTip control used by this list-view or tree-view.
+ *  Retrieves the child ToolTip control used by this list-view, tree-view,
+ *  rebar, or...
  *
  *  @param  None.
  *
@@ -2627,9 +2646,13 @@ RexxMethod1(RexxObjectPtr, generic_getToolTips, CSELF, pCSelf)
     {
         hTT = ListView_GetToolTips(pcdc->hCtrl);
     }
-    else
+    else if ( ctrlType == winTreeView )
     {
         hTT = TreeView_GetToolTips(pcdc->hCtrl);
+    }
+    else if ( ctrlType == winReBar )
+    {
+        hTT = (HWND)SendMessage(pcdc->hCtrl, RB_GETTOOLTIPS, 0, 0);
     }
 
     if ( hTT == NULL )
@@ -2646,9 +2669,11 @@ done_out:
 
 
 /** ListView::setToolTips()
+ *  ReBar::setToolTips()
  *  TreeView::setToolTips()
  *
- *  Sets the child ToolTip control used by this list-view or tree-view controls
+ *  Sets the child ToolTip control used by this list-view, tree-view, rebar,
+ *  or...
  *
  *  @param  None.
  *
@@ -2673,7 +2698,7 @@ RexxMethod2(RexxObjectPtr, generic_setToolTips, RexxObjectPtr, toolTip, CSELF, p
     HWND         hOldTT   = NULL;
 
     // Rather than put the tool tip object in the dialog bag, we put it in this
-    // control's bag, list-view or tree-view.
+    // control's bag, list-view, tree-view, rebar, or...
     pCDialogControl pcdcTT = controlToCSelf(context, toolTip);
     protectControlObject(context, pcdc, toolTip);
 
@@ -2681,9 +2706,13 @@ RexxMethod2(RexxObjectPtr, generic_setToolTips, RexxObjectPtr, toolTip, CSELF, p
     {
         hOldTT = ListView_SetToolTips(pcdc->hCtrl, pcdcTT->hCtrl);
     }
-    else
+    else if ( ctrlType == winTreeView )
     {
         hOldTT = TreeView_SetToolTips(pcdc->hCtrl, pcdcTT->hCtrl);
+    }
+    else if ( ctrlType == winReBar )
+    {
+        hOldTT = (HWND)SendMessage(pcdc->hCtrl, RB_SETTOOLTIPS, (WPARAM)pcdcTT->hCtrl, 0);
     }
     if ( hOldTT == NULL )
     {

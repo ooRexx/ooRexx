@@ -739,7 +739,7 @@
          self~sendWith(attributeName'=', .array~of(data))
          return
       end
-      i = self~dataConnection~Next(i)
+      id = self~dataConnection~Next(i)
    end
 
 ::method setDataAttribute unguarded

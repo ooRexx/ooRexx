@@ -181,7 +181,6 @@ enum LvSortOpt {lvSortAscending = 1, lvSortAscendingI, lvSortDescending, lvSortD
 #define LVFULLROW_NOID               0xffffffff  // No ID assigned
 #define LVFULLROW_DEF_SUBITEMS       10          // Initial size of the subItems array
 
-extern RexxObjectPtr lviLParam2UserData(LPARAM lParam);
 extern MsgReplyType  lvSimpleCustomDraw(RexxThreadContext *c, CSTRING methodName, LPARAM lParam, pCPlainBaseDialog pcpbd);
 
 
@@ -230,9 +229,6 @@ extern void               sysTime2dt(RexxThreadContext *c, SYSTEMTIME *sysTime, 
 extern bool               dt2sysTime(RexxThreadContext *c, RexxObjectPtr dateTime, SYSTEMTIME *sysTime, DateTimePart part);
 extern RexxStringObject   objectStateToString(RexxMethodContext *c, uint32_t state);
 extern RexxObjectPtr      createRexxControl(RexxThreadContext *, HWND, HWND, uint32_t, oodControl_t, RexxObjectPtr, RexxClassObject, bool, bool);
-extern RexxObjectPtr      createControlFromHwnd(RexxMethodContext *, pCDialogControl, HWND, oodControl_t, bool);
-extern RexxObjectPtr      createControlFromHwnd(RexxMethodContext *, pCPlainBaseDialog, HWND, oodControl_t, bool);
-extern RexxObjectPtr      createControlFromHwnd(RexxThreadContext *, pCPlainBaseDialog, HWND, oodControl_t, bool);
 extern bool               addSubclassMessage(RexxMethodContext *c, pCDialogControl pcdc, pWinMessageFilter pwmf);
 extern void               unProtectControlUserData(RexxMethodContext *c, pCDialogControl pcdc, RexxObjectPtr oldUserData);
 extern void               protectControlUserData(RexxMethodContext *c, pCDialogControl pcdc, RexxObjectPtr data);

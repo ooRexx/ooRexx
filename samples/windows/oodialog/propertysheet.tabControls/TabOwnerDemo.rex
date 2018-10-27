@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -122,7 +122,7 @@
 
 ::method initDialog
   expose tabControl pbNext pbPrevious
-  say "Enter NewControlsDialog::initDialog()"
+--say "Enter NewControlsDialog::initDialog()"
 
   -- Save a reference to the push buttons.
   pbNext = self~newPushButton(IDC_PB_NEXT)
@@ -131,7 +131,7 @@
 
   pbPrevious~disable
 
-  say "Leave NewControlsDialog::initDialog()"
+--say "Leave NewControlsDialog::initDialog()"
 
 ::method tabOwnerSelChange unguarded
   expose pbNext pbPrevious
@@ -187,7 +187,7 @@
 
 ::method initDialog
     expose lv
-    say "Enter ListViewDlg::initDialog"
+--  say "Enter ListViewDlg::initDialog"
 
     self~initUpdateListView(IDC_LV_MAIN)
 
@@ -206,10 +206,10 @@
     -- created without the SHAREIMAGES styles, so it takes care of releasing the
     -- image list when the program ends.
     image = .Image~getImage(.application~srcDir"rc\TabOwnerDemoListView.bmp")
-    imageList = .ImageList~create(.Size~new(16, 16), .Image~toID(ILC_COLOR8), 4, 0)
+    imageList = .ImageList~create(.Size~new(16, 16), COLOR8, 4, 0)
     if \image~isNull,  \imageList~isNull then do
         imageList~add(image)
-        lv~setImageList(imageList, .Image~toID(LVSIL_SMALL))
+        lv~setImageList(imageList, SMALL)
 
         -- The image list makes a copy of the bitmap, so we can release it now
         -- to free up some (small) amount of system resources.  This is not
@@ -239,7 +239,7 @@
     self~connectListViewEvent(IDC_LV_MAIN, "ACTIVATE", "onActivate")
     self~connectListViewEvent(IDC_LV_MAIN, "COLUMNCLICK")
 
-    say "Leave ListViewDlg::initDialog"
+--  say "Leave ListViewDlg::initDialog"
 
 -- Invoked when a list-view item is double-clicked.  We display a message and
 -- set the focus to the next item in the list.
@@ -289,10 +289,10 @@
 
     -- Create and set the ImageList for the tree view items
     image = .Image~getImage(.application~srcDir"rc\TabOwnerDemoTreeView.bmp")
-    imageList = .ImageList~create(.Size~new(32, 32), .Image~toID(ILC_COLOR8), 10, 0)
+    imageList = .ImageList~create(.Size~new(32, 32), COLOR8, 10, 0)
     if \image~isNull,  \imageList~isNull then do
           imageList~add(image)
-          tv~setImageList(imageList, .Image~toID(TVSIL_NORMAL))
+          tv~setImageList(imageList, NORMAL)
           image~release
     end
 
@@ -358,13 +358,13 @@
 ::method initDialog unguarded
   expose threadsStarted processes
 
-  say 'ProgressBarDlg::initDialog() ENTER'
+--say 'ProgressBarDlg::initDialog() ENTER'
   reply 0;
   threadsStarted = 0
   processes = .array~of('animateProgressA', 'animateProgressB', 'animateProgressC',  -
                         'animateProgressD', 'animateProgressE')
   self~activateThreads
-  say 'ProgressBarDlg::initDialog() LEAVE'
+--say 'ProgressBarDlg::initDialog() LEAVE'
 
 
 -- This message is sent to us by the owner dialog, the .NewControlsDialog dialog
@@ -474,7 +474,7 @@
 
 ::method initDialog
     expose font1 trackBars tbLabels
-    say "TrackBarDlg::initDialog ENTER"
+--  say "TrackBarDlg::initDialog ENTER"
     -- As we initialize each track bar we'll stash the Rexx object in a table
     -- for easy access later, indexed by its numeric resource id.  The same
     -- thing is done for the static control that is the label for the track bar.
@@ -577,7 +577,7 @@
     self~connectTrackBarEvent(IDC_TB_VERT_LEFT, "EndTrack", "onEndTrack")
     self~connectTrackBarEvent(IDC_TB_VERT_BOTH, "EndTrack", "onEndTrack")
 
-    say "TrackBarDlg::initDialog LEAVE"
+--  say "TrackBarDlg::initDialog LEAVE"
 
 
 -- Update the static contol that shows the position for a slider when the
@@ -638,7 +638,7 @@
    image = .Image~getImage(.application~srcDir"rc\TabOwnerDemoTab.bmp")
 
    -- Create our image list, as a masked image list.
-   flags = .DlgUtil~or(.Image~toID(ILC_COLOR24), .Image~toID(ILC_MASK))
+   flags = 'COLOR24 MASK'
    imageList = .ImageList~create(.Size~new(16, 16), flags, 10, 0)
    if \image~isNull,  \imageList~isNull then do
       -- The bitmap is added and the image list deduces the number of images
@@ -783,4 +783,4 @@
   self~connectHelp(onHelp)
 
 ::method onHelp unguarded
-  say 'Got onHelp hwnd' self~hwnd
+--say 'Got onHelp hwnd' self~hwnd

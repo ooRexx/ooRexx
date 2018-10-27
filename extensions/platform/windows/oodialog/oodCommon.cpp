@@ -845,7 +845,7 @@ int32_t idError(RexxMethodContext *c, RexxObjectPtr rxID)
  * @param id        Resource ID to resolve.
  * @param argPosID  Arg position used for exceptions
  * @param strict    If true the resolved ID must be 1 or greater, if false the
- *                  resolved ID must be -1 or greater.
+ *                  resolved ID must be -2 or greater.
  *
  * @return  The resolved numeric ID, or OOD_ID_EXCEPTION on error.  If,
  *          OOD_ID_EXCEPTION is returned an exception has been raised.
@@ -868,7 +868,7 @@ int32_t oodGlobalID(RexxThreadContext *c, RexxObjectPtr id, size_t argPosID, boo
         wrongArgValueException(c, argPosID, "a positive numeric ID or a valid symbolic ID", id);
         result = OOD_ID_EXCEPTION;
     }
-    else if ( result < -1 )
+    else if ( result < -2 )
     {
         wrongArgValueException(c, argPosID, "a valid numeric or symbolic resource ID", id);
         result = OOD_ID_EXCEPTION;
@@ -1148,7 +1148,7 @@ HICON getOORexxIcon(uint32_t id)
     return icon;
 }
 
-DWORD oodGetSysErrCode(RexxThreadContext *c)
+uint32_t oodGetSysErrCode(RexxThreadContext *c)
 {
     uint32_t code = 0;
     RexxObjectPtr rxCode = c->DirectoryAt(TheDotLocalObj, "SYSTEMERRORCODE");
@@ -1354,151 +1354,6 @@ bool oodObj2handle(RexxMethodContext *c, RexxObjectPtr obj, void **result, size_
 raise_condition:
     userDefinedMsgException(c, argPos, "is not a handle");
     return false;
-}
-
-/**
- * Tests if a string is a pointer string.
- *
- * Pointer strings are strings representing a pointer, handle, etc..  I.e. in
- * "0xdd" format. But, this really just tests for hexidecimal format.
- *
- * @param string  The string to test.
- *
- * @return True or false
- */
-bool isPointerString(const char *string)
-{
-    if ( string != NULL && strlen(string) > 2 )
-    {
-        return *string == '0' && toupper(string[1]) == 'X' && isxdigit(string[2]);
-    }
-    return false;
-}
-
-/**
- * Converts a string in hexadecimal format (starts with 0x) to its pointer-sized
- * value.
- *
- * Note that this converts "0" to null, which is what we want.  It also accepts
- * a NULL pointer for string.
- *
- * @param string  The string to convert.
- *
- * @return The converted value, which could be null to begin with, or null if it
- *         is not converted.
- */
-void *string2pointer(const char *string)
-{
-    void *pointer = NULL;
-    if ( string != NULL && strlen(string) > 1 )
-    {
-        if ( string[1] == 'x' )
-        {
-            sscanf(string, "0x%p", &pointer);
-        }
-        else if ( string[1] == 'X' )
-        {
-            sscanf(string, "0X%p", &pointer);
-        }
-    }
-    return pointer;
-}
-
-void *string2pointer(RexxMethodContext *c, RexxStringObject string)
-{
-    if ( string == NULLOBJECT )
-    {
-        return NULL;
-    }
-    return string2pointer(c->CString(string));
-}
-
-/**
- * A sort of special case used in dialog procedure functions.  We don't really
- * know what the user returned.  It is supposedly a pointer (some type of
- * handle, a HWND, or ...).
- *
- * There is no error, if it is not a handle, then null is returned.  The caller
- * would need to implement any type checking.
- *
- * @param c
- * @param ptr
- *
- * @return A handle, which may be null
- */
-void *string2pointer(RexxThreadContext *c, RexxObjectPtr ptr)
-{
-    if ( ptr == NULLOBJECT )
-    {
-        return NULL;
-    }
-    return string2pointer(c->ObjectToStringValue(ptr));
-}
-
-/**
- * Converts a pointer-sized type to a pointer-string, or 0 if the pointer is
- * null.
- *
- * @param result   [out] Pointer-string is returned here.  Ensure the storage
- *                 pointed to is big enough for a 64-bit pointer.
- *
- * @param pointer  [in] The pointer to convert.
- *
- * @remarks  Pointer-sized type is used to indicate that this will work for
- *           opaque types, like HANDLE, HMENU, HINST, UINT_PTR, DWORD_PTR, etc.,
- *           that are pointer size.
- *
- *           For now, 0 is returned for null rather than 0x00000000 because
- *           many, many places in ooDialog test for 0 to detect error.
- *
- *           This function should go away when ooDialog is converted to use
- *           .Pointer for all pointer-sized data types.
- */
-void pointer2string(char *result, void *pointer)
-{
-    if ( pointer == NULL )
-    {
-        sprintf(result, "0");
-    }
-    else
-    {
-        sprintf(result, "0x%p", pointer);
-    }
-}
-
-
-/**
- * Variation of above.  Converts the pointer and returns it as a
- * RexxStringObject.
- *
- * @param c        Method context we are operating in.
- * @param pointer  Pointer to convert
- *
- * @return A string object representing the pointer as either 0xffff1111 if not
- *         null, or as 0 if null.
- */
-RexxStringObject pointer2string(RexxMethodContext *c, void *pointer)
-{
-    char buf[32];
-    pointer2string(buf, pointer);
-    return c->String(buf);
-}
-
-/**
- * Variation of above, but takes a thread context pointer instead of a method
- * context pointer. Converts the pointer and returns it as a RexxStringObject.
- *
- * @param c        Thread context we are operating in.
- * @param pointer  Pointer to convert
- *
- * @return A string object representing the pointer as either 0xffff1111 if not
- *         null, or as 0 if null.
- */
-RexxStringObject pointer2string(RexxThreadContext *c, void *pointer)
-{
-    char buf[32];
-    pointer2string(buf, pointer);
-    return c->String(buf);
 }
 
 /**
@@ -1899,96 +1754,6 @@ pCDialogControl requiredDlgControlCSelf(RexxMethodContext *c, RexxObjectPtr cont
     return pcdc;
 }
 
-PPOINT rxGetPoint(RexxMethodContext *context, RexxObjectPtr p, size_t argPos)
-{
-    if ( requiredClass(context->threadContext, p, "Point", argPos) )
-    {
-        return (PPOINT)context->ObjectToCSelf(p);
-    }
-    return NULL;
-}
-
-
-RexxObjectPtr rxNewPoint(RexxThreadContext *c, long x, long y)
-{
-    return c->SendMessage2(ThePointClass, "NEW", c->WholeNumber(x), c->WholeNumber(y));;
-}
-
-RexxObjectPtr rxNewPoint(RexxMethodContext *c, long x, long y)
-{
-    return rxNewPoint(c->threadContext, x, y);
-}
-
-PRECT rxGetRect(RexxMethodContext *context, RexxObjectPtr r, size_t argPos)
-{
-    if ( requiredClass(context->threadContext, r, "Rect", argPos) )
-    {
-        return (PRECT)context->ObjectToCSelf(r);
-    }
-    return NULL;
-}
-
-
-RexxObjectPtr rxNewRect(RexxMethodContext *context, long l, long t, long r, long b)
-{
-    RexxObjectPtr rect = NULL;
-
-    RexxClassObject RectClass = rxGetContextClass(context, "RECT");
-    if ( RectClass != NULL )
-    {
-        RexxArrayObject args = context->NewArray(4);
-        context->ArrayAppend(args, context->WholeNumber(l));
-        context->ArrayAppend(args, context->WholeNumber(t));
-        context->ArrayAppend(args, context->WholeNumber(r));
-        context->ArrayAppend(args, context->WholeNumber(b));
-
-        rect = context->SendMessage(RectClass, "NEW", args);
-    }
-    return rect;
-}
-
-
-RexxObjectPtr rxNewRect(RexxThreadContext *c, PRECT r)
-{
-    RexxArrayObject args = c->ArrayOfFour(c->WholeNumber(r->left),
-                                          c->WholeNumber(r->top),
-                                          c->WholeNumber(r->right),
-                                          c->WholeNumber(r->bottom));
-
-    return c->SendMessage(TheRectClass, "NEW", args);
-}
-
-
-RexxObjectPtr rxNewRect(RexxMethodContext *context, PRECT r)
-{
-    return rxNewRect(context->threadContext, r);
-}
-
-PSIZE rxGetSize(RexxMethodContext *context, RexxObjectPtr s, size_t argPos)
-{
-    if ( requiredClass(context->threadContext, s, "Size", argPos) )
-    {
-        return (PSIZE)context->ObjectToCSelf(s);
-    }
-    return NULL;
-}
-
-
-RexxObjectPtr rxNewSize(RexxThreadContext *c, long cx, long cy)
-{
-    return c->SendMessage2(TheSizeClass, "NEW", c->WholeNumber(cx), c->WholeNumber(cy));
-}
-
-RexxObjectPtr rxNewSize(RexxMethodContext *c, long cx, long cy)
-{
-    return rxNewSize(c->threadContext, cx, cy);
-}
-
-RexxObjectPtr rxNewSize(RexxMethodContext *c, PSIZE s)
-{
-    return rxNewSize(c->threadContext, s->cx, s->cx);
-}
-
 bool rxGetWindowText(RexxMethodContext *c, HWND hwnd, RexxStringObject *pStringObj)
 {
     oodResetSysErrCode(c->threadContext);
@@ -2350,39 +2115,6 @@ RexxObjectPtr setWindowStyle(RexxMethodContext *c, HWND hwnd, uint32_t style)
     return result;
 }
 
-
-/**
- * Checks that an argument array contains the minimum, and not more than the
- * maximum, number of arguments.  Raises the appropriate exception if the check
- * fails.
- *
- * In addition the actual size of the argument array is returned.
- *
- * @param c         Method context we are operating in.
- * @param args      Argument array.
- * @param min       Minimum expected number of arguments.
- * @param max       Maximum number of arguments allowed.
- * @param arraySize [out] Size of argument array.
- *
- * @return True if the check succeeds, otherwise false.  If false, an exception
- *         has been raised.
- */
-bool goodMinMaxArgs(RexxMethodContext *c, RexxArrayObject args, size_t min, size_t max, size_t *arraySize)
-{
-    *arraySize = c->ArraySize(args);
-    if ( *arraySize > max )
-    {
-        tooManyArgsException(c->threadContext, max);
-        return false;
-    }
-    if ( *arraySize < min )
-    {
-        missingArgException(c->threadContext, min);
-        return false;
-    }
-    return true;
-}
-
 /**
  * Gets the error message text for the specified error code.
  *
@@ -2449,258 +2181,97 @@ bool printHResultErr(CSTRING api, HRESULT hr)
 }
 
 /**
- * Fills in a RECT structure using an argument array passed to a Rexx object
- * method.
+ * Converts a string of keywords to the proper STATE_SYSTEM_* flag.
  *
- * The purpose is to give the Rexx programmer some flexibility in how they pass
- * in "rectangle-like" coordinates to a method.
+ * @param flags
  *
- * The coordinates can be expressed as a .Rect, as a .Point and a .Size, as a
- * .Point and a .Point, or as 4 individual intergers.
- *
- * There are also two basic scenarios where this is used:
- *
- * 1.) A bounding rectangle: x1, y1, x2, y2  With a bounding rectangle x1 and y1
- * specify the upper-left corner of the rectangle. x2 and y2 specify the
- * lower-bottom corner of the rectangle.  In this scenario, the Rexx programmer
- * can use .Point .Point, but not .Point .Size.
- *
- * 2.) A point / size rectangle.  In this case the first two args specify the
- * upper-left corner of the rectangle, and the third and forth args specify the
- * width and height of the rectangle.  In this scenario, the Rexx programmer can
- * use .Point and .Size, but not .Point and .Point
- *
- * In either case, .Rect and 4 indvidual integers are taken at face value.
- *
- * @param c            Method context we are operating in.
- * @param args         The arg list array (ARGLIST) passed to the native API
- * @param rect         [IN/OUT] Pointer to a rect struct, this is filled in on
- *                     success.
- * @param boundingRect True if rect should be interpreted as a bounding
- *                     rectangle, false if rect should be interpreted as a
- *                     point/size rectangle.
- * @param startArg     The argument number in the arg array where the rectangle
- *                     specifications start.
- * @param maxArgs      The maximum number of args allowed.
- * @param arraySize    [IN/OUT] The size of the argument array, returned.
- * @param usedArgs     [IN/OUT] The number of arguments used in specifying the
- *                     rectangle. I.e., if startArg is a .Rect, then usedArgs
- *                     will be 1 on return.  If at startArg we have x, y, cx, cy
- *                     then useArgs will be 4 on return.
- *
- * @return True on success, false otherwise.  If the return is false, an
- *         exception has been raised.
+ * @return uint32_t
  */
-bool getRectFromArglist(RexxMethodContext *c, RexxArrayObject args, PRECT rect, bool boundingRect,
-                        int startArg, int maxArgs, size_t *arraySize, size_t *usedArgs)
+uint32_t keyword2stateSystem(CSTRING flags)
 {
-    if ( ! goodMinMaxArgs(c, args, startArg, maxArgs, arraySize) )
-    {
-        goto err_out;
-    }
+    uint32_t val = 0;
 
-    RexxObjectPtr obj1 = c->ArrayAt(args, startArg);
-    if ( obj1 == NULLOBJECT )
-    {
-        missingArgException(c->threadContext, startArg);
-        goto err_out;
-    }
+    if ( StrStrI(flags, "ANIMATED")        != NULL ) val |= STATE_SYSTEM_ANIMATED;
+    if ( StrStrI(flags, "BUSY")            != NULL ) val |= STATE_SYSTEM_BUSY;
+    if ( StrStrI(flags, "CHECKED")         != NULL ) val |= STATE_SYSTEM_CHECKED;
+    if ( StrStrI(flags, "COLLAPSED")       != NULL ) val |= STATE_SYSTEM_COLLAPSED;
+    if ( StrStrI(flags, "DEFAULT")         != NULL ) val |= STATE_SYSTEM_DEFAULT;
+    if ( StrStrI(flags, "EXPANDED")        != NULL ) val |= STATE_SYSTEM_EXPANDED;
+    if ( StrStrI(flags, "EXTSELECTABLE")   != NULL ) val |= STATE_SYSTEM_EXTSELECTABLE;
+    if ( StrStrI(flags, "FLOATING")        != NULL ) val |= STATE_SYSTEM_FLOATING;
+    if ( StrStrI(flags, "FOCUSABLE")       != NULL ) val |= STATE_SYSTEM_FOCUSABLE;
+    if ( StrStrI(flags, "FOCUSED")         != NULL ) val |= STATE_SYSTEM_FOCUSED;
+    if ( StrStrI(flags, "HOTTRACKED")      != NULL ) val |= STATE_SYSTEM_HOTTRACKED;
+    if ( StrStrI(flags, "INDETERMINATE")   != NULL ) val |= STATE_SYSTEM_INDETERMINATE;
+    if ( StrStrI(flags, "INVISIBLE")       != NULL ) val |= STATE_SYSTEM_INVISIBLE;
+    if ( StrStrI(flags, "LINKED")          != NULL ) val |= STATE_SYSTEM_LINKED;
+    if ( StrStrI(flags, "MARQUEED")        != NULL ) val |= STATE_SYSTEM_MARQUEED;
+    if ( StrStrI(flags, "MIXED")           != NULL ) val |= STATE_SYSTEM_MIXED;
+    if ( StrStrI(flags, "MOVEABLE")        != NULL ) val |= STATE_SYSTEM_MOVEABLE;
+    if ( StrStrI(flags, "MULTISELECTABLE") != NULL ) val |= STATE_SYSTEM_MULTISELECTABLE;
+    if ( StrStrI(flags, "OFFSCREEN")       != NULL ) val |= STATE_SYSTEM_OFFSCREEN;
+    if ( StrStrI(flags, "PRESSED")         != NULL ) val |= STATE_SYSTEM_PRESSED;
+    if ( StrStrI(flags, "PROTECTED")       != NULL ) val |= STATE_SYSTEM_PROTECTED;
+    if ( StrStrI(flags, "READONLY")        != NULL ) val |= STATE_SYSTEM_READONLY;
+    if ( StrStrI(flags, "SELECTABLE")      != NULL ) val |= STATE_SYSTEM_SELECTABLE;
+    if ( StrStrI(flags, "SELECTED")        != NULL ) val |= STATE_SYSTEM_SELECTED;
+    if ( StrStrI(flags, "SELFVOICING")     != NULL ) val |= STATE_SYSTEM_SELFVOICING;
+    if ( StrStrI(flags, "SIZEABLE")        != NULL ) val |= STATE_SYSTEM_SIZEABLE;
+    if ( StrStrI(flags, "TRAVERSED")       != NULL ) val |= STATE_SYSTEM_TRAVERSED;
+    if ( StrStrI(flags, "UNAVAILABLE")     != NULL ) val |= STATE_SYSTEM_UNAVAILABLE;
+    if ( StrStrI(flags, "VALID")           != NULL ) val |= STATE_SYSTEM_VALID;
 
-    if ( c->IsOfType(obj1, "RECT") )
-    {
-        PRECT r = rxGetRect(c, obj1, startArg);
-        if ( r == NULL )
-        {
-            goto err_out;
-        }
-        CopyRect(rect, r);
-        *usedArgs = 1;
-    }
-    else if ( c->IsOfType(obj1, "POINT") )
-    {
-        PPOINT p = rxGetPoint(c, obj1, startArg);
-        if ( p == NULL )
-        {
-            goto err_out;
-        }
 
-        RexxObjectPtr obj2 = c->ArrayAt(args, startArg + 1);
-        if ( obj2 == NULLOBJECT )
-        {
-            missingArgException(c->threadContext, startArg + 1);
-            goto err_out;
-        }
-
-        // If it is a bounding rectangle, the second object has to be a .Point
-        // object. Otherwise, the second object has to be a .Size object
-        if ( boundingRect )
-        {
-            PPOINT p2 = rxGetPoint(c, obj2, startArg + 1);
-            if ( p2 == NULL )
-            {
-                goto err_out;
-            }
-            SetRect(rect, p->x, p->y, p2->x, p2->y);
-        }
-        else
-        {
-            PSIZE s = rxGetSize(c, obj2, startArg + 1);
-            if ( s == NULL )
-            {
-                goto err_out;
-            }
-            SetRect(rect, p->x, p->y, s->cx, s->cy);
-        }
-        *usedArgs = 2;
-    }
-    else
-    {
-        int x, y, cx, cy;
-
-        if ( ! c->Int32(obj1, &x) )
-        {
-            wrongRangeException(c->threadContext, startArg, INT32_MIN, INT32_MAX, obj1);
-            goto err_out;
-        }
-
-        obj1 = c->ArrayAt(args, startArg + 1);
-        if ( obj1 == NULLOBJECT )
-        {
-            missingArgException(c->threadContext, startArg + 1);
-            goto err_out;
-        }
-        if ( ! c->Int32(obj1, &y) )
-        {
-            wrongRangeException(c->threadContext, startArg + 1, INT32_MIN, INT32_MAX, obj1);
-            goto err_out;
-        }
-
-        obj1 = c->ArrayAt(args, startArg + 2);
-        if ( obj1 == NULLOBJECT )
-        {
-            missingArgException(c->threadContext, startArg + 2);
-            goto err_out;
-        }
-        if ( ! c->Int32(obj1, &cx) )
-        {
-            wrongRangeException(c->threadContext, startArg + 2, INT32_MIN, INT32_MAX, obj1);
-            goto err_out;
-        }
-
-        obj1 = c->ArrayAt(args, startArg + 3);
-        if ( obj1 == NULLOBJECT )
-        {
-            missingArgException(c->threadContext, startArg + 3);
-            goto err_out;
-        }
-        if ( ! c->Int32(obj1, &cy) )
-        {
-            wrongRangeException(c->threadContext, startArg + 3, INT32_MIN, INT32_MAX, obj1);
-            goto err_out;
-        }
-        SetRect(rect, x, y, cx, cy);
-        *usedArgs = 4;
-    }
-    return true;
-
-err_out:
-    return false;
+    return val;
 }
 
-
 /**
- * Fills in a POINT structure using an argument array passed to a Rexx object
- * method.
+ * Converts a set of STATE_SYSTEM* flags to their keyword string.
  *
- * The purpose is to give the Rexx programmer some flexibility in how they pass
- * in "point-like" coordinates to a method.
+ * @param c
+ * @param flags
  *
- * The coordinates can be expressed as a .Point, a .Size, or as 2 individual
- * intergers.
- *
- * Since a point and a size are binary compatible, no effort is made to enforce
- * that only a point is used.  This makes things more flexible.
- *
- * @param c            Method context we are operating in.
- * @param args         The arg list array (ARGLIST) passed to the native API
- * @param point        [IN/OUT] Pointer to a point struct, this is filled in on
- *                     success.
- * @param startArg     The argument number in the arg array where the point
- *                     specifications start.
- * @param maxArgs      The maximum number of args allowed.
- * @param arraySize    [IN/OUT] The size of the argument array, returned.
- * @param usedArgs     [IN/OUT] The number of arguments used in specifying the
- *                     point. I.e., if startArg is a .point, then usedArgs
- *                     will be 1 on return.  If at startArg we have x, y, (or
- *                     cx, cy) then useArgs will be 2 on return.
- *
- * @return True on success, false otherwise.  If the return is false, an
- *         exception has been raised.
+ * @return A Rexx string object.
  */
-bool getPointFromArglist(RexxMethodContext *c, RexxArrayObject args, PPOINT point, int startArg, int maxArgs,
-                         size_t *arraySize, size_t *usedArgs)
+RexxStringObject stateSystem2keyword(RexxMethodContext *c, uint32_t flags)
 {
-    if ( ! goodMinMaxArgs(c, args, startArg, maxArgs, arraySize) )
-    {
-        goto err_out;
-    }
+    char buf[256];
+    *buf = '\0';
 
-    RexxObjectPtr obj1 = c->ArrayAt(args, startArg);
-    if ( obj1 == NULLOBJECT )
-    {
-        missingArgException(c->threadContext, startArg);
-        goto err_out;
-    }
+    if ( flags & STATE_SYSTEM_ANIMATED       ) strcat(buf, "ANIMATED ");
+    if ( flags & STATE_SYSTEM_BUSY           ) strcat(buf, "BUSY ");
+    if ( flags & STATE_SYSTEM_CHECKED        ) strcat(buf, "CHECKED ");
+    if ( flags & STATE_SYSTEM_COLLAPSED      ) strcat(buf, "COLLAPSED ");
+    if ( flags & STATE_SYSTEM_DEFAULT        ) strcat(buf, "DEFAULT ");
+    if ( flags & STATE_SYSTEM_EXPANDED       ) strcat(buf, "EXPANDED ");
+    if ( flags & STATE_SYSTEM_EXTSELECTABLE  ) strcat(buf, "EXTSELECTABLE ");
+    if ( flags & STATE_SYSTEM_FLOATING       ) strcat(buf, "FLOATING ");
+    if ( flags & STATE_SYSTEM_FOCUSABLE      ) strcat(buf, "FOCUSABLE ");
+    if ( flags & STATE_SYSTEM_FOCUSED        ) strcat(buf, "FOCUSED ");
+    if ( flags & STATE_SYSTEM_HOTTRACKED     ) strcat(buf, "HOTTRACKED ");
+    if ( flags & STATE_SYSTEM_INDETERMINATE  ) strcat(buf, "INDETERMINATE ");
+    if ( flags & STATE_SYSTEM_INVISIBLE      ) strcat(buf, "INVISIBLE ");
+    if ( flags & STATE_SYSTEM_LINKED         ) strcat(buf, "LINKED ");
+    if ( flags & STATE_SYSTEM_MARQUEED       ) strcat(buf, "MARQUEED ");
+    if ( flags & STATE_SYSTEM_MIXED          ) strcat(buf, "MIXED ");
+    if ( flags & STATE_SYSTEM_MOVEABLE       ) strcat(buf, "MOVEABLE ");
+    if ( flags & STATE_SYSTEM_MULTISELECTABLE) strcat(buf, "MULTISELECTABLE ");
+    if ( flags & STATE_SYSTEM_OFFSCREEN      ) strcat(buf, "OFFSCREEN ");
+    if ( flags & STATE_SYSTEM_PRESSED        ) strcat(buf, "PRESSED ");
+    if ( flags & STATE_SYSTEM_PROTECTED      ) strcat(buf, "PROTECTED ");
+    if ( flags & STATE_SYSTEM_READONLY       ) strcat(buf, "READONLY ");
+    if ( flags & STATE_SYSTEM_SELECTABLE     ) strcat(buf, "SELECTABLE ");
+    if ( flags & STATE_SYSTEM_SELECTED       ) strcat(buf, "SELECTED ");
+    if ( flags & STATE_SYSTEM_SELFVOICING    ) strcat(buf, "SELFVOICING ");
+    if ( flags & STATE_SYSTEM_SIZEABLE       ) strcat(buf, "SIZEABLE ");
+    if ( flags & STATE_SYSTEM_TRAVERSED      ) strcat(buf, "TRAVERSED ");
+    if ( flags & STATE_SYSTEM_UNAVAILABLE    ) strcat(buf, "UNAVAILABLE ");
+    if ( flags & STATE_SYSTEM_VALID          ) strcat(buf, "VALID ");
 
-    if ( c->IsOfType(obj1, "POINT") )
+    if ( *buf != '\0' )
     {
-        PPOINT p = rxGetPoint(c, obj1, startArg);
-        if ( p == NULL )
-        {
-            goto err_out;
-        }
-        point->x = p->x;
-        point->y = p->y;
-        *usedArgs = 1;
+        *(buf + strlen(buf) - 1) = '\0';
     }
-    else if ( c->IsOfType(obj1, "SIZE") )
-    {
-        PSIZE s = rxGetSize(c, obj1, startArg);
-        if ( s == NULL )
-        {
-            goto err_out;
-        }
-        point->x = s->cx;
-        point->y = s->cy;
-        *usedArgs = 1;
-    }
-    else
-    {
-        int x, y;
-        if ( ! c->Int32(obj1, &x) )
-        {
-            wrongRangeException(c->threadContext, startArg, INT32_MIN, INT32_MAX, obj1);
-            goto err_out;
-        }
-
-        obj1 = c->ArrayAt(args, startArg + 1);
-        if ( obj1 == NULLOBJECT )
-        {
-            missingArgException(c->threadContext, startArg + 1);
-            goto err_out;
-        }
-        if ( ! c->Int32(obj1, &y) )
-        {
-            wrongRangeException(c->threadContext, startArg + 1, INT32_MIN, INT32_MAX, obj1);
-            goto err_out;
-        }
-        point->x = x;
-        point->y = y;
-        *usedArgs = 2;
-    }
-    return true;
-
-err_out:
-    return false;
+    return c->String(buf);
 }
 

@@ -39,16 +39,13 @@
 /**
  * oodBarControls.cpp
  *
- * Contains methods for the ScrollBar, TrackBar, and ProgressBar dialog
- * controls.  Also the misc control UpDown
+ * Contains methods for the ProgressBar, ScrollBar, and TrackBar dialog
+ * controls. Also the misc control UpDown
  */
 #include "ooDialog.hpp"     // Must be first, includes windows.h, commctrl.h, and oorexxapi.h
 
 #include <stdio.h>
-#include <dlgs.h>
-#include <malloc.h>
-#include <limits.h>
-#include "APICommon.hpp"
+#include <APICommon.hpp>
 #include "oodCommon.hpp"
 #include "oodControl.hpp"
 
@@ -305,7 +302,7 @@ RexxMethod1(int32_t, sb_getPosition, CSELF, pCSelf)
 /** TrackBar::getRange()
  *
  */
-RexxMethod1(RexxObjectPtr, tb_getRange, CSELF, pCSelf)
+RexxMethod1(RexxObjectPtr, trckbar_getRange, CSELF, pCSelf)
 {
     RexxDirectoryObject result = context->NewDirectory();
     HWND hCtrl = getDChCtrl(pCSelf);
@@ -320,7 +317,7 @@ RexxMethod1(RexxObjectPtr, tb_getRange, CSELF, pCSelf)
 /** TrackBar::getSelRange()
  *
  */
-RexxMethod1(RexxObjectPtr, tb_getSelRange, CSELF, pCSelf)
+RexxMethod1(RexxObjectPtr, trckbar_getSelRange, CSELF, pCSelf)
 {
     RexxDirectoryObject result = context->NewDirectory();
     HWND hCtrl = getDChCtrl(pCSelf);
@@ -359,27 +356,33 @@ RexxMethod1(RexxObjectPtr, tb_getSelRange, CSELF, pCSelf)
  *                   updown control is changed.  The default is 1.  This
  *                   argument is only used if change is true and cancel is
  *                   false.
+ *
+ *  @note  I don't think NewBuffer() will ever fail, bu if it does we raise an
+ *         out of memory exception and return .nil
  */
 RexxMethod3(RexxObjectPtr, ud_deltaPosReply_cls, OPTIONAL_logical_t, change, OPTIONAL_logical_t, cancel, OPTIONAL_int32_t, newDelta)
 {
-    if ( ! change )
-    {
-        return TheFalseObj;
-    }
-
     RexxBufferObject _dpr = context->NewBuffer(sizeof(DELTAPOSREPLY));
     if ( _dpr == NULLOBJECT )
     {
-        return TheFalseObj;
+        outOfMemoryException(context->threadContext);
+        return TheNilObj;
     }
 
     PDELTAPOSREPLY pdpr = (PDELTAPOSREPLY)context->BufferData(_dpr);
-    pdpr->change = true;
-    pdpr->cancel = cancel ? true : false;
+    memset(pdpr, 0, sizeof(DELTAPOSREPLY));
 
-    if ( ! pdpr->cancel )
+    if ( argumentExists(1) && change )
     {
-        pdpr->newDelta = argumentExists(1) ? newDelta : 1;
+        pdpr->change = true;
+        if ( cancel )
+        {
+            pdpr->cancel = true;
+        }
+        else
+        {
+            pdpr->newDelta = argumentExists(1) ? newDelta : 1;
+        }
     }
     return _dpr;
 }

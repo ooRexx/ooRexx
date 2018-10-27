@@ -894,8 +894,15 @@ RexxRoutine2(uintptr_t, winTimer_rtn, CSTRING, mode, uintptr_t, msOrId)
  *  only.
  *
  */
-RexxRoutine1(RexxObjectPtr, routineTest_rtn, RexxObjectPtr, obj)
+RexxRoutine0(RexxObjectPtr, routineTest_rtn)
 {
-    return TheZeroObj;
+
+    RexxCallContext *c = context;
+    RexxObjectPtr cntx = c->GetCallerContext();
+    RexxPackageObject pck = (RexxPackageObject)c->SendMessage0(cntx, "PACKAGE");
+    RexxObjectPtr name = c->SendMessage0(pck, "NAME");
+    printf("Package name=%s\n", c->ObjectToStringValue(name));
+
+    return name;
 }
 

@@ -217,7 +217,7 @@
    if \ m~completed then self~scrollInControl(IDC_PB_OWNERDRAW)
    self~hide
 
-   call sd"oobmpvu.rex"
+   call (sd"oobmpvu.rex")
 
    -- Show ourself and become the topmost.
    self~~show~toTheTop
@@ -230,7 +230,7 @@
    if \ m~completed then self~scrollInControl(IDC_PB_OWNERDRAW)
    self~hide
 
-   call sd"oodraw.rex"
+   call (sd"oodraw.rex")
 
    -- Show ourself and become the topmost.
    self~~show~toTheTop

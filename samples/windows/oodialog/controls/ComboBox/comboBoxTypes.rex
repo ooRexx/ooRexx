@@ -89,13 +89,13 @@
     fireBrickRed      =  .Image~colorRef(205, 38, 38)
 
     -- Connect the button clicks
-    self~connectButtonEvent(IDC_PB_DROP, 'CLICKED', onDrop)
-    self~connectButtonEvent(IDC_PB_CLOSE, 'CLICKED', onClose)
+    self~connectButtonEvent(IDC_PB_DROP, 'CLICKED', onDrop, sync)
+    self~connectButtonEvent(IDC_PB_CLOSE, 'CLICKED', onClose, sync)
 
-    self~connectButtonEvent(IDC_RB_NONE, 'CLICKED', onSchemeChange)
-    self~connectButtonEvent(IDC_RB_RAINBOW, 'CLICKED', onSchemeChange)
-    self~connectButtonEvent(IDC_RB_TEXTONLY, 'CLICKED', onSchemeChange)
-    self~connectButtonEvent(IDC_RB_FIREBRICK, 'CLICKED', onSchemeChange)
+    self~connectButtonEvent(IDC_RB_NONE, 'CLICKED', onSchemeChange, .true)
+    self~connectButtonEvent(IDC_RB_RAINBOW, 'CLICKED', onSchemeChange, .false)
+    self~connectButtonEvent(IDC_RB_TEXTONLY, 'CLICKED', onSchemeChange, sync)
+    self~connectButtonEvent(IDC_RB_FIREBRICK, 'CLICKED', onSchemeChange, .true)
 
     -- Create arrays of the items to be inserted into each combo box.
     colors  = .array~of("Green", "Blue", "Yellow", "Orange", "Red", "Pink")

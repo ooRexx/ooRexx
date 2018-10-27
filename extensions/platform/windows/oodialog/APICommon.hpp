@@ -40,15 +40,21 @@
 #define APICommon_Included
 
 
-#ifdef _WIN32
-#if _MSC_VER < 1900
-    #define snprintf _snprintf
-#endif
-#endif
-
+extern RexxObjectPtr       TheTrueObj;
+extern RexxObjectPtr       TheFalseObj;
+extern RexxObjectPtr       TheNilObj;
+extern RexxObjectPtr       TheZeroObj;
+extern RexxObjectPtr       TheOneObj;
+extern RexxObjectPtr       TheTwoObj;
+extern RexxObjectPtr       TheNegativeOneObj;
+extern RexxObjectPtr       TheZeroPointerObj;
+extern RexxDirectoryObject TheDotLocalObj;
 
 #define NO_MEMORY_MSG             "failed to allocate memory"
 #define INVALID_CONSTANT_MSG      "the valid %s_XXX constants"
+#define NO_LOCAL_ENVIRONMENT_MSG  "the .local environment was not found"
+
+extern bool RexxEntry packageLoadHelper(RexxThreadContext *c);
 
 extern void  severeErrorException(RexxThreadContext *c, const char *msg);
 extern void  systemServiceException(RexxThreadContext *context, const char *msg);
@@ -69,6 +75,7 @@ extern void  userDefinedMsgException(RexxMethodContext *c, CSTRING msg);
 extern void  userDefinedMsgException(RexxMethodContext *c, size_t pos, CSTRING msg);
 extern void  invalidImageException(RexxThreadContext *c, size_t pos, CSTRING type, CSTRING actual);
 extern void  stringTooLongException(RexxThreadContext *c, size_t pos, size_t len, size_t realLen);
+extern void  stringTooLongException(RexxThreadContext *c, CSTRING name, bool isMethod, size_t max);
 extern void  numberTooSmallException(RexxThreadContext *c, int pos, int min, RexxObjectPtr actual);
 extern void  notNonNegativeException(RexxThreadContext *c, size_t pos, RexxObjectPtr actual);
 extern void  notPositiveException(RexxThreadContext *c, size_t pos, RexxObjectPtr actual);
@@ -86,6 +93,7 @@ extern void  missingIndexesInDirectoryException(RexxThreadContext *c, int argPos
 extern void  missingIndexInStemException(RexxThreadContext *c, int argPos, CSTRING index);
 extern void  stemIndexZeroException(RexxMethodContext *c, size_t pos);
 extern void  emptyArrayException(RexxThreadContext *c, int argPos);
+extern void  arrayWrongSizeException(RexxThreadContext *c, size_t found, size_t need, int argPos);
 extern void  arrayToLargeException(RexxThreadContext *c, uint32_t found, uint32_t max, int argPos);
 extern void  nullObjectException(RexxThreadContext *c, CSTRING name, size_t pos);
 extern void  nullObjectException(RexxThreadContext *c, CSTRING name);
@@ -100,6 +108,7 @@ extern RexxObjectPtr wrongArgValueException(RexxThreadContext *c, size_t pos, co
 extern RexxObjectPtr wrongArgValueException(RexxThreadContext *c, size_t pos, const char *list, const char *actual);
 extern RexxObjectPtr wrongArgKeywordsException(RexxThreadContext *c, size_t pos, CSTRING list, CSTRING actual);
 extern RexxObjectPtr wrongArgKeywordsException(RexxThreadContext *c, size_t pos, CSTRING list, RexxObjectPtr actual);
+extern RexxObjectPtr wrongArgKeywordException(RexxThreadContext *c, size_t pos, CSTRING list, CSTRING actual);
 extern RexxObjectPtr wrongArgKeywordException(RexxMethodContext *c, size_t pos, CSTRING list, CSTRING actual);
 extern RexxObjectPtr invalidConstantException(RexxMethodContext *c, size_t argNumber, char *msg, const char *sub, RexxObjectPtr actual);
 extern RexxObjectPtr invalidConstantException(RexxMethodContext *c, size_t argNumber, char *msg, const char *sub, const char *actual);
@@ -111,15 +120,27 @@ extern RexxObjectPtr notBooleanException(RexxThreadContext *c, size_t pos, RexxO
 extern RexxObjectPtr wrongArgOptionException(RexxThreadContext *c, size_t pos, CSTRING list, RexxObjectPtr actual);
 extern RexxObjectPtr wrongArgOptionException(RexxThreadContext *c, size_t pos, CSTRING list, CSTRING actual);
 extern RexxObjectPtr invalidTypeException(RexxThreadContext *c, size_t pos, const char *type);
+extern RexxObjectPtr invalidTypeException(RexxThreadContext *c, size_t pos, const char *type, RexxObjectPtr actual);
 extern RexxObjectPtr noSuchRoutineException(RexxThreadContext *c, CSTRING rtnName, size_t pos);
 extern RexxObjectPtr unsupportedRoutineException(RexxCallContext *c, CSTRING rtnName);
 extern RexxObjectPtr invalidReturnWholeNumberException(RexxThreadContext *c, CSTRING name, RexxObjectPtr actual, bool isMethod);
 extern void          notBooleanReplyException(RexxThreadContext *c, CSTRING method, RexxObjectPtr actual);
+extern void          notUnsignedInt32Exception(RexxMethodContext *c, size_t pos, RexxObjectPtr actual);
+
+extern bool              isPointerString(const char *string);
+extern void *            string2pointer(const char *string);
+extern void *            string2pointer(RexxMethodContext *c, RexxStringObject string);
+extern void *            string2pointer(RexxThreadContext *c, RexxObjectPtr ptr);
+extern void              pointer2string(char *, void *pointer);
+extern RexxStringObject  pointer2string(RexxMethodContext *, void *);
+extern RexxStringObject  pointer2string(RexxThreadContext *c, void *pointer);
 
 extern CSTRING rxGetStringAttribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING name);
 extern bool    rxGetNumberAttribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING name, wholenumber_t *pNumber);
 extern bool    rxGetUIntPtrAttribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING name, uintptr_t *pNumber);
 extern bool    rxGetUInt32Attribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING name, uint32_t *pNumber);
+extern
+RexxDirectoryObject rxGetDirectory(RexxMethodContext *context, RexxObjectPtr d, size_t argPos);
 
 extern bool            requiredClass(RexxThreadContext *c, RexxObjectPtr obj, const char *name, size_t pos);
 extern int32_t         getLogical(RexxThreadContext *c, RexxObjectPtr obj);
@@ -134,6 +155,7 @@ extern RexxObjectPtr   rxNewBuiltinObject(RexxThreadContext *c, CSTRING classNam
 
 extern bool    isOutOfMemoryException(RexxThreadContext *c);
 extern bool    checkForCondition(RexxThreadContext *c, bool clear);
+extern bool    isOutOfMemoryException(RexxThreadContext *c);
 extern bool    isInt(int, RexxObjectPtr, RexxThreadContext *);
 extern bool    isOfClassType(RexxMethodContext *, RexxObjectPtr, CSTRING);
 extern void    dbgPrintClassID(RexxThreadContext *c, RexxObjectPtr obj);
@@ -220,6 +242,24 @@ inline RexxObjectPtr noRoutineReturnException(RexxThreadContext *c, CSTRING rtnN
 inline RexxObjectPtr missingArgException(RexxThreadContext *c, size_t argPos)
 {
     c->RaiseException1(Rexx_Error_Invalid_argument_noarg, c->WholeNumber(argPos));
+    return NULLOBJECT;
+}
+
+/**
+ *  Missing argument in method; argument 'argument' is required
+ *
+ *  Missing argument in method; argument 2 is required
+ *
+ *  Raises 93.90
+ *
+ * @param c    The method context we are operating under.
+ * @param pos  The 'argument' position.
+ *
+ * @return NULLOBJECT
+ */
+inline RexxObjectPtr missingArgException(RexxMethodContext *c, size_t argPos)
+{
+    c->RaiseException1(Rexx_Error_Incorrect_method_noarg, c->WholeNumber(argPos));
     return NULLOBJECT;
 }
 

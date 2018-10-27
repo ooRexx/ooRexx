@@ -50,6 +50,14 @@
 #include "oodShared.hpp"
 #include "oodShellObjects.hpp"
 
+/* Allow compiling with the Windows SDK version 6.1.  To compile with a 6.1
+ * Windows SDK set OODIALOG_WINSDK_6_1=1 in the environment and the make file
+ * will do the proper thing.
+ */
+#ifdef OODIALOG_WINSDK_6_1
+typedef DWORD FILEOPENDIALOGOPTIONS;
+#define CDCS_ENABLEDVISIBLE 0x3
+#endif
 
 /**
  * General purpose stuff for working with the Shell.

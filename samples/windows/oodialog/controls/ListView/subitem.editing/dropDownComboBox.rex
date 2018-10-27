@@ -98,9 +98,9 @@ return 0
     self~createListView(IDC_LISTVIEW, 10, 20, 305, 145, "REPORT SHOWSELALWAYS")
     self~createPushButton(IDOK, 280, 175, 35, 15, "DEFAULT", "Close")
 
-    self~connectListViewEvent(IDC_LISTVIEW, "CLICK", onClick)
-    self~connectListViewEvent(IDC_LISTVIEW, "BEGINSCROLL", onBeginScroll)
-    self~connectListViewEvent(IDC_LISTVIEW, "ENDSCROLL", onBeginScroll)
+    self~connectListViewEvent(IDC_LISTVIEW, "CLICK", onClick, .true)
+    self~connectListViewEvent(IDC_LISTVIEW, "BEGINSCROLL", onBeginScroll, sync)
+    self~connectListViewEvent(IDC_LISTVIEW, "ENDSCROLL", onBeginScroll, .false)
 
 
 /** initDialog()
@@ -158,19 +158,19 @@ return 0
  *  subitem.  This allows space for the drop down.
  */
 ::method onClick unguarded
-  expose list cb cbVisible lastIdx lastCol
-  use arg id, itemIndex, columnIndex, keyState
+  expose cb cbVisible lastIdx lastCol
+  use arg id, itemIndex, columnIndex, keyState, , lv
 
   if lastIdx == itemIndex & lastCol == columnIndex then do
     if columnIndex > 0 then do
-        r = list~getSubitemRect(itemIndex, columnIndex, 'LABEL')
-        ret = cb~setWindowPos(list~hwnd, r~left, r~top, r~right - r~left, 4 * (r~bottom - r~top), "SHOWWINDOW NOZORDERCHANGE")
+        r = lv~getSubitemRect(itemIndex, columnIndex, 'LABEL')
+        ret = cb~setWindowPos(lv~hwnd, r~left, r~top, r~right - r~left, 4 * (r~bottom - r~top), "SHOWWINDOW NOZORDERCHANGE")
         cbVisible = .true
         cb~assignFocus
     end
     else do
-        r = list~getItemRect(itemIndex, 'LABEL')
-        ret = cb~setWindowPos(list~hwnd, r~left, r~top, r~right - r~left, 4 * (r~bottom - r~top), "SHOWWINDOW NOZORDERCHANGE")
+        r = lv~getItemRect(itemIndex, 'LABEL')
+        ret = cb~setWindowPos(lv~hwnd, r~left, r~top, r~right - r~left, 4 * (r~bottom - r~top), "SHOWWINDOW NOZORDERCHANGE")
         cbVisible = .true
         cb~assignFocus
     end

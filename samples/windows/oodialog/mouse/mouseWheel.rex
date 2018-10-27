@@ -394,22 +394,13 @@ return 0
  * variable.  That way 'process' always reflects which radio button is currently
  * selected.
  *
- * The event handler is sent two arguments.  The first argument is a whole
- * number containing information about the click.  Note that several button
- * events and menu item selections generate the same event notification in
- * Windows.  The information in the first argument allow the programmer to
- * determine exactly what caused the event.
- *
- * However, the low word of the number is always the resource ID of the dialog
- * control or menu item. The resource ID is all we need.  The second argument,
- * for a dialog control, is the window handle of the control.  For a menu item
- * it is always 0.
+ * The event handler is sent five arguments.  However the first two are left
+ * over from the old IBM ooDialog implementation and we ignore them.  We only
+ * need the third 'id' argument, so we ignore the last two args also.
  */
 ::method onRbSelect
   expose process
-  use arg info, handle
-
-  id = .DlgUtil~loWord(info)
+  use arg , , id
 
   select
     when id == .ConstDir[IDC_RB_ANYWHERE        ] then process = "ANYWHERE"

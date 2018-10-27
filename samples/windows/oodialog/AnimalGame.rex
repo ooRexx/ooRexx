@@ -143,7 +143,7 @@
   use strict arg bitmaps, buttonIDs
 
   size   = .Size~new(self~BITMAP_WIDTH, self~BITMAP_HEIGHT)
-  flags  = .DlgUtil~or(.Image~toID(ILC_COLOR8), .Image~toID(ILC_MASK))
+  flags  = 'COLOR8 MASK'
   margin = .Rect~new(2)
   cRef   = .Image~colorRef(255, 255, 153)
 

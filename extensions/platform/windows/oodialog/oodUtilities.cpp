@@ -48,6 +48,7 @@
 #include <shlobj.h>         // For ShChangeNotify()
 #include <Rpc.h>
 #include "APICommon.hpp"
+#include "ooShapes.hpp"
 #include "oodCommon.hpp"
 #include "oodShared.hpp"
 #include "oodDeviceGraphics.hpp"
@@ -1044,7 +1045,7 @@ RexxObjectPtr SPI_getWorkArea(RexxMethodContext *c)
         oodSetSysErrCode(c->threadContext);
     }
 
-    return rxNewRect(c, &r);
+    return rxNewRect(c, (PORXRECT)&r);
 }
 
 
@@ -1317,9 +1318,19 @@ RexxMethod1(uintptr_t, dlgutil_unsigned_cls, intptr_t, n1)
     return (uintptr_t)n1;
 }
 
+RexxMethod1(uint32_t, dlgutil_unsigned32_cls, int32_t, n1)
+{
+    return (uint32_t)n1;
+}
+
 RexxMethod1(intptr_t, dlgutil_signed_cls, uintptr_t, n1)
 {
     return (intptr_t)n1;
+}
+
+RexxMethod1(int32_t, dlgutil_signed32_cls, uint32_t, n1)
+{
+    return (int32_t)n1;
 }
 
 inline bool inBounds(RexxThreadContext *c, size_t pos, uint32_t n, uint32_t upperLimit)
@@ -1488,7 +1499,7 @@ RexxMethod2(RexxObjectPtr, dlgutil_screenSize_cls, OPTIONAL_CSTRING, _flag, OPTI
                 goto done_out;
             }
 
-            POINT point = {pixelX, pixelY};
+            POINT point = {(LONG)pixelX, (LONG)pixelY}; // cast avoids C4838
             mapPixelToDu(context, dlgObj, &point, 1);
             duX = point.x;
             duY = point.y;
@@ -1589,7 +1600,7 @@ RexxMethod0(uint32_t, dlgutil_threadID_cls)
  */
 RexxMethod1(RexxStringObject, dlgutil_windowFromPoint_cls, RexxObjectPtr, pt)
 {
-    PPOINT p = rxGetPoint(context, pt, 1);
+    PPOINT p = (PPOINT)rxGetPoint(context, pt, 1);
     if ( p != NULL )
     {
         return pointer2string(context, WindowFromPoint(*p));
@@ -1966,7 +1977,7 @@ RexxMethod2(RexxObjectPtr, spi_setWorkArea_cls, RexxObjectPtr, rect, CSELF, pCSe
 {
     oodResetSysErrCode(context->threadContext);
 
-    PRECT r = rxGetRect(context, rect, 1);
+    PRECT r = (PRECT)rxGetRect(context, rect, 1);
     if ( r != NULL )
     {
         if ( ! SystemParametersInfo(SPI_SETWORKAREA, 0, &r, ((pCSpi)pCSelf)->fWinIni) )
@@ -2028,6 +2039,10 @@ RexxMethod0(int32_t, sm_cxFixedFrame_cls)
 {
     return GetSystemMetrics(SM_CXFIXEDFRAME);
 }
+RexxMethod0(int32_t, sm_cxIcon_cls)
+{
+    return GetSystemMetrics(SM_CXICON);
+}
 RexxMethod0(int32_t, sm_cxScreen_cls)
 {
     return GetSystemMetrics(SM_CXSCREEN);
@@ -2064,6 +2079,10 @@ RexxMethod0(int32_t, sm_cyHScroll_cls)
 {
     return GetSystemMetrics(SM_CYHSCROLL);
 }
+RexxMethod0(int32_t, sm_cyIcon_cls)
+{
+    return GetSystemMetrics(SM_CYICON);
+}
 RexxMethod0(int32_t, sm_cyMenu_cls)
 {
     return GetSystemMetrics(SM_CYMENU);
@@ -2071,6 +2090,14 @@ RexxMethod0(int32_t, sm_cyMenu_cls)
 RexxMethod0(int32_t, sm_cyScreen_cls)
 {
     return GetSystemMetrics(SM_CYSCREEN);
+}
+RexxMethod0(int32_t, sm_cySize_cls)
+{
+    return GetSystemMetrics(SM_CYSIZE);
+}
+RexxMethod0(int32_t, sm_cySmIcon_cls)
+{
+    return GetSystemMetrics(SM_CYSMICON);
 }
 RexxMethod0(int32_t, sm_menuDropAlignment_cls)
 {
@@ -2337,353 +2364,6 @@ RexxMethod1(RexxObjectPtr, window_unInit, CSELF, pCSelf)
     return NULLOBJECT;
 }
 
-
-/**
- * Methods for the ooDialog .Point class.
- */
-#define POINT_CLASS  "Point"
-
-
-RexxMethod1(RexxObjectPtr, point_init_cls, OSELF, self)
-{
-    if ( isOfClassType(context, self, POINT_CLASS) )
-    {
-        ThePointClass = (RexxClassObject)self;
-        context->RequestGlobalReference(ThePointClass);
-    }
-    return NULLOBJECT;
-}
-
-RexxMethod2(RexxObjectPtr, point_init, OPTIONAL_int32_t,  x, OPTIONAL_int32_t, y)
-{
-    RexxBufferObject obj = context->NewBuffer(sizeof(POINT));
-    context->SetObjectVariable("CSELF", obj);
-
-    POINT *p = (POINT *)context->BufferData(obj);
-    p->x = argumentExists(1) ? x : 0;
-    p->y = argumentExists(2) ? y : p->x;
-
-    return NULLOBJECT;
-}
-
-RexxMethod1(int32_t, point_x, CSELF, p) { return ((POINT *)p)->x; }
-RexxMethod1(int32_t, point_y, CSELF, p) { return ((POINT *)p)->y; }
-RexxMethod2(RexxObjectPtr, point_setX, CSELF, p, int32_t, x) { ((POINT *)p)->x = x; return NULLOBJECT; }
-RexxMethod2(RexxObjectPtr, point_setY, CSELF, p, int32_t, y) { ((POINT *)p)->y = y; return NULLOBJECT; }
-
-/** Point::copy()
- *
- *  Returns a new point object that is a copy of this point.
- *
- */
-RexxMethod1(RexxObjectPtr, point_copy, CSELF, p)
-{
-    POINT *_p = (POINT *)p;
-    return rxNewPoint(context, _p->x, _p->y);
-}
-
-/** Point::+
- *
- *  Returns a new point object that is the result of "adding" two points.
- *
- */
-RexxMethod2(RexxObjectPtr, point_add, RexxObjectPtr, other, CSELF, p)
-{
-    if ( ! context->IsOfType(other, "POINT") )
-    {
-        wrongClassException(context->threadContext, 1, "Point");
-        return NULLOBJECT;
-    }
-
-    POINT *p1 = (POINT *)p;
-    POINT *p2 = (POINT *)context->ObjectToCSelf(other);
-
-    return rxNewPoint(context, p1->x + p2->x, p1->y + p2->y);
-}
-
-/** Point::-
- *
- *  Returns a new point object that is the result of "subtracting" two points.
- *
- */
-RexxMethod2(RexxObjectPtr, point_subtract, RexxObjectPtr, other, CSELF, p)
-{
-    if ( ! context->IsOfType(other, "POINT") )
-    {
-        wrongClassException(context->threadContext, 1, "Point");
-        return NULLOBJECT;
-    }
-
-    POINT *p1 = (POINT *)p;
-    POINT *p2 = (POINT *)context->ObjectToCSelf(other);
-
-    return rxNewPoint(context, p1->x - p2->x, p1->y - p2->y);
-}
-
-/** Point::incr
- *
- *  Increments this point's x and y attributes by the specified amount. If both
- *  optional args are ommitted, the x and y are incremented by 1.
- *
- *  @param  x  The amount to increment, (to add to,) this point's x attribute.
- *             If y is specified and this arg is omitted than 0 is used.
- *
- *  @param  y  The amount to increment, (to add to,) this point's y attribute.
- *             If x is specified and this arg is omitted than 0 is used.
- *
- *  @return  No return.
- *
- *  @remarks  If either x or y are omitted, then their value will be 0.  Since
- *            that is the default, once we check that both are not ommitted, we
- *            are safe to just add x and y to the current x and y.
- */
-RexxMethod3(RexxObjectPtr, point_incr, OPTIONAL_int32_t, x, OPTIONAL_int32_t, y, CSELF, p)
-{
-    if ( argumentOmitted(1) && argumentOmitted(2) )
-    {
-        ((POINT *)p)->x++;
-        ((POINT *)p)->y++;
-    }
-    else
-    {
-        ((POINT *)p)->x += x;
-        ((POINT *)p)->y += y;
-    }
-
-    return NULLOBJECT;
-}
-
-/** Point::decr
- *
- *  Decrements this point's x and y attributes by the specified amount. See the
- *  comments above for Point::incr() for details.
- */
-RexxMethod3(RexxObjectPtr, point_decr, OPTIONAL_int32_t, x, OPTIONAL_int32_t, y, CSELF, p)
-{
-    if ( argumentOmitted(1) && argumentOmitted(2) )
-    {
-        ((POINT *)p)->x--;
-        ((POINT *)p)->y--;
-    }
-    else
-    {
-        ((POINT *)p)->x -= x;
-        ((POINT *)p)->y -= y;
-    }
-
-    return NULLOBJECT;
-}
-
-/** Point::inRect
- *
- *  Determines if this point is in the specified rectangle.  The rectangle must
- *  be normalized, that is, rect.right must be greater than rect.left and
- *  rect.bottom must be greater than rect.top. If the rectangle is not
- *  normalized, a point is never considered inside of the rectangle.
- */
-RexxMethod2(logical_t, point_inRect, RexxObjectPtr, rect, CSELF, p)
-{
-    PRECT r = rxGetRect(context, rect, 1);
-    if ( r != NULL )
-    {
-        POINT pt = {((POINT *)p)->x, ((POINT *)p)->y};
-        return PtInRect(r, pt);
-    }
-
-    return FALSE;
-}
-
-RexxMethod1(RexxStringObject, point_string, CSELF, p)
-{
-    PPOINT pt = (PPOINT)p;
-
-    TCHAR buf[128];
-    _snprintf(buf, sizeof(buf), "a Point (%d, %d)", pt->x, pt->y);
-
-    return context->String(buf);
-}
-
-
-
-/**
- * Methods for the ooDialog .Size class.
- */
-#define SIZE_CLASS  "Size"
-
-RexxMethod1(RexxObjectPtr, size_init_cls, OSELF, self)
-{
-    if ( isOfClassType(context, self, SIZE_CLASS) )
-    {
-        TheSizeClass = (RexxClassObject)self;
-        context->RequestGlobalReference(TheSizeClass);
-    }
-    return NULLOBJECT;
-}
-
-RexxMethod2(RexxObjectPtr, size_init, OPTIONAL_int32_t, cx, OPTIONAL_int32_t, cy)
-{
-    RexxBufferObject obj = context->NewBuffer(sizeof(SIZE));
-    context->SetObjectVariable("CSELF", obj);
-
-    SIZE *s = (SIZE *)context->BufferData(obj);
-
-    s->cx = argumentExists(1) ? cx : 0;
-    s->cy = argumentExists(2) ? cy : s->cx;
-
-    return NULLOBJECT;
-}
-
-RexxMethod1(int32_t, size_cx, CSELF, s) { return ((SIZE *)s)->cx; }
-RexxMethod1(int32_t, size_cy, CSELF, s) { return ((SIZE *)s)->cy; }
-RexxMethod2(RexxObjectPtr, size_setCX, CSELF, s, int32_t, cx) { ((SIZE *)s)->cx = cx; return NULLOBJECT; }
-RexxMethod2(RexxObjectPtr, size_setCY, CSELF, s, int32_t, cy) { ((SIZE *)s)->cy = cy; return NULLOBJECT; }
-
-RexxMethod1(RexxStringObject, size_string, CSELF, s)
-{
-    PSIZE size = (PSIZE)s;
-
-    TCHAR buf[128];
-    _snprintf(buf, sizeof(buf), "a Size (%d, %d)", size->cx, size->cy);
-
-    return context->String(buf);
-}
-
-RexxMethod2(logical_t, size_equateTo, RexxObjectPtr, other, CSELF, s)
-{
-    PSIZE size = (PSIZE)s;
-    PSIZE pOther = rxGetSize(context, other, 1);
-    if ( pOther == NULL )
-    {
-        return FALSE;
-    }
-
-    size->cx = pOther->cx;
-    size->cy = pOther->cy;
-
-    return TRUE;
-}
-
-RexxMethod3(logical_t, size_compare, RexxObjectPtr, other, NAME, method, CSELF, s)
-{
-    PSIZE size = (PSIZE)s;
-    PSIZE pOther = rxGetSize(context, other, 1);
-    if ( pOther == NULL )
-    {
-        return 0;
-    }
-
-    if ( strcmp(method, "=") == 0 )
-    {
-        return (size->cx * size->cy) == (pOther->cx * pOther->cy);
-    }
-    else if ( strcmp(method, "==") == 0 )
-    {
-        return (size->cx == pOther->cx) && (size->cy == pOther->cy);
-    }
-    else if ( strcmp(method, "\\=") == 0 )
-    {
-        return (size->cx * size->cy) != (pOther->cx * pOther->cy);
-    }
-    else if ( strcmp(method, "\\==") == 0 )
-    {
-        return (size->cx != pOther->cx) && (size->cy != pOther->cy);
-    }
-    else if ( strcmp(method, "<") == 0 )
-    {
-        return (size->cx * size->cy) < (pOther->cx * pOther->cy);
-    }
-    else if ( strcmp(method, "<<") == 0 )
-    {
-        return (size->cx < pOther->cx) && (size->cy < pOther->cy);
-    }
-    else if ( strcmp(method, "<=") == 0 )
-    {
-        return (size->cx * size->cy) <= (pOther->cx * pOther->cy);
-    }
-    else if ( strcmp(method, "<<=") == 0 )
-    {
-        return (size->cx <= pOther->cx) && (size->cy <= pOther->cy);
-    }
-    else if ( strcmp(method, ">") == 0 )
-    {
-        return (size->cx * size->cy) > (pOther->cx * pOther->cy);
-    }
-    else if ( strcmp(method, ">>") == 0 )
-    {
-        return (size->cx > pOther->cx) && (size->cy > pOther->cy);
-    }
-    else if ( strcmp(method, ">=") == 0 )
-    {
-        return (size->cx * size->cy) >= (pOther->cx * pOther->cy);
-    }
-    else if ( strcmp(method, ">>=") == 0 )
-    {
-        return (size->cx >= pOther->cx) && (size->cy >= pOther->cy);
-    }
-
-    return FALSE;
-}
-
-/**
- * Methods for the ooDialog .Rect class.
- */
-#define RECT_CLASS  "Rect"
-
-RexxMethod1(RexxObjectPtr, rect_init_cls, OSELF, self)
-{
-    if ( isOfClassType(context, self, RECT_CLASS) )
-    {
-        TheRectClass = (RexxClassObject)self;
-        context->RequestGlobalReference(TheRectClass);
-    }
-    return NULLOBJECT;
-}
-
-RexxMethod4(RexxObjectPtr, rect_init, OPTIONAL_int32_t, left, OPTIONAL_int32_t, top,
-            OPTIONAL_int32_t, right, OPTIONAL_int32_t, bottom)
-{
-    RexxBufferObject obj = context->NewBuffer(sizeof(RECT));
-    context->SetObjectVariable("CSELF", obj);
-
-    RECT *r = (RECT *)context->BufferData(obj);
-
-    r->left = argumentExists(1) ? left : 0;
-    r->top = argumentExists(2) ? top : r->left;
-    r->right = argumentExists(3) ? right : r->left;
-    r->bottom = argumentExists(4) ? bottom : r->left;
-
-    return NULLOBJECT;
-}
-
-RexxMethod1(int32_t, rect_left, CSELF, pRect) { return ((RECT *)pRect)->left; }
-RexxMethod1(int32_t, rect_top, CSELF, pRect) { return ((RECT *)pRect)->top; }
-RexxMethod1(int32_t, rect_right, CSELF, pRect) { return ((RECT *)pRect)->right; }
-RexxMethod1(int32_t, rect_bottom, CSELF, pRect) { return ((RECT *)pRect)->bottom; }
-RexxMethod2(RexxObjectPtr, rect_setLeft, CSELF, pRect, int32_t, left) { ((RECT *)pRect)->left = left; return NULLOBJECT; }
-RexxMethod2(RexxObjectPtr, rect_setTop, CSELF, pRect, int32_t, top) { ((RECT *)pRect)->top = top; return NULLOBJECT; }
-RexxMethod2(RexxObjectPtr, rect_setRight, CSELF, pRect, int32_t, right) { ((RECT *)pRect)->right = right; return NULLOBJECT; }
-RexxMethod2(RexxObjectPtr, rect_setBottom, CSELF, pRect, int32_t, bottom) { ((RECT *)pRect)->bottom = bottom; return NULLOBJECT; }
-
-/** Rect::copy()
- *
- *  Returns a new Rect object that is a copy of this Rect.
- *
- */
-RexxMethod1(RexxObjectPtr, rect_copy, CSELF, pRect)
-{
-    PRECT pR = (PRECT)pRect;
-    return rxNewRect(context, pR->left, pR->top, pR->right, pR->bottom);
-}
-
-RexxMethod1(RexxStringObject, rect_string, CSELF, pRect)
-{
-    PRECT pR = (PRECT)pRect;
-
-    TCHAR buf[128];
-    _snprintf(buf, sizeof(buf), "a Rect (%d, %d, %d, %d)", pR->left, pR->top, pR->right, pR->bottom);
-
-    return context->String(buf);
-}
 
 /**
  * Methods for the ooDialog .VK class.

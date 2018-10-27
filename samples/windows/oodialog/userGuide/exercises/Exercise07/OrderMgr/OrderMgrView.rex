@@ -64,6 +64,8 @@
        5. Added methods "person" and "messageSender" which launch a PersonModel
           and a Message Sender respectively.
        27Feb13: Commented-out several 'say's.
+       30Jly14: Corrected .ImageList~create(...) statement in createIconList 
+                method.
 
 ------------------------------------------------------------------------------*/
 
@@ -135,7 +137,7 @@ call "OrderMgr\RequiresList.rex"
     self~lv = self~newListView(IDC_ORDMGR_ICONS)
 
     -- Add the Image List to the ListView:
-    self~lv~setImageList(iconList, .Image~toID(LVSIL_NORMAL))
+    self~lv~setImageList(iconList, NORMAL)
     -- Add icons (i.e. records) to the ListView:
     do i=1 to records~items
       self~lv~addRow(, i-1, records[i]~name)
@@ -187,7 +189,8 @@ call "OrderMgr\RequiresList.rex"
     imgProdList  = .Image~getImage("product\res\ProdList.bmp")
     imgOrderList = .Image~getImage("order\bmp\OrderList.bmp")
     imgOrderForm = .Image~getImage("order\bmp\OrderForm.bmp")
-    iconList = .ImageList~create(.Size~new(64, 64), .Image~toID(ILC_COLOR4), 4, 0)
+    iconList = .ImageList~create(.Size~new(64, 64), .Image~toId(ILC_COLOR4), 4, 0)
+
     -- Boldly assume no errors in creating the Image List or in the ~getImage statements.
     iconList~add(imgCustList)   -- item 0 in iconList (item 1 in records)
     iconList~add(imgProdList)   -- item 1 in iconList (item 2 in records)
@@ -233,7 +236,7 @@ call "OrderMgr\RequiresList.rex"
     --say "OrderMgrView-initDialog."
     self~initDialog:super
     -- Add the Image List to the ListView:
-    self~lv~setImageList(iconList, .Image~toID(LVSIL_NORMAL))
+    self~lv~setImageList(iconList, NORMAL)
     -- Add icons (i.e. records) to the ListView:
     do i=1 to records~items
       self~lv~addRow(, i-1, records[i]~name)

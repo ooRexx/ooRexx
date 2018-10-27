@@ -72,10 +72,11 @@ end
 -- Files are in the order they are read and written out. UtilityClasses.cls must be kept first, otherwise
 -- the order should not make any difference.
 srcFiles = .array~of("UtilityClasses.cls",    "AnimatedButton.cls",    "BaseDialog.cls",        "ControlDialog.cls",     -
-                     "DialogControls.cls",    "ListView.cls",          "TreeView.cls",          "ToolTip.cls",           -
-                     "DialogExtensions.cls",  "DynamicDialog.cls",     "EventNotification.cls", "PlainBaseDialog.cls",   -
-                     "RcDialog.cls",          "Menu.cls",              "ResDialog.cls",         "UserDialog.cls",        -
-                     "DeprecatedClasses.cls", "ShellObjects.cls")
+                     "DialogControls.cls",    "ListView.cls",          "ReBar.cls",             "StatusBar.cls",         -
+                     "TreeView.cls",          "ToolBar.cls",           "ToolTip.cls",           "DialogExtensions.cls",  -
+                     "DynamicDialog.cls",     "EventNotification.cls", "PlainBaseDialog.cls",   "RcDialog.cls",          -
+                     "Menu.cls",              "ResDialog.cls",         "UserDialog.cls",        "DeprecatedClasses.cls", -
+                     "ShellObjects.cls")
 
 outFile = .stream~new(outdir || outname[3])
 if outFile~open("WRITE REPLACE") \= "READY:" then return 9
@@ -86,6 +87,7 @@ do i = 1 to 37
   outFile~lineout(sourceLine(i))
 end
 outFile~lineout("")
+outFile~lineout("::requires 'ooShapes.cls'")
 outFile~lineout("::requires 'oodialog' LIBRARY")
 outFile~lineout("")
 

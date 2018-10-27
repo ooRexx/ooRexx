@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -48,6 +48,7 @@
 #include <dlgs.h>
 #include <shlwapi.h>
 #include "APICommon.hpp"
+#include "ooShapes.hpp"
 #include "oodCommon.hpp"
 #include "oodMessaging.hpp"
 #include "oodUser.hpp"
@@ -1634,7 +1635,7 @@ LRESULT CALLBACK PropSheetCBTProc(int nCode, WPARAM wParam, LPARAM lParam)
         else
         {
             printf("PropSheetCBTProc() DID NOT MATCH !! hwnd=%p className=%s name=%s style=0x%08x exStyle=0x%08x\n",
-                    wParam, cs->lpszClass, cs->lpszName, cs->style, cs->dwExStyle);
+                    (void *)wParam, cs->lpszClass, cs->lpszName, cs->style, cs->dwExStyle);
         }
     }
 
@@ -4788,7 +4789,7 @@ RexxMethod2(RexxObjectPtr, psp_setSize, ARGLIST, args, CSELF, pCSelf)
     size_t arraySize;
     size_t argsUsed;
     POINT  point;
-    if ( ! getPointFromArglist(context, args, &point, 1, 2, &arraySize, &argsUsed) )
+    if ( ! getPointFromArglist(context, args, (PORXPOINT)&point, 1, 2, &arraySize, &argsUsed) )
     {
         return TheOneObj;
     }
@@ -5262,7 +5263,7 @@ DLGTEMPLATEEX *getDialogResource(RexxThreadContext *c, pCControlDialog pccd)
     pCPlainBaseDialog pcpbd = pccd->pcpbd;
 
     // Find the dialog template resource.
-    hResource = FindResource(pcpbd->hInstance, (LPCSTR)pccd->resID, RT_DIALOG);
+    hResource = FindResource(pcpbd->hInstance, (LPCSTR)(UINT_PTR)pccd->resID, RT_DIALOG); // double cast avoids C4312
     if (hResource == NULL)
     {
         systemServiceExceptionCode(c, API_FAILED_MSG, "FindResource");
@@ -5386,7 +5387,9 @@ DLGTEMPLATEEX *getTemplate(RexxThreadContext *c, pCControlDialog pccd)
  */
 HWND createMTPageDlg(RexxThreadContext *c, pCControlDialog pccd, DLGTEMPLATEEX *pTemplate, pCPlainBaseDialog pcpbdOwner)
 {
+#ifdef _DEBUG
     printf("Enter createMTPageDlg() dlg=%s\n", c->ObjectToStringValue(pccd->rexxSelf));
+#endif
 
     pCPlainBaseDialog pcpbd = pccd->pcpbd;
 
@@ -5442,7 +5445,9 @@ HWND createMTPageDlg(RexxThreadContext *c, pCControlDialog pccd, DLGTEMPLATEEX *
         stopDialog(pcpbd, c);
     }
 
+#ifdef _DEBUG
     printf("Leave createMTPageDlg() dlg=%s\n", c->ObjectToStringValue(pccd->rexxSelf));
+#endif
     return hPage;
 }
 
@@ -5675,8 +5680,13 @@ static LRESULT doTCNSelChange(pCTabOwnerDialog pctod, pCManagedTab pcmt)
 
             if ( pcmt->ownerWantsSelChange )
             {
-                RexxArrayObject args = c->ArrayOfTwo(pccdNew->rexxSelf, c->UnsignedInt32(cur + 1));
-                invokeDispatch(c, pcmt->rexxOwner, c->String(TABOWNERSELCHANGE_MSG), args);
+                RexxObjectPtr   tabIndex = c->UnsignedInt32(cur + 1);
+                RexxArrayObject args     = c->ArrayOfTwo(pccdNew->rexxSelf, tabIndex);
+
+                invokeDispatch(c, pcmt->pcpbd, TABOWNERSELCHANGE_MSG, args);
+
+                c->ReleaseLocalReference(tabIndex);
+                c->ReleaseLocalReference(args);
             }
             break;
 
@@ -6472,7 +6482,7 @@ static bool setCdiSize(RexxMethodContext *c, pCControlDialogInfo pccdi, RexxObje
 {
     if ( exists )
     {
-        SIZE *s = rxGetSize(c, _size, argPos);
+        SIZE *s = (PSIZE)rxGetSize(c, _size, argPos);
         if ( s == NULL )
         {
             return false;

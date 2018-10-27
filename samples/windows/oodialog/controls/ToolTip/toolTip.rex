@@ -90,7 +90,7 @@
 
     -- Locate our icon file
     srcDir = locate()
-    icon = .Image~getImage(srcDir"musicNote.ico", .Image~toID(IMAGE_ICON), .size~new(16, 16))
+    icon = .Image~getImage(srcDir"musicNote.ico", ICON, .size~new(16, 16))
 
     self~create(30, 30, 257, 123, "ToolTip Example Dialog", "CENTER")
 

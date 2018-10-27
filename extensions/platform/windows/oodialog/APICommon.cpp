@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -47,8 +47,47 @@
 #include <string.h>
 #include <errno.h>
 #include "oorexxapi.h"
-#include "oodShared.hpp"
 #include "APICommon.hpp"
+
+RexxObjectPtr       TheTrueObj        = NULLOBJECT;
+RexxObjectPtr       TheFalseObj       = NULLOBJECT;
+RexxObjectPtr       TheNilObj         = NULLOBJECT;
+RexxObjectPtr       TheZeroObj        = NULLOBJECT;
+RexxObjectPtr       TheOneObj         = NULLOBJECT;
+RexxObjectPtr       TheTwoObj         = NULLOBJECT;
+RexxObjectPtr       TheNegativeOneObj = NULLOBJECT;
+RexxObjectPtr       TheZeroPointerObj = NULLOBJECT;
+RexxDirectoryObject TheDotLocalObj    = NULLOBJECT;
+
+bool RexxEntry packageLoadHelper(RexxThreadContext *c)
+{
+    TheTrueObj    = c->True();
+    TheFalseObj   = c->False();
+    TheNilObj     = c->Nil();
+    TheZeroObj    = TheFalseObj;
+    TheOneObj     = TheTrueObj;
+
+    TheNegativeOneObj = c->WholeNumber(-1);
+    c->RequestGlobalReference(TheNegativeOneObj);
+
+    TheTwoObj = c->WholeNumber(2);
+    c->RequestGlobalReference(TheTwoObj);
+
+    TheZeroPointerObj = c->NewPointer(NULL);
+    c->RequestGlobalReference(TheZeroPointerObj);
+
+    RexxDirectoryObject local = c->GetLocalEnvironment();
+    if ( local != NULLOBJECT )
+    {
+        TheDotLocalObj = local;
+    }
+    else
+    {
+        severeErrorException(c, NO_LOCAL_ENVIRONMENT_MSG);
+        return false;
+    }
+    return true;
+}
 
 
 /**
@@ -417,6 +456,26 @@ RexxObjectPtr invalidTypeException(RexxThreadContext *c, size_t pos, const char 
     return NULLOBJECT;
 }
 
+/**
+ * Argument 'argument' is not a valid 'type'; found 'actual'
+ *
+ * Argument 1 is not a valid COLORREF; found a Directoy
+ *
+ * Raises 88.900
+ *
+ * @param c    Thread context we are executing in.
+ * @param pos  Argumet position
+ * @param type  "Some thing"
+ * @param actual
+ */
+RexxObjectPtr invalidTypeException(RexxThreadContext *c, size_t pos, const char *type, RexxObjectPtr actual)
+{
+    char buffer[256];
+    snprintf(buffer, sizeof(buffer), "Argument %zd is not a valid %s; found %s", pos, type, c->ObjectToStringValue(actual));
+    userDefinedMsgException(c, buffer);
+    return NULLOBJECT;
+}
+
 void invalidImageException(RexxThreadContext *c, size_t pos, CSTRING type, CSTRING actual)
 {
     char buffer[256];
@@ -442,6 +501,26 @@ void stringTooLongException(RexxThreadContext *c, size_t pos, size_t len, size_t
     char buffer[256];
     snprintf(buffer, sizeof(buffer), "Argument %zd must be less than %zd characters in length; length is %zd",
               pos, len, realLen);
+    userDefinedMsgException(c, buffer);
+}
+
+/**
+ * String produced by the <name> <type> is longer than allowed; (max == <max>)
+ *
+ * String produced by the enquote method is longer than allowed; (max == 2048)
+ *
+ * Raises 88.900
+ *
+ * @param c        Thread context we are executing in.
+ * @param pos      Argumet position
+ * @param len      Fixed length
+ * @param realLen  Actual length
+ */
+void stringTooLongException(RexxThreadContext *c, CSTRING name, bool isMethod, size_t max)
+{
+    char buffer[256];
+    snprintf(buffer, sizeof(buffer), "String produced by the %s %s is longer than allowed; (max == %zd)",
+             name, isMethod ? "method" : "function", max);
     userDefinedMsgException(c, buffer);
 }
 
@@ -664,6 +743,13 @@ void arrayToLargeException(RexxThreadContext *c, uint32_t found, uint32_t max, i
     snprintf(buffer, sizeof(buffer), "Argument %d, array items (%d) exceeds maximum (%d) allowed", argPos, found, max);
     userDefinedMsgException(c, buffer);
 }
+void arrayWrongSizeException(RexxThreadContext *c, size_t found, size_t need, int argPos)
+{
+    char buffer[256];
+    snprintf(buffer, sizeof(buffer), "Argument %d, array items must equal (%zd), found (%zd)", argPos, need, found);
+    userDefinedMsgException(c, buffer);
+}
+
 
 RexxObjectPtr sparseArrayException(RexxThreadContext *c, size_t argPos, size_t index)
 {
@@ -825,7 +911,7 @@ RexxObjectPtr wrongArgKeywordsException(RexxThreadContext *c, size_t pos, CSTRIN
 
 RexxObjectPtr wrongArgKeywordsException(RexxThreadContext *c, size_t pos, CSTRING list, RexxObjectPtr actual)
 {
-    return wrongArgOptionException(c, pos, list, c->ObjectToStringValue(actual));
+    return wrongArgKeywordsException(c, pos, list, c->ObjectToStringValue(actual));
 }
 
 /**
@@ -848,6 +934,30 @@ RexxObjectPtr wrongArgKeywordException(RexxMethodContext *c, size_t pos, CSTRING
 {
     char buffer[512];
     snprintf(buffer, sizeof(buffer), "Method argument %zd, keyword must be exactly one of %s; found \"%s\"", pos, list, actual);
+    userDefinedMsgException(c, buffer);
+    return NULLOBJECT;
+}
+
+/**
+ * Similar to 93.915 and 93.914  (actually a combination of the two.)
+ *
+ * Argument <pos>, keyword must be exactly one of <list>; found
+ * "<actual>"
+ *
+ * Method argument 2 must be exactly one of left, right, top, or bottom found
+ * "Side"
+ *
+ * @param c
+ * @param pos
+ * @param list
+ * @param actual  String, actual keyword
+ *
+ * @return RexxObjectPtr
+ */
+RexxObjectPtr wrongArgKeywordException(RexxThreadContext *c, size_t pos, CSTRING list, CSTRING actual)
+{
+    char buffer[512];
+    snprintf(buffer, sizeof(buffer), "Argument %zd, keyword must be exactly one of %s; found \"%s\"", pos, list, actual);
     userDefinedMsgException(c, buffer);
     return NULLOBJECT;
 }
@@ -977,8 +1087,6 @@ RexxObjectPtr invalidReturnWholeNumberException(RexxThreadContext *c, CSTRING na
  *  The return from method "name"() must a logical; found "value"
  *
  *  The return from method onCustomDraw() must be a logical; found an Array
- *
- *  The exception is raised, printed, and the dialog is ended.
  */
 void notBooleanReplyException(RexxThreadContext *c, CSTRING method, RexxObjectPtr actual)
 {
@@ -987,6 +1095,169 @@ void notBooleanReplyException(RexxThreadContext *c, CSTRING method, RexxObjectPt
              method, c->ObjectToStringValue(actual));
 
     c->RaiseException1(Rexx_Error_Execution_user_defined, c->String(buf));
+}
+
+/**
+ *  93.900
+ *
+ *  Error 93 - Incorrect call to method
+ *        The specified method, built-in function, or external routine exists,
+ *        but you used it incorrectly.
+ *
+ *  Argument pos must be in the range 0 to 4294967295; found "actual"
+ *
+ *  Argument 1 must be in the range 0 to 4294967295; found "an Array"
+ */
+void notUnsignedInt32Exception(RexxMethodContext *c, size_t pos, RexxObjectPtr actual)
+{
+    char buf[256];
+    snprintf(buf, sizeof(buf), "Argument %zd must be in the range 0 to 4294967295; found \"%s\"",
+             pos, c->ObjectToStringValue(actual));
+
+    c->RaiseException1(Rexx_Error_Incorrect_method_user_defined, c->String(buf));
+}
+
+
+/**
+ * Tests if a string is a pointer string.
+ *
+ * Pointer strings are strings representing a pointer, handle, etc..  I.e. in
+ * "0xdd" format. But, this really just tests for hexidecimal format.
+ *
+ * @param string  The string to test.
+ *
+ * @return True or false
+ */
+bool isPointerString(const char *string)
+{
+    if ( string != NULL && strlen(string) > 2 )
+    {
+        return *string == '0' && toupper(string[1]) == 'X' && isxdigit(string[2]);
+    }
+    return false;
+}
+
+/**
+ * Converts a string in hexadecimal format (starts with 0x) to its pointer-sized
+ * value.
+ *
+ * Note that this converts "0" to null, which is what we want.  It also accepts
+ * a NULL pointer for string.
+ *
+ * @param string  The string to convert.
+ *
+ * @return The converted value, which could be null to begin with, or null if it
+ *         is not converted.
+ */
+void *string2pointer(const char *string)
+{
+    void *pointer = NULL;
+    if ( string != NULL && strlen(string) > 1 )
+    {
+        if ( string[1] == 'x' )
+        {
+            sscanf(string, "0x%p", &pointer);
+        }
+        else if ( string[1] == 'X' )
+        {
+            sscanf(string, "0X%p", &pointer);
+        }
+    }
+    return pointer;
+}
+
+void *string2pointer(RexxMethodContext *c, RexxStringObject string)
+{
+    if ( string == NULLOBJECT )
+    {
+        return NULL;
+    }
+    return string2pointer(c->CString(string));
+}
+
+/**
+ * A sort of special case used in dialog procedure functions.  We don't really
+ * know what the user returned.  It is supposedly a pointer (some type of
+ * handle, a HWND, or ...).
+ *
+ * There is no error, if it is not a handle, then null is returned.  The caller
+ * would need to implement any type checking.
+ *
+ * @param c
+ * @param ptr
+ *
+ * @return A handle, which may be null
+ */
+void *string2pointer(RexxThreadContext *c, RexxObjectPtr ptr)
+{
+    if ( ptr == NULLOBJECT )
+    {
+        return NULL;
+    }
+    return string2pointer(c->ObjectToStringValue(ptr));
+}
+
+/**
+ * Converts a pointer-sized type to a pointer-string, or 0 if the pointer is
+ * null.
+ *
+ * @param result   [out] Pointer-string is returned here.  Ensure the storage
+ *                 pointed to is big enough for a 64-bit pointer.
+ *
+ * @param pointer  [in] The pointer to convert.
+ *
+ * @remarks  Pointer-sized type is used to indicate that this will work for
+ *           opaque types, like HANDLE, HMENU, HINST, UINT_PTR, DWORD_PTR, etc.,
+ *           that are pointer size.
+ *
+ *           For now, 0 is returned for null rather than 0x00000000 because
+ *           many, many places in ooDialog test for 0 to detect error.
+ */
+void pointer2string(char *result, void *pointer)
+{
+    if ( pointer == NULL )
+    {
+        sprintf(result, "0");
+    }
+    else
+    {
+        sprintf(result, "0x%p", pointer);
+    }
+}
+
+
+/**
+ * Variation of above.  Converts the pointer and returns it as a
+ * RexxStringObject.
+ *
+ * @param c        Method context we are operating in.
+ * @param pointer  Pointer to convert
+ *
+ * @return A string object representing the pointer as either 0xffff1111 if not
+ *         null, or as 0 if null.
+ */
+RexxStringObject pointer2string(RexxMethodContext *c, void *pointer)
+{
+    char buf[32];
+    pointer2string(buf, pointer);
+    return c->String(buf);
+}
+
+/**
+ * Variation of above, but takes a thread context pointer instead of a method
+ * context pointer. Converts the pointer and returns it as a RexxStringObject.
+ *
+ * @param c        Thread context we are operating in.
+ * @param pointer  Pointer to convert
+ *
+ * @return A string object representing the pointer as either 0xffff1111 if not
+ *         null, or as 0 if null.
+ */
+RexxStringObject pointer2string(RexxThreadContext *c, void *pointer)
+{
+    char buf[32];
+    pointer2string(buf, pointer);
+    return c->String(buf);
 }
 
 
@@ -1047,6 +1318,24 @@ bool rxGetUInt32Attribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING
         }
     }
     return result;
+}
+
+/**
+ * Checks that an argument value is truly a Directory object.
+ *
+ * @param context
+ * @param d
+ * @param argPos
+ *
+ * @return a RexxDirectoryObject object on sucess, null on error.
+ */
+RexxDirectoryObject rxGetDirectory(RexxMethodContext *context, RexxObjectPtr d, size_t argPos)
+{
+    if ( requiredClass(context->threadContext, d, "Directory", argPos) )
+    {
+        return (RexxDirectoryObject)d;
+    }
+    return NULL;
 }
 
 bool requiredClass(RexxThreadContext *c, RexxObjectPtr obj, const char *name, size_t pos)
@@ -1140,7 +1429,9 @@ size_t rxArgCount(RexxMethodContext * context)
  *
  * @note  This function is using some things that work on Windows, but cause
  *        errors on Linux.  Just comment out until it can be researched.
+ *        TODO PLEASE fix this.
  */
+#ifdef _WIN32
 bool rxStr2Number(RexxMethodContext *c, CSTRING str, uint64_t *number, size_t pos)
 {
     char *end;
@@ -1152,6 +1443,7 @@ bool rxStr2Number(RexxMethodContext *c, CSTRING str, uint64_t *number, size_t po
     }
     return true;
 }
+#endif
 
 /*
  * This function behaves exactly like rxStr2Number(), except it is for 32-bit
@@ -1297,7 +1589,6 @@ RexxObjectPtr rxNewBuiltinObject(RexxThreadContext *c, CSTRING className)
     }
     return o;
 }
-
 RexxObjectPtr rxNewBuiltinObject(RexxMethodContext *c, CSTRING className)
 {
     return rxNewBuiltinObject(c->threadContext, className);
@@ -1322,6 +1613,160 @@ bool isOutOfMemoryException(RexxThreadContext *c)
 
 
 /**
+ * Given a condition object, extracts and returns as a whole number the subcode
+ * of the condition.
+ */
+static inline wholenumber_t conditionSubCode(RexxCondition *condition)
+{
+    return (condition->code - (condition->rc * 1000));
+}
+
+
+/**
+ * Doubles a buffer of size *bytes and returns the new buffer and new size.
+ *
+ * @param buffer
+ * @param bytes
+ *
+ * @return char*
+ *
+ * @notes  The existing buffer is assumed to contain null terminated text.  This
+ *         text is copied into the new buffer on success.  The existing buffer
+ *         is freed.
+ *
+ *         Null is returned if memory allocation fails.
+ */
+static char *doubleBuffer(char *buffer, size_t *bytes)
+{
+    *bytes *= 2;
+    char *tmp = (char *)malloc(*bytes);
+    if ( tmp == NULL )
+    {
+        // We just bail.
+        free(buffer);
+        return NULL;
+    }
+
+    strcpy(tmp, buffer);
+    free(buffer);
+    return tmp;
+}
+
+/**
+ * Returns a buffer with the typical condition message.  For example:
+ *
+ *      4 *-* say dt~number
+ * Error 97 running C:\work\qTest.rex line 4:  Object method not found
+ * Error 97.1:  Object "a DateTime" does not understand message "NUMBER"
+ *
+ * @param c       The thread context we are operating in.
+ * @param major   The major error code, i.e., Error 93, the 93
+ * @param minor   The minor error subcode, i.e., Error 93.900, the 900
+ *
+ * @returns  A buffer allocated through malloc containing the standard
+ *           condition message.  The caller is responsible for freeing the
+ *           buffer using free().
+ *
+ * @assumes  The the condition has already been preformed.
+ *
+ * @notes  Null is returned if free() fails.  If for some reason there is
+ *         no condition object, the string: "No condition object" is returned.
+ *         The caller must still free this string.
+ *
+ *         Either or both of major and minor can be null.  Both are only set on
+ *         success.
+ *
+ *         This is an OS neutral version of an ooDialog function.
+ */
+static char *getConditionMsg(RexxThreadContext *c, wholenumber_t *major, wholenumber_t *minor)
+{
+#define BIG_BUF 2048
+#define MED_BUF  512
+
+    size_t bytes  = BIG_BUF;
+    char *condMsg = (char *)malloc(bytes);
+    if ( condMsg == NULL )
+    {
+        return condMsg;
+    }
+    memset(condMsg, 0, BIG_BUF);
+
+    RexxDirectoryObject condObj = c->GetConditionInfo();
+    RexxCondition       condition;
+    if ( condObj == NULLOBJECT )
+    {
+        strcpy(condMsg, "No condition object");
+        return condMsg;
+    }
+
+    size_t usedBytes = 0;
+    size_t cBytes    = 0;
+    char   buf[MED_BUF] = {'\0'};
+
+    c->DecodeConditionInfo(condObj, &condition);
+
+    RexxObjectPtr list = c->SendMessage0(condObj, "TRACEBACK");
+    if ( list != NULLOBJECT )
+    {
+        RexxArrayObject a = (RexxArrayObject)c->SendMessage0(list, "ALLITEMS");
+        if ( a != NULLOBJECT )
+        {
+            size_t count = c->ArrayItems(a);
+            for ( size_t i = 1; i <= count; i++ )
+            {
+                RexxObjectPtr o = c->ArrayAt(a, i);
+                if ( o != NULLOBJECT )
+                {
+                    cBytes = snprintf(buf, MED_BUF, "%s\n", c->ObjectToStringValue(o));
+
+                    while ( cBytes + usedBytes >= bytes )
+                    {
+                        condMsg = doubleBuffer(condMsg, &bytes);
+                        if ( condMsg == NULL )
+                        {
+                            return NULL;
+                        }
+                    }
+
+                    strcat(condMsg, buf);
+                    usedBytes += cBytes;
+                }
+            }
+        }
+    }
+
+    cBytes = snprintf(buf, MED_BUF, "Error %zd running %s line %zd: %s\n", condition.rc,
+                       c->CString(condition.program), condition.position, c->CString(condition.errortext));
+
+    // The next, last string is short.  We add some padding to the needed size
+    // to account for it.  If we come up short, doubling the current buffer is
+    // always sufficient to finish.
+    if ( cBytes + usedBytes + 256 >= bytes )
+    {
+        condMsg = doubleBuffer(condMsg, &bytes);
+        if ( condMsg == NULL )
+        {
+            return NULL;
+        }
+    }
+    strcat(condMsg, buf);
+
+    snprintf(buf, MED_BUF, "Error %zd.%03zd:  %s\n", condition.rc, conditionSubCode(&condition),
+              c->CString(condition.message));
+    strcat(condMsg, buf);
+
+    if ( major != NULL )
+    {
+        *major = condition.rc;
+    }
+    if ( minor != NULL )
+    {
+        *minor = conditionSubCode(&condition);
+    }
+    return condMsg;
+}
+
+/**
  * Given a thread context, checks for a raised condition, and prints out the
  * standard condition message if there is a condition.
  *
@@ -1335,18 +1780,19 @@ bool checkForCondition(RexxThreadContext *c, bool clear)
 {
     if ( c->CheckCondition() )
     {
-        char *msg = getStandardConditionMsg(c, NULL, NULL);
+        // Use the local function.
+        char *msg = getConditionMsg(c, NULL, NULL);
         if ( msg )
         {
             printf(msg);
-            LocalFree(msg);
+            free(msg);
         }
-        if ( clear )
-        {
-            c->ClearCondition();
+            if ( clear )
+            {
+                c->ClearCondition();
+            }
+            return true;
         }
-        return true;
-    }
     return false;
 }
 

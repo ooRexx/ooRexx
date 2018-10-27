@@ -63,8 +63,9 @@
  */
 
  srcDir = locate()
+ .application~setDefaults('O', srcDir'rc\walker.h', .false)
 
- dlg = .WalkerDialog~new(srcDir'res\oowalk2.dll',100,data.)
+ dlg = .WalkerDialog~new(srcDir'res\oowalk2.dll', IDD_WALKER)
 
  if dlg~initCode \= 0 then do
    mgr~goBack
@@ -86,14 +87,22 @@
 ::method initDialog
    expose bitmaps spriteButton quitCheckBox restartButton okButton
 
-   -- Make button 105 a bitmap button.  Bitmap buttons are owner-drawn and
-   -- ooDialog will manage the 'drawing' of the button by painting a series of
-   -- bitmaps on the button, using the AnimatedButton class.
-   self~installBitmapButton(105, '', 0);
+   -- Make button IDC_DRAW_BUTTON a bitmap button.  Bitmap buttons are owner-
+   -- drawn and ooDialog will manage the 'drawing' of the button by painting a
+   -- series of bitmaps on the button, using the AnimatedButton class.
+   self~installBitmapButton(IDC_DRAW_BUTTON, '', 0);
 
    -- The bitmaps are loaded from the resource DLL by specifying their resouce
    -- IDs in the DLL file, res\oowalk2.dll.
-   spriteButton = .WalkButton~new(105, 201, 208, 10, 2, 70, 120, 60, 10, 10, self)
+   --
+   -- We use symbolic IDs for the  bitmaps, and we assigned the IDs in order.
+   -- In the new() method, the 2nd arg is the first bitmap ID and the 3rd is the
+   -- last bitmap ID and they are assumed to be in order.  The AnimatedButton
+   -- class was never updated to accept symbolic IDs, so we need to convert the
+   -- IDs to numeric IDs
+   bmpFirst = .constDir[ID_BMP_FIG1]
+   bmpLast  = .constDir[ID_BMP_FIG8]
+   spriteButton = .WalkButton~new(IDC_DRAW_BUTTON, bmpFirst, bmpLast, 10, 2, 70, 120, 60, 10, 10, self)
 
    -- Use 'bouncy' operation when hitting edges.
    spriteButton~setSmooth(.false)
@@ -102,32 +111,42 @@
    spriteButton~setstep(1)
 
    -- Get things set up.
-   self~connectButtonEvent(107, "CLICKED", onRestart)
-   quitCheckBox = self~newCheckBox(106)
-   restartButton = self~newPushButton(107)
-   okButton = self~newPushButton(IDOK)
+   self~connectButtonEvent(IDC_PB_RESTART, "CLICKED", onRestart)
+
+   quitCheckBox  = self~newCheckBox(IDC_CB_GOTCHA)
+   restartButton = self~newPushButton(IDC_PB_RESTART)
+   okButton      = self~newPushButton(IDOK)
+
    quitCheckBox~check
    spriteButton~fillData(data.)
    spriteButton~suspendGotCha(.false)
-   self~setDataStem(data.)
-   ret = Play("tada.wav", n)
+   self~doValueStemSet(data.)
+   ret = Play(srcDir"tada.wav", n)  -- TODO not playing in Win7
 
    -- Animate the button.
    spriteButton~run
 
-::method doDataStemGet unguarded
+::method doValueStemGet unguarded
   use strict arg data.
-  self~getDataStem(data.)
+  data.IDC_EDIT_MOVEX = self~newEdit(IDC_EDIT_MOVEX)~getText
+  data.IDC_EDIT_MOVEY = self~newEdit(IDC_EDIT_MOVEY)~getText
+  data.IDC_EDIT_DELAY = self~newEdit(IDC_EDIT_DELAY)~getText
+  if self~newCheckBox(IDC_CB_SMOOTH)~checked then data.IDC_CB_SMOOTH = 1
+  else data.IDC_CB_SMOOTH = 0
 
-::method doDataStemSet unguarded
+::method doValueStemSet unguarded
   use strict arg data.
-  self~setDataStem(data.)
+  self~newEdit(IDC_EDIT_MOVEX)~setText(data.IDC_EDIT_MOVEX)
+  self~newEdit(IDC_EDIT_MOVEY)~setText(data.IDC_EDIT_MOVEY)
+  self~newEdit(IDC_EDIT_DELAY)~setText(data.IDC_EDIT_DELAY)
+  if data.IDC_CB_SMOOTH == 1 then self~newCheckBox(IDC_CB_SMOOTH)~check
+  else self~newCheckBox(IDC_CB_SMOOTH)~uncheck
 
 ::method onGotCha
    expose okButton
    use strict arg animatedButton, x, y
    okButton~disable
-   self~writetoButton(105, x, y, "Got-cha", "Arial", 28, "BOLD")
+   self~writetoButton(IDC_DRAW_BUTTON, x, y, "Got-cha", "Arial", 28, "BOLD")
    ret = play('gotcha.wav')
    animatedButton~stop
    call msSleep 1000
@@ -151,15 +170,15 @@
 
    -- Give the walker time to 'walk' out of the danger zone before reactivating
    -- the 'GotCha.'
-   delay = self~newEdit(103)~getText
+   delay = self~newEdit(IDC_EDIT_DELAY)~getText
    j = msSleep(2 * delay)
    spriteButton~suspendGotCha(.false)
 
-::method ok
+::method ok unguarded
    self~stopAnimation
    return self~ok:super
 
-::method cancel
+::method cancel unguarded
    self~stopAnimation
    return self~cancel:super
 
@@ -177,37 +196,37 @@
 
 ::class 'WalkButton' subclass AnimatedButton
 
-::method run
+::method run unguarded
    expose xDanger yDanger running
    xDanger = 300; yDanger = 70; running = .true
 
    reply 0
 
-   do until(self~stopped = 1) | (self~parentStopped = 1)
+   do until self~stopped | self~parentStopped
       self~doAnimatedSequence
    end
 
    -- Have the walker do one more sequence, gives the appearance of walking 'in
-   -- in place.'
+   -- place.'
    self~doAnimatedSequence
 
    -- We are no longer running, tell the parent dialog to maybe quit.
    running = .false
    self~parentDlg~maybeQuit
 
-::method doAnimatedSequence private
+::method doAnimatedSequence private unguarded
    expose xDanger yDanger
 
-   self~moveseq
-   self~parentDlg~doDataStemGet(data.)
+   self~parentDlg~doValueStemGet(data.)
    do k over data.
-      if data.k~datatype('N') = 0 then data.k = 0
+      if \ data.k~datatype('N') then data.k = 0
    end
-   self~setmove(data.101, data.102)
-   self~setdelay(data.103)
-   self~setsmooth(data.104)
-   if self~stopped = 0 then
-      self~parentDlg~writetoButton(105,xDanger,yDanger,"!!!","Arial",20,"BOLD")
+   self~moveseq
+   self~setmove(data.IDC_EDIT_MOVEX, data.IDC_EDIT_MOVEY)
+   self~setdelay(data.IDC_EDIT_DELAY)
+   self~setsmooth(data.IDC_CB_SMOOTH)
+   if \ self~stopped then
+      self~parentDlg~writetoButton(IDC_DRAW_BUTTON,xDanger,yDanger,"!!!","Arial",20,"BOLD")
 
 ::method isRunning unguarded
    expose running
@@ -233,7 +252,7 @@
    s.movey = -s.movey
    self~setsprite(s.)
    self~fillData(data.)
-   self~parentDlg~doDataStemSet(data.)
+   self~parentDlg~doValueStemSet(data.)
    return 0
 
 ::method hittop
@@ -243,25 +262,25 @@
    s.movey = -s.movey
    self~setsprite(s.)
    self~fillData(data.)
-   self~parentDlg~doDataStemSet(data.)
+   self~parentDlg~doValueStemSet(data.)
    return 0
 
 ::method fillData
    expose quitCheckBox
    use arg data.
-   if \ quitCheckBox~isA(.CheckBox) then quitCheckBox = self~parentDlg~newCheckBox(106)
+   if \ quitCheckBox~isA(.CheckBox) then quitCheckBox = self~parentDlg~newCheckBox(IDC_CB_GOTCHA)
    self~getSprite(msprite.)
-   data.101 = msprite.movex
-   data.102 = msprite.movey
-   data.103 = msprite.delay
-   data.104 = msprite.smooth
+   data.IDC_EDIT_MOVEX = msprite.movex
+   data.IDC_EDIT_MOVEY = msprite.movey
+   data.IDC_EDIT_DELAY = msprite.delay
+   data.IDC_CB_SMOOTH = msprite.smooth
 
-   if quitCheckBox~checked then data.106 = 1
-   else data.106 = 0
+   if quitCheckBox~checked then data.IDC_CB_GOTCHA = 1
+   else data.IDC_CB_GOTCHA = 0
 
 ::method movepos
    use arg px, py
-   if self~stopped=0 then do
+   if \ self~stopped then do
       self~movepos:super(px,py)
       self~checkDanger
    end

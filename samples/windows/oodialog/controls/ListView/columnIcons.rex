@@ -91,8 +91,8 @@
     list~setView("SMALLICON")
 
 ::method onColClick unguarded
-    expose list itemColumns
-    use arg id, colIndex
+    expose itemColumns
+    use arg id, colIndex, listView
 
     -- Adjust for 0-based indexes
     i = colIndex + 1
@@ -114,23 +114,24 @@
       itemColumns[i] = 0
     end
 
-    list~sortItems('InternalListViewSort', d)
+    listView~sortItems('InternalListViewSort', d)
     return 0
 
 
 ::method connectEvents private
 
-    self~connectButtonEvent(IDC_RB_REPORT, "CLICKED", onReport)
-    self~connectButtonEvent(IDC_RB_LIST, "CLICKED", onList)
+    self~connectButtonEvent(IDC_RB_REPORT, "CLICKED", onReport, .true)
+    self~connectButtonEvent(IDC_RB_LIST, "CLICKED", onList, sync)
     self~connectButtonEvent(IDC_RB_ICON, "CLICKED", onIcon)
-    self~connectButtonEvent(IDC_RB_SMALL_ICON, "CLICKED", onSmallIcon)
+    self~connectButtonEvent(IDC_RB_SMALL_ICON, "CLICKED", onSmallIcon, .false)
     self~connectListViewEvent(IDC_LV_VIEWS, "COLUMNCLICK", onColClick, .true)
+    self~connectListViewEvent(IDC_LV_VIEWS, "BEGINDRAG", defListDragHandler)
 
 
 ::method setImageLists private
     expose list
 
-    resourceImage = .ResourceImage~new('ignored', self)
+    resourceImage = .ResourceImage~new(self)
     smIcons       = resourceImage~getImage(IDB_SMALL_ICONS)
     normalIcons   = resourceImage~getImage(IDB_NORMAL_ICONS)
 
@@ -138,12 +139,12 @@
     imageList = .ImageList~create(.Size~new(16), flags, 28, 0)
     imageList~add(smIcons)
 
-    list~setImageList(imageList, .Image~toId(LVSIL_SMALL))
+    list~setImageList(imageList, SMALL)
 
     imageList = .ImageList~create(.Size~new(32), flags, 9, 0)
     imageList~add(normalIcons)
 
-    list~setImageList(imageList, .Image~toId(LVSIL_NORMAL))
+    list~setImageList(imageList, NORMAL)
 
 
 ::method populateList private

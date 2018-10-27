@@ -94,7 +94,7 @@
     if (a.IDC_RB_C180 = 1) then o~lineout("Tape    : C180")
     if (a.IDC_RB_C240 = 1) then o~lineout("Tape    : C240")
     o~close()
-    "type" logfile
+    'type "'logfile'"'
  end
 
  return

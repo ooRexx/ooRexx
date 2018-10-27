@@ -323,13 +323,6 @@ LPWSTR ansi2unicode(LPCSTR str)
  * string.
  *
  * @param wstr    The string to convert.
- * @param len     The length, including the terminating null, of the wide string
- *                to convert.  If this length does not include the terminating
- *                null, the returned string will not include a terminating
- *                string.
- *
- *                If -1 is passed for this parameter, the length will be
- *                calculated and assumed the terminating null is desired.
  *
  * @return The converted string, or null on error.
  *
@@ -466,11 +459,13 @@ char *getCompleteVersion(RexxThreadContext *c)
 
     char buf1[SMALL_BUF_SIZE];
 
+#define QUOTE(arg) #arg
+#define QUOTED(name) QUOTE(name)
     _snprintf(buf1, SMALL_BUF_SIZE, "          Built %s %s\r\n"
-                                    "          Copyright (c) IBM Corporation 1995, 2004.\r\n"
-                                    "          Copyright (c) RexxLA %d.\r\n"
-                                    "          All Rights Reserved.\r\n\r\n",
-              __DATE__, __TIME__, OOD_COPY_YEAR);
+                                    "          Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.\r\n"
+                                    "          Copyright (c) %s Rexx Language Association. All rights reserved.\r\n"
+                                    "\r\n\r\n",
+              __DATE__, __TIME__, QUOTED(OOD_COPY_YEAR));
     strcat(buf, buf1);
 
     size_t rx = c->InterpreterVersion();

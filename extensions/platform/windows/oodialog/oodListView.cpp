@@ -46,6 +46,7 @@
 #include <shlwapi.h>
 
 #include "APICommon.hpp"
+#include "ooShapes.hpp"
 #include "oodCommon.hpp"
 #include "oodShared.hpp"
 #include "oodMessaging.hpp"
@@ -357,6 +358,44 @@ static RexxStringObject extendedStyleToString(RexxMethodContext *c, HWND hList)
     return c->String(buf);
 }
 
+/**
+ * Gets the image list type from the specified argument object, where the object
+ * could be the numeric value, a string keyword, or omitted altogether.
+ *
+ * @param context
+ * @param _type
+ * @param argPos
+ *
+ * @return The list-view image list type or OOD_NO_VALUE on error.  An exception
+ *         has been raised on error.
+ */
+static uint32_t getImageListTypeArg(RexxMethodContext *context, RexxObjectPtr _type, size_t argPos)
+{
+    uint32_t type = LVSIL_NORMAL;
+
+    if ( argumentExists(argPos) )
+    {
+        if ( ! context->UnsignedInt32(_type, &type) )
+        {
+            CSTRING lvsil = context->ObjectToStringValue(_type);
+            if (      StrCmpI("NORMAL", lvsil) == 0 ) type = LVSIL_NORMAL;
+            else if ( StrCmpI("SMALL", lvsil)  == 0 ) type = LVSIL_SMALL;
+            else if ( StrCmpI("STATE", lvsil)  == 0 ) type = LVSIL_STATE;
+            else
+            {
+                wrongArgValueException(context->threadContext, argPos, "Normal, Small, or State", _type);
+                type = OOD_NO_VALUE;
+            }
+        }
+
+        if ( type != OOD_NO_VALUE && type > LVSIL_STATE )
+        {
+            wrongRangeException(context->threadContext, argPos, LVSIL_NORMAL, LVSIL_STATE, type);
+            type = OOD_NO_VALUE;
+        }
+    }
+    return type;
+}
 
 static int getColumnWidthArg(RexxMethodContext *context, RexxObjectPtr _width, size_t argPos)
 {
@@ -743,7 +782,7 @@ static void updateFullRowText(RexxThreadContext *c, pCLvFullRow pclvfr, uint32_t
  */
 static pCLvFullRow maybeGetFullRow(HWND hList, uint32_t itemIndex)
 {
-    LVITEM      lvi    = {LVIF_PARAM, itemIndex};
+    LVITEM      lvi    = {LVIF_PARAM, (int)itemIndex}; // cast avoids C4838
     pCLvFullRow pclvfr = NULL;
 
     if ( ListView_GetItem(hList, &lvi) != 0 )
@@ -847,7 +886,7 @@ static RexxObjectPtr getLviUserData(LVITEM *lvi)
  *
  * @return The Rexx object that is the lParam.
  */
-RexxObjectPtr lviLParam2UserData(LPARAM lParam)
+static RexxObjectPtr lviLParam2UserData(LPARAM lParam)
 {
     RexxObjectPtr result = TheNilObj;
 
@@ -875,7 +914,7 @@ RexxObjectPtr lviLParam2UserData(LPARAM lParam)
  * @param existingLvi
  * @param lvi
  */
-void mergeLviState(RexxMethodContext *c, pCLvFullRow pclvfr, LPLVITEM existingLvi, LPLVITEM lvi)
+static void mergeLviState(RexxMethodContext *c, pCLvFullRow pclvfr, LPLVITEM existingLvi, LPLVITEM lvi)
 {
     if ( LVIF_COLFMT & lvi->mask )
     {
@@ -983,7 +1022,7 @@ void mergeLviState(RexxMethodContext *c, pCLvFullRow pclvfr, LPLVITEM existingLv
  */
 static RexxObjectPtr getCurrentLviUserData(HWND hList, uint32_t index)
 {
-    LVITEM        lvi    = {LVIF_PARAM, index};
+    LVITEM        lvi    = {LVIF_PARAM, (int)index}; // cast avoids C4838
     RexxObjectPtr result = TheNilObj;
 
     if ( ListView_GetItem(hList, &lvi) != 0 )
@@ -1358,6 +1397,7 @@ static RexxObjectPtr fixColumns(RexxMethodContext *c, HWND hList, uint32_t colIn
     return (i == cItems ? TheTrueObj : TheFalseObj);
 }
 
+/* This can be made static if we move the LVN processing from oodMessaging */
 void maybeUpdateFullRowText(RexxThreadContext *c, NMLVDISPINFO *pdi)
 {
     if ( pdi->item.lParam != 0 )
@@ -1591,7 +1631,7 @@ static RexxObjectPtr modifyFullRow(RexxMethodContext *c, pCDialogControl pcdc, p
  *           seen ListView_SetItem() fail.  We check for a failure, and if one
  *           is detected, we deleted the aready inserted item and return -1.
  */
-int32_t fullRowOperation(RexxMethodContext *c, RexxObjectPtr row, FullRowOp type, void *pCSelf)
+static int32_t fullRowOperation(RexxMethodContext *c, RexxObjectPtr row, FullRowOp type, void *pCSelf)
 {
     pCDialogControl pcdc      = validateDCCSelf(c, pCSelf);
     int32_t         itemIndex = -1;
@@ -1664,6 +1704,687 @@ done_out:
     return itemIndex;
 }
 
+#define BEGIN_EVENT_NOTIFICATION_CODE
+
+inline bool selectionDidChange(LPNMLISTVIEW p)
+{
+    return ((p->uNewState & LVIS_SELECTED) != (p->uOldState & LVIS_SELECTED));
+}
+
+inline bool focusDidChange(LPNMLISTVIEW p)
+{
+    return ((p->uNewState & LVIS_FOCUSED) != (p->uOldState & LVIS_FOCUSED));
+}
+
+/* matchSelectFocus
+ * Check that: (a) tag is for select change and focuse change, and (b) that
+ * either the selection or the focus actually changed.
+ */
+inline bool matchSelectFocus(uint32_t tag, LPNMLISTVIEW p)
+{
+    return ((tag & TAG_SELECTCHANGED) && (tag & TAG_FOCUSCHANGED)) && (selectionDidChange(p) || focusDidChange(p));
+}
+
+/* matchSelect
+ * Check that: (a) tag is only for selection change and not focuse change, and (b)
+ * that the selection actually changed.
+ */
+inline bool matchSelect(uint32_t tag, LPNMLISTVIEW p)
+{
+    return ((tag & TAG_SELECTCHANGED) && !(tag & TAG_FOCUSCHANGED)) && (selectionDidChange(p));
+}
+
+/* matchFocus
+ * Check that: (a) tag is only for focus change and not selection change, and (b)
+ * that the focus actually changed.
+ */
+inline bool matchFocus(uint32_t tag, LPNMLISTVIEW p)
+{
+    return ((tag & TAG_FOCUSCHANGED) && !(tag & TAG_SELECTCHANGED)) && (focusDidChange(p));
+}
+
+/**
+ * Helper function to determine a list view item's index using a hit test.
+ *
+ * @param hwnd  Handle of the list view.
+ * @param pIA   Pointer to an item activate structure.
+ *
+ * @remarks  This function should only be used when the list view is in report
+ *           mode.  If the subitem hit test does not produce an item index, we
+ *           only look for a y position that falls within the bounding rectangle
+ *           of a visible item.
+ *
+ *           We start with the top visible index and look at each item on the
+ *           page.  The count per page only includes fully visible items, so we
+ *           also check for a last, partially visible item.
+ */
+static void getItemIndexFromHitPoint(LPNMITEMACTIVATE pIA, HWND hwnd)
+{
+    LVHITTESTINFO lvhti = {0};
+    lvhti.pt.x = pIA->ptAction.x;
+    lvhti.pt.y = pIA->ptAction.y;
+    lvhti.flags = LVHT_ONITEM;
+
+    ListView_SubItemHitTestEx(hwnd, &lvhti);
+    pIA->iItem = lvhti.iItem;
+
+    if ( pIA->iItem == -1 )
+    {
+        int topIndex = ListView_GetTopIndex(hwnd);
+        int count = ListView_GetCountPerPage(hwnd);
+        RECT r;
+
+        for ( int i = topIndex; i <= count; i++)
+        {
+            if ( ListView_GetItemRect(hwnd, i, &r, LVIR_BOUNDS) )
+            {
+                if ( lvhti.pt.y >= r.top && lvhti.pt.y < r.bottom )
+                {
+                    pIA->iItem = i;
+                    break;
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Processes the LVN_BEGINGDRAG and LVN_BEGINRDRAG notifications.
+ *
+ * @param pcpbd
+ * @param lParam
+ * @param methodName
+ * @param tag
+ * @param ifFrom
+ * @param notifyCode  Sent to the event handler so that the user can distinguish
+ *                    between LVN_BEGINDRAG and LVN_BEGINRDRAG.
+ *
+ * @param rxLV
+ *
+ * @return MsgReplyType
+ *
+ * @notes  For the begin drag notifications, we use the TAG_PRESERVE_OLD, even
+ *         though we do not have a "new" behavior.  At some point we may add
+ *         BEGINGDRAGEX and BEGINRDRAGEX keywords.
+ *
+ *         For the record, the arguments sent to the event handler under the old
+ *         behavior are:
+ *
+ *           use arg id, item, pt
+ *
+ *         where id is the list-view control ID, item is the 0-based item ID,
+ *         and point is a string "x y"
+ *
+ *         In 4.2.4 we add a fourth and fifth arg, which mouse button and the
+ *         Rexx list view object.
+ *
+ *         use arg id, item, pt, isLMB, listView
+ *
+ *         For a "new" behavior the most likely arguments would be:
+ *
+ *           use arg id, item, pt, isLMB, lvObj
+ *
+ *         where pt would be a .Point object and we would send the Rexx
+ *         list-view object in addition.
+ */
+MsgReplyType lvnBeginDrag(pCPlainBaseDialog pcpbd, LPARAM lParam, CSTRING methodName, uint32_t tag, uint32_t code)
+{
+    RexxThreadContext *c     = pcpbd->dlgProcContext;
+    LPNMLISTVIEW       pnmlv = (LPNMLISTVIEW)lParam;
+
+    if ( (tag & TAG_FLAGMASK) == TAG_PRESERVE_OLD )
+    {
+        char buf[256];
+        sprintf(buf, "%d %d", pnmlv->ptAction.x, pnmlv->ptAction.y);
+
+        RexxObjectPtr isLMB  = (code == LVN_BEGINDRAG) ? TheTrueObj : TheFalseObj;
+        RexxObjectPtr idFrom = idFrom2rexxArg(c, lParam);
+        RexxObjectPtr rxLV   = controlFrom2rexxArg(pcpbd, lParam, winListView);
+        RexxObjectPtr item   = c->Int32(pnmlv->iItem);
+        RexxObjectPtr point  = c->String(buf);
+
+        RexxArrayObject args = c->ArrayOfFour(idFrom, item, point, isLMB);
+        c->ArrayPut(args, rxLV, 5);
+
+        genericInvoke(pcpbd, methodName, args, tag);
+
+        c->ReleaseLocalReference(idFrom);
+        c->ReleaseLocalReference(item);
+        c->ReleaseLocalReference(point);
+        c->ReleaseLocalReference(rxLV);
+        c->ReleaseLocalReference(args);
+    }
+    else
+    {
+        ;  // Purposively do nothing.
+    }
+
+    return ReplyTrue;
+}
+
+
+MsgReplyType lvnBeginEndScroll(pCPlainBaseDialog pcpbd, LPARAM lParam, CSTRING methodName, uint32_t tag, uint32_t code)
+{
+    RexxThreadContext *c  = pcpbd->dlgProcContext;
+    NMLVSCROLL        *ps = (NMLVSCROLL  *)lParam;
+
+    RexxObjectPtr idFrom = idFrom2rexxArg(c, lParam);
+    RexxObjectPtr rxLV   = controlFrom2rexxArg(pcpbd, lParam, winListView);
+    RexxObjectPtr rxDx   = c->Int32(ps->dx);
+    RexxObjectPtr rxDy   = c->Int32(ps->dy);
+
+    RexxArrayObject args = c->ArrayOfFour(idFrom, rxDx, rxDy, rxLV);
+    c->ArrayPut(args, code == LVN_BEGINSCROLL ? TheTrueObj : TheFalseObj, 5);
+
+    genericInvoke(pcpbd, methodName, args, tag);
+
+    c->ReleaseLocalReference(idFrom);
+    c->ReleaseLocalReference(rxDx);
+    c->ReleaseLocalReference(rxDy);
+    c->ReleaseLocalReference(rxLV);
+    c->ReleaseLocalReference(args);
+
+    return ReplyTrue;
+}
+
+
+MsgReplyType lvnBeginLabelEdit(pCPlainBaseDialog pcpbd, LPARAM lParam, CSTRING methodName, uint32_t tag)
+{
+    RexxThreadContext *c   = pcpbd->dlgProcContext;
+    NMLVDISPINFO      *pdi = (NMLVDISPINFO *)lParam;
+
+    RexxObjectPtr idFrom = idFrom2rexxArg(c, lParam);
+    RexxObjectPtr rxLV   = controlFrom2rexxArg(pcpbd, lParam, winListView);
+
+    if ( (tag & TAG_FLAGMASK) == TAG_PRESERVE_OLD )
+    {
+        // To preserve old behavior for DefListEditStater, we don't need
+        // to do anything. Otherwise, we need to invoke the named method
+        // with the old args, plus the list view object.
+        if ( StrCmpI(methodName, "DefListEditStarter") != 0 )
+        {
+            RexxObjectPtr    useLess = c->Intptr(lParam);
+            RexxArrayObject  args    = c->ArrayOfThree(idFrom, useLess, rxLV);
+
+            invokeDispatch(c, pcpbd, methodName, args);
+
+            c->ReleaseLocalReference(idFrom);
+            c->ReleaseLocalReference(useLess);
+            c->ReleaseLocalReference(rxLV);
+            c->ReleaseLocalReference(args);
+        }
+        return ReplyTrue;
+    }
+
+    // Implement the new behavior
+    HWND hEdit = ListView_GetEditControl(pdi->hdr.hwndFrom);
+
+    RexxObjectPtr   itemID = c->UnsignedInt32(pdi->item.iItem);
+    RexxObjectPtr   rxEdit = createControlFromHwnd(c, pcpbd, hEdit, winEdit, false);
+    RexxArrayObject args   = c->ArrayOfFour(idFrom, itemID, rxEdit, rxLV);
+
+    if ( tag & TAG_REPLYFROMREXX )
+    {
+        RexxObjectPtr msgReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
+
+        msgReply = requiredBooleanReply(c, pcpbd, msgReply, methodName, false);
+        if ( msgReply == NULL )
+        {
+            // Dialog is ended, we don't care about releasing local references.
+            setWindowPtr(pcpbd->hDlg, DWLP_MSGRESULT, TRUE);
+            return ReplyFalse;
+        }
+
+        // Return false to let the text be edited, true to disallow it.
+        // The return from Rexx is true to allow, false to disallow.
+        setWindowPtr(pcpbd->hDlg, DWLP_MSGRESULT, msgReply == TheTrueObj ? FALSE : TRUE);
+    }
+    else
+    {
+        // This is okay, we know the tag is not will reply.
+        genericInvoke(pcpbd, methodName, args, tag);
+    }
+
+    c->ReleaseLocalReference(idFrom);
+    c->ReleaseLocalReference(itemID);
+    c->ReleaseLocalReference(rxLV);
+    if ( rxEdit != TheNilObj )
+    {
+        c->ReleaseLocalReference(rxEdit);
+    }
+    c->ReleaseLocalReference(args);
+
+    return ReplyTrue;
+}
+
+
+MsgReplyType lvnColumnClick(pCPlainBaseDialog pcpbd, LPARAM lParam, CSTRING methodName, uint32_t tag)
+{
+    RexxThreadContext *c  = pcpbd->dlgProcContext;
+
+    RexxObjectPtr idFrom = idFrom2rexxArg(c, lParam);
+    RexxObjectPtr rxCol  = c->UnsignedInt32((ULONG)((NM_LISTVIEW *)lParam)->iSubItem);
+    RexxObjectPtr rxLV   = controlFrom2rexxArg(pcpbd, lParam, winListView);
+
+    RexxArrayObject args = c->ArrayOfThree(idFrom, rxCol, rxLV);
+
+    genericInvoke(pcpbd, methodName, args, tag);
+
+    c->ReleaseLocalReference(idFrom);
+    c->ReleaseLocalReference(rxCol);
+    c->ReleaseLocalReference(rxLV);
+    c->ReleaseLocalReference(args);
+
+    return ReplyTrue;
+}
+
+
+/**
+ * Process the LVN_ENDLABELEDIT notification.
+ *
+ * @param pcpbd
+ * @param lParam
+ * @param methodName
+ * @param tag
+ * @param idFrom
+ * @param rxLV
+ *
+ * @return MsgReplyType
+ *
+ * @remarks  The end label edit notification is sent when the user ends editing
+ *           the label. If the user did not cancel the editing then
+ *           pdi->item.pszText contains the text the user entered.  If there is
+ *           text entered and the event handler returns true, the list view
+ *           updates the item label with the new text.  If the event handler
+ *           returns false, the item's lable is not changed.  If there is no
+ *           text in pdi->item.pszText then the return is ignored.
+ *
+ *           What the old ooDialog did is always accept the text.  So to
+ *           preserve old behavior we just need to always accept the text if
+ *           there is any.  The old DefListEventHandler is removed from
+ *           ooDialog, so we can not invoke it.  However if the user assigned
+ *           there own event handler we need to inovke it, but we add the Rexx
+ *           list-view object to the end of the argument list.
+ *
+ *           Note that SYNC is not allowed for willReply for this event.
+ *           Either, the user omits willReply and gets the old behavior, or does
+ *           not omit willReply and gets the new behavior.  The new behavior is
+ *           that the user must reply true or false.
+ */
+MsgReplyType lvnEndLabelEdit(pCPlainBaseDialog pcpbd, LPARAM lParam, CSTRING methodName, uint32_t tag)
+{
+    RexxThreadContext *c   = pcpbd->dlgProcContext;
+    NMLVDISPINFO      *pdi = (NMLVDISPINFO *)lParam;
+
+    RexxObjectPtr idFrom = idFrom2rexxArg(c, lParam);
+    RexxObjectPtr rxLV   = controlFrom2rexxArg(pcpbd, lParam, winListView);
+
+    if ( (tag & TAG_FLAGMASK) == TAG_PRESERVE_OLD )
+    {
+        if ( StrCmpI(methodName, "DefListEditHandler") != 0 )
+        {
+            RexxArrayObject args;
+
+            RexxObjectPtr itemID = c->UnsignedInt32(pdi->item.iItem);
+            RexxObjectPtr text   = pdi->item.pszText ? c->String(pdi->item.pszText) : NULLOBJECT;
+
+            args = c->ArrayOfFour(idFrom, itemID, text, rxLV);
+            invokeDispatch(c, pcpbd, methodName, args);
+
+            if ( text != NULLOBJECT )
+            {
+                c->ReleaseLocalReference(text);
+            }
+            c->ReleaseLocalReference(idFrom);
+            c->ReleaseLocalReference(itemID);
+            c->ReleaseLocalReference(rxLV);
+            c->ReleaseLocalReference(args);
+        }
+
+        if ( pdi->item.pszText )
+        {
+            maybeUpdateFullRowText(c, pdi);
+        }
+
+        // If there is text we set reply to true, if not we set reply to false.
+        // This is the old behavior, it doesn't matter if the user connected
+        // their own event handler or not.
+        setWindowPtr(pcpbd->hDlg, DWLP_MSGRESULT, pdi->item.pszText ? TRUE : FALSE);
+        return ReplyTrue;
+    }
+
+    // Implement the new behavior.
+    RexxObjectPtr   itemID = c->UnsignedInt32(pdi->item.iItem);
+    RexxObjectPtr   text   = pdi->item.pszText ? c->String(pdi->item.pszText) : TheNilObj;
+    RexxArrayObject args   = c->ArrayOfFour(idFrom, itemID, text, rxLV);
+
+    if ( (tag & TAG_REPLYFROMREXX) == TAG_REPLYFROMREXX )
+    {
+        RexxObjectPtr msgReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
+
+        msgReply = requiredBooleanReply(c, pcpbd, msgReply, methodName, false);
+        if ( msgReply == NULL )
+        {
+            // requiredBooleanReply() has ended the dialog, so we do not care
+            // about releasing local references.
+            return ReplyFalse;
+        }
+
+        // From Rexx, return true to accept the edited text, false to
+        // cancel it.  The return to Windows is the same.  But, if the
+        // user canceled the edit and the Rexx programmer returns true,
+        // we ignore the Rexx programmer's reply and return FALSE to
+        // Windows.
+        BOOL windowsReply = (msgReply == TheTrueObj && pdi->item.pszText != NULL) ? TRUE : FALSE;
+
+        if ( windowsReply )
+        {
+            maybeUpdateFullRowText(c, pdi);
+        }
+
+        setWindowPtr(pcpbd->hDlg, DWLP_MSGRESULT, windowsReply);
+    }
+    else
+    {
+        // This is okay, we know the tag is not will reply.
+        genericInvoke(pcpbd, methodName, args, tag);
+    }
+
+    c->ReleaseLocalReference(idFrom);
+    c->ReleaseLocalReference(itemID);
+    c->ReleaseLocalReference(rxLV);
+    if ( text != TheNilObj )
+    {
+        c->ReleaseLocalReference(text);
+    }
+    c->ReleaseLocalReference(args);
+
+    return ReplyTrue;
+}
+
+MsgReplyType lvnGetInfoTip(pCPlainBaseDialog pcpbd, LPARAM lParam, CSTRING methodName, uint32_t tag)
+{
+    RexxThreadContext *c   = pcpbd->dlgProcContext;
+    NMLVGETINFOTIP    *tip = (LPNMLVGETINFOTIP)lParam;
+
+    RexxObjectPtr idFrom = idFrom2rexxArg(c, lParam);
+    RexxObjectPtr rxLV   = controlFrom2rexxArg(pcpbd, lParam, winListView);
+    RexxObjectPtr item   = c->Int32(tip->iItem);
+    RexxObjectPtr text   = tip->dwFlags == 0 ? c->String(tip->pszText) : c->NullString();
+    RexxObjectPtr len    = c->Int32(tip->cchTextMax - 1);
+
+    RexxArrayObject args = c->ArrayOfFour(idFrom, item, text, len);
+    c->ArrayPut(args, rxLV, 5);
+
+    RexxObjectPtr rexxReply = c->SendMessage(pcpbd->rexxSelf, methodName, args);
+
+    if ( msgReplyIsGood(c, pcpbd, rexxReply, methodName, false) )
+    {
+        CSTRING newText = c->ObjectToStringValue(rexxReply);
+        if ( strlen(newText) > 0 )
+        {
+            _snprintf(tip->pszText, tip->cchTextMax - 1, "%s", newText);
+        }
+    }
+
+    c->ReleaseLocalReference(idFrom);
+    c->ReleaseLocalReference(item);
+    c->ReleaseLocalReference(text);
+    c->ReleaseLocalReference(len);
+    c->ReleaseLocalReference(rxLV);
+    c->ReleaseLocalReference(args);
+    safeLocalRelease(c, rexxReply);
+
+    return ReplyTrue;
+}
+
+
+MsgReplyType lvnItemChanged(pCPlainBaseDialog pcpbd, LPARAM lParam, CSTRING methodName, uint32_t tag)
+{
+    RexxThreadContext *c   = pcpbd->dlgProcContext;
+    LPNMLISTVIEW       pLV = (LPNMLISTVIEW)lParam;
+
+    MsgReplyType  msgReply = ReplyTrue;
+
+    RexxObjectPtr idFrom = idFrom2rexxArg(c, lParam);
+    RexxObjectPtr item   = c->Int32(pLV->iItem);
+    RexxObjectPtr rxLV   = controlFrom2rexxArg(pcpbd, lParam, winListView);
+
+    RexxObjectPtr   flags = NULLOBJECT;
+    RexxArrayObject args  = NULLOBJECT;
+
+    char tmpBuffer[20];
+    char *p;
+
+    /* The use of the tag field allows a finer degree of control as to exactly
+     * which event the user wants to be notified of, then does the initial
+     * message match above.  Because of that, this specific LVN_ITEMCHANGED
+     * notification may not match the tag.  So, if we do not match here, we
+     * continue the search through the message table because this notification
+     * may match some latter entry in the table.
+     */
+
+    if ( (tag & TAG_STATECHANGED) && (pLV->uChanged == LVIF_STATE) )
+    {
+        if ( (tag & TAG_CHECKBOXCHANGED) && (pLV->uNewState & LVIS_STATEIMAGEMASK) )
+        {
+            p = (pLV->uNewState == INDEXTOSTATEIMAGEMASK(2) ? "CHECKED" : "UNCHECKED");
+
+            flags = c->String(p);
+            args  = c->ArrayOfFour(idFrom, item, flags, rxLV);
+
+            genericInvoke(pcpbd, methodName, args, tag);
+        }
+        else if ( matchSelectFocus(tag, pLV) )
+        {
+            tmpBuffer[0] = '\0';
+
+            if ( selectionDidChange(pLV) )
+            {
+                if ( pLV->uNewState & LVIS_SELECTED )
+                {
+                    strcpy(tmpBuffer, "SELECTED");
+                }
+                else
+                {
+                    strcpy(tmpBuffer, "UNSELECTED");
+                }
+            }
+
+            if ( focusDidChange(pLV) )
+            {
+                if ( pLV->uNewState & LVIS_FOCUSED )
+                {
+                    tmpBuffer[0] == '\0' ? strcpy(tmpBuffer, "FOCUSED") : strcat(tmpBuffer, " FOCUSED");
+                }
+                else
+                {
+                    tmpBuffer[0] == '\0' ? strcpy(tmpBuffer, "UNFOCUSED") : strcat(tmpBuffer, " UNFOCUSED");
+                }
+            }
+
+            flags = c->String(tmpBuffer);
+            args = c->ArrayOfFour(idFrom, item, flags, rxLV);
+
+            genericInvoke(pcpbd, methodName, args, tag);
+        }
+        else if ( matchSelect(tag, pLV) )
+        {
+            p = (pLV->uNewState & LVIS_SELECTED) ? "SELECTED" : "UNSELECTED";
+
+            flags = c->String(p);
+            args = c->ArrayOfFour(idFrom, item, flags, rxLV);
+
+            genericInvoke(pcpbd, methodName, args, tag);
+            msgReply = ContinueSearching;  // Not sure if this is wise with the C++ API
+        }
+        else if ( matchFocus(tag, pLV) )
+        {
+            p = (pLV->uNewState & LVIS_FOCUSED) ? "FOCUSED" : "UNFOCUSED";
+
+            flags = c->String(p);
+            args = c->ArrayOfFour(idFrom, item, flags, rxLV);
+
+            genericInvoke(pcpbd, methodName, args, tag);
+            msgReply = ContinueSearching;  // Not sure if this is wise with the C++ API
+        }
+        else
+        {
+            // This message in the message table does not match, keep searching.
+            msgReply = ContinueSearching;
+        }
+    }
+
+    safeLocalRelease(c, flags);
+    safeLocalRelease(c, args);
+
+    return msgReply;
+}
+
+
+/**
+ * Processes the LVN_KEYDOWN notification.
+ *
+ * @param c
+ * @param methodName
+ * @param tag
+ * @param lParam
+ * @param pcpbd
+ *
+ * @return MsgReplyType
+ *
+ * @notes  If the user uses the KEYDOWN keyword, then the tag TAG_PRESERVE_OLD
+ *         is added, if the user used the KEYDOWNEX keyword then the preserve
+ *         old tag is not added.
+ *
+ *         For both keywords the value of the return is ignored by the OS.  So,
+ *         if the user sets will reply to true, we check that a value is
+ *         returned from the event handler, but we ignore what value it is.
+ *
+ *         The args sent for KEYDOWN are, with rxLvObj added from original:
+ *
+ *         use arg id, vKey, rxLvObj
+ *
+ *         The args sent for KEYDOWNEX are:
+ *
+ *         use arg vKey, bShift, bControl, bAlt, info, rxLvObj
+ */
+MsgReplyType lvnKeyDown(pCPlainBaseDialog pcpbd, LPARAM lParam, CSTRING methodName, uint32_t tag)
+{
+    RexxThreadContext *c = pcpbd->dlgProcContext;
+    uint16_t vKey        = ((NMLVKEYDOWN *)lParam)->wVKey;
+    bool     preserveOld = (tag & TAG_FLAGMASK) == TAG_PRESERVE_OLD;
+
+    RexxArrayObject args   = NULLOBJECT;
+    RexxObjectPtr   rxVKey = NULLOBJECT;
+    RexxObjectPtr   idFrom = idFrom2rexxArg(c, lParam);
+    RexxObjectPtr   rxLV   = controlFrom2rexxArg(pcpbd, lParam, winListView);
+
+    if ( preserveOld )
+    {
+        rxVKey = c->UnsignedInt32(vKey);
+        args   = c->ArrayOfThree(idFrom, rxVKey, rxLV);
+    }
+    else
+    {
+        args = getKeyEventRexxArgs(c, (WPARAM)vKey, false, rxLV);
+        c->ArrayPut(args, idFrom, 7);
+    }
+
+    genericInvoke(pcpbd, methodName, args, tag);
+
+    c->ReleaseLocalReference(idFrom);
+
+    if ( preserveOld )
+    {
+        c->ReleaseLocalReference(rxVKey);
+        c->ReleaseLocalReference(rxLV);
+        c->ReleaseLocalReference(args);
+    }
+    else
+    {
+        releaseKeyEventRexxArgs(c, args);
+    }
+
+    return ReplyTrue;
+}
+
+
+MsgReplyType lvnNmClick(pCPlainBaseDialog pcpbd, LPARAM lParam, CSTRING methodName, uint32_t tag, uint32_t code)
+{
+    RexxThreadContext *c   = pcpbd->dlgProcContext;
+    LPNMITEMACTIVATE   pIA = (LPNMITEMACTIVATE)lParam;
+
+    RexxObjectPtr idFrom  = idFrom2rexxArg(c, lParam);
+    RexxObjectPtr isClick = (code == NM_CLICK) ? TheTrueObj : TheFalseObj;
+    RexxObjectPtr rxLV    = controlFrom2rexxArg(pcpbd, lParam, winListView);
+
+    char tmpBuffer[20];
+    if ( pIA->uKeyFlags == 0 )
+    {
+        strcpy(tmpBuffer, "NONE");
+    }
+    else
+    {
+        tmpBuffer[0] = '\0';
+
+        if ( pIA->uKeyFlags & LVKF_SHIFT )
+            strcpy(tmpBuffer, "SHIFT");
+        if ( pIA->uKeyFlags & LVKF_CONTROL )
+            tmpBuffer[0] == '\0' ? strcpy(tmpBuffer, "CONTROL") : strcat(tmpBuffer, " CONTROL");
+        if ( pIA->uKeyFlags & LVKF_ALT )
+            tmpBuffer[0] == '\0' ? strcpy(tmpBuffer, "ALT") : strcat(tmpBuffer, " ALT");
+    }
+
+    // The user can click on an item in a list view, or on the
+    // background of the list view.  For report mode only, the user can
+    // also click on a subitem of the item.  When the click is on the
+    // background, the item index and column index will be sent to the
+    // Rexx method as -1.
+    //
+    // In report mode, if the list view has the extended full row select
+    // stylye, everything works as expected.  But, without that style,
+    // if the user clicks anywhere on the row outside of the item icon
+    // and item text, the OS does not report the item index.  This looks
+    // odd to the user.  For this case we go to some extra trouble to
+    // get the correct item index.
+    if ( pIA->iItem == -1 && pIA->iSubItem != -1 )
+    {
+        HWND hwnd = pIA->hdr.hwndFrom;
+        if ( isInReportView(hwnd)  )
+        {
+            getItemIndexFromHitPoint(pIA, hwnd);
+        }
+        else
+        {
+            // iSubItem is always 0 when not in report mode, but -1 is
+            // more consistent.
+            pIA->iSubItem = -1;
+        }
+    }
+
+    RexxObjectPtr rxItem    = c->Int32(pIA->iItem);
+    RexxObjectPtr rxSubitem = c->Int32(pIA->iSubItem);
+    RexxObjectPtr keyState  = c->String(tmpBuffer);
+
+    RexxArrayObject args = c->ArrayOfFour(idFrom, rxItem, rxSubitem, keyState);
+    c->ArrayPut(args, isClick, 5);
+    c->ArrayPut(args, rxLV, 6);
+
+    genericInvoke(pcpbd, methodName, args, tag);
+
+    c->ReleaseLocalReference(idFrom);
+    c->ReleaseLocalReference(rxItem);
+    c->ReleaseLocalReference(rxSubitem);
+    c->ReleaseLocalReference(keyState);
+    c->ReleaseLocalReference(rxLV);
+    c->ReleaseLocalReference(args);
+
+    return ReplyTrue;
+}
+
+
+#define END_EVENT_NOTIFICATION_CODE
 
 /**
  * A list view item sort callback function that sorts the list-view here, using
@@ -2531,7 +3252,7 @@ RexxMethod2(int32_t, lv_findNearestXY, ARGLIST, args, CSELF, pCSelf)
     size_t arraySize;
     size_t argsUsed;
     POINT  point;
-    if ( ! getPointFromArglist(context, args, &point, 1, 3, &arraySize, &argsUsed) )
+    if ( ! getPointFromArglist(context, args, (PORXPOINT)&point, 1, 3, &arraySize, &argsUsed) )
     {
         goto err_out;
     }
@@ -2965,24 +3686,26 @@ err_out:
  *          or state. Normal is the default.
  *
  *  @return  The image list, if it exists, otherwise .nil.
+ *
+ *  @remarks  Originally the image list type argument had to be the numeric
+ *            value of the type.  This was a mistake.  For backward
+ *            compatibility we still need to accept a number, but we allow a
+ *            string keyword.
  */
-RexxMethod2(RexxObjectPtr, lv_getImageList, OPTIONAL_uint8_t, type, OSELF, self)
+RexxMethod2(RexxObjectPtr, lv_getImageList, OPTIONAL_RexxObjectPtr, _type, OSELF, self)
 {
-    if ( argumentOmitted(1) )
+    RexxObjectPtr result = TheNilObj;
+    uint32_t      type   = getImageListTypeArg(context, _type, 1);
+
+    if ( type != OOD_NO_VALUE )
     {
-        type = LVSIL_NORMAL;
-    }
-    else if ( type > LVSIL_STATE )
-    {
-        wrongRangeException(context->threadContext, 1, LVSIL_NORMAL, LVSIL_STATE, type);
-        return NULLOBJECT;
+        result = context->GetObjectVariable(getLVAttributeName(type));
+        if ( result == NULLOBJECT )
+        {
+            result = TheNilObj;
+        }
     }
 
-    RexxObjectPtr result = context->GetObjectVariable(getLVAttributeName(type));
-    if ( result == NULLOBJECT )
-    {
-        result = TheNilObj;
-    }
     return result;
 }
 
@@ -3248,7 +3971,7 @@ RexxMethod3(RexxObjectPtr, lv_getItemRect, uint32_t, index, OPTIONAL_CSTRING, pa
     {
         return TheNilObj;
     }
-    return rxNewRect(context, &r);
+    return rxNewRect(context, (PORXRECT)&r);
 }
 
 /** ListView::getSubitem()
@@ -3452,7 +4175,7 @@ RexxMethod4(RexxObjectPtr, lv_getSubitemRect, uint32_t, index, uint32_t, subInde
         }
     }
 
-    return rxNewRect(context, &r);
+    return rxNewRect(context, (PORXRECT)&r);
 }
 
 /** ListView::getView()
@@ -3536,7 +4259,7 @@ RexxMethod2(int32_t, lv_hitTestInfo, ARGLIST, args, CSELF, pCSelf)
     size_t sizeArray;
     size_t argsUsed;
     POINT  point;
-    if ( ! getPointFromArglist(context, args, &point, 1, 3, &sizeArray, &argsUsed) )
+    if ( ! getPointFromArglist(context, args, (PORXPOINT)&point, 1, 3, &sizeArray, &argsUsed) )
     {
         goto done_out;
     }
@@ -4241,7 +4964,7 @@ RexxMethod2(RexxObjectPtr, lv_removeItemData, uint32_t, index, CSELF, pCSelf)
     RexxObjectPtr result = getCurrentLviUserData(pcdc->hCtrl, index);
     if ( result != TheNilObj )
     {
-        LVITEM lvi = {LVIF_PARAM, index};
+        LVITEM lvi = {LVIF_PARAM, (int)index}; // cast avoids C4838
 
         if ( ListView_SetItem(pcdc->hCtrl, &lvi) )
         {
@@ -4519,26 +5242,34 @@ done_out:
  *  @remarks  It is possible for this method to fail, without an exception
  *            raised.  Therefore returning NULLOBJECT on all errors is not
  *            viable.  The question is whether to return .nil on error, or 0.
- *            For now, 0 is returned for an error.
+ *            For now, 0 is returned for an error, *when* an exception has not
+ *            been raised.
+ *
+ *            Originally the image list type argument had to be the numeric
+ *            value of the type.  This was a mistake.  For backward
+ *            compatibility we still need to accept a number, but we allow a
+ *            string keyword.
  */
 RexxMethod5(RexxObjectPtr, lv_setImageList, RexxObjectPtr, ilSrc,
-            OPTIONAL_int32_t, width, OPTIONAL_int32_t, height, OPTIONAL_int32_t, ilType, CSELF, pCSelf)
+            OPTIONAL_RexxObjectPtr, width, OPTIONAL_int32_t, height, OPTIONAL_RexxObjectPtr, ilType, CSELF, pCSelf)
 {
     RexxObjectPtr result = TheNilObj;
 
     HWND hwnd = getDChCtrl(pCSelf);
     oodResetSysErrCode(context->threadContext);
 
-    HIMAGELIST himl = NULL;
     RexxObjectPtr imageList = NULL;
-    int type = LVSIL_NORMAL;
+    HIMAGELIST    himl      = NULL;
+    uint32_t      type      = LVSIL_NORMAL;
 
     if ( ilSrc == TheNilObj )
     {
         imageList = ilSrc;
-        if ( argumentExists(2) )
+
+        type = getImageListTypeArg(context, width, 2);
+        if ( type == OOD_NO_VALUE )
         {
-            type = width;
+            goto err_out;
         }
     }
     else if ( context->IsOfType(ilSrc, "IMAGELIST") )
@@ -4550,30 +5281,34 @@ RexxMethod5(RexxObjectPtr, lv_setImageList, RexxObjectPtr, ilSrc,
             goto err_out;
         }
 
-        if ( argumentExists(2) )
+        type = getImageListTypeArg(context, width, 2);
+        if ( type == OOD_NO_VALUE )
         {
-            type = width;
+            goto err_out;
         }
     }
     else
     {
-        imageList = oodILFromBMP(context, &himl, ilSrc, width, height, hwnd);
+        uint32_t _width;
+
+        if ( ! context->ObjectToUnsignedInt32(width, &_width) )
+        {
+            wrongRangeException(context->threadContext, 2, (uint32_t)0, UINT32_MAX, width);
+            goto err_out;
+        }
+
+        imageList = oodILFromBMP(context, &himl, ilSrc, _width, height, hwnd);
         if ( imageList == NULLOBJECT )
         {
             result = TheZeroObj;
             goto err_out;
         }
 
-        if ( argumentExists(4) )
+        type = getImageListTypeArg(context, ilType, 4);
+        if ( type == OOD_NO_VALUE )
         {
-            type = ilType;
+            goto err_out;
         }
-    }
-
-    if ( type > LVSIL_STATE )
-    {
-        wrongRangeException(context->threadContext, argumentExists(4) ? 4 : 2, LVSIL_NORMAL, LVSIL_STATE, type);
-        goto err_out;
     }
 
     ListView_SetImageList(hwnd, himl, type);
@@ -4589,7 +5324,7 @@ err_out:
  */
 RexxMethod3(RexxObjectPtr, lv_setItemData, uint32_t, index, RexxObjectPtr, data, CSELF, pCSelf)
 {
-    LVITEM lvi = {LVIF_PARAM, index};
+    LVITEM lvi = {LVIF_PARAM, (int)index}; // cast avoids C4838
 
     pCDialogControl pcdc = validateDCCSelf(context, pCSelf);
     if ( pcdc == NULL )
@@ -6478,7 +7213,7 @@ RexxMethod2(RexxObjectPtr, lvfr_init, ARGLIST, args, OSELF, self)
 
     if ( argCount == 0 )
     {
-        context->RaiseException(Rexx_Error_Incorrect_method_noarg, context->ArrayOfOne(TheOneObj));
+        missingArgException(context, 1);
         goto err_out;
     }
 
@@ -6487,7 +7222,7 @@ RexxMethod2(RexxObjectPtr, lvfr_init, ARGLIST, args, OSELF, self)
         RexxObjectPtr obj = context->ArrayAt(args, i);
         if ( obj == NULLOBJECT )
         {
-            context->RaiseException(Rexx_Error_Incorrect_method_noarg, context->ArrayOfOne(context->WholeNumber(i)));
+            missingArgException(context, i);
             goto err_out;
         }
 

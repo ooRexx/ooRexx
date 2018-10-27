@@ -277,13 +277,13 @@ exit -1
                         /* ------------------------------------------------- */
 
                         /* ------------------------------------------------- */
-                        /* Here we can populate list boxes etc.              */
+                        /* Here we can populate list viws etc.               */
                         /* ------------------------------------------------- */
 
 /*  for example:                                                             */
 /*  List = self~newListView([id])                                            */
 /*  if List \= .Nil then do                                                  */
-/*    list~setImageList(imageList, .Image~toID(LVSIL_SMALL))                 */
+/*    list~setImageList(imageList, SMALL)                                    */
 /*    list~addStyle("[Style1 style2...]")                                    */
 /*    list~insertColumn(0,"[Title]",[width],[style])                         */
 /*    list~insertColumn(1,"[Title]",[width],[style])                         */

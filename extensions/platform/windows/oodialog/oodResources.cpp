@@ -44,6 +44,8 @@
  */
 #include "ooDialog.hpp"     // Must be first, includes windows.h, commctrl.h, and oorexxapi.h
 
+#include <shlwapi.h>
+
 #if 0
 // Future enhancement.
 #include <gdiplus.h>
@@ -51,100 +53,474 @@ using namespace Gdiplus;
 #endif
 
 #include "APICommon.hpp"
+#include "ooShapes.hpp"
 #include "oodCommon.hpp"
 #include "oodControl.hpp"
 #include "oodDeviceGraphics.hpp"
 #include "oodResources.hpp"
 
-/**
- * Defines, structs, etc., for the .ImageList class.
- */
-
-#define IMAGELISTCLASS             ".ImageList"
-
-
-// ImageList helper functions.
-RexxObjectPtr rxNewImageList(RexxMethodContext *, HIMAGELIST);
-
-#define IL_DEFAULT_FLAGS           ILC_COLOR32 | ILC_MASK
-#define IL_DEFAULT_COUNT           6
-#define IL_DEFAULT_GROW            0
-
 
 /**
- * Defines, structs, etc., for the .Image class.
+ * Initializes the string to int map for IDs and flags used by images and image
+ * lists.  This will included things like a button control's alignment flags for
+ * an image list, image list creation flags, OEM icon IDs, etc..
+ *
+ * @return String2Int*
+ *
+ * @note  All IDs are included here, except the obsolete ones, and things like
+ *        OBM_OLD*, all of which were for 16-bit Windows.
  */
-
-#define IMAGECLASS                 ".Image"
-
-
-// Helper functions.
-CSTRING getImageTypeName(uint8_t);
-RexxObjectPtr rxNewImageFromControl(RexxMethodContext *, HWND, HANDLE, uint8_t, oodControl_t);
-RexxObjectPtr rxNewEmptyImage(RexxMethodContext *, DWORD);
-
-POODIMAGE rxGetImageBitmap(RexxMethodContext *, RexxObjectPtr, size_t);
-
-RexxObjectPtr oodILFromBMP(RexxMethodContext *, HIMAGELIST *, RexxObjectPtr, int, int, HWND);
-
-
-/**
- * Defines and structs for the .ResourceImage class.
- */
-#define RESOURCEIMAGECLASS  ".ResourceImage"
-
-RexxObjectPtr oodSetImageAttribute(RexxMethodContext *c, CSTRING varName, RexxObjectPtr image, HWND hwnd,
-                                   HANDLE hOldImage, uint8_t type, oodControl_t ctrl)
+static String2Int *imageInitMap(void)
 {
-    RexxObjectPtr result = c->GetObjectVariable(varName);
-    if ( result == NULLOBJECT )
-    {
-        result = TheNilObj;
-    }
-    c->SetObjectVariable(varName, image);
+    String2Int *cMap = new String2Int;
 
-    // It could be that the existing image was set from a resource DLL.  In
-    // which case we need to create an .Image object.
-    if ( result == TheNilObj && hOldImage != NULL )
-    {
-        result = rxNewImageFromControl(c, hwnd, hOldImage, type, ctrl);
-    }
-    return result;
+    cMap->insert(String2Int::value_type("IDI_APPLICATION", 32512));
+    cMap->insert(String2Int::value_type("IDI_HAND",        32513));
+    cMap->insert(String2Int::value_type("IDI_QUESTION",    32514));
+    cMap->insert(String2Int::value_type("IDI_EXCLAMATION", 32515));
+    cMap->insert(String2Int::value_type("IDI_ASTERISK",    32516));
+    cMap->insert(String2Int::value_type("IDI_WINLOGO",     32517));
+
+    cMap->insert(String2Int::value_type("IMAGE_BITMAP",      0));
+    cMap->insert(String2Int::value_type("IMAGE_ICON",        1));
+    cMap->insert(String2Int::value_type("IMAGE_CURSOR",      2));
+    cMap->insert(String2Int::value_type("IMAGE_ENHMETAFILE", 3));
+
+    cMap->insert(String2Int::value_type("OCR_NORMAL",      32512));
+    cMap->insert(String2Int::value_type("OCR_IBEAM",       32513));
+    cMap->insert(String2Int::value_type("OCR_WAIT",        32514));
+    cMap->insert(String2Int::value_type("OCR_CROSS",       32515));
+    cMap->insert(String2Int::value_type("OCR_UP",          32516));
+    cMap->insert(String2Int::value_type("OCR_SIZENWSE",    32642));
+    cMap->insert(String2Int::value_type("OCR_SIZENESW",    32643));
+    cMap->insert(String2Int::value_type("OCR_SIZEWE",      32644));
+    cMap->insert(String2Int::value_type("OCR_SIZENS",      32645));
+    cMap->insert(String2Int::value_type("OCR_SIZEALL",     32646));
+    cMap->insert(String2Int::value_type("OCR_NO",          32648));
+    cMap->insert(String2Int::value_type("OCR_HAND",        32649));
+    cMap->insert(String2Int::value_type("OCR_APPSTARTING", 32650));
+
+    cMap->insert(String2Int::value_type("OBM_CLOSE",      32754));
+    cMap->insert(String2Int::value_type("OBM_UPARROW",    32753));
+    cMap->insert(String2Int::value_type("OBM_DNARROW",    32752));
+    cMap->insert(String2Int::value_type("OBM_RGARROW",    32751));
+    cMap->insert(String2Int::value_type("OBM_LFARROW",    32750));
+    cMap->insert(String2Int::value_type("OBM_REDUCE",     32749));
+    cMap->insert(String2Int::value_type("OBM_ZOOM",       32748));
+    cMap->insert(String2Int::value_type("OBM_RESTORE",    32747));
+    cMap->insert(String2Int::value_type("OBM_REDUCED",    32746));
+    cMap->insert(String2Int::value_type("OBM_ZOOMD",      32745));
+    cMap->insert(String2Int::value_type("OBM_RESTORED",   32744));
+    cMap->insert(String2Int::value_type("OBM_UPARROWD",   32743));
+    cMap->insert(String2Int::value_type("OBM_DNARROWD",   32742));
+    cMap->insert(String2Int::value_type("OBM_RGARROWD",   32741));
+    cMap->insert(String2Int::value_type("OBM_LFARROWD",   32740));
+    cMap->insert(String2Int::value_type("OBM_MNARROW",    32739));
+    cMap->insert(String2Int::value_type("OBM_COMBO",      32738));
+    cMap->insert(String2Int::value_type("OBM_UPARROWI",   32737));
+    cMap->insert(String2Int::value_type("OBM_DNARROWI",   32736));
+    cMap->insert(String2Int::value_type("OBM_RGARROWI",   32735));
+    cMap->insert(String2Int::value_type("OBM_LFARROWI",   32734));
+    cMap->insert(String2Int::value_type("OBM_SIZE",       32766));
+    cMap->insert(String2Int::value_type("OBM_BTSIZE",     32761));
+    cMap->insert(String2Int::value_type("OBM_CHECK",      32760));
+    cMap->insert(String2Int::value_type("OBM_CHECKBOXES", 32759));
+    cMap->insert(String2Int::value_type("OBM_BTNCORNERS", 32758));
+
+    cMap->insert(String2Int::value_type("LR_DEFAULTCOLOR",     0x0000));
+    cMap->insert(String2Int::value_type("LR_MONOCHROME",       0x0001));
+    cMap->insert(String2Int::value_type("LR_COLOR",            0x0002));
+    cMap->insert(String2Int::value_type("LR_COPYRETURNORG",    0x0004));
+    cMap->insert(String2Int::value_type("LR_COPYDELETEORG",    0x0008));
+    cMap->insert(String2Int::value_type("LR_LOADFROMFILE",     0x0010));
+    cMap->insert(String2Int::value_type("LR_LOADTRANSPARENT",  0x0020));
+    cMap->insert(String2Int::value_type("LR_DEFAULTSIZE",      0x0040));
+    cMap->insert(String2Int::value_type("LR_VGACOLOR",         0x0080));
+    cMap->insert(String2Int::value_type("LR_LOADMAP3DCOLORS",  0x1000));
+    cMap->insert(String2Int::value_type("LR_CREATEDIBSECTION", 0x2000));
+    cMap->insert(String2Int::value_type("LR_COPYFROMRESOURCE", 0x4000));
+    cMap->insert(String2Int::value_type("LR_SHARED",           0x8000));
+
+    // ImageList_Create flags
+    cMap->insert(String2Int::value_type("ILC_MASK", 0x0001));
+    cMap->insert(String2Int::value_type("ILC_COLOR", 0x0000));
+    cMap->insert(String2Int::value_type("ILC_COLORDDB", 0x00FE));
+    cMap->insert(String2Int::value_type("ILC_COLOR4", 0x0004));
+    cMap->insert(String2Int::value_type("ILC_COLOR8", 0x0008));
+    cMap->insert(String2Int::value_type("ILC_COLOR16", 0x0010));
+    cMap->insert(String2Int::value_type("ILC_COLOR24", 0x0018));
+    cMap->insert(String2Int::value_type("ILC_COLOR32", 0x0020));
+    cMap->insert(String2Int::value_type("ILC_PALETTE", 0x0800));
+    cMap->insert(String2Int::value_type("ILC_MIRROR", 0x2000));
+    cMap->insert(String2Int::value_type("ILC_PERITEMMIRROR", 0x8000));
+
+    // Button image list alignment values
+    cMap->insert(String2Int::value_type("BUTTON_IMAGELIST_ALIGN_LEFT",   0));
+    cMap->insert(String2Int::value_type("BUTTON_IMAGELIST_ALIGN_RIGHT",  1));
+    cMap->insert(String2Int::value_type("BUTTON_IMAGELIST_ALIGN_TOP",    2));
+    cMap->insert(String2Int::value_type("BUTTON_IMAGELIST_ALIGN_BOTTOM", 3));
+    cMap->insert(String2Int::value_type("BUTTON_IMAGELIST_ALIGN_CENTER", 4));
+
+    cMap->insert(String2Int::value_type("LVSIL_NORMAL", 0));
+    cMap->insert(String2Int::value_type("LVSIL_SMALL", 1));
+    cMap->insert(String2Int::value_type("LVSIL_STATE", 2));
+
+    cMap->insert(String2Int::value_type("TVSIL_NORMAL", 0));
+    cMap->insert(String2Int::value_type("TVSIL_STATE", 2));
+
+    //cMap->insert(String2Int::value_type("", ));
+
+    return cMap;
 }
 
-RexxObjectPtr oodGetImageAttribute(RexxMethodContext *c, RexxObjectPtr self, CSTRING varName,
-                                   UINT msg, WPARAM wParam, uint8_t type, oodControl_t ctrl)
+uint32_t mapSymbol(RexxMethodContext *c, CSTRING symbol, size_t argPos, bool raiseException)
 {
-    // If we already have an image in the object variable, just use it.
-    RexxObjectPtr result = c->GetObjectVariable(varName);
-    if ( result == NULLOBJECT )
-    {
-        HWND hwnd = controlToHCtrl(c, self);
-        HANDLE hImage = (HANDLE)SendMessage(hwnd, msg, wParam, 0);
+    static String2Int *imageConstantsMap = NULL;
 
-        if ( hImage == NULL )
+    if ( imageConstantsMap == NULL )
+    {
+        imageConstantsMap = imageInitMap();
+    }
+    int idValue = getKeywordValue(imageConstantsMap, symbol);
+    if ( idValue == -1 && raiseException )
+    {
+        wrongArgValueException(c->threadContext, argPos, "the Image class symbol IDs", symbol);
+    }
+    return (uint32_t)idValue;
+}
+
+/**
+ * Gets the image list type from the specified argument object, where the object
+ * could be the numeric value, a string keyword, or omitted altogether.
+ *
+ * @param context
+ * @param _type
+ * @param defType   The value to use if the argument is omitted.
+ * @param argPos
+ *
+ * @return The image type or OOD_NO_VALUE on error.  An exception has been
+ *         raised on error.
+ */
+static uint32_t getImageTypeArg(RexxMethodContext *context, RexxObjectPtr _type, uint32_t defType, size_t argPos)
+{
+    uint32_t type = defType;
+
+    if ( argumentExists(argPos) )
+    {
+        if ( ! context->UnsignedInt32(_type, &type) )
         {
-            result = TheNilObj;
+            CSTRING image = context->ObjectToStringValue(_type);
+            if (      StrCmpI("BITMAP", image)       == 0 ) type = IMAGE_BITMAP;
+            else if ( StrCmpI("ICON", image)         == 0 ) type = IMAGE_ICON;
+            else if ( StrCmpI("CURSOR", image)       == 0 ) type = IMAGE_CURSOR;
+            else if ( StrCmpI("ENHMETAFILE", image)  == 0 ) type = IMAGE_ENHMETAFILE;
+            else
+            {
+                wrongArgValueException(context->threadContext, argPos, IMAGE_TYPE_LIST, _type);
+                type = OOD_NO_VALUE;
+            }
         }
+
+        if ( type != OOD_NO_VALUE && type > IMAGE_ENHMETAFILE )
+        {
+            wrongRangeException(context->threadContext, argPos, IMAGE_BITMAP, IMAGE_ENHMETAFILE, type);
+            type = OOD_NO_VALUE;
+        }
+    }
+    return type;
+}
+
+/**
+ * Gets the size for an image where the size argument must be a .Size object, or
+ * could be omitted.
+ *
+ * @param context
+ * @param size      Rexx .Size Object, could be omitted
+ * @param defSize   Default size if size is omitted, used to return the new size
+ *                  if argument is not omitted.
+ * @param argPos
+ *
+ * @return True on success, false on error.  On error an exception has been
+ *         raised.
+ */
+static bool getImageSizeArg(RexxMethodContext *context, RexxObjectPtr size, SIZE *defSize, size_t argPos)
+{
+    if ( argumentExists(argPos) )
+    {
+        SIZE *p = (PSIZE)rxGetSize(context, size, argPos);
+        if ( p == NULL )
+        {
+            return false;
+        }
+        defSize->cx = p->cx;
+        defSize->cy = p->cy;
+    }
+    return true;
+}
+
+
+/**
+ * Gets the image load resource flags the specified argument object, where the
+ * object could be the numeric value, a string keyword, or omitted altogether.
+ *
+ * @param context
+ * @param _flags
+ * @param defFlags   The value to use if the argument is omitted.
+ * @param argPos
+ *
+ * @return The image flags or OOD_NO_VALUE on error.  An exception has been
+ *         raised on error.
+ */
+static uint32_t getImageFlagsArg(RexxMethodContext *context, RexxObjectPtr _flags, uint32_t defFlags, size_t argPos)
+{
+    uint32_t flags = defFlags;
+
+    if ( argumentExists(argPos) )
+    {
+        if ( ! context->UnsignedInt32(_flags, &flags) )
+        {
+            CSTRING lr = context->ObjectToStringValue(_flags);
+
+            char *dup = strdupupr(lr);
+            if ( dup == NULL )
+            {
+                outOfMemoryException(context->threadContext);
+                return OOD_NO_VALUE;
+            }
+
+            flags = 0;
+            char *token = strtok(dup, " ");
+            while ( token != NULL )
+            {
+                if (      StrCmpI(token, "DEFAULTCOLOR")     == 0 ) flags |= LR_DEFAULTCOLOR           ;
+                else if ( StrCmpI(token, "MONOCHROME")       == 0 ) flags |= LR_MONOCHROME             ;
+                else if ( StrCmpI(token, "COLOR")            == 0 ) flags |= LR_COLOR                  ;
+                else if ( StrCmpI(token, "COPYRETURNORG")    == 0 ) flags |= LR_COPYRETURNORG          ;
+                else if ( StrCmpI(token, "COPYDELETEORG")    == 0 ) flags |= LR_COPYDELETEORG          ;
+                else if ( StrCmpI(token, "LOADFROMFILE")     == 0 ) flags |= LR_LOADFROMFILE           ;
+                else if ( StrCmpI(token, "LOADTRANSPARENT")  == 0 ) flags |= LR_LOADTRANSPARENT        ;
+                else if ( StrCmpI(token, "DEFAULTSIZE")      == 0 ) flags |= LR_DEFAULTSIZE            ;
+                else if ( StrCmpI(token, "VGACOLOR")         == 0 ) flags |= LR_VGACOLOR               ;
+                else if ( StrCmpI(token, "LOADMAP3DCOLORS")  == 0 ) flags |= LR_LOADMAP3DCOLORS        ;
+                else if ( StrCmpI(token, "CREATEDIBSECTION") == 0 ) flags |= LR_CREATEDIBSECTION       ;
+                else if ( StrCmpI(token, "COPYFROMRESOURCE") == 0 ) flags |= LR_COPYFROMRESOURCE       ;
+                else if ( StrCmpI(token, "SHARED")           == 0 ) flags |= LR_SHARED                 ;
+                else
+                {
+                    wrongArgKeywordsException(context->threadContext, argPos, IMAGE_FLAGS_LIST, _flags);
+                    flags = OOD_NO_VALUE;
+                    break;
+                }
+
+                token = strtok(NULL, " ");
+            }
+            LocalFree(dup);
+        }
+
+        if ( flags != OOD_NO_VALUE )
+        {
+            // The user specified flags.  Use some safeguards, determined by the
+            // value of the default flags.  In all other cases, assume the user
+            // knows best.
+
+            if ( defFlags == LR_LOADFROMFILE )
+            {
+                // Ensure the user did not use shared and did use load from file.
+                flags = (flags &  ~LR_SHARED) | LR_LOADFROMFILE;
+            }
+            else if ( defFlags == (LR_SHARED | LR_DEFAULTSIZE) )
+            {
+                // Ensure the user did not use load from file and did use shared.
+                flags = (flags &  ~LR_LOADFROMFILE) | LR_SHARED;
+            }
+        }
+    }
+    return flags;
+}
+
+uint32_t getSystemImageID(RexxMethodContext *c, RexxObjectPtr id, size_t argPos)
+{
+    uint32_t resourceID;
+
+    if ( ! c->UnsignedInt32(id, &resourceID) )
+    {
+        CSTRING keyword = c->ObjectToStringValue(id);
+
+        if (      StrCmpI(keyword, "IDI_HAND"       )     == 0 ) resourceID = 32513                     ;
+        else if ( StrCmpI(keyword, "IDI_QUESTION"   )     == 0 ) resourceID = 32514                     ;
+        else if ( StrCmpI(keyword, "IDI_EXCLAMATION")     == 0 ) resourceID = 32515                     ;
+        else if ( StrCmpI(keyword, "IDI_ASTERISK"   )     == 0 ) resourceID = 32516                     ;
+        else if ( StrCmpI(keyword, "IDI_WINLOGO"    )     == 0 ) resourceID = 32517                     ;
+        else if ( StrCmpI(keyword, "IDI_SHEILD"     )     == 0 ) resourceID = 32518                     ;
+        else if ( StrCmpI(keyword, "OCR_NORMAL"     )     == 0 ) resourceID = OCR_NORMAL                ;
+        else if ( StrCmpI(keyword, "OCR_IBEAM"      )     == 0 ) resourceID = OCR_IBEAM                 ;
+        else if ( StrCmpI(keyword, "OCR_WAIT"       )     == 0 ) resourceID = OCR_WAIT                  ;
+        else if ( StrCmpI(keyword, "OCR_CROSS"      )     == 0 ) resourceID = OCR_CROSS                 ;
+        else if ( StrCmpI(keyword, "OCR_UP"         )     == 0 ) resourceID = OCR_UP                    ;
+        else if ( StrCmpI(keyword, "OCR_SIZENWSE"   )     == 0 ) resourceID = OCR_SIZENWSE              ;
+        else if ( StrCmpI(keyword, "OCR_SIZENESW"   )     == 0 ) resourceID = OCR_SIZENESW              ;
+        else if ( StrCmpI(keyword, "OCR_SIZEWE"     )     == 0 ) resourceID = OCR_SIZEWE                ;
+        else if ( StrCmpI(keyword, "OCR_SIZENS"     )     == 0 ) resourceID = OCR_SIZENS                ;
+        else if ( StrCmpI(keyword, "OCR_SIZEALL"    )     == 0 ) resourceID = OCR_SIZEALL               ;
+        else if ( StrCmpI(keyword, "OCR_NO"         )     == 0 ) resourceID = OCR_NO                    ;
+        else if ( StrCmpI(keyword, "OCR_HAND"       )     == 0 ) resourceID = OCR_HAND                  ;
+        else if ( StrCmpI(keyword, "OCR_APPSTARTING")     == 0 ) resourceID = OCR_APPSTARTING           ;
+        else if ( StrCmpI(keyword, "OBM_CLOSE"      )     == 0 ) resourceID = OBM_CLOSE                 ;
+        else if ( StrCmpI(keyword, "OBM_UPARROW"    )     == 0 ) resourceID = OBM_UPARROW               ;
+        else if ( StrCmpI(keyword, "OBM_DNARROW"    )     == 0 ) resourceID = OBM_DNARROW               ;
+        else if ( StrCmpI(keyword, "OBM_RGARROW"    )     == 0 ) resourceID = OBM_RGARROW               ;
+        else if ( StrCmpI(keyword, "OBM_LFARROW"    )     == 0 ) resourceID = OBM_LFARROW               ;
+        else if ( StrCmpI(keyword, "OBM_REDUCE"     )     == 0 ) resourceID = OBM_REDUCE                ;
+        else if ( StrCmpI(keyword, "OBM_ZOOM"       )     == 0 ) resourceID = OBM_ZOOM                  ;
+        else if ( StrCmpI(keyword, "OBM_RESTORE"    )     == 0 ) resourceID = OBM_RESTORE               ;
+        else if ( StrCmpI(keyword, "OBM_REDUCED"    )     == 0 ) resourceID = OBM_REDUCED               ;
+        else if ( StrCmpI(keyword, "OBM_ZOOMD"      )     == 0 ) resourceID = OBM_ZOOMD                 ;
+        else if ( StrCmpI(keyword, "OBM_RESTORED"   )     == 0 ) resourceID = OBM_RESTORED              ;
+        else if ( StrCmpI(keyword, "OBM_UPARROWD"   )     == 0 ) resourceID = OBM_UPARROWD              ;
+        else if ( StrCmpI(keyword, "OBM_DNARROWD"   )     == 0 ) resourceID = OBM_DNARROWD              ;
+        else if ( StrCmpI(keyword, "OBM_RGARROWD"   )     == 0 ) resourceID = OBM_RGARROWD              ;
+        else if ( StrCmpI(keyword, "OBM_LFARROWD"   )     == 0 ) resourceID = OBM_LFARROWD              ;
+        else if ( StrCmpI(keyword, "OBM_MNARROW"    )     == 0 ) resourceID = OBM_MNARROW               ;
+        else if ( StrCmpI(keyword, "OBM_COMBO"      )     == 0 ) resourceID = OBM_COMBO                 ;
+        else if ( StrCmpI(keyword, "OBM_UPARROWI"   )     == 0 ) resourceID = OBM_UPARROWI              ;
+        else if ( StrCmpI(keyword, "OBM_DNARROWI"   )     == 0 ) resourceID = OBM_DNARROWI              ;
+        else if ( StrCmpI(keyword, "OBM_RGARROWI"   )     == 0 ) resourceID = OBM_RGARROWI              ;
+        else if ( StrCmpI(keyword, "OBM_LFARROWI"   )     == 0 ) resourceID = OBM_LFARROWI              ;
+        else if ( StrCmpI(keyword, "OBM_SIZE"       )     == 0 ) resourceID = OBM_SIZE                  ;
+        else if ( StrCmpI(keyword, "OBM_BTSIZE"     )     == 0 ) resourceID = OBM_BTSIZE                ;
+        else if ( StrCmpI(keyword, "OBM_CHECK"      )     == 0 ) resourceID = OBM_CHECK                 ;
+        else if ( StrCmpI(keyword, "OBM_CHECKBOXES" )     == 0 ) resourceID = OBM_CHECKBOXES            ;
+        else if ( StrCmpI(keyword, "OBM_BTNCORNERS" )     == 0 ) resourceID = OBM_BTNCORNERS            ;
         else
         {
-            // Create a new .Image object from the image handle.
-            result = rxNewImageFromControl(c, hwnd, hImage, type, ctrl);
+            resourceID = OOD_NO_VALUE;
         }
-
-        // Set the result in the object variable.  If there is a next time we
-        // can retrieve it easily.
-        c->SetObjectVariable(varName, result);
     }
-    return result;
-}
 
+    return resourceID;
+}
 
 /**
  * Methods for the .ImageList class.
  */
 #define IMAGELIST_CLASS "ImageList"
 
+
+#define IL_DEFAULT_FLAGS           ILC_COLOR32 | ILC_MASK
+#define IL_DEFAULT_COUNT           6
+#define IL_DEFAULT_GROW            0
+
+/**
+ * Gets the image list create flags the from specified argument object, where
+ * the object could be the numeric value, a string keyword, or omitted
+ * altogether.
+ *
+ * @param context
+ * @param _flags
+ * @param defFlags   The value to use if the argument is omitted.
+ * @param argPos
+ *
+ * @return The image flags.
+ *
+ */
+static uint32_t getImageListCreateFlagsArg(RexxMethodContext *context, RexxObjectPtr _flags,
+                                           uint32_t defFlags, size_t argPos)
+{
+    uint32_t flags = defFlags;
+
+    if ( argumentExists(argPos) )
+    {
+        if ( ! context->UnsignedInt32(_flags, &flags) )
+        {
+            CSTRING ilc = context->ObjectToStringValue(_flags);
+
+            char *dup = strdupupr(ilc);
+            if ( dup == NULL )
+            {
+                outOfMemoryException(context->threadContext);
+                return OOD_NO_VALUE;
+            }
+
+            flags = 0;
+            char *token = strtok(dup, " ");
+            while ( token != NULL )
+            {
+                if (      strcmp(token, "MASK")             == 0 ) flags |= ILC_MASK                  ;
+                else if ( strcmp(token, "COLOR")            == 0 ) flags |= ILC_COLOR                 ;
+                else if ( strcmp(token, "COLORDDB")         == 0 ) flags |= ILC_COLORDDB              ;
+                else if ( strcmp(token, "COLOR4")           == 0 ) flags |= ILC_COLOR4                ;
+                else if ( strcmp(token, "COLOR8")           == 0 ) flags |= ILC_COLOR8                ;
+                else if ( strcmp(token, "COLOR16")          == 0 ) flags |= ILC_COLOR16               ;
+                else if ( strcmp(token, "COLOR24")          == 0 ) flags |= ILC_COLOR24               ;
+                else if ( strcmp(token, "COLOR32")          == 0 ) flags |= ILC_COLOR32               ;
+                else if ( strcmp(token, "PALETTE")          == 0 ) flags |= ILC_PALETTE               ;
+                else if ( strcmp(token, "MIRROR")           == 0 ) flags |= ILC_MIRROR                ;
+                else if ( strcmp(token, "PERITEMMIRROR")    == 0 ) flags |= ILC_PERITEMMIRROR         ;
+                else if ( strcmp(token, "ORIGINALSIZE")     == 0 ) flags |= ILC_ORIGINALSIZE          ;
+                else if ( strcmp(token, "HIGHQUALITYSCALE") == 0 ) flags |= ILC_HIGHQUALITYSCALE      ;
+                else
+                {
+                    wrongArgKeywordsException(context->threadContext, argPos, IMAGELIST_CREATE_LIST, _flags);
+                    flags = OOD_NO_VALUE;
+                    break;
+                }
+
+                token = strtok(NULL, " ");
+            }
+            LocalFree(dup);
+        }
+    }
+    return flags;
+}
+
+
+/**
+ * Map a keyword string to the proper ILD_* flags.  By default ILD_NORMAL is
+ * used when the argument is omitted (flags will be null.)  ILD_NORMAL is 0
+ * anyway.
+ *
+ * @param flags
+ *
+ * @return uint32_t
+ */
+uint32_t keyword2ild(RexxMethodContext *c, CSTRING flags, size_t argPos)
+{
+    uint32_t val = ILD_NORMAL;
+
+    if ( flags != NULL )
+    {
+        char *dup = strdupupr(flags);
+        if ( dup == NULL )
+        {
+            outOfMemoryException(c->threadContext);
+            return OOD_NO_VALUE;
+        }
+
+        char *token = strtok(dup, " ");
+        while ( token != NULL )
+        {
+            if (      strcmp(flags, "BLEND"       ) == 0 ) val |= ILD_BLEND          ;
+            else if ( strcmp(flags, "BLEND25"     ) == 0 ) val |= ILD_BLEND25        ;
+            else if ( strcmp(flags, "BLEND50"     ) == 0 ) val |= ILD_BLEND50        ;
+            else if ( strcmp(flags, "FOCUS"       ) == 0 ) val |= ILD_FOCUS          ;
+            else if ( strcmp(flags, "MASK"        ) == 0 ) val |= ILD_MASK           ;
+            else if ( strcmp(flags, "NORMAL"      ) == 0 ) val |= ILD_NORMAL         ;
+            else if ( strcmp(flags, "SELECTED"    ) == 0 ) val |= ILD_SELECTED       ;
+            else if ( strcmp(flags, "TRANSPARENT" ) == 0 ) val |= ILD_TRANSPARENT    ;
+            else
+            {
+                wrongArgValueException(c->threadContext, argPos, LOAD_RESOURCE_LIST, flags);
+                val = OOD_NO_VALUE;
+                break;
+            }
+
+            token = strtok(NULL, " ");
+        }
+        LocalFree(dup);
+    }
+
+    return val;
+}
 
 HIMAGELIST rxGetImageList(RexxMethodContext *context, RexxObjectPtr il, size_t argPos)
 {
@@ -155,7 +531,7 @@ HIMAGELIST rxGetImageList(RexxMethodContext *context, RexxObjectPtr il, size_t a
         himl = (HIMAGELIST)context->ObjectToCSelf(il);
         if ( himl == NULL )
         {
-            nullObjectException(context->threadContext, IMAGELISTCLASS, argPos);
+            nullObjectException(context->threadContext, IMAGELIST_CLASS, argPos);
         }
     }
     return himl;
@@ -302,6 +678,56 @@ done_out:
     return imageList;
 }
 
+/** ImageList::create()    [class method]
+ *
+ *
+ *
+ */
+RexxMethod4(RexxObjectPtr, il_create_cls, OPTIONAL_RexxObjectPtr, size,  OPTIONAL_RexxObjectPtr, _flags,
+            OPTIONAL_int32_t, count, OPTIONAL_int32_t, grow)
+{
+    RexxMethodContext *c = context;
+    RexxObjectPtr result = TheNilObj;
+
+    SIZE s = {0};
+    if ( argumentExists(1) )
+    {
+        SIZE *p = (PSIZE)rxGetSize(c, size, 3);
+        if ( p == NULL )
+        {
+            goto out;
+        }
+        s.cx = p->cx;
+        s.cy = p->cy;
+    }
+    else
+    {
+        s.cx = GetSystemMetrics(SM_CXICON);
+        s.cy = GetSystemMetrics(SM_CYICON);
+    }
+
+    uint32_t flags = getImageListCreateFlagsArg(context, _flags, IL_DEFAULT_FLAGS, 2);
+    if ( (flags & (ILC_ORIGINALSIZE | ILC_HIGHQUALITYSCALE)) && (! requiredComCtl32Version(c, "init", COMCTL32_6_0)) )
+    {
+        goto out;
+    }
+
+    if ( argumentOmitted(3) )
+    {
+        count = IL_DEFAULT_COUNT;
+    }
+    if ( argumentOmitted(4) )
+    {
+        grow = IL_DEFAULT_GROW;
+    }
+
+    HIMAGELIST himl = ImageList_Create(s.cx, s.cy, flags, count, grow);
+    result = rxNewImageList(c, himl);
+
+out:
+    return result;
+}
+
 /** ImageList::init()
  *
  *
@@ -343,57 +769,11 @@ out:
     return NULLOBJECT;
 }
 
-RexxMethod4(RexxObjectPtr, il_create_cls, OPTIONAL_RexxObjectPtr, size,  OPTIONAL_uint32_t, flags,
-            OPTIONAL_int32_t, count, OPTIONAL_int32_t, grow)
-{
-    RexxMethodContext *c = context;
-    RexxObjectPtr result = TheNilObj;
-
-    SIZE s = {0};
-    if ( argumentExists(1) )
-    {
-        SIZE *p = rxGetSize(c, size, 3);
-        if ( p == NULL )
-        {
-            goto out;
-        }
-        s.cx = p->cx;
-        s.cy = p->cy;
-    }
-    else
-    {
-        s.cx = GetSystemMetrics(SM_CXICON);
-        s.cy = GetSystemMetrics(SM_CYICON);
-    }
-
-    if ( argumentExists(2) )
-    {
-        if ( (flags & (ILC_MIRROR | ILC_PERITEMMIRROR)) && (! requiredComCtl32Version(c, "init", COMCTL32_6_0)) )
-        {
-            goto out;
-        }
-    }
-    else
-    {
-        flags = IL_DEFAULT_FLAGS;
-    }
-
-    if ( argumentOmitted(3) )
-    {
-        count = IL_DEFAULT_COUNT;
-    }
-    if ( argumentOmitted(4) )
-    {
-        grow = IL_DEFAULT_GROW;
-    }
-
-    HIMAGELIST himl = ImageList_Create(s.cx, s.cy, flags, count, grow);
-    result = rxNewImageList(c, himl);
-
-out:
-    return result;
-}
-
+/** ImageList::add()
+ *
+ *
+ *
+ */
 RexxMethod3(int, il_add, RexxObjectPtr, image, OPTIONAL_RexxObjectPtr, optMask, CSELF, il)
 {
     RexxMethodContext *c = context;
@@ -402,7 +782,7 @@ RexxMethod3(int, il_add, RexxObjectPtr, image, OPTIONAL_RexxObjectPtr, optMask, 
     HIMAGELIST himl = (HIMAGELIST)il;
     if ( himl == NULL )
     {
-        nullObjectException(c->threadContext, IMAGELISTCLASS);
+        nullObjectException(c->threadContext, IMAGELIST_CLASS);
         goto out;
     }
 
@@ -429,28 +809,11 @@ out:
     return result;
 }
 
-RexxMethod3(int, il_addMasked, RexxObjectPtr, image, uint32_t, cRef, CSELF, il)
-{
-    int result = -1;
-
-    HIMAGELIST himl = (HIMAGELIST)il;
-    if ( himl == NULL )
-    {
-        nullObjectException(context->threadContext, IMAGELISTCLASS);
-        goto out;
-    }
-
-    POODIMAGE oi = rxGetImageBitmap(context, image, 1);
-    if ( oi == NULL )
-    {
-        goto out;
-    }
-    result = ImageList_AddMasked(himl, (HBITMAP)oi->hImage, cRef);
-
-out:
-    return result;
-}
-
+/** ImageList::addIcon()
+ *
+ *
+ *
+ */
 RexxMethod2(int, il_addIcon, RexxObjectPtr, image, CSELF, il)
 {
     int result = -1;
@@ -458,7 +821,7 @@ RexxMethod2(int, il_addIcon, RexxObjectPtr, image, CSELF, il)
     HIMAGELIST himl = (HIMAGELIST)il;
     if ( himl == NULL )
     {
-        nullObjectException(context->threadContext, IMAGELISTCLASS);
+        nullObjectException(context->threadContext, IMAGELIST_CLASS);
         goto out;
     }
     POODIMAGE oi = rxGetImageIcon(context, image, 1);
@@ -472,6 +835,11 @@ out:
     return result;
 }
 
+/** ImageList::addImages()
+ *
+ *
+ *
+ */
 RexxMethod3(int, il_addImages, RexxArrayObject, images, OPTIONAL_uint32_t, cRef, CSELF, il)
 {
     RexxMethodContext *c = context;
@@ -481,7 +849,7 @@ RexxMethod3(int, il_addImages, RexxArrayObject, images, OPTIONAL_uint32_t, cRef,
     HIMAGELIST himl = (HIMAGELIST)il;
     if ( himl == NULL )
     {
-        nullObjectException(context->threadContext, IMAGELISTCLASS);
+        nullObjectException(context->threadContext, IMAGELIST_CLASS);
         goto out;
     }
     size_t count = c->ArraySize(images);
@@ -574,6 +942,48 @@ out:
     return result;
 }
 
+/** ImageList::addMasked()
+ *
+ *
+ *
+ */
+RexxMethod3(int, il_addMasked, RexxObjectPtr, image, uint32_t, cRef, CSELF, il)
+{
+    int result = -1;
+
+    HIMAGELIST himl = (HIMAGELIST)il;
+    if ( himl == NULL )
+    {
+        nullObjectException(context->threadContext, IMAGELIST_CLASS);
+        goto out;
+    }
+
+    POODIMAGE oi = rxGetImageBitmap(context, image, 1);
+    if ( oi == NULL )
+    {
+        goto out;
+    }
+    result = ImageList_AddMasked(himl, (HBITMAP)oi->hImage, cRef);
+
+out:
+    return result;
+}
+
+/** ImageList::duplicate()
+ *
+ *
+ */
+RexxMethod1(RexxObjectPtr, il_duplicate, CSELF, il)
+{
+    HIMAGELIST himl = (HIMAGELIST)il;
+    if ( himl != NULL )
+    {
+        return rxNewImageList(context, ImageList_Duplicate(himl));
+    }
+    nullObjectException(context->threadContext, IMAGELIST_CLASS);
+    return NULL;
+}
+
 /** ImageList::getCount()
  *
  *
@@ -586,8 +996,58 @@ RexxMethod1(int, il_getCount, CSELF, il)
     {
         return ImageList_GetImageCount(himl);
     }
-    nullObjectException(context->threadContext, IMAGELISTCLASS);
+    nullObjectException(context->threadContext, IMAGELIST_CLASS);
     return NULL;
+}
+
+
+
+/** ImageList::getIcon()
+ *
+ *  @param index  [required] The one-based index of the icon to get.
+ *
+ *  @param style  [optional] The drawing style of the icon.  If this argument is
+ *                omitted, the NORMAL style is used
+ *
+ *  @param overlayIndex  [optional]  The one-based index of an overlay mask.
+ *
+ *  @return  The specified icon in this image list or .nil on error.
+ *
+ *  @remarks  For an Image_List, the overlay index is already one-based.
+ */
+RexxMethod4(RexxObjectPtr, il_getIcon, uint32_t, index, OPTIONAL_CSTRING, _style,
+            OPTIONAL_uint32_t, overlayIndex, CSELF, il)
+{
+    HIMAGELIST himl = (HIMAGELIST)il;
+    if ( himl != NULL )
+    {
+        uint32_t style = keyword2ild(context, _style, 2);
+        if ( style == OOD_NO_VALUE )
+        {
+            return NULLOBJECT;
+        }
+
+        if ( argumentExists(3) )
+        {
+            style |= INDEXTOOVERLAYMASK(overlayIndex);
+        }
+        index--;
+        HICON icon = ImageList_GetIcon(himl, index, style);
+
+        if ( icon != NULL )
+        {
+            SIZE s;
+            if ( ImageList_GetIconSize(himl, (int *)&s.cx, (int *)&s.cy) )
+            {
+                // LR_DEFAULTCOLOR means nothing, but I think that is correct
+                // for the flags so we use true for the last arg.
+                return rxNewValidImage(context, icon, IMAGE_ICON, &s, LR_DEFAULTCOLOR, true);
+            }
+        }
+        return TheNilObj;
+    }
+    nullObjectException(context->threadContext, IMAGELIST_CLASS);
+    return NULLOBJECT;
 }
 
 /** ImageList::getImageSize()
@@ -611,44 +1071,36 @@ RexxMethod1(RexxObjectPtr, il_getImageSize, CSELF, il)
             return rxNewSize(context, s.cx, s.cy);
         }
     }
-    nullObjectException(context->threadContext, IMAGELISTCLASS);
+    nullObjectException(context->threadContext, IMAGELIST_CLASS);
     return NULL;
 }
 
-RexxMethod1(RexxObjectPtr, il_duplicate, CSELF, il)
+/** ImageList::handle()
+ *
+ *
+ *
+ */
+RexxMethod1(POINTER, il_handle, CSELF, il)
 {
-    HIMAGELIST himl = (HIMAGELIST)il;
-    if ( himl != NULL )
+    if ( il == NULL )
     {
-        return rxNewImageList(context, ImageList_Duplicate(himl));
+        nullObjectException(context->threadContext, IMAGELIST_CLASS);
     }
-    nullObjectException(context->threadContext, IMAGELISTCLASS);
-    return NULL;
+    return il;
 }
 
-RexxMethod2(logical_t, il_remove, int32_t, index, CSELF, il)
-{
-    HIMAGELIST himl = (HIMAGELIST)il;
-    if ( himl != NULL )
-    {
-        index--;
-        return ImageList_Remove(himl, index);
-    }
-    nullObjectException(context->threadContext, IMAGELISTCLASS);
-    return NULL;
-}
+/** ImageList::isNull()
+ *
+ *
+ *
+ */
+RexxMethod1(logical_t, il_isNull, CSELF, il) { return ( il == NULL);  }
 
-RexxMethod1(logical_t, il_removeAll, CSELF, il)
-{
-    HIMAGELIST himl = (HIMAGELIST)il;
-    if ( himl != NULL )
-    {
-        return ImageList_RemoveAll(himl);
-    }
-    nullObjectException(context->threadContext, IMAGELISTCLASS);
-    return NULL;
-}
-
+/** ImageList::release()
+ *
+ *
+ *
+ */
 RexxMethod1(uint32_t, il_release, CSELF, il)
 {
     if ( il != NULL )
@@ -659,16 +1111,38 @@ RexxMethod1(uint32_t, il_release, CSELF, il)
     return 0;
 }
 
-RexxMethod1(POINTER, il_handle, CSELF, il)
+/** ImageList::remove()
+ *
+ *
+ *
+ */
+RexxMethod2(logical_t, il_remove, int32_t, index, CSELF, il)
 {
-    if ( il == NULL )
+    HIMAGELIST himl = (HIMAGELIST)il;
+    if ( himl != NULL )
     {
-        nullObjectException(context->threadContext, IMAGELISTCLASS);
+        index--;
+        return ImageList_Remove(himl, index);
     }
-    return il;
+    nullObjectException(context->threadContext, IMAGELIST_CLASS);
+    return FALSE;
 }
 
-RexxMethod1(logical_t, il_isNull, CSELF, il) { return ( il == NULL);  }
+/** ImageList::removeAll()
+ *
+ *
+ *
+ */
+RexxMethod1(logical_t, il_removeAll, CSELF, il)
+{
+    HIMAGELIST himl = (HIMAGELIST)il;
+    if ( himl != NULL )
+    {
+        return ImageList_RemoveAll(himl);
+    }
+    nullObjectException(context->threadContext, IMAGELIST_CLASS);
+    return NULL;
+}
 
 
 /**
@@ -676,101 +1150,6 @@ RexxMethod1(logical_t, il_isNull, CSELF, il) { return ( il == NULL);  }
  */
 #define IMAGE_CLASS "Image"
 
-CSTRING getImageTypeName(uint8_t type)
-{
-    switch ( type )
-    {
-        case IMAGE_ICON :
-            return "Icon";
-        case IMAGE_BITMAP :
-            return "Bitmap";
-        case IMAGE_CURSOR :
-            return "Cursor";
-        case IMAGE_ENHMETAFILE :
-            return "Enhanced Metafile";
-        default :
-            return "Unknown";
-    }
-}
-
-POODIMAGE rxGetOodImage(RexxMethodContext *context, RexxObjectPtr o, size_t argPos)
-{
-    if ( requiredClass(context->threadContext, o, "Image", argPos) )
-    {
-        POODIMAGE oi = (POODIMAGE)context->ObjectToCSelf(o);
-        if ( oi->isValid )
-        {
-            return oi;
-        }
-        nullObjectException(context->threadContext, IMAGECLASS, argPos);
-    }
-    return NULL;
-}
-
-/**
- * Extracts a valid oodImage pointer from a RexxObjectPtr, ensuring that the
- * image is either an icon or a cursor.  (Cursors are icons.)
- *
- * @param c    The method context we are executing in.
- * @param o    The, assumed, .Image object.
- * @param pos  The argument position in the invocation from ooRexx.  Used for
- *             exception messages.
- *
- * @return A pointer to an OODIMAGE struct on success, othewise NULL.
- */
-POODIMAGE rxGetImageIcon(RexxMethodContext *c, RexxObjectPtr o, size_t pos)
-{
-    POODIMAGE oi = rxGetOodImage(c, o, pos);
-    if ( oi != NULL )
-    {
-        if ( oi->type == IMAGE_ICON || oi->type == IMAGE_CURSOR )
-        {
-            return oi;
-        }
-        wrongArgValueException(c->threadContext, pos, "Icon, Cursor", oi->typeName);
-    }
-    return NULL;
-}
-
-/**
- * Extracts a valid oodImage pointer from a RexxObjectPtr, ensuring that the
- * image is a cursor.  (Cursors are icons, but this function strictly enforces
- * that the image is a cursor.)
- *
- * @param c    The method context we are executing in.
- * @param o    The, assumed, .Image object.
- * @param pos  The argument position in the invocation from ooRexx.  Used for
- *             exception messages.
- *
- * @return A pointer to an OODIMAGE struct on success, othewise NULL.
- */
-POODIMAGE rxGetImageCursor(RexxMethodContext *c, RexxObjectPtr o, size_t pos)
-{
-    POODIMAGE oi = rxGetOodImage(c, o, pos);
-    if ( oi != NULL )
-    {
-        if ( oi->type == IMAGE_CURSOR )
-        {
-            return oi;
-        }
-        wrongArgValueException(c->threadContext, pos, "Cursor", oi->typeName);
-    }
-    return NULL;
-}
-
-POODIMAGE rxGetImageBitmap(RexxMethodContext *c, RexxObjectPtr o, size_t pos)
-{
-    POODIMAGE oi = rxGetOodImage(c, o, pos);
-    if ( oi != NULL )
-    {
-        if ( oi->type == IMAGE_BITMAP )
-        {
-            return oi;
-        }
-        invalidImageException(c->threadContext, pos, "Bitmap", oi->typeName);
-    }
-    return NULL;
-}
 
 RexxObjectPtr rxNewImageObject(RexxMethodContext *c, RexxBufferObject bufferObj)
 {
@@ -784,17 +1163,35 @@ RexxObjectPtr rxNewImageObject(RexxMethodContext *c, RexxBufferObject bufferObj)
     return image;
 }
 
-RexxObjectPtr rxNewEmptyImage(RexxMethodContext *c, DWORD rc)
+/**
+ * Instantiates a new, non-null, .Image object.
+ *
+ * @param context
+ * @param hImage
+ * @param type
+ * @param s
+ * @param flags
+ * @param src       True, ooDialog created using LoadImage(). False created from
+ *                  a handle (so type, size, flags may not be correct.)
+ *
+ * @return  A new .Image object.
+ */
+RexxObjectPtr rxNewValidImage(RexxMethodContext *c, HANDLE hImage, uint8_t type, PSIZE s, uint32_t flags, bool src)
 {
     RexxBufferObject bufferObj = c->NewBuffer(sizeof(OODIMAGE));
     POODIMAGE cself = (POODIMAGE)c->BufferData(bufferObj);
 
-    // Set everything to invalid.
-    memset(cself, 0, sizeof(OODIMAGE));
-    cself->type = -1;
-    cself->size.cx = -1;
-    cself->size.cy = -1;
-    cself->lastError = rc;
+    cself->hImage = hImage;
+    cself->type = type;
+    cself->size.cx = s->cx;
+    cself->size.cy = s->cy;
+    cself->flags = flags;
+    cself->isValid = true;
+    cself->srcOOD = src;
+    cself->canRelease = ! (flags & LR_SHARED);
+    cself->typeName = getImageTypeName(type);
+    cself->lastError = 0;
+    cself->fileName = "";
 
     return rxNewImageObject(c, bufferObj);
 }
@@ -876,35 +1273,162 @@ RexxObjectPtr rxNewImageFromControl(RexxMethodContext *c, HWND hwnd, HANDLE hIma
     return rxNewValidImage(c, hImage, type, &s, LR_SHARED, false);
 }
 
+
+RexxObjectPtr oodSetImageAttribute(RexxMethodContext *c, CSTRING varName, RexxObjectPtr image, HWND hwnd,
+                                   HANDLE hOldImage, uint8_t type, oodControl_t ctrl)
+{
+    RexxObjectPtr result = c->GetObjectVariable(varName);
+    if ( result == NULLOBJECT )
+    {
+        result = TheNilObj;
+    }
+    c->SetObjectVariable(varName, image);
+
+    // It could be that the existing image was set from a resource DLL.  In
+    // which case we need to create an .Image object.
+    if ( result == TheNilObj && hOldImage != NULL )
+    {
+        result = rxNewImageFromControl(c, hwnd, hOldImage, type, ctrl);
+    }
+    return result;
+}
+
+RexxObjectPtr oodGetImageAttribute(RexxMethodContext *c, RexxObjectPtr self, CSTRING varName,
+                                   UINT msg, WPARAM wParam, uint8_t type, oodControl_t ctrl)
+{
+    // If we already have an image in the object variable, just use it.
+    RexxObjectPtr result = c->GetObjectVariable(varName);
+    if ( result == NULLOBJECT )
+    {
+        HWND hwnd = controlToHCtrl(c, self);
+        HANDLE hImage = (HANDLE)SendMessage(hwnd, msg, wParam, 0);
+
+        if ( hImage == NULL )
+        {
+            result = TheNilObj;
+        }
+        else
+        {
+            // Create a new .Image object from the image handle.
+            result = rxNewImageFromControl(c, hwnd, hImage, type, ctrl);
+        }
+
+        // Set the result in the object variable.  If there is a next time we
+        // can retrieve it easily.
+        c->SetObjectVariable(varName, result);
+    }
+    return result;
+}
+
+
+
+CSTRING getImageTypeName(uint8_t type)
+{
+    switch ( type )
+    {
+        case IMAGE_ICON :
+            return "Icon";
+        case IMAGE_BITMAP :
+            return "Bitmap";
+        case IMAGE_CURSOR :
+            return "Cursor";
+        case IMAGE_ENHMETAFILE :
+            return "Enhanced Metafile";
+        default :
+            return "Unknown";
+    }
+}
+
+POODIMAGE rxGetOodImage(RexxMethodContext *context, RexxObjectPtr o, size_t argPos)
+{
+    if ( requiredClass(context->threadContext, o, "Image", argPos) )
+    {
+        POODIMAGE oi = (POODIMAGE)context->ObjectToCSelf(o);
+        if ( oi->isValid )
+        {
+            return oi;
+        }
+        nullObjectException(context->threadContext, IMAGE_CLASS, argPos);
+    }
+    return NULL;
+}
+
 /**
- * Instantiates a new, non-null, .Image object.
+ * Extracts a valid oodImage pointer from a RexxObjectPtr, ensuring that the
+ * image is either an icon or a cursor.  (Cursors are icons.)
  *
- * @param context
- * @param hImage
- * @param type
- * @param s
- * @param flags
- * @param src       True, ooDialog created using LoadImage(). False created from
- *                  a handle (so type, size, flags may not be correct.)
+ * @param c    The method context we are executing in.
+ * @param o    The, assumed, .Image object.
+ * @param pos  The argument position in the invocation from ooRexx.  Used for
+ *             exception messages.
  *
- * @return  A new .Image object.
+ * @return A pointer to an OODIMAGE struct on success, othewise NULL.
  */
-RexxObjectPtr rxNewValidImage(RexxMethodContext *c, HANDLE hImage, uint8_t type, PSIZE s, uint32_t flags, bool src)
+POODIMAGE rxGetImageIcon(RexxMethodContext *c, RexxObjectPtr o, size_t pos)
+{
+    POODIMAGE oi = rxGetOodImage(c, o, pos);
+    if ( oi != NULL )
+    {
+        if ( oi->type == IMAGE_ICON || oi->type == IMAGE_CURSOR )
+        {
+            return oi;
+        }
+        wrongArgValueException(c->threadContext, pos, "Icon, Cursor", oi->typeName);
+    }
+    return NULL;
+}
+
+/**
+ * Extracts a valid oodImage pointer from a RexxObjectPtr, ensuring that the
+ * image is a cursor.  (Cursors are icons, but this function strictly enforces
+ * that the image is a cursor.)
+ *
+ * @param c    The method context we are executing in.
+ * @param o    The, assumed, .Image object.
+ * @param pos  The argument position in the invocation from ooRexx.  Used for
+ *             exception messages.
+ *
+ * @return A pointer to an OODIMAGE struct on success, othewise NULL.
+ */
+POODIMAGE rxGetImageCursor(RexxMethodContext *c, RexxObjectPtr o, size_t pos)
+{
+    POODIMAGE oi = rxGetOodImage(c, o, pos);
+    if ( oi != NULL )
+    {
+        if ( oi->type == IMAGE_CURSOR )
+        {
+            return oi;
+        }
+        wrongArgValueException(c->threadContext, pos, "Cursor", oi->typeName);
+    }
+    return NULL;
+}
+
+POODIMAGE rxGetImageBitmap(RexxMethodContext *c, RexxObjectPtr o, size_t pos)
+{
+    POODIMAGE oi = rxGetOodImage(c, o, pos);
+    if ( oi != NULL )
+    {
+        if ( oi->type == IMAGE_BITMAP )
+        {
+            return oi;
+        }
+        invalidImageException(c->threadContext, pos, "Bitmap", oi->typeName);
+    }
+    return NULL;
+}
+
+RexxObjectPtr rxNewEmptyImage(RexxMethodContext *c, DWORD rc)
 {
     RexxBufferObject bufferObj = c->NewBuffer(sizeof(OODIMAGE));
     POODIMAGE cself = (POODIMAGE)c->BufferData(bufferObj);
 
-    cself->hImage = hImage;
-    cself->type = type;
-    cself->size.cx = s->cx;
-    cself->size.cy = s->cy;
-    cself->flags = flags;
-    cself->isValid = true;
-    cself->srcOOD = src;
-    cself->canRelease = ! (flags & LR_SHARED);
-    cself->typeName = getImageTypeName(type);
-    cself->lastError = 0;
-    cself->fileName = "";
+    // Set everything to invalid.
+    memset(cself, 0, sizeof(OODIMAGE));
+    cself->type = -1;
+    cself->size.cx = -1;
+    cself->size.cy = -1;
+    cself->lastError = rc;
 
     return rxNewImageObject(c, bufferObj);
 }
@@ -989,193 +1513,30 @@ out:
     return result;
 }
 
-bool getStandardImageArgs(RexxMethodContext *context, uint8_t *type, uint8_t defType, RexxObjectPtr size,
-                          SIZE *defSize, uint32_t *flags, uint32_t defFlags)
-{
-    oodResetSysErrCode(context->threadContext);
-
-    if ( argumentOmitted(2) )
-    {
-        *type = defType;
-    }
-
-    if ( argumentExists(3) )
-    {
-        SIZE *p = rxGetSize(context, size, 3);
-        if ( p == NULL )
-        {
-            return false;
-        }
-        defSize->cx = p->cx;
-        defSize->cy = p->cy;
-    }
-
-    if ( argumentOmitted(4) )
-    {
-        *flags = defFlags;
-    }
-    else
-    {
-        // The user specified flags.  Use some safeguards, determined by the
-        // value of the default flags.  In all other cases, assume the user
-        // knows best.
-
-        if ( defFlags == LR_LOADFROMFILE )
-        {
-            // Ensure the user did not use shared and did use load from file.
-            *flags = (*flags &  ~LR_SHARED) | LR_LOADFROMFILE;
-        }
-        else if ( defFlags == (LR_SHARED | LR_DEFAULTSIZE) )
-        {
-            // Ensure the user did not use load from file and did use shared.
-            *flags = (*flags &  ~LR_LOADFROMFILE) | LR_SHARED;
-        }
-    }
-    return true;
-}
-
-/**
- * Initializes the string to int map for IDs and flags used by images and image
- * lists.  This will included things like a button control's alignment flags for
- * an image list, image list creation flags, OEM icon IDs, etc..
- *
- * @return String2Int*
- *
- * @note  All IDs are included here, except the obsolete ones, and things like
- *        OBM_OLD*, all of which were for 16-bit Windows.
- */
-static String2Int *imageInitMap(void)
-{
-    String2Int *cMap = new String2Int;
-
-    cMap->insert(String2Int::value_type("IDI_APPLICATION", 32512));
-    cMap->insert(String2Int::value_type("IDI_HAND",        32513));
-    cMap->insert(String2Int::value_type("IDI_QUESTION",    32514));
-    cMap->insert(String2Int::value_type("IDI_EXCLAMATION", 32515));
-    cMap->insert(String2Int::value_type("IDI_ASTERISK",    32516));
-    cMap->insert(String2Int::value_type("IDI_WINLOGO",     32517));
-
-    cMap->insert(String2Int::value_type("IMAGE_BITMAP",      0));
-    cMap->insert(String2Int::value_type("IMAGE_ICON",        1));
-    cMap->insert(String2Int::value_type("IMAGE_CURSOR",      2));
-    cMap->insert(String2Int::value_type("IMAGE_ENHMETAFILE", 3));
-
-    cMap->insert(String2Int::value_type("OCR_NORMAL",      32512));
-    cMap->insert(String2Int::value_type("OCR_IBEAM",       32513));
-    cMap->insert(String2Int::value_type("OCR_WAIT",        32514));
-    cMap->insert(String2Int::value_type("OCR_CROSS",       32515));
-    cMap->insert(String2Int::value_type("OCR_UP",          32516));
-    cMap->insert(String2Int::value_type("OCR_SIZENWSE",    32642));
-    cMap->insert(String2Int::value_type("OCR_SIZENESW",    32643));
-    cMap->insert(String2Int::value_type("OCR_SIZEWE",      32644));
-    cMap->insert(String2Int::value_type("OCR_SIZENS",      32645));
-    cMap->insert(String2Int::value_type("OCR_SIZEALL",     32646));
-    cMap->insert(String2Int::value_type("OCR_NO",          32648));
-    cMap->insert(String2Int::value_type("OCR_HAND",        32649));
-    cMap->insert(String2Int::value_type("OCR_APPSTARTING", 32650));
-
-    cMap->insert(String2Int::value_type("OBM_CLOSE",      32754));
-    cMap->insert(String2Int::value_type("OBM_UPARROW",    32753));
-    cMap->insert(String2Int::value_type("OBM_DNARROW",    32752));
-    cMap->insert(String2Int::value_type("OBM_RGARROW",    32751));
-    cMap->insert(String2Int::value_type("OBM_LFARROW",    32750));
-    cMap->insert(String2Int::value_type("OBM_REDUCE",     32749));
-    cMap->insert(String2Int::value_type("OBM_ZOOM",       32748));
-    cMap->insert(String2Int::value_type("OBM_RESTORE",    32747));
-    cMap->insert(String2Int::value_type("OBM_REDUCED",    32746));
-    cMap->insert(String2Int::value_type("OBM_ZOOMD",      32745));
-    cMap->insert(String2Int::value_type("OBM_RESTORED",   32744));
-    cMap->insert(String2Int::value_type("OBM_UPARROWD",   32743));
-    cMap->insert(String2Int::value_type("OBM_DNARROWD",   32742));
-    cMap->insert(String2Int::value_type("OBM_RGARROWD",   32741));
-    cMap->insert(String2Int::value_type("OBM_LFARROWD",   32740));
-    cMap->insert(String2Int::value_type("OBM_MNARROW",    32739));
-    cMap->insert(String2Int::value_type("OBM_COMBO",      32738));
-    cMap->insert(String2Int::value_type("OBM_UPARROWI",   32737));
-    cMap->insert(String2Int::value_type("OBM_DNARROWI",   32736));
-    cMap->insert(String2Int::value_type("OBM_RGARROWI",   32735));
-    cMap->insert(String2Int::value_type("OBM_LFARROWI",   32734));
-    cMap->insert(String2Int::value_type("OBM_SIZE",       32766));
-    cMap->insert(String2Int::value_type("OBM_BTSIZE",     32761));
-    cMap->insert(String2Int::value_type("OBM_CHECK",      32760));
-    cMap->insert(String2Int::value_type("OBM_CHECKBOXES", 32759));
-    cMap->insert(String2Int::value_type("OBM_BTNCORNERS", 32758));
-
-    cMap->insert(String2Int::value_type("LR_DEFAULTCOLOR",     0x0000));
-    cMap->insert(String2Int::value_type("LR_MONOCHROME",       0x0001));
-    cMap->insert(String2Int::value_type("LR_COLOR",            0x0002));
-    cMap->insert(String2Int::value_type("LR_COPYRETURNORG",    0x0004));
-    cMap->insert(String2Int::value_type("LR_COPYDELETEORG",    0x0008));
-    cMap->insert(String2Int::value_type("LR_LOADFROMFILE",     0x0010));
-    cMap->insert(String2Int::value_type("LR_LOADTRANSPARENT",  0x0020));
-    cMap->insert(String2Int::value_type("LR_DEFAULTSIZE",      0x0040));
-    cMap->insert(String2Int::value_type("LR_VGACOLOR",         0x0080));
-    cMap->insert(String2Int::value_type("LR_LOADMAP3DCOLORS",  0x1000));
-    cMap->insert(String2Int::value_type("LR_CREATEDIBSECTION", 0x2000));
-    cMap->insert(String2Int::value_type("LR_COPYFROMRESOURCE", 0x4000));
-    cMap->insert(String2Int::value_type("LR_SHARED",           0x8000));
-
-    // ImageList_Create flags
-    cMap->insert(String2Int::value_type("ILC_MASK", 0x0001));
-    cMap->insert(String2Int::value_type("ILC_COLOR", 0x0000));
-    cMap->insert(String2Int::value_type("ILC_COLORDDB", 0x00FE));
-    cMap->insert(String2Int::value_type("ILC_COLOR4", 0x0004));
-    cMap->insert(String2Int::value_type("ILC_COLOR8", 0x0008));
-    cMap->insert(String2Int::value_type("ILC_COLOR16", 0x0010));
-    cMap->insert(String2Int::value_type("ILC_COLOR24", 0x0018));
-    cMap->insert(String2Int::value_type("ILC_COLOR32", 0x0020));
-    cMap->insert(String2Int::value_type("ILC_PALETTE", 0x0800));
-    cMap->insert(String2Int::value_type("ILC_MIRROR", 0x2000));
-    cMap->insert(String2Int::value_type("ILC_PERITEMMIRROR", 0x8000));
-
-    // Button image list alignment values
-    cMap->insert(String2Int::value_type("BUTTON_IMAGELIST_ALIGN_LEFT",   0));
-    cMap->insert(String2Int::value_type("BUTTON_IMAGELIST_ALIGN_RIGHT",  1));
-    cMap->insert(String2Int::value_type("BUTTON_IMAGELIST_ALIGN_TOP",    2));
-    cMap->insert(String2Int::value_type("BUTTON_IMAGELIST_ALIGN_BOTTOM", 3));
-    cMap->insert(String2Int::value_type("BUTTON_IMAGELIST_ALIGN_CENTER", 4));
-
-    cMap->insert(String2Int::value_type("LVSIL_NORMAL", 0));
-    cMap->insert(String2Int::value_type("LVSIL_SMALL", 1));
-    cMap->insert(String2Int::value_type("LVSIL_STATE", 2));
-
-    cMap->insert(String2Int::value_type("TVSIL_NORMAL", 0));
-    cMap->insert(String2Int::value_type("TVSIL_STATE", 2));
-
-    //cMap->insert(String2Int::value_type("", ));
-
-    return cMap;
-}
-
 RexxMethod1(uint32_t, image_toID_cls, CSTRING, symbol)
 {
-    static String2Int *imageConstantsMap = NULL;
-
-    if ( imageConstantsMap == NULL )
-    {
-        imageConstantsMap = imageInitMap();
-    }
-    int idValue = getKeywordValue(imageConstantsMap, symbol);
-    if ( idValue == -1 )
-    {
-        wrongArgValueException(context->threadContext, 1, "the Image class symbol IDs", symbol);
-    }
-    return (uint32_t)idValue;
+    return mapSymbol(context, symbol, 1, true);
 }
 
 
 /** Image::getImage()  [class method]
  *
- *  Instantiate an .Image object from one of the system OEM images, or loaded
- *  from an image file (.bmp, .ico, etc..)
+ *  Instantiate an .Image object from one of the system images, or loaded from
+ *  an image file (.bmp, .ico, etc..)
  *
- *  @param   id  Either the numeric resource id of an OEM system image, or the
- *               file name of a stand-alone image file.
+ *  @param   id  Either the numeric resource id of a system image, a system
+ *               image keyword, or the file name of a stand-alone image file.
  *
- *  @note  The programmer can use one of the .OEM constants to load a system
- *         image, or the raw number if she knows it.
+ *               The programmer should use one of the .OEM constants to load a
+ *               system image, or the raw number if she knows it.  If id is not
+ *               a number, or a system image keyword, it is assumed to be a file
+ *               name.
  *
- *         This method is designed to always return an .Image object, or raise
+ *               Note that many of the .OEM constants have the same numeric
+ *               value. The type argument distinguishes whether a bitmap or an
+ *               icon is loaded
+ *
+ *  @note  This method is designed to always return an .Image object, or raise
  *         an exception.  The user would need to test the returned .Image object
  *         for null to be sure it is good.  I.e.:
  *
@@ -1184,8 +1545,8 @@ RexxMethod1(uint32_t, image_toID_cls, CSTRING, symbol)
  *          -- error
  *        end
  */
-RexxMethod4(RexxObjectPtr, image_getImage_cls, RexxObjectPtr, id, OPTIONAL_uint8_t, type,
-            OPTIONAL_RexxObjectPtr, size, OPTIONAL_uint32_t, flags)
+RexxMethod4(RexxObjectPtr, image_getImage_cls, RexxObjectPtr, id, OPTIONAL_RexxObjectPtr, _type,
+            OPTIONAL_RexxObjectPtr, size, OPTIONAL_RexxObjectPtr, _flags)
 {
     RexxObjectPtr result = NULLOBJECT;
     SIZE s = {0};
@@ -1193,8 +1554,8 @@ RexxMethod4(RexxObjectPtr, image_getImage_cls, RexxObjectPtr, id, OPTIONAL_uint8
     bool fromFile = true;
     LPCTSTR name = NULL;
 
-    int resourceID;
-    if ( context->Int32(id, &resourceID) )
+    int32_t resourceID = getSystemImageID(context, id, 1);
+    if ( resourceID != OOD_NO_VALUE )
     {
         name = MAKEINTRESOURCE(resourceID);
         fromFile = false;
@@ -1210,8 +1571,19 @@ RexxMethod4(RexxObjectPtr, image_getImage_cls, RexxObjectPtr, id, OPTIONAL_uint8
         name = context->ObjectToStringValue(id);
     }
 
-    if ( ! getStandardImageArgs(context, &type, IMAGE_BITMAP, size, &s, &flags,
-                                fromFile ? LR_LOADFROMFILE : LR_SHARED | LR_DEFAULTSIZE) )
+    uint32_t type = getImageTypeArg(context, _type, IMAGE_BITMAP, 2);
+    if ( type == OOD_NO_VALUE )
+    {
+        goto out;
+    }
+
+    if ( ! getImageSizeArg(context, size, &s, 3) )
+    {
+        goto out;
+    }
+
+    uint32_t flags = getImageFlagsArg(context, _flags, fromFile ? LR_LOADFROMFILE : LR_SHARED | LR_DEFAULTSIZE, 4);
+    if ( flags == OOD_NO_VALUE )
     {
         goto out;
     }
@@ -1280,11 +1652,10 @@ out:
  *  @return An image object, which may be a null image on error.
  */
 RexxMethod4(RexxObjectPtr, image_userIcon_cls, RexxObjectPtr, dlg, RexxObjectPtr, rxID,
-            OPTIONAL_RexxObjectPtr, size, OPTIONAL_uint32_t, flags)
+            OPTIONAL_RexxObjectPtr, size, OPTIONAL_RexxObjectPtr, _flags)
 {
     RexxObjectPtr result = NULLOBJECT;
     SIZE s = {0};
-    uint32_t defFlags = LR_LOADFROMFILE;
 
     if ( ! requiredClass(context->threadContext, dlg, "PlainBaseDialog", 1) )
     {
@@ -1316,7 +1687,7 @@ RexxMethod4(RexxObjectPtr, image_userIcon_cls, RexxObjectPtr, dlg, RexxObjectPtr
 
     if ( argumentExists(3) )
     {
-        SIZE *p = rxGetSize(context, size, 3);
+        SIZE *p = (PSIZE)rxGetSize(context, size, 3);
         if ( p == NULL )
         {
             goto out;
@@ -1325,10 +1696,10 @@ RexxMethod4(RexxObjectPtr, image_userIcon_cls, RexxObjectPtr, dlg, RexxObjectPtr
         s.cy = p->cy;
     }
 
-    if ( argumentExists(4) )
+    uint32_t defFlags = getImageFlagsArg(context, _flags, LR_LOADFROMFILE, 4);
+    if ( defFlags == OOD_NO_VALUE )
     {
-        // Make sure the user has compatible flags for this operation.
-        defFlags = (flags &  ~LR_SHARED) | LR_LOADFROMFILE;
+        goto out;
     }
 
     HANDLE hImage = LoadImage(NULL, fileName, IMAGE_ICON, s.cx, s.cy, defFlags);
@@ -1346,14 +1717,26 @@ out:
     return result;
 }
 
-RexxMethod4(RexxObjectPtr, image_fromFiles_cls, RexxArrayObject, files, OPTIONAL_uint8_t, type,
-            OPTIONAL_RexxObjectPtr, size, OPTIONAL_uint32_t, flags)
+RexxMethod4(RexxObjectPtr, image_fromFiles_cls, RexxArrayObject, files, OPTIONAL_RexxObjectPtr, _type,
+            OPTIONAL_RexxObjectPtr, size, OPTIONAL_RexxObjectPtr, _flags)
 {
     RexxMethodContext *c = context;
     RexxArrayObject result = NULLOBJECT;
     SIZE s = {0};
 
-    if ( ! getStandardImageArgs(context, &type, IMAGE_BITMAP, size, &s, &flags, LR_LOADFROMFILE) )
+    uint32_t type = getImageTypeArg(context, _type, IMAGE_BITMAP, 2);
+    if ( type == OOD_NO_VALUE )
+    {
+        goto out;
+    }
+
+    if ( ! getImageSizeArg(context, size, &s, 3) )
+    {
+        goto out;
+    }
+
+    uint32_t flags = getImageFlagsArg(context, _flags, LR_LOADFROMFILE, 4);
+    if ( flags == OOD_NO_VALUE )
     {
         goto out;
     }
@@ -1405,14 +1788,26 @@ out:
  *  doc that the IDs can be numeric or symbolic.
  *
  */
-RexxMethod4(RexxObjectPtr, image_fromIDs_cls, RexxArrayObject, ids, OPTIONAL_uint8_t, type,
-            OPTIONAL_RexxObjectPtr, size, OPTIONAL_uint32_t, flags)
+RexxMethod4(RexxObjectPtr, image_fromIDs_cls, RexxArrayObject, ids, OPTIONAL_RexxObjectPtr, _type,
+            OPTIONAL_RexxObjectPtr, size, OPTIONAL_RexxObjectPtr, _flags)
 {
     RexxMethodContext *c = context;
     RexxArrayObject result = NULLOBJECT;
     SIZE s = {0};
 
-    if ( ! getStandardImageArgs(context, &type, IMAGE_ICON, size, &s, &flags, LR_SHARED | LR_DEFAULTSIZE) )
+    uint32_t type = getImageTypeArg(context, _type, IMAGE_ICON, 2);
+    if ( type == OOD_NO_VALUE )
+    {
+        goto out;
+    }
+
+    if ( ! getImageSizeArg(context, size, &s, 3) )
+    {
+        goto out;
+    }
+
+    uint32_t flags = getImageFlagsArg(context, _flags, LR_SHARED | LR_DEFAULTSIZE, 4);
+    if ( flags == OOD_NO_VALUE )
     {
         goto out;
     }
@@ -1562,7 +1957,7 @@ RexxMethod1(POINTER, image_handle, CSELF, oi)
 {
     if ( ! ((POODIMAGE)oi)->isValid )
     {
-        nullObjectException(context->threadContext, IMAGECLASS);
+        nullObjectException(context->threadContext, IMAGE_CLASS);
     }
     return ((POODIMAGE)oi)->hImage;
 }
@@ -1589,9 +1984,43 @@ PRESOURCEIMAGE rxGetResourceImage(RexxMethodContext *context, RexxObjectPtr r, s
 
 /** ResouceImage::init()
  *
+ *  Instantiates a new ResourceImage from an executable module.
  *
+ *  @param fileOrDlg  [required]  Either a dialog object, or a file name of an
+ *                    executable module.  (DLLs are executable modules.)
+ *
+ *                    When the arg is a dialog object:  If the dialog object is
+ *                    a ResDialog, the DLL used to instantiate the dialog is
+ *                    used. Otherwise, ooDialog.dll is used.  ooDialog.dll has
+ *                    some common resources bound to it that are always
+ *                    available for use.
+ *
+ *                    When the arg is not a dialog object, it must be the string
+ *                    file name of an executable file.
+ *
+ *  @param dlg        [optional] A dialog object.  This usage is deprecated, but
+ *                    is maintained for backwards compatibility.  Do not use
+ *                    this in new code.
+ *
+ *  @note  When this method was first introduced, the first arg had to be the
+ *         string file name of an excutable file.  Arg 2 was an optional dialog
+ *         object and could be used to optionally instantiate the resource image
+ *         from an already loaded DLL as outlined above for the fileOrDlg
+ *         argument.  This was silly, it forced the programmer to use a string
+ *         for the first arg, when only the dialog object was needed.  This
+ *         oversight is now fixed.
+ *
+ *  @remarks  Originally arg 1 was a CSTRING and named a file.  Arg 2 was an
+ *            optional dialog object.  If arg 2 existed, then we got the HMODULE
+ *            from the already loaded instance - either ooDialog.dll or the
+ *            hInstance if a ResDialog.
+ *
+ *            That was done when the new native API was new, and silly. Now we
+ *            just check the first arg for a dialog object or a string and do
+ *            the right thing.  But, we still need to preserve the old for
+ *            compatibility.
  */
-RexxMethod2(RexxObjectPtr, ri_init, CSTRING, file, OPTIONAL_RexxObjectPtr, dlg)
+RexxMethod2(RexxObjectPtr, ri_init, RexxObjectPtr, fileOrDlg, OPTIONAL_RexxObjectPtr, dlg)
 {
     oodResetSysErrCode(context->threadContext);
 
@@ -1601,44 +2030,62 @@ RexxMethod2(RexxObjectPtr, ri_init, CSTRING, file, OPTIONAL_RexxObjectPtr, dlg)
     PRESOURCEIMAGE ri = (PRESOURCEIMAGE)context->BufferData(cself);
     memset(ri, 0, sizeof(RESOURCEIMAGE));
 
-    if ( argumentOmitted(2) )
+    RexxMethodContext *c = context;
+    if ( c->IsOfType(fileOrDlg, "ResDialog") )
     {
-        ri->hMod = LoadLibraryEx(file, NULL, LOAD_LIBRARY_AS_DATAFILE);
-        if ( ri->hMod == NULL )
-        {
-            ri->lastError = GetLastError();
-            oodSetSysErrCode(context->threadContext, ri->lastError);
-        }
-        else
-        {
-            ri->canRelease = true;
-            ri->isValid = true;
-        }
+        pCPlainBaseDialog pcpbd = dlgToCSelf(context, fileOrDlg);
+        ri->hMod = pcpbd->hInstance;
+        ri->isValid = true;
+    }
+    else if ( c->IsOfType(fileOrDlg, "PlainBaseDialog") )
+    {
+        ri->hMod = MyInstance;
+        ri->isValid = true;
     }
     else
     {
-        if ( ! requiredClass(context->threadContext, dlg, "PlainBaseDialog", 2) )
-        {
-            goto err_out;
-        }
+        CSTRING file = c->ObjectToStringValue(fileOrDlg);
 
-        if ( stricmp(OODDLL, file) == 0 )
+        if ( argumentOmitted(2) )
         {
-            ri->hMod = MyInstance;
-            ri->isValid = true;
+            ri->hMod = LoadLibraryEx(file, NULL, LOAD_LIBRARY_AS_DATAFILE);
+            if ( ri->hMod == NULL )
+            {
+                ri->lastError = GetLastError();
+                oodSetSysErrCode(context->threadContext, ri->lastError);
+            }
+            else
+            {
+                ri->canRelease = true;
+                ri->isValid = true;
+            }
         }
         else
         {
-            if ( ! requiredClass(context->threadContext, dlg, "ResDialog", 2) )
+            if ( ! requiredClass(context->threadContext, dlg, "PlainBaseDialog", 2) )
             {
                 goto err_out;
             }
 
-            pCPlainBaseDialog pcpbd = dlgToCSelf(context, dlg);
-            ri->hMod = pcpbd->hInstance;
-            ri->isValid = true;
+            if ( stricmp(OODDLL, file) == 0 )
+            {
+                ri->hMod = MyInstance;
+                ri->isValid = true;
+            }
+            else
+            {
+                if ( ! requiredClass(context->threadContext, dlg, "ResDialog", 2) )
+                {
+                    goto err_out;
+                }
+
+                pCPlainBaseDialog pcpbd = dlgToCSelf(context, dlg);
+                ri->hMod = pcpbd->hInstance;
+                ri->isValid = true;
+            }
         }
     }
+
 
     return NULLOBJECT;
 
@@ -1679,8 +2126,8 @@ err_out:
  *          -- error
  *        end
  */
-RexxMethod5(RexxObjectPtr, ri_getImage, RexxObjectPtr, _id, OPTIONAL_uint8_t, type,
-            OPTIONAL_RexxObjectPtr, size, OPTIONAL_uint32_t, flags, CSELF, cself)
+RexxMethod5(RexxObjectPtr, ri_getImage, RexxObjectPtr, _id, OPTIONAL_RexxObjectPtr, _type,
+            OPTIONAL_RexxObjectPtr, size, OPTIONAL_RexxObjectPtr, _flags, CSELF, cself)
 {
     RexxObjectPtr result = NULLOBJECT;
     SIZE s = {0};
@@ -1691,16 +2138,27 @@ RexxMethod5(RexxObjectPtr, ri_getImage, RexxObjectPtr, _id, OPTIONAL_uint8_t, ty
         goto out;
     }
 
-
     PRESOURCEIMAGE ri = (PRESOURCEIMAGE)cself;
     if ( ! ri->isValid )
     {
-        nullObjectException(context->threadContext, RESOURCEIMAGECLASS);
+        nullObjectException(context->threadContext, RESOURCE_IMAGE_CLASS);
         goto out;
     }
     ri->lastError = 0;
 
-    if ( ! getStandardImageArgs(context, &type, IMAGE_BITMAP, size, &s, &flags, LR_SHARED) )
+    uint32_t type = getImageTypeArg(context, _type, IMAGE_BITMAP, 2);
+    if ( type == OOD_NO_VALUE )
+    {
+        goto out;
+    }
+
+    if ( ! getImageSizeArg(context, size, &s, 3) )
+    {
+        goto out;
+    }
+
+    uint32_t flags = getImageFlagsArg(context, _flags, LR_SHARED, 4);
+    if ( flags == OOD_NO_VALUE )
     {
         goto out;
     }
@@ -1720,8 +2178,8 @@ out:
     return result;
 }
 
-RexxMethod5(RexxObjectPtr, ri_getImages, RexxArrayObject, ids, OPTIONAL_uint8_t, type,
-            OPTIONAL_RexxObjectPtr, size, OPTIONAL_uint32_t, flags, CSELF, cself)
+RexxMethod5(RexxObjectPtr, ri_getImages, RexxArrayObject, ids, OPTIONAL_RexxObjectPtr, _type,
+            OPTIONAL_RexxObjectPtr, size, OPTIONAL_RexxObjectPtr, _flags, CSELF, cself)
 {
     RexxObjectPtr result = NULLOBJECT;
     SIZE s = {0};
@@ -1729,12 +2187,24 @@ RexxMethod5(RexxObjectPtr, ri_getImages, RexxArrayObject, ids, OPTIONAL_uint8_t,
     PRESOURCEIMAGE ri = (PRESOURCEIMAGE)cself;
     if ( ! ri->isValid )
     {
-        nullObjectException(context->threadContext, RESOURCEIMAGECLASS);
+        nullObjectException(context->threadContext, RESOURCE_IMAGE_CLASS);
         goto out;
     }
     ri->lastError = 0;
 
-    if ( ! getStandardImageArgs(context, &type, IMAGE_BITMAP, size, &s, &flags, LR_SHARED) )
+    uint32_t type = getImageTypeArg(context, _type, IMAGE_BITMAP, 2);
+    if ( type == OOD_NO_VALUE )
+    {
+        goto out;
+    }
+
+    if ( ! getImageSizeArg(context, size, &s, 3) )
+    {
+        goto out;
+    }
+
+    uint32_t flags = getImageFlagsArg(context, _flags, LR_SHARED, 4);
+    if ( flags == OOD_NO_VALUE )
     {
         goto out;
     }
@@ -1775,7 +2245,7 @@ RexxMethod1(POINTER, ri_handle, CSELF, ri)
 {
     if ( ! ((PRESOURCEIMAGE)ri)->isValid )
     {
-        nullObjectException(context->threadContext, RESOURCEIMAGECLASS);
+        nullObjectException(context->threadContext, RESOURCE_IMAGE_CLASS);
     }
     return ((PRESOURCEIMAGE)ri)->hMod;
 }

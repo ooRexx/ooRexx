@@ -73,6 +73,7 @@
 ::method drawPie unguarded external "LIBRARY oodialog winex_drawArcOrPie"
 ::method drawPixel unguarded external "LIBRARY oodialog winex_drawPixel"
 ::method fillDrawing unguarded external "LIBRARY oodialog winex_fillDrawing"
+::method fillRect unguarded external "LIBRARY oodialog winex_fillRect"
 ::method fontColor unguarded external "LIBRARY oodialog winex_fontColor"
 ::method fontToDC unguarded external "LIBRARY oodialog winex_objectToDC"
 ::method freeDC unguarded external "LIBRARY oodialog winex_freeDC"
@@ -80,6 +81,7 @@
 ::method getDC unguarded external "LIBRARY oodialog winex_getDC"
 ::method getFont unguarded external "LIBRARY oodialog winex_getFont"
 ::method getPixel unguarded external "LIBRARY oodialog winex_getPixel"
+::method getSysBrush unguarded external "LIBRARY oodialog winex_getSysBrush"
 ::method getTextAlign unguarded external "LIBRARY oodialog winex_getTextAlign"
 ::method getTextExtent unguarded external "LIBRARY oodialog winex_getTextExtent"
 ::method hScrollPos unguarded external "LIBRARY oodialog winex_getScrollPos"
@@ -183,18 +185,28 @@
 ::method create class external "LIBRARY oodialog il_create_cls"
 
 ::method init external "LIBRARY oodialog il_init"
-::method release external "LIBRARY oodialog il_release"
 ::method add external "LIBRARY oodialog il_add"
-::method addMasked external "LIBRARY oodialog il_addMasked"
 ::method addIcon external "LIBRARY oodialog il_addIcon"
 ::method addImages external "LIBRARY oodialog il_addImages"
-::method getCount external "LIBRARY oodialog il_getCount"
-::method getImageSize external "LIBRARY oodialog il_getImageSize"
+::method addMasked external "LIBRARY oodialog il_addMasked"
 ::method duplicate external "LIBRARY oodialog il_duplicate"
-::method remove external "LIBRARY oodialog il_remove"
-::method removeAll external "LIBRARY oodialog il_removeAll"
+::method getCount external "LIBRARY oodialog il_getCount"
+::method getIcon external "LIBRARY oodialog il_getIcon"
+::method getImageSize external "LIBRARY oodialog il_getImageSize"
 ::method handle external "LIBRARY oodialog il_handle"
 ::method isNull external "LIBRARY oodialog il_isNull"
+::method release external "LIBRARY oodialog il_release"
+::method remove external "LIBRARY oodialog il_remove"
+::method removeAll external "LIBRARY oodialog il_removeAll"
+
+
+::class 'CreateWindows' public mixinclass Object
+
+::method initCreateWindows external "LIBRARY oodialog cw_initCreateWindows"
+::method createReBarWindow external "LIBRARY oodialog cw_createReBarWindow"
+::method createStatusBarWindow external "LIBRARY oodialog cw_createStatusBarWindow"
+::method createToolBarWindow external "LIBRARY oodialog cw_createToolBarWindow"
+
 
 
 ::class 'CustomDraw' public mixinclass EventNotification

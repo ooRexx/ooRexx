@@ -47,260 +47,43 @@
 ::method init_eventNotification private external "LIBRARY oodialog en_init_eventNotification"
 
 ::method addUserMsg unguarded external "LIBRARY oodialog en_addUserMessage"
-
--- The following methods map a Windows Message event to a method
-
--- WM_HELP (F1)
-::method connectHelp
-   use strict arg msgToRise = 'onHelp'
-   return self~addUserMsg(msgToRise, 0x00000053, 0xFFFFFFFF, 0, 0, 0, 0, 0x00000101)
-
--- WM_SIZE
-::method connectResize
-   use strict arg msgToRise = 'onResize', sync = .false
-   tag = 0
-   if sync then tag = 0x08000000
-   return self~addUserMsg(msgToRise, 0x00000005, 0xFFFFFFFF, 0, 0, 0, 0, tag)
-
--- WM_SIZING
-::method connectResizing
-   use strict arg msgToRise = 'onResizing'
-   return self~addUserMsg(msgToRise, 0x00000214, 0xFFFFFFFF, 0, 0, 0, 0)
-
--- WM_MOVE
-::method connectMove
-   use strict arg msgToRise = 'onMove'
-   return self~addUserMsg(msgToRise, 0x00000003, 0xFFFFFFFF, 0, 0, 0, 0)
-
--- WM_ACTIVATE
-::method connectActivate
-   use strict arg msgToRise = 'onActivate'
-   return self~addUserMsg(msgToRise, 0x00000006, 0xFFFFFFFF, 0, 0, 0, 0)
-
--- WM_EXITSIZEMOVE
-::method connectSizeMoveEnded
-   use strict arg msgToRise = 'onSizeMoveEnded', willReply = .true
-   tag = 0
-   if willReply then tag = 0x02000000
-   return self~addUserMsg(msgToRise, "0x00000232", "0xFFFFFFFF", 0, 0, 0, 0, tag)
-
--- WM_WINDOWPOSCHANGED
-::method connectPosChanged
-   use strict arg msgToRise = 'onPosChaged'
-   return self~addUserMsg(msgToRise, 0x00000047, 0xFFFFFFFF, 0, 0, 0, 0)
-
--- WM_DRAWITEM
-::method connectDraw
-   use strict arg id = 0, msgToRaise = "onDraw"
-   if \ id~dataType("W") then id = self~resolveSymbolicId(id)
-   if id = -1 then return -1
-
-   if id == 0 then return self~addUserMsg(msgToRaise, 0x0000002B, 0xFFFFFFFF, 0, 0, 0, 0)
-   else return self~addUserMsg(msgToRaise, 0x0000002B, 0xFFFFFFFF, '0x0000'||id~d2x(4), 0xFFFFFFFF, 0, 0)
-
--- These methods map or unmap keyboard events to a method, or query if the mapping exists.
-::method connectKeyPress unguarded external "LIBRARY oodialog en_connectKeyPress"
+::method connectActivate external "LIBRARY oodialog en_connectWmEvent"        -- WM_ACTIVATE
+::method connectAllSBEvents external "LIBRARY oodialog en_connectAllSBEvents"
+::method connectButtonEvent external "LIBRARY oodialog en_connectButtonEvent"
+::method connectComboBoxEvent external "LIBRARY oodialog en_connectComboBoxEvent"
+::method connectCommandEvents external "LIBRARY oodialog en_connectCommandEvents"
+::method connectDateTimePickerEvent external "LIBRARY oodialog en_connectDateTimePickerEvent"
+::method connectDraw external "LIBRARY oodialog en_connectDraw"               -- WM_DRAWITEM
+::method connectEachSBEvent external "LIBRARY oodialog en_connectEachSBEvent"
+::method connectEditEvent external "LIBRARY oodialog en_connectEditEvent"
 ::method connectFKeyPress unguarded external "LIBRARY oodialog en_connectFKeyPress"
+::method connectHelp external "LIBRARY oodialog en_connectWmEvent"            -- WM_HELP (F1)
+::method connectKeyPress unguarded external "LIBRARY oodialog en_connectKeyPress"
+::method connectListBoxEvent external "LIBRARY oodialog en_connectListBoxEvent"
+::method connectListViewEvent external "LIBRARY oodialog en_connectListViewEvent"
+::method connectMonthCalendarEvent external "LIBRARY oodialog en_connectMonthCalendarEvent"
+::method connectMove external "LIBRARY oodialog en_connectWmEvent"            -- WM_MOVE
+::method connectNotifyEvent external "LIBRARY oodialog en_connectNotifyEvent"
+::method connectPosChanged external "LIBRARY oodialog en_connectWmEvent"      -- WM_WINDOWPOSCHANGED
+::method connectReBarEvent external "LIBRARY oodialog en_connectReBarEvent"
+::method connectResize external "LIBRARY oodialog en_connectWmEvent"          -- WM_SIZE
+::method connectResizing external "LIBRARY oodialog en_connectWmEvent"        -- WM_SIZING
+::method connectScrollBarEvent external "LIBRARY oodialog en_connectScrollBarEvent"
+::method connectSizeMoveEnded external "LIBRARY oodialog en_connectWmEvent"   -- WM_EXITSIZEMOVE
+::method connectStaticEvent external "LIBRARY oodialog en_connectStaticEvent"
+::method connectStatusBarEvent external "LIBRARY oodialog en_connectStatusBarEvent"
+::method connectTabEvent external "LIBRARY oodialog en_connectTabEvent"
+::method connectToolBarEvent external "LIBRARY oodialog en_connectToolBarEvent"
+::method connectToolTipEvent external "LIBRARY oodialog en_connectToolTipEvent"
+::method connectTrackBarEvent external "LIBRARY oodialog en_connectTrackBarEvent"
+::method connectTreeViewEvent external "LIBRARY oodialog en_connectTreeViewEvent"
+::method connectUpDownEvent external "LIBRARY oodialog en_connectUpDownEvent"
 ::method disconnectKeyPress unguarded external "LIBRARY oodialog en_disconnectKeyPress"
 ::method hasKeyPressConnection unguarded external "LIBRARY oodialog en_hasKeyPressConnection"
 
--- The following methods map the notification events of a dialog control to a method.
+::method defListDragHandler unguarded
+   use arg id, item, pt, isLMB, lc
 
-::method connectCommandEvents external "LIBRARY oodialog en_connectCommandEvents"
-
-::method connectNotifyEvent
-   use strict arg id, type, msgToRise = ""
-   if \ id~dataType("W") then id = self~resolveSymbolicId(id)
-   if id = -1 then return -1
-   if msgToRise == "" then msgToRise = "on" || type
-   type = type~translate
-   select
-       when type = "OUTOFMEMORY" then lp = -1
-       when type = "CLICK"       then lp = -2
-       when type = "DBLCLK"      then lp = -3
-       when type = "ENTER"       then lp = -4
-       when type = "RCLICK"      then lp = -5
-       when type = "RDBLCLK"     then lp = -6
-       when type = "GOTFOCUS"    then lp = -7
-       when type = "LOSTFOCUS"   then lp = -8
-       otherwise return -1
-   end
-   return self~addUserMsg(msgToRise, 0x0000004E, "0xFFFFFFFF", id, "0xFFFFFFFF", lp, "0xFFFFFFFF")
-
-::method connectStaticEvent
-   use strict arg id, type, msgToRaise = ""
-   if \ id~DataType("W") then id = self~resolveSymbolicId(id)
-   if id = -1 then return -1
-   if msgToRaise == "" then msgToRaise = "on" || type
-   type = type~translate
-   select
-       when type = "CLICK"   then lp = 0
-       when type = "DBLCLK"  then lp = 1
-       when type = "ENABLE"  then lp = 2
-       when type = "DISABLE" then lp = 3
-       otherwise return -1
-   end
-   return self~addUserMsg(msgToRaise, 0x00000111, "0xFFFFFFFF", lp~x2d * x2d("10000") + id, "0xFFFFFFFF", 0, 0)
-
-
-::method connectButtonEvent
-   use strict arg id, type, msgToRise = "", willReply = .false
-   if \ id~dataType("W") then id = self~resolveSymbolicId(id)
-   if id = -1 then return -1
-
-   if msgToRise == "" then msgToRise = "on" || type
-   type = type~translate
-   tag = 0
-   if willReply then tag = 0x02000000
-   select
-       when type = "CLICKED"   then do
-          if id < 3 | id = 9 then return 0
-          lp = 0
-       end
-       when type = "PAINT"     then lp = 1
-       when type = "HILITE"    then lp = 2
-       when type = "UNHILITE"  then lp = 3
-       when type = "DISABLE"   then lp = 4
-       when type = "DBLCLK"    then lp = 5
-       when type = "GOTFOCUS"  then lp = 6
-       when type = "LOSTFOCUS" then lp = 7
-
-       when type = "HOTITEM"   then do
-         -- Sends WM_NOTIFY and notify code is: BCN_HOTITEMCHANGE=0xfffffb1f (decimal=-1249) TAG_BUTTON = 0x00000004
-         tag = .DlgUtil~or(tag, 0x00000004)
-         return self~addUserMsg(msgToRise, 0x0000004E, "0xFFFFFFFF", id, "0xFFFFFFFF", 0xFFFFFB1F, "0xFFFFFFFF", tag)
-       end
-
-       otherwise return -1
-   end
-   return self~addUserMsg(msgToRise, 0x00000111, "0xFFFFFFFF", lp * x2d("10000") + id, "0xFFFFFFFF", 0, 0, tag) /* buttons sends WM_COMMAND when BS_NOTIFY */
-
-
-::method connectEditEvent
-   use arg id, type, msgToRise = ""
-   if \ id~dataType("W") then id = self~resolveSymbolicId(id)
-   if id = -1 then return -1
-   if msgToRise == "" then msgToRise = "on" || type
-   type = type~translate
-   select
-       when type = "GOTFOCUS"  then lp = "100"
-       when type = "LOSTFOCUS" then lp = "200"
-       when type = "CHANGE"    then lp = "300"
-       when type = "UPDATE"    then lp = "400"
-       when type = "ERRSPACE"  then lp = "500"
-       when type = "MAXTEXT "  then lp = "501"
-       when type = "HSCROLL"   then lp = "601"
-       when type = "VSCROLL"   then lp = "602"
-       otherwise return -1
-   end
-   return self~addUserMsg(msgToRise, 0x00000111, "0xFFFFFFFF", lp~x2d * x2d("10000") + id, "0xFFFFFFFF", 0, 0) /* also send WM_COMMAND */
-
-
-::method connectListBoxEvent
-   use strict arg id, type, msgToRise = ""
-   if \ id~dataType("W") then id = self~resolveSymbolicId(id)
-   if id = -1 then return -1
-   if msgToRise == "" then msgToRise = "on" || type
-   type = type~translate
-   select
-       when type = "SELCHANGE" then lp = 1
-       when type = "DBLCLK"    then lp = 2
-       when type = "SELCANCEL" then lp = 3
-       when type = "GOTFOCUS"  then lp = 4
-       when type = "LOSTFOCUS" then lp = 5
-       when type = "ERRSPACE"  then lp = -2
-       when type = "KEYDOWN"   then do   /* can first be called from initDialog */
-           return self~addUserMsg(msgToRise, 0x0000002E, "0xFFFFFFFF", 0, 0, self~getControlHandle(id), "0xFFFFFFFF") /* WM_VKEYTOITEM */
-       end
-       otherwise return -1
-   end
-   return self~addUserMsg(msgToRise, 0x00000111, "0xFFFFFFFF", lp * x2d("10000") + id, "0xFFFFFFFF", 0, 0) /* also send WM_COMMAND */
-
-
-::method connectComboBoxEvent
-   use strict arg id, type, msgToRise = "", willReply = .false
-   if \ id~dataType("W") then id = self~resolveSymbolicId(id)
-   if id = -1 then return -1
-   if msgToRise == "" then msgToRise = "on" || type
-   tag = 0
-   type = type~translate
-   select
-       when type = "SELCHANGE"    then lp = 1
-       when type = "DBLCLK"       then lp = 2
-       when type = "GOTFOCUS"     then lp = 3
-       when type = "LOSTFOCUS"    then lp = 4
-       when type = "CHANGE"       then lp = 5
-       when type = "UPDATE"       then lp = 6
-       when type = "DROPDOWN"     then lp = 7
-       when type = "CLOSEUP"      then lp = 8
-       when type = "SELENDOK"     then lp = 9
-       when type = "SELENDCANCEL" then lp = 10
-       when type = "ERRSPACE"     then lp = -1
-       otherwise return -1
-   end
-   if willReply then tag = 0x02000000
-   return self~addUserMsg(msgToRise, 0x00000111, "0xFFFFFFFF", lp * x2d("10000") + id, "0xFFFFFFFF", 0, 0, tag)
-
-
-::method connectScrollBarEvent external "LIBRARY oodialog en_connectScrollBarEvent"
-::method connectEachSBEvent external "LIBRARY oodialog en_connectEachSBEvent"
-::method connectAllSBEvents external "LIBRARY oodialog en_connectAllSBEvents"
-
-
-::method connectTabEvent
-   use strict arg id, type, msgToRise = "", willReply = .false
-   if \ id~dataType("W") then id = self~resolveSymbolicId(id)
-   if id = -1 then return -1
-   if msgToRise == "" then msgToRise = "on" || type
-   type = type~translate
-   tag = 0
-   select
-       when type = "KEYDOWN"     then lp = -550
-       when type = "SELCHANGE"   then lp = -551
-       when type = "SELCHANGING" then do
-         lp = -552
-         if willReply then tag = 0x02000009
-       end
-       otherwise return -1
-   end
-   return self~addUserMsg(msgToRise, 0x0000004E, "0xFFFFFFFF", id, "0xFFFFFFFF", lp, "0xFFFFFFFF", tag)
-
-
-::method connectTrackBarEvent   /* can only be called in initDialog */
-   use strict arg id, type, msgToRise = "", categoryHDlg = .NullHandle
-   if \ id~dataType("W") then id = self~resolveSymbolicId(id)
-   if id = -1 then return -1
-   if arg(4,'O') then hwnd = self~getControlHandle(id)
-   else hwnd = self~getControlHandle(id, categoryHdlg)
-   if hwnd = 0 then return -1
-   if msgToRise == "" then msgToRise = "on" || type
-   type = type~translate
-   select
-       when type = "UP"       then wp =0
-       when type = "DOWN"     then wp =1
-       when type = "PAGEUP"   then wp =2
-       when type = "PAGEDOWN" then wp =3
-       when type = "POSITION" then wp =4
-       when type = "DRAG"     then wp =5
-       when type = "TOP"      then wp =6
-       when type = "BOTTOM"   then wp =7
-       when type = "ENDTRACK" then wp =8
-       otherwise return -1
-   end
-   ret = self~addUserMsg(msgToRise, 0x00000114, "0xFFFFFFFF", wp, "0x0000FFFF", hwnd, "0xFFFFFFFF")  /* WM_HSCROLL */
-   if ret <> 0 then return ret
-   return self~addUserMsg(msgToRise, 0x00000115, "0xFFFFFFFF", wp, "0x0000FFFF", hwnd, "0xFFFFFFFF")  /* WM_VSCROLL */
-
-
-::method connectToolTipEvent external "LIBRARY oodialog en_connectToolTipEvent"
-::method connectTreeViewEvent external "LIBRARY oodialog en_connectTreeViewEvent"
-::method connectListViewEvent external "LIBRARY oodialog en_connectListViewEvent"
-::method connectDateTimePickerEvent external "LIBRARY oodialog en_connectDateTimePickerEvent"
-::method connectMonthCalendarEvent external "LIBRARY oodialog en_connectMonthCalendarEvent"
-::method connectUpDownEvent external "LIBRARY oodialog en_connectUpDownEvent"
-::method defListDragHandler
-   use arg id, item, pt
-   lc = self~newListView(id)
    hc = lc~cursor_Cross   /* change cursor and store current */
    parse value lc~getRect with left top right bottom
    parse var pt oldx oldy
@@ -351,6 +134,7 @@
    pos = self~cursorPos
    parse var pos x y
    self~setCursorPos(x+1, y+1)  /* move cursor to force redraw */
+   return 0
 
 
 ::method defTreeDragHandler unguarded
@@ -427,6 +211,7 @@
    pos = self~CursorPos
    parse var pos x y
    self~SetCursorPos(x+1, y+1)  /* move cursor to force redraw */
+   return 0
 
 
 -- DEPRECATED (all methods to end of file.)

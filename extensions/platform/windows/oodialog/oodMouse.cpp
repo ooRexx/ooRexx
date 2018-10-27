@@ -48,6 +48,7 @@
 #include <WindowsX.h>
 
 #include "APICommon.hpp"
+#include "ooShapes.hpp"
 #include "oodCommon.hpp"
 #include "oodControl.hpp"
 #include "oodShared.hpp"
@@ -271,39 +272,6 @@ inline CSTRING wm2name(uint32_t mcn)
     return "onWM";
 }
 
-inline CSTRING ncHitTest2string(WPARAM hit)
-{
-    switch ( hit )
-    {
-        case HTERROR       : return "ERROR";
-        case HTTRANSPARENT : return "TRANSPARENT";
-        case HTNOWHERE     : return "NOWHERE";
-        case HTCLIENT      : return "CLIENT";
-        case HTCAPTION     : return "CAPTION";
-        case HTSYSMENU     : return "SYSMENU";
-        case HTGROWBOX     : return "GROWBOX";
-        case HTMENU        : return "MENU";
-        case HTHSCROLL     : return "HSCROLL";
-        case HTVSCROLL     : return "VSCROLL";
-        case HTMINBUTTON   : return "MINBUTTON";
-        case HTMAXBUTTON   : return "MAXBUTTON";
-        case HTLEFT        : return "LEFT";
-        case HTRIGHT       : return "RIGHT";
-        case HTTOP         : return "TOP";
-        case HTTOPLEFT     : return "TOPLEFT";
-        case HTTOPRIGHT    : return "TOPRIGHT";
-        case HTBOTTOM      : return "BOTTOM";
-        case HTBOTTOMLEFT  : return "BOTTOMLEFT";
-        case HTBOTTOMRIGHT : return "BOTTOMRIGHT";
-        case HTBORDER      : return "BORDER";
-        case HTOBJECT      : return "OBJECT";
-        case HTCLOSE       : return "CLOSE";
-        case HTHELP        : return "HELP";
-    }
-    return "err";
-}
-
-
 /**
  * Produces a rexx argument array for the standard mouse event handler
  * arugments.  Which are: keyState, mousePos, mouseObj.
@@ -450,7 +418,7 @@ static LRESULT mouseWheelNotify(PMOUSEWHEELDATA mwd, WPARAM wParam, LPARAM lPara
         }
         else
         {
-            invokeDispatch(c, mwd->pcpbd->rexxSelf, c->String(mwd->method), args);
+            invokeDispatch(c, mwd->pcpbd, mwd->method, args);
             if ( tag & CTRLTAG_SENDTOCONTROL )
             {
                 reply = DefSubclassProc(mwd->hwnd, WM_MOUSEWHEEL, wParam, lParam);
@@ -473,7 +441,7 @@ static LRESULT mouseWheelNotify(PMOUSEWHEELDATA mwd, WPARAM wParam, LPARAM lPara
         }
         else
         {
-            invokeDispatch(c, mwd->pcpbd->rexxSelf, c->String(mwd->method), args);
+            invokeDispatch(c, mwd->pcpbd, mwd->method, args);
             if ( tag & TAG_REPLYFALSE )
             {
                 reply = (LRESULT)TheFalseObj;
@@ -541,7 +509,7 @@ static LRESULT invokeControlMethod(RexxThreadContext *c, pCPlainBaseDialog pcpbd
     }
     else
     {
-        invokeDispatch(c, pcpbd->rexxSelf, c->String(methodName), args);
+        invokeDispatch(c, pcpbd, methodName, args);
         if ( ! (tag & CTRLTAG_SENDTOCONTROL) )
         {
             return 0;
@@ -584,7 +552,7 @@ static MsgReplyType invokeDialogMethod(RexxThreadContext *c, pCPlainBaseDialog p
     }
     else
     {
-        invokeDispatch(c, pcpbd->rexxSelf, c->String(methodName), args);
+        invokeDispatch(c, pcpbd, methodName, args);
         if ( tag & TAG_REPLYFALSE )
         {
             ret = ReplyFalse;
@@ -1233,7 +1201,7 @@ RexxMethod2(RexxObjectPtr, mouse_dragDetect, RexxObjectPtr, _pt, CSELF, pCSelf)
         return TheFalseObj;
     }
 
-    PPOINT pt = rxGetPoint(context, _pt, 1);
+    PPOINT pt = (PPOINT)rxGetPoint(context, _pt, 1);
     if ( pt == NULL )
     {
         return TheFalseObj;
@@ -1457,7 +1425,7 @@ RexxMethod2(RexxObjectPtr, mouse_setCursorPos, ARGLIST, args, CSELF, pCSelf)
     size_t sizeArray;
     size_t argsUsed;
     POINT  point;
-    if ( ! getPointFromArglist(context, args, &point, 1, 2, &sizeArray, &argsUsed) )
+    if ( ! getPointFromArglist(context, args, (PORXPOINT)&point, 1, 2, &sizeArray, &argsUsed) )
     {
         return NULLOBJECT;
     }
@@ -1808,7 +1776,7 @@ RexxMethod2(logical_t, mouse_clipCursor, ARGLIST, args, CSELF, pCSelf)
     size_t arraySize;
     size_t argsUsed;
 
-    if ( ! getRectFromArglist(context, args, &r, true, 1, 4, &arraySize, &argsUsed) )
+    if ( ! getRectFromArglist(context, args, (PORXRECT)&r, true, 1, 4, &arraySize, &argsUsed) )
     {
         return FALSE;
     }
@@ -1880,7 +1848,7 @@ RexxMethod1(logical_t, mouse_releaseClipCursor, CSELF, pCSelf)
  */
 RexxMethod1(logical_t, mouse_getClipCursor, RexxObjectPtr, _rect)
 {
-    PRECT r = rxGetRect(context, _rect, 1);
+    PRECT r = (PRECT)rxGetRect(context, _rect, 1);
     if ( r == NULL )
     {
         return FALSE;
@@ -1998,7 +1966,7 @@ RexxMethod5(RexxObjectPtr, mouse_connectEvent, CSTRING, event, OPTIONAL_CSTRING,
             }
         }
 
-        if ( addMiscMessage(pcen, context, wmMsg, 0xFFFFFFFF, 0, 0, 0, 0, methodName, tag) )
+        if ( addMiscMessage(pcen, context, wmMsg, UINT32_MAX, 0, 0, 0, 0, methodName, tag) )
         {
             return TheTrueObj;
         }

@@ -261,9 +261,8 @@ return 0
  */
 ::method onRbClick unguarded
   expose dtp currentType
-  use arg info, hwnd
+  use arg info, hwnd, id
 
-  id = .DlgUtil~loWord(info)
   dt = self~getFirstDayOfPeriod
 
   select
