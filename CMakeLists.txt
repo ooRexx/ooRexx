@@ -192,7 +192,7 @@ if (WIN32)
      set(NSIS_COMPONENT_SHORTCUTS_Docs "${NSIS_COMPONENT_SHORTCUTS_Docs}\n!insertmacro ConfigureDocShortCut \"${name}\" \"${file}\"")
    ENDMACRO ()
 
-   set (OOREXX_SHEBANG_PROGRAM "/usr/bin/rexx")
+   set (OOREXX_SHEBANG_PROGRAM "/usr/bin/env rexx")
 
  else ()
    if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
@@ -226,6 +226,8 @@ if (WIN32)
    set (INSTALL_INCLUDE_DIR ${CMAKE_INSTALL_PREFIX}/include)
    set (INSTALL_SAMPLES_DIR ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME})
    set (INSTALL_MAN_DIR ${CMAKE_INSTALL_PREFIX}/share/man)
+
+   # this may need adjusting for some platforms
    set (OOREXX_SHEBANG_PROGRAM ${CMAKE_INSTALL_PREFIX}/bin/rexx)
 endif ()
 # Set compiler and linker flags common to all build environments
@@ -1613,7 +1615,6 @@ configure_build_file(singleLinkedList.rex ${build_samples_dir})
 configure_build_file(sortComposite.rex ${build_samples_dir})
 configure_build_file(synchronousConcurrency.rex ${build_samples_dir})
 configure_build_file(treeTraversal.rex ${build_samples_dir})
-configure_build_file(treeDirectory.cls ${build_samples_dir})
 configure_build_file(usetree.rex ${build_samples_dir})
 
 add_custom_target(class_files ALL DEPENDS
@@ -1683,10 +1684,11 @@ install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/interface.rex COMPONENT Sampl
 install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/singleLinkedList.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/sortComposite.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/synchronousConcurrency.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(FILES ${SAMPLES_SOURCE}/jabberwocky.txt COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/treeTraversal.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/treeDirectory.cls COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/usetree.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+
+install(PROGRAMS ${SAMPLES_SOURCE}/treeDirectory.cls COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(FILES ${SAMPLES_SOURCE}/jabberwocky.txt COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 
 if (NOT WIN32)
    add_custom_command(OUTPUT rexx.cat
