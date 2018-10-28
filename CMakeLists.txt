@@ -1613,7 +1613,8 @@ configure_build_file(singleLinkedList.rex ${build_samples_dir})
 configure_build_file(sortComposite.rex ${build_samples_dir})
 configure_build_file(synchronousConcurrency.rex ${build_samples_dir})
 configure_build_file(treeTraversal.rex ${build_samples_dir})
-configure_build_file(useTree.rex ${build_samples_dir})
+configure_build_file(treeDirectory.cls ${build_samples_dir})
+configure_build_file(usetree.rex ${build_samples_dir})
 
 add_custom_target(class_files ALL DEPENDS
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rxregexp.cls
