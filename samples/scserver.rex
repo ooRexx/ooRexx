@@ -1,4 +1,4 @@
-#!/usr/bin/rexx
+#!@OOREXX_SHEBANG_PROGRAM@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Description: Simple socket server using socket class                       */

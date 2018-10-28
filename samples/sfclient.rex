@@ -1,4 +1,4 @@
-#!/usr/bin/rexx
+#!@OOREXX_SHEBANG_PROGRAM@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Description: Simple socket client using socket function package            */

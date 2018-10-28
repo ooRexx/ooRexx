@@ -1,4 +1,4 @@
-#!/usr/bin/rexx
+#!@OOREXX_SHEBANG_PROGRAM@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
@@ -151,14 +151,14 @@
 ::method string                               /* format as a string value       */
   expose real imaginary                       /* get the state info             */
   -- format as real+/-imaginaryi, but use short format if possible
-  select                                      
+  select
     when imaginary = 0 then return real
     when real = 0, imaginary = -1 then return "-i"
     when real = 0, imaginary = 1 then return "i"
     when real = 0 then return imaginary"i"
-    when imaginary = 1 then return real"+i" 
-    when imaginary = -1 then return real"-i" 
-    when imaginary > 0 then return real"+"imaginary"i" 
+    when imaginary = 1 then return real"+i"
+    when imaginary = -1 then return real"-i"
+    when imaginary > 0 then return real"+"imaginary"i"
     when imaginary < 0 then return real || imaginary"i"
   end
 

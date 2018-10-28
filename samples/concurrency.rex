@@ -1,4 +1,4 @@
-#!/usr/bin/rexx
+#!@OOREXX_SHEBANG_PROGRAM@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
