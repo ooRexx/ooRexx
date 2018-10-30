@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -64,9 +64,31 @@ DWORD WINAPI call_thread_function(void * arguments)
  */
 void SysThread::createThread()
 {
-    _threadHandle = CreateThread(NULL, THREAD_STACK_SIZE, call_thread_function, this, 0, &_threadID);
+
+    createThread(_threadHandle, _threadID, THREAD_STACK_SIZE, call_thread_function, (void *)this);
     // we created this one
     attached = false;
+}
+
+
+/**
+ * Create a new thread.
+ *
+ * @param threadHandle
+ *                  The handle of the created thread
+ * @param threadId  The id of the created thread
+ * @param stackSize The required stack size
+ * @param startRoutine
+ *                  The thread startup routine.
+ * @param startArgument
+ *                  The typeless argument passed to the startup routine.
+ *
+ * @return The success/failure return code.
+ */
+int SysThread::createThread(HANDLE &threadHandle, DWORD &threadId, size_t stackSize, DWORD (*startRoutine)(void *), void *startArgument)
+{
+    threadHandle = CreateThread(NULL, stackSize, startRoutine, startArgument, 0, &threadId);
+    return threadHandle == INVALID_HANDLE_VALUE;
 }
 
 /**
@@ -87,40 +109,6 @@ void SysThread::attachThread()
     _threadID = GetCurrentThreadId();
     _threadHandle = GetCurrentThread();
     attached = true;           // we don't own this one (and don't terminate it)
-}
-
-/**
- * Set the thread priority.
- *
- * @param priority The thread priority value.
- */
-void SysThread::setPriority(ThreadPriority priority)
-{
-    int pri = THREAD_PRIORITY_NORMAL;
-                                         /* critical priority?                */
-    switch (priority)
-    {
-        case HIGH_PRIORITY:       // critical priority
-            pri= THREAD_PRIORITY_ABOVE_NORMAL+1; /* the class is regular, but move    */
-                                                 /* to the head of the class          */
-                                                 /* medium priority                   */
-            break;
-
-        case GUARDED_PRIORITY:
-            pri = THREAD_PRIORITY_NORMAL+1;    /* guard priority is just above normal*/
-            break;
-
-        case MEDIUM_PRIORITY:
-            pri = THREAD_PRIORITY_NORMAL;      /* normal class,                     */
-                                               /* dead in the middle of it all      */
-            break;
-
-        case LOW_PRIORITY:
-            pri = THREAD_PRIORITY_IDLE +1;     /* give us idle only, but make it    */
-            break;
-                                               /* important idle time only          */
-    }
-    SetThreadPriority(_threadHandle, pri);
 }
 
 

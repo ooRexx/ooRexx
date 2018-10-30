@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -46,6 +46,7 @@
 #include "SysActivity.hpp"
 #include "Activity.hpp"
 #include "ActivityManager.hpp"
+#include "SysThread.hpp"
 
 /**
  * Close out any resources required by this thread descriptor.
@@ -75,14 +76,12 @@ DWORD WINAPI dispatch_activity_function(void * arguments)
  */
 void SysActivity::create(Activity *activity, size_t stackSize)
 {
-    DWORD res;
+    SysThread::createThread(hThread, threadId, stackSize, dispatch_activity_function, (void *)activity);
 
-    hThread = CreateThread(NULL, stackSize, dispatch_activity_function, (void *)activity, 0, &res);
     if (hThread == NULL)
     {
         reportException(Error_System_service_service, "Error creating thread");
     }
-    threadId = res;
 }
 
 

@@ -59,14 +59,6 @@ class SysThread
 
 public:
 
-    typedef enum
-    {
-        LOW_PRIORITY,
-        MEDIUM_PRIORITY,
-        GUARDED_PRIORITY,
-        HIGH_PRIORITY
-    } ThreadPriority;
-
     enum
     {
         THREAD_STACK_SIZE = 1024*512
@@ -81,7 +73,6 @@ public:
     }
 
     virtual void attachThread();
-    void setPriority(ThreadPriority priority);
     virtual void dispatch();
     char *getStackBase();
     void terminate();
@@ -101,6 +92,8 @@ public:
         // which is typically in the range of 10 milliseconds to 16 milliseconds.
         return GetTickCount64();
     }
+
+    static int createThread(HANDLE &threadHandle, DWORD &threadId, size_t stackSize, DWORD (*startRoutine)(void *), void *startArgument);
 
 protected:
     void createThread();

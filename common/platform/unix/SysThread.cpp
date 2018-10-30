@@ -58,20 +58,6 @@ void SysThread::attachThread()
     attached = true;      // we didn't create this one
 }
 
-
-void SysThread::setPriority(int priority)
-{
-    int schedpolicy;
-    struct sched_param schedparam;
-
-    pthread_getschedparam(_threadID,  &schedpolicy, &schedparam);
-
-    /* Medium_priority(=100) is used for every new thread */
-    schedparam.sched_priority = priority;
-    pthread_setschedparam(_threadID, schedpolicy, &schedparam);
-}
-
-
 void SysThread::dispatch()
 {
     // default dispatch returns immediately
@@ -140,67 +126,47 @@ static void * call_thread_function(void *argument)
 // create a new thread and attach to an activity
 void SysThread::createThread()
 {
-    pthread_attr_t  newThreadAttr;
-    int schedpolicy, maxpri, minpri;
-    struct sched_param schedparam;
+    // we own this thread vs. running on an exising thread
+    attached = false;
 
-    attached = false;           // we own this thread
-
-    // Create an attr block for Thread.
-    pthread_attr_init(&newThreadAttr);
-#if defined(LINUX) ||  defined(OPSYS_SUN) || defined(AIX)
-    /* scheduling on two threads controlled by the result method of the */
-    /* message object do not work properly without an enhanced priority */
-    pthread_getschedparam(pthread_self(), &schedpolicy, &schedparam);
-
-#if defined(AIX)
-  // Starting with AIX 5.3 the priority for a thread created by
-  // a non root user can not be higher then 59. The priority
-  // of a user prog should not be higher then 59 (IBM AIX development).
-  schedparam.sched_priority = 59;
-#else
-#   ifdef _POSIX_PRIORITY_SCHEDULING
-        maxpri = sched_get_priority_max(schedpolicy);
-        minpri = sched_get_priority_min(schedpolicy);
-        schedparam.sched_priority = (minpri + maxpri) / 2;
-#   endif
-#endif
-
-#if defined(OPSYS_SUN)
-    /* PTHREAD_EXPLICIT_SCHED ==> use scheduling attributes of the new object */
-    pthread_attr_setinheritsched(&newThreadAttr, PTHREAD_EXPLICIT_SCHED);
-
-    /* Performance measurements show massive performance improvements > 50 % */
-    /* using Round Robin scheduling instead of FIFO scheduling               */
-    pthread_attr_setschedpolicy(&newThreadAttr, SCHED_RR);
-#endif
-
-#if defined(AIX)
-    /* PTHREAD_EXPLICIT_SCHED ==> use scheduling attributes of the new object */
-    pthread_attr_setinheritsched(&newThreadAttr, PTHREAD_EXPLICIT_SCHED);
-
-    /* Each thread has an initial priority that is dynamically modified by   */
-    /* the scheduler, according to the thread's activity; thread execution   */
-    /* is time-sliced. On other systems, this scheduling policy may be       */
-    /* different.                                                            */
-    pthread_attr_setschedpolicy(&newThreadAttr, SCHED_OTHER);
-#endif
-
-    pthread_attr_setschedparam(&newThreadAttr, &schedparam);
-#endif
-
-    // Set the stack size.
-    pthread_attr_setstacksize(&newThreadAttr, THREAD_STACK_SIZE);
-
-    // Now create the thread
-    int rc = pthread_create(&_threadID, &newThreadAttr, call_thread_function, (void *)this);
+    // create the thread now
+    int rc = createThread(_threadID, THREAD_STACK_SIZE, call_thread_function, (void *)this);
     if (rc != 0)
     {
         _threadID = 0;
         fprintf(stderr," *** ERROR: At SysThread(), createThread - RC = %d !\n", rc);
     }
-    pthread_attr_destroy(&newThreadAttr);
     return;
+}
+
+
+/**
+ * Create a new thread.
+ *
+ * @param threadNumber
+ *                  The returned thread ID
+ * @param stackSize The required stack size
+ * @param startRoutine
+ *                  The thread startup routine.
+ * @param startArgument
+ *                  The typeless argument passed to the startup routine.
+ *
+ * @return The success/failure return code.
+ */
+int SysThread::createThread(pthread_t &threadNumber, size_t stackSize, void *(*startRoutine)(void *), void *startArgument)
+{
+    pthread_attr_t  newThreadAttr;
+
+    // Create an attr block for Thread.
+    pthread_attr_init(&newThreadAttr);
+
+    // Set the stack size.
+    pthread_attr_setstacksize(&newThreadAttr, stackSize);
+
+    // Now create the thread
+    int rc = pthread_create(&threadNumber, &newThreadAttr, startRoutine, (void *)startArgument);
+    pthread_attr_destroy(&newThreadAttr);
+    return rc;
 }
 
 

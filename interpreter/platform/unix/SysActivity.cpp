@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -46,10 +46,9 @@
 #include "ActivityManager.hpp"
 #include <errno.h>
 
-#define THREAD_PRIORITY 100
-
 #include "RexxCore.h"
 #include "SysActivity.hpp"
+#include "SysThread.hpp"
 
 
 /**
@@ -79,43 +78,12 @@ void SysActivity::close()
  */
 void SysActivity::create(Activity *activity, size_t stackSize)
 {
-    int             rc;
-    pthread_attr_t  newThreadAttr;
-    int schedpolicy;
-    struct sched_param schedparam;
-
-                               // Create an attr block for Thread.
-    rc = pthread_attr_init(&newThreadAttr);
-                               // Set the stack size.
- #if defined(LINUX) || defined(OPSYS_SUN) || defined(AIX)
-
- /* scheduling on two threads controlled by the result method of the message object */
- /* do not work proper without an enhanced priority                                 */
-
-    pthread_getschedparam(pthread_self(), &schedpolicy, &schedparam);
-    schedparam.sched_priority = 100;
-
- #if defined(OPSYS_SUN)
- /* PTHREAD_EXPLICIT_SCHED ==> use scheduling attributes of the new object    */
-
-    rc = pthread_attr_setinheritsched(&newThreadAttr, PTHREAD_EXPLICIT_SCHED);
-
- /* Performance measurements show massive performance improvements > 50 %     */
- /* using Round Robin scheduling instead of FIFO scheduling                   */
-    rc = pthread_attr_setschedpolicy(&newThreadAttr, SCHED_RR);
- #endif
-    rc = pthread_attr_setschedparam(&newThreadAttr, &schedparam);
-
- #endif
-    rc = pthread_attr_setstacksize(&newThreadAttr, stackSize);
-                                               // Now create the thread
-    rc = pthread_create(&threadId, &newThreadAttr, threadFnc, (void *)activity);
-                               // Bumop thread count by one. Threadid
+    // try to create the thread and raise an exception for any failure
+    int rc = SysThread::createThread(threadId, stackSize, threadFnc, (void *)activity);
     if (rc != 0)
     {
         reportException(Error_System_service_service, "ERROR CREATING THREAD");
     }
-    rc = pthread_attr_destroy(&newThreadAttr);
 }
 
 

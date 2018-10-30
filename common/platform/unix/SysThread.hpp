@@ -62,17 +62,9 @@ class SysThread
 
 public:
 
-    typedef enum
-    {
-        LOW_PRIORITY,
-        MEDIUM_PRIORITY,
-        GUARDED_PRIORITY,
-        HIGH_PRIORITY
-    } ThreadPriority;
-
     enum
     {
-        THREAD_STACK_SIZE = 1024*96
+        THREAD_STACK_SIZE = 1024*512
     };
 
     SysThread() : attached(false), _threadID(0) { ; }
@@ -84,7 +76,6 @@ public:
     }
 
     virtual void attachThread();
-    void setPriority(int priority);
     virtual void dispatch();
     char *getStackBase();
     void terminate();
@@ -104,6 +95,7 @@ public:
         gettimeofday(&now, NULL);
         return (uint64_t)now.tv_sec * 1000 + now.tv_usec / 1000;
     }
+    static int createThread(pthread_t &threadNumber, size_t stackSize, void *(*startRoutine)(void *), void *startArgument);
 
 
 protected:
