@@ -85,7 +85,7 @@ void SysThread::createThread()
  *
  * @return The success/failure return code.
  */
-int SysThread::createThread(HANDLE &threadHandle, DWORD &threadId, size_t stackSize, DWORD (*startRoutine)(void *), void *startArgument)
+int SysThread::createThread(HANDLE &threadHandle, DWORD &threadId, size_t stackSize, LPTHREAD_START_ROUTINE startRoutine, void *startArgument)
 {
     threadHandle = CreateThread(NULL, stackSize, startRoutine, startArgument, 0, &threadId);
     return threadHandle == INVALID_HANDLE_VALUE;

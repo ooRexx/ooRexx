@@ -93,7 +93,7 @@ public:
         return GetTickCount64();
     }
 
-    static int createThread(HANDLE &threadHandle, DWORD &threadId, size_t stackSize, DWORD (*startRoutine)(void *), void *startArgument);
+    static int createThread(HANDLE &threadHandle, DWORD &threadId, size_t stackSize, LPTHREAD_START_ROUTINE, void *startArgument);
 
 protected:
     void createThread();
