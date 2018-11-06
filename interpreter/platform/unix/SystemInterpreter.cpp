@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2012 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -141,6 +141,10 @@ void SystemInterpreter::startInterpreter()
         sigaction(SIGTERM, &new_action, NULL); /* exitClear on SIGTERM signal   */
         sigaction(SIGHUP, &new_action, NULL);  /* exitClear on SIGHUP signal    */
     }
+
+    // Set SIGPIPE to ignore so that ADDRESS WITH pipes or rxsock sockets
+    // may return EPIPE error codes instead of the interpreter being killed
+    signal(SIGPIPE, SIG_IGN);
 }
 
 

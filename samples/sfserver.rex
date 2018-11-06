@@ -1,9 +1,9 @@
-#!@OOREXX_SHEBANG_PROGRAM@
+#!/usr/bin/env rexx
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Description: Simple socket server using socket function package            */
 /*                                                                            */
-/* Copyright (c) 2007-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2007-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -60,7 +60,11 @@
     this may not be the best method of shutting down, but does work on both
     Linux and Windows  */
     say 'Press [Enter] To Shutdown'
-    pull .
+    pull seconds
+    if seconds~dataType("n") then do
+        say "shutdown in" seconds "sec"
+        call SysSleep seconds
+    end
 
     shutdown = .true
 
@@ -70,7 +74,7 @@
 /*  specify the host we will connect to  */
     host.!family = 'AF_INET'
     host.!addr = SockGetHostId()
-    host.!port = '726578'
+    host.!port = '50010'
 
 /*  connect to the server (if it hasn't already shutdown)  */
     if sockconnect(socket, 'host.!') < 0 then
@@ -84,20 +88,22 @@
 /*  specify the host we will run as  */
     host.!family = 'AF_INET'        --  Protocol family (only AF_INET is supported)
     host.!addr = SockGetHostId()    --  IP address (use the sockgethostid function to get address of the localhost)
-    host.!port = '726578'           --  Port number
+    host.!port = '50010'            --  Port number
 
 /*  bind to the host information  */
+    call SockSetSockOpt socket, 'SOL_SOCKET', 'SO_REUSEADDR', 1
     if sockbind(socket, 'host.!') < 0 then do
-        say 'SockBind Failed'
+        say 'SockBind failed:' errno
         exit
     end
 
 /*  start listening for new connections  */
     if socklisten(socket, 256) < 0 then do
-        say 'SockListen Failed'
+        say 'SockListen failed:' errno
         exit
     end
 
+    say "Server listening at" host.!addr':'host.!port
     self~start('monitor')   --  this will allow the server to be shutdown cleanly
 
     do forever
@@ -109,10 +115,10 @@
 
     if cs <> -1 then
         if sockclose(cs) < 0 then
-            say 'SockClose Failed'
+            say 'SockClose failed:' errno
 
     if sockclose(socket) < 0 then
-        say 'SockClose Failed'
+        say 'SockClose failed:' errno
 
 ::method respond unguarded
     use arg socket

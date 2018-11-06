@@ -774,14 +774,14 @@ logical_t handleCommandInternally(RexxExitContext *context, char *cmd, RexxObjec
 
 
 /**
- * Raises syntax error 98.896 Address command redirection failed.
+ * Raises syntax error 98.923 Address command redirection failed.
  *
  * @param context    The Exit context.
  * @param errCode    The operating system error code.
  */
 RexxObjectPtr ErrorRedirection(RexxExitContext *context, int errCode)
 {
-    // raise 98.896 Address command redirection failed
+    // raise 98.923 Address command redirection failed
     context->RaiseException1(Error_Execution_address_redirection_failed,
       context->CString(strerror(errno)));
     return NULLOBJECT;
@@ -870,13 +870,6 @@ RexxObjectPtr RexxEntry ioCommandHandler(RexxExitContext *context, RexxStringObj
 
         posix_spawn_file_actions_t action;
         posix_spawn_file_actions_init(&action);
-
-        // ignore SIGPIPE so that we receive EPIPE for a write() operation on a
-        // pipe which has closed its read end.
-        if (signal(SIGPIPE, SIG_IGN) == SIG_ERR)
-        {
-            return ErrorRedirection(context, errno);
-        }
 
         // Create stdin, stdout, and stderr pipes as requested.  pipe() returns
         // two file descriptors: [0] is the pipe read end, [1] is the pipe

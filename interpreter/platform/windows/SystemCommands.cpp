@@ -183,14 +183,14 @@ public:
 
 
 /**
- * Raises syntax error 98.896 Address command redirection failed.
+ * Raises syntax error 98.923 Address command redirection failed.
  *
  * @param context    The Exit context.
  * @param errCode    The operating system error code.
  */
 RexxObjectPtr ErrorRedirection(RexxExitContext *context, int errCode)
 {
-    // raise 98.896 Address command redirection failed
+    // raise 98.923 Address command redirection failed
     context->RaiseException1(Error_Execution_address_redirection_failed,
       context->Int32ToObject(errCode));
     return NULLOBJECT;

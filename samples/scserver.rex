@@ -3,7 +3,7 @@
 /*                                                                            */
 /* Description: Simple socket server using socket class                       */
 /*                                                                            */
-/* Copyright (c) 2007-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2007-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -50,7 +50,7 @@ srv~listen()
 ::method init
     expose sock shutdown
 
-/*  instaniate an instance of the socket class  */
+/*  instantiate an instance of the socket class  */
     sock = .socket~new()
 
     shutdown = .false
@@ -62,14 +62,18 @@ srv~listen()
     this may not be the best method of shutting down, but does work on both
     Linux and Windows  */
     say 'Press [Enter] To Shutdown'
-    pull .
+    pull seconds
+    if seconds~dataType("n") then do
+        say "shutdown in" seconds "sec"
+        call SysSleep seconds
+    end
 
     shutdown = .true
 
-/*  instaniate an instance of the socket class  */
+/*  instantiate an instance of the socket class  */
     sock = .socket~new()
 
-    host = .inetaddress~new(.socket~gethostid(), '726578')
+    host = .inetaddress~new(.socket~gethostid(), '50010')
 
 /*  connect to the server (if it hasn't already shutdown)  */
     if sock~connect(host) < 0 then
@@ -79,24 +83,26 @@ srv~listen()
 ::method listen
     expose sock shutdown
 
-/*  instaniate an instance of the inetaddress class
+/*  instantiate an instance of the inetaddress class
     with the host information of the server we will
-    contact: localhost and port 726578
+    contact: localhost and port 50010
     we use the "gethostid" class method of the socket
     class to determine the localhost address  */
-    host = .inetaddress~new(.socket~gethostid(), '726578')
+    host = .inetaddress~new(.socket~gethostid(), '50010')
 
 /*  bind to the host information  */
+    sock~setOption('SO_REUSEADDR', 1)
     if sock~bind(host) < 0 then do
-        say 'Bind Failed'
+        say 'Bind failed:' sock~errno
         exit
     end
 
     if sock~listen(256) < 0 then do
-        say 'Listen Failed'
+        say 'Listen failed:' sock~errno
         exit
     end
 
+    say "Server listening at" host~address':'host~port
     self~start('monitor')   --  this will allow the server to be shutdown cleanly
 
     do forever
@@ -108,10 +114,10 @@ srv~listen()
 
     if csock~isa(.socket) then
         if csock~close() < 0 then
-            say 'SockClose Failed'
+            say 'SockClose failed:' sock~errno
 
     if sock~close() < 0 then
-        say 'SockClose Failed'
+        say 'SockClose failed:' sock~errno
 
 ::method respond unguarded
     use arg sock
@@ -119,7 +125,7 @@ srv~listen()
     do forever
         /*  get data from the client  */
         data = sock~recv(1024)
-        if data = .nil then leave
+        if data = .nil | data == "" then leave
         /*  echo that data back to the client  */
         sock~send('Echo:' data)
     end

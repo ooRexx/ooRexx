@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -139,7 +139,8 @@ RexxRoutine2(int, SockAccept, int, sock, OPTIONAL_RexxObjectPtr, stemSource)
     socklen_t    nameLen;
 
     nameLen = sizeof(addr);
-    int rc = accept(sock, (struct sockaddr *)&addr, &nameLen);
+    // (int) cast avoids C4244 on Windows 64-bit
+    int rc = (int)accept(sock, (struct sockaddr *)&addr, &nameLen);
 
     // set the errno variables
     cleanup(context);
@@ -1048,7 +1049,8 @@ RexxRoutine3(int, SockSend, int, sock, RexxStringObject, dataObj, OPTIONAL_CSTRI
     /*---------------------------------------------------------------
      * call function
      *---------------------------------------------------------------*/
-    int rc = send(sock,data,dataLen,flags);
+    // (int) cast avoids C4267 on Windows 64-bit, but potential issue
+    int rc = send(sock, data, (int)dataLen, flags);
 
     // set the errno information
     cleanup(context);
@@ -1074,7 +1076,7 @@ RexxRoutine4(int, SockSendTo, int, sock, RexxStringObject, dataObj, RexxObjectPt
     /*---------------------------------------------------------------
      * get data length
      *---------------------------------------------------------------*/
-    int dataLen = context->StringLength(dataObj);
+    size_t dataLen = context->StringLength(dataObj);
     const char *data    = context->StringData(dataObj);
 
     /*---------------------------------------------------------------
@@ -1119,7 +1121,8 @@ RexxRoutine4(int, SockSendTo, int, sock, RexxStringObject, dataObj, RexxObjectPt
     /*---------------------------------------------------------------
      * call function
      *---------------------------------------------------------------*/
-    int rc = sendto(sock,data,dataLen,flags,(struct sockaddr *)&addr,sizeof(addr));
+    // (int) cast avoids C4267 on Windows 64-bit, but potential issue
+    int rc = sendto(sock, data, (int)dataLen, flags, (struct sockaddr *)&addr, sizeof(addr));
 
     // set the errno information
     cleanup(context);
@@ -1311,7 +1314,8 @@ RexxRoutine3(int, SockSocket, CSTRING, domainArg, CSTRING, typeArg, CSTRING, pro
     /*---------------------------------------------------------------
      * call function
      *---------------------------------------------------------------*/
-    int rc = socket(domain,type,protocol);
+    // (int) cast avoids C4244 on Windows 64-bit
+    int rc = (int)socket(domain, type, protocol);
     // set the errno information
     cleanup(context);
 
@@ -1320,25 +1324,3 @@ RexxRoutine3(int, SockSocket, CSTRING, domainArg, CSTRING, typeArg, CSTRING, pro
      *---------------------------------------------------------------*/
     return rc;
 }
-
-/*-/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\-*/
-/*-\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/-*/
-
-/*------------------------------------------------------------------
- * soclose()
- *------------------------------------------------------------------*/
-RexxRoutine1(int, SockSoClose, int, sock)
-{
-    /*---------------------------------------------------------------
-     * call function
-     *---------------------------------------------------------------*/
-#if defined(WIN32)
-    int rc = closesocket(sock);
-#else
-    int rc = close(sock);
-#endif
-    // set the errno information
-    cleanup(context);
-    return rc;
-}
-

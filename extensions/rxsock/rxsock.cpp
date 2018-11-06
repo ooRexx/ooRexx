@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -458,7 +458,7 @@ void setErrno(RexxCallContext *context)
 
 #if defined(WIN32)
     theErrno = WSAGetLastError();
-#elif defined(OPSYS_AIX) || defined(OPSYS_LINUX)
+#else
     theErrno = errno;
 #endif
 
@@ -563,7 +563,7 @@ void setH_Errno(RexxCallContext *context)
 
     // The code that was here previous to version 5.0 was completely bogus.
     // There used to be calls to the herrno and hstrerrno functions here but
-    // those functions have been obsolete for a long time. 
+    // those functions have been obsolete for a long time.
     //
     // To correct the bug of always setting the h_errno Rexx variable to 1514
     // unconditionally (thus always returning an error) we will now set it to zero.
@@ -695,7 +695,7 @@ RexxRoutineEntry rxsock_functions[] =
     REXX_TYPED_ROUTINE( SockShutDown,       SockShutDown),
     REXX_TYPED_ROUTINE( SockSock_Errno,     SockSock_Errno),
     REXX_TYPED_ROUTINE( SockSocket,         SockSocket),
-    REXX_TYPED_ROUTINE( SockSoClose,        SockSoClose),
+    REXX_TYPED_ROUTINE( SockSoClose,        SockClose),
     REXX_TYPED_ROUTINE( SockVersion,        SockVersion),
     REXX_LAST_ROUTINE()
 };

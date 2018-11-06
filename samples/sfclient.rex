@@ -1,9 +1,9 @@
-#!@OOREXX_SHEBANG_PROGRAM@
+#!/usr/bin/env rexx
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Description: Simple socket client using socket function package            */
 /*                                                                            */
-/* Copyright (c) 2007-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2007-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -46,11 +46,11 @@
 /*  specify the host we will connect to  */
     host.!family = 'AF_INET'        --  Protocol family (only AF_INET is supported)
     host.!addr = SockGetHostId()    --  IP address (use the sockgethostid function to get address of the localhost)
-    host.!port = '726578'           --  Port number
+    host.!port = '50010'            --  Port number
 
 /*  connect to the server  */
     if sockconnect(socket, 'host.!') < 0 then do
-        say 'SockConnect Failed'
+        say 'SockConnect failed:' errno
         exit
     end
 
@@ -61,23 +61,23 @@
         if message~upper() = 'X' then leave
     /*  send message to server  */
         if socksend(socket, message) < 0 then do
-            say 'SockSend Failed'
+            say 'SockSend failed:' errno
             leave
         end
     /*  get message from server  */
         ret = sockrecv(socket, 'data', 1024)
         if ret < 1 then do
             if ret < 0 then
-                say 'SockRecv Failed'
+                say 'SockRecv failed:' errno
             else
-                say 'Socket Closed'
+                say 'Socket closed:' errno
             leave
         end
-        say 'Server Responded:' data
+        say 'Server responded:' data
     end
 
 /*  close the socket connection  */
     if sockclose(socket) < 0 then
-        say 'SockClose Failed'
+        say 'SockClose failed:' errno
 
 ::requires 'rxsock' LIBRARY
