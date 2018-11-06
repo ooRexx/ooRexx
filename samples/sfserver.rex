@@ -1,4 +1,4 @@
-#!/usr/bin/env rexx
+#!@OOREXX_SHEBANG_PROGRAM@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Description: Simple socket server using socket function package            */
