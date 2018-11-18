@@ -125,4 +125,4 @@ do item over array2
 end
 
 
-::REQUIRES 'pipe'
+::REQUIRES 'pipe.cls'
