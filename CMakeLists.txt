@@ -1249,6 +1249,9 @@ target_include_directories(rxunixsys PUBLIC
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     target_link_libraries(rxunixsys rexx rexxapi crypt ${CMAKE_REQUIRED_LIBRARIES})
 else ()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -stdlib=libc++")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -stdlib=libc++ -lc++abi")
+
     target_link_libraries(rxunixsys rexx rexxapi ${CMAKE_REQUIRED_LIBRARIES})
 endif ()
 
