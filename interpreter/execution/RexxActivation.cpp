@@ -1500,8 +1500,10 @@ CommandIOConfiguration *RexxActivation::getIOConfig(RexxString *environment)
         return OREF_NULL;
     }
 
-    // see if we have one for this environment name
-    return (CommandIOConfiguration *)settings.ioConfigs->get(environment);
+    Protected<RexxString> name = environment->upper();
+
+    // see if we have one for this environment name (always upper case the name)
+    return (CommandIOConfiguration *)settings.ioConfigs->get(name);
 }
 
 
@@ -1516,7 +1518,9 @@ void RexxActivation::addIOConfig(RexxString *environment, CommandIOConfiguration
 {
     // create or copy the config table as required
     checkIOConfigTable();
-    settings.ioConfigs->put(config, environment);
+    Protected<RexxString> name = environment->upper();
+
+    settings.ioConfigs->put(config, name);
 }
 
 
