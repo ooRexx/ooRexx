@@ -126,12 +126,14 @@ void RexxInstructionAddress::flatten(Envelope *envelope)
  */
 void RexxInstructionAddress::execute(RexxActivation *context, ExpressionStack *stack )
 {
-    // trace if necessary
-    context->traceInstruction(this);
+    // tracing is handled seperately in each section because the command form
+    // needs to trace if "Trace Commands" is in effect.
 
     // Nothing specified is just an address toggle.. this is simple.
     if (environment == OREF_NULL && dynamicAddress == OREF_NULL)
     {
+        // trace if necessary
+        context->traceInstruction(this);
         context->toggleAddress();
         context->pauseInstruction();
     }
@@ -141,14 +143,20 @@ void RexxInstructionAddress::execute(RexxActivation *context, ExpressionStack *s
         // Is this the command form?  Evaluate and issue to the target environment
         if (command != OREF_NULL)
         {
+            // this also traces if TRACE COMMANDS is in effect.
+            context->traceCommand(this);
             // evaluate the command expression
             RexxObject *result = command->evaluate(context, stack);
             // this must be a string
             RexxString *_command = result->requestString();
             // protect this
             stack->push(_command);
-            // need to trace this if on
-            context->traceResult(_command);
+            // are we tracing commands?
+            if (context->tracingCommands())
+            {
+                // trace the full command result
+                context->traceResultValue(_command);
+            }
             // validate the address name using system rules
             SystemInterpreter::validateAddressName(environment);
             // and execute the command
@@ -157,6 +165,7 @@ void RexxInstructionAddress::execute(RexxActivation *context, ExpressionStack *s
         // we're just changing the current address target
         else
         {
+            context->traceInstruction(this);
             // validate this environment name
             SystemInterpreter::validateAddressName(environment);
             // and make that the current address
@@ -167,6 +176,7 @@ void RexxInstructionAddress::execute(RexxActivation *context, ExpressionStack *s
     // ADDRESS VALUE form
     else
     {
+        context->traceInstruction(this);
         // evaluate
         RexxObject *result = dynamicAddress->evaluate(context, stack);
         RexxString *_address = result->requestString();
