@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -50,6 +50,7 @@
 
 
 const char *compiledHeader = "/**/@REXX";
+const char *standardShebang = "#!/usr/bin/env rexx\n";
 
 
 /**
@@ -199,6 +200,8 @@ bool ProgramMetaData::validate(bool &badVersion)
  */
 void ProgramMetaData::write(FILE *handle, BufferClass *program)
 {
+    // add a standard shebang line as a courtesy for the unix-based systems.
+    fwrite(standardShebang, 1, strlen(standardShebang), handle);
     fwrite(this, 1, getHeaderSize(), handle);
     /* and finally the flattened method  */
     fwrite(program->getData(), 1, program->getDataLength(), handle);
