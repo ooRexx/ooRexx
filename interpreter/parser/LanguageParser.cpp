@@ -4078,14 +4078,14 @@ RoutineClass *LanguageParser::processInstore(PRXSTRING instore, RexxString * nam
     if (instore[1].strptr != NULL)
     {
         // we're saved as a program object
-        RoutineClass *routine = RoutineClass::restore(&instore[1], name);
-        if (routine != OREF_NULL)
+        Protected<RoutineClass> routine = RoutineClass::restore(&instore[1], name);
+        if (!routine.isNull())
         {
             // did it unflatten successfully?   If we have source also,
             // reattach it to the routine for tracing/error reporting.
             if (instore[0].strptr != NULL)
             {
-                BufferClass *source_buffer = new_buffer(instore[0]);
+                Protected<BufferClass> source_buffer = new_buffer(instore[0]);
                 routine->getPackageObject()->attachSource(source_buffer);
             }
             return routine;                  /* go return it                      */
@@ -4095,7 +4095,7 @@ RoutineClass *LanguageParser::processInstore(PRXSTRING instore, RexxString * nam
     // flatten the program for reuse.
     if (instore[0].strptr != NULL)
     {
-        BufferClass *source_buffer = new_buffer(instore[0]);
+        Protected<BufferClass> source_buffer = new_buffer(instore[0]);
 
         // translate the source
         Protected<RoutineClass> routine = createProgram(name, source_buffer);
@@ -4123,7 +4123,7 @@ RoutineClass *LanguageParser::restoreFromMacroSpace(RexxString *name)
     // get the image of function
     RexxResolveMacroFunction(name->getStringData(), &buffer);
     // unflatten the method now
-    RoutineClass *routine = RoutineClass::restore(&buffer, name);
+    Protected<RoutineClass> routine = RoutineClass::restore(&buffer, name);
     // release the buffer memory
     SystemInterpreter::releaseResultMemory(buffer.strptr);
     return routine;
