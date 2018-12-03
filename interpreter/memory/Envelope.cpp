@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -254,17 +254,8 @@ BufferClass *Envelope::pack(RexxInternalObject *_receiver)
  */
 void Envelope::puff(BufferClass *sourceBuffer, char *startPointer, size_t dataLength)
 {
-    // this will mark the last object of our range
-    RexxInternalObject *lastObject = sourceBuffer->nextObject();
-
     // fix up the objects contained in the data buffer.
-    receiver = memoryObject.unflattenObjectBuffer(sourceBuffer, startPointer, dataLength);
-    // Set envelope to the real address of the new objects.  This tells
-    // mark_general to send unflatten to run any proxies.
-
-    // now have the memory object traverse this set of objects handling
-    // the unflatten calls.
-    memoryObject.unflattenProxyObjects(this, receiver, lastObject);
+    receiver = memoryObject.unflattenObjectBuffer(this, sourceBuffer, startPointer, dataLength);
 
     // now rehash any unflattened collection objects that require it.
     rehash();

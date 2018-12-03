@@ -120,7 +120,7 @@ class MemoryObject : public RexxInternalObject
     void        removeUninitObject(RexxInternalObject *obj);
     void        addUninitObject(RexxInternalObject *obj);
     inline void checkUninitQueue() { if (pendingUninits > 0) runUninits(); }
-    RexxInternalObject *unflattenObjectBuffer(BufferClass *sourceBuffer, char *startPointer, size_t dataLength);
+    RexxInternalObject *unflattenObjectBuffer(Envelope *envelope, BufferClass *sourceBuffer, char *startPointer, size_t dataLength);
     void        unflattenProxyObjects(Envelope *envelope, RexxInternalObject *firstObject, RexxInternalObject *endObject);
 
     void        markObjects();

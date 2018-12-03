@@ -1380,6 +1380,7 @@ void MemoryObject::tracingMark(RexxInternalObject *root, MarkReason reason)
  * Perform an in-place unflatten operation on an object
  * in a buffer.
  *
+ * @param envelope  The envelope for the unflatten operation.
  * @param sourceBuffer
  *                   The source buffer that contains this data (will need fixups at the end)
  * @param startPointer
@@ -1388,7 +1389,7 @@ void MemoryObject::tracingMark(RexxInternalObject *root, MarkReason reason)
  *
  * @return The first "real" object in the buffer.
  */
-RexxInternalObject *MemoryObject::unflattenObjectBuffer(BufferClass *sourceBuffer, char *startPointer, size_t dataLength)
+RexxInternalObject *MemoryObject::unflattenObjectBuffer(Envelope *envelope, BufferClass *sourceBuffer, char *startPointer, size_t dataLength)
 {
     // get an end pointer
     RexxInternalObject *endPointer = (RexxInternalObject *)(startPointer + dataLength);
@@ -1400,6 +1401,8 @@ RexxInternalObject *MemoryObject::unflattenObjectBuffer(BufferClass *sourceBuffe
     // pointer for addressing a location as an object.  This will also
     // give use the last object we've processed at the end.
     RexxInternalObject *puffObject = (RexxInternalObject *)startPointer;
+    // this will be the last object we process in the buffer
+    RexxInternalObject *lastObject = OREF_NULL;
 
     // now traverse the buffer fixing all of the behaviour pointers and having the object
     // mark and fix up their references.
@@ -1436,6 +1439,8 @@ RexxInternalObject *MemoryObject::unflattenObjectBuffer(BufferClass *sourceBuffe
         // Note that this flavor of mark_general should update the
         // mark fields in the objects.
         puffObject->liveGeneral(UNFLATTENINGOBJECT);
+        // save the pointer before stepping to the next object so we know the last object.
+        lastObject = puffObject;
         // Point to next object in image.
         puffObject = puffObject->nextObject();
     }
@@ -1450,13 +1455,20 @@ RexxInternalObject *MemoryObject::unflattenObjectBuffer(BufferClass *sourceBuffe
     RexxInternalObject *firstObject = ((RexxInternalObject *)startPointer)->nextObject();
 
     // this is the location of the next object after the buffer
-    char *nextObject = (char *)sourceBuffer->nextObject();
+    RexxInternalObject *nextObject = sourceBuffer->nextObject();
     // this is the size of any tailing buffer portion after the last unflattened object.
-    size_t tailSize = nextObject - (char *)endPointer;
+    size_t tailSize = (char *)nextObject - (char *)endPointer;
 
-    // puffObject is the last object we processed.  Add any tail data size on to that object
+    // lastObject is the last object we processed.  Add any tail data size on to that object
     // so we don't create an invalid gap in the heap.
-    puffObject->setObjectSize(puffObject->getObjectSize() + tailSize);
+    lastObject->setObjectSize(lastObject->getObjectSize() + tailSize);
+
+    // now have the memory object traverse this set of objects handling
+    // the unflatten calls.
+    // Set envelope to the real address of the new objects.  This tells
+    // mark_general to send unflatten to run any proxies.
+    memoryObject.unflattenProxyObjects(envelope, firstObject, nextObject);
+
     // now adjust the front portion of the buffer object to reveal all of the
     // unflattened data.  There is a dummy object at the front of the buffer...we want to
     // step to the the first real object
