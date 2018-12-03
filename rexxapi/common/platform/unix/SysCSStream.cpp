@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -45,18 +45,25 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/ioctl.h>
 #include <netdb.h>
+#include "sys/un.h"
+#include <pwd.h>
+#include <cstddef>
 
 #if defined( HAVE_STRINGS_H )
 # include <strings.h>
 #endif
 #include <errno.h>
+#include "oorexxapi.h"
 #include "SysCSStream.hpp"
 #include "ServiceException.hpp"
+
+const char *SysServerLocalSocketConnectionManager::userServiceName = NULL;
 
 /**
  * Read from the connection.
@@ -184,76 +191,26 @@ bool SysSocketConnection::write(void *buf, size_t bufsize, void *buf2, size_t bu
     return true;
 }
 
+
 /**
- * Get a buffer for sending a buffered message.
+ * Close the server connection.
  *
- * @param size   The required size.
- *
- * @return A pointer to a buffer, or NULL if unable to allocate.
+ * @return True on an error, otherwise false
  */
-char *SysSocketConnection::getMessageBuffer(size_t size)
+bool SysSocketConnection::disconnect()
 {
-    // if larger than our cached buffer, return
-    if (size > MAX_CACHED_BUFFER)
+    if (c != -1)
     {
-        char *buffer = (char *)malloc(size);
-        if (buffer == NULL)
-        {
-            throw new ServiceException(SERVER_FAILURE, "Error allocating message buffer");
-        }
-        return buffer;
+        ::close(c);
+        c = -1;
+        errcode = CSERROR_OK;
+        return true;
     }
-    // use our cached buffer, allocating it if required.
-    if (messageBuffer == NULL)
+    else
     {
-        messageBuffer = (char *)malloc(MAX_CACHED_BUFFER);
-        if (messageBuffer == NULL)
-        {
-            throw new ServiceException(SERVER_FAILURE, "Error allocating message buffer");
-        }
+        errcode = CSERROR_INTERNAL;
+        return false;
     }
-    return messageBuffer;
-}
-
-
-/**
- * Return a message buffer after sending a message.  This will
- * either cache the buffer, or release it, depending upon
- * how it was obtained in the first place.
- *
- * @param buffer The buffer to release.
- */
-void SysSocketConnection::returnMessageBuffer(void *buffer)
-{
-    if (buffer != messageBuffer)
-    {
-        free(buffer);
-    }
-}
-
-
-/**
- * Standard constructor.
- */
-SysClientStream::SysClientStream() : SysSocketConnection()
-{
-    domain = AF_INET;
-    type = SOCK_STREAM;
-    protocol = 0;
-}
-
-
-/**
- * Alternate constructor.
- *
- * @param name   Hostname and port in the form "hostname:port".
- */
-SysClientStream::SysClientStream(const char *name) : SysSocketConnection()
-{
-    domain = AF_INET;
-    type = SOCK_STREAM;
-    protocol = 0;
-    open(name);
 }
 
 
@@ -263,269 +220,51 @@ SysClientStream::SysClientStream(const char *name) : SysSocketConnection()
  * @param host   String name of the host.
  * @param port   Target port number.
  */
-SysClientStream::SysClientStream(const char *host, int port) : SysSocketConnection()
+SysLocalSocketConnection::SysLocalSocketConnection(const char *serviceName) : SysSocketConnection()
 {
-    domain = AF_INET;
-    type = SOCK_STREAM;
-    protocol = 0;
-    open(host, port);
+    connect(serviceName);
 }
 
 
 /**
- * Standard destructor.
+ * Open a connection to a named local service
+ *
+ * @param host   The target service name.
+ *
+ * @return True on an error, otherwise false.
  */
-SysClientStream::~SysClientStream()
+bool SysLocalSocketConnection::connect(const char *serviceName)
 {
+    // make sure we're not already connected.
     if (c != -1)
     {
-        close();
-    }
-}
-
-
-/**
- * Open a connection to a host/port.
- *
- * @param name   Hostname and port in the form "hostname:port".
- *
- * @return True on an error, otherwise false.
- */
-bool SysClientStream::open(const char *name)
-{
-    // copy the host name so we can separate the host and port values.
-    char *hostname = strdup(name);
-
-    char *portstr = strstr(hostname, ":");
-    if (portstr == NULL)
-    {
-        free(hostname);
-        errcode = CSERROR_HOSTNAME_PORT;
+        errcode = CSERROR_ALREADY_CONNECTED;
         return false;
     }
-    // split the two pieces with a null terminator.
-    *portstr = '\0';
-    portstr++;
-    int port = atoi(portstr);
-    if (port == 0)
-    {
-        free(hostname);
-        errcode = CSERROR_HOSTNAME_PORT;
-        return false;
-    }
-    // do the open and free the temp name value.
-    bool result = open(hostname, port);
-    free(hostname);
-    return result;
-}
-
-
-/**
- * Open a connection to a host/port.
- *
- * @param host   The target host name.
- * @param port   The connection port number.
- *
- * @return True on an error, otherwise false.
- */
-bool SysClientStream::open(const char *host, int port)
-{
-    struct sockaddr_in  addr; // address structure
-    struct hostent *phe; // pointer to a host entry
 
     // get a socket
-    c = socket(domain, type, protocol);
+    c = socket(AF_LOCAL, SOCK_STREAM, 0);
     if (c == -1)
     {
         errcode = CSERROR_INTERNAL;
         return false;
     }
-    // convert the host entry/name to an address
-    phe = gethostbyname(host);
-    if (phe)
-    {
-        bcopy(phe->h_addr, (char *) &addr.sin_addr, sizeof(addr.sin_addr));
-    }
-    else
-    {
-        addr.sin_addr.s_addr = inet_addr(host);
-    }
-    if (addr.sin_addr.s_addr == INADDR_NONE)
-    {
-        errcode = CSERROR_HOSTNAME_PORT;
-        close();
-        return false;
-    }
-    // connect to the remote host
-    addr.sin_family = domain;
-    addr.sin_port = htons(port);
-    if (connect(c, (struct sockaddr *) &addr, sizeof(addr)) == -1)
+
+    // bind the server socket to a service name
+    struct sockaddr_un name; // address structure
+    name.sun_family = AF_LOCAL;
+    strncpy(name.sun_path, serviceName, sizeof (name.sun_path));
+    // make sure this is null terminated
+    name.sun_path[sizeof (name.sun_path) - 1] = '\0';
+
+    socklen_t size = (offsetof(sockaddr_un, sun_path)
+          + strlen (name.sun_path));
+
+    if (::connect(c, (struct sockaddr *) &name, size) == -1)
     {
         errcode = CSERROR_OPEN_FAILED;
-        close();
-        return false;
-    }
-
-    errcode = CSERROR_OK;
-    return true;
-}
-
-
-/**
- * Close the connection to the host.
- *
- * @return True on an error, otherwise false.
- */
-bool SysClientStream::close()
-{
-    if (c != -1)
-    {
         ::close(c);
-    }
-    else
-    {
-        errcode = CSERROR_UNKNOWN;
-        return false;
-    }
-    c = -1;
-    errcode = CSERROR_OK;
-    return true;
-}
-
-
-/**
- * Standard constructor.
- */
-SysServerStream::SysServerStream()
-{
-    errcode = CSERROR_OK;
-    s = -1;
-    domain = AF_INET;
-    type = SOCK_STREAM;
-    protocol = 0;
-    backlog = 20;
-}
-
-
-/**
- * Alternate constructor.
- *
- * @param name   Hostname and port in the form "hostname:port".
- */
-SysServerStream::SysServerStream(const char *name)
-{
-    errcode = CSERROR_OK;
-    s = -1;
-    domain = AF_INET;
-    type = SOCK_STREAM;
-    protocol = 0;
-    backlog = 20;
-    make(name);
-}
-
-
-/**
- * Alternate constructor.
- *
- * @param port   Port number to listen on.
- */
-SysServerStream::SysServerStream(int port)
-{
-    errcode = CSERROR_OK;
-    s = -1;
-    domain = AF_INET;
-    type = SOCK_STREAM;
-    protocol = 0;
-    backlog = 20;
-    make(port);
-}
-
-
-/**
- * Standard destructor.
- */
-SysServerStream::~SysServerStream()
-{
-    // close our server connection.
-    close();
-}
-
-
-/**
- * Make a sever connection.
- *
- * @param name   Hostname and port in the form "hostname:port".
- *
- * @return True on an error, otherwise false
- */
-bool SysServerStream::make(const char *name)
-{
-    char *hostname;
-    char *portstr;
-    int port;
-
-    // get host name and port strings
-    hostname = strdup(name);
-    portstr = strstr(hostname, ":");
-    if (portstr == NULL)
-    {
-        free(hostname);
-        errcode = CSERROR_HOSTNAME_PORT;
-        return false;
-    }
-    *portstr = '\0';
-    portstr++;
-    port = atoi(portstr);
-    free(hostname);
-    if (port == 0)
-    {
-        errcode = CSERROR_HOSTNAME_PORT;
-        return false;
-    }
-    return make(port);
-}
-
-
-/**
- * Make a server connection.
- *
- * @param port   Port to use for the connection.
- *
- * @return True on an error, otherwise false
- */
-bool SysServerStream::make(int port)
-{
-    struct sockaddr_in addr; // server address structure
-    int so_reuseaddr = false; // socket reuse flag
-
-    // get a server socket
-    s = socket(domain, type, protocol);
-    if (s == -1)
-    {
-        errcode = CSERROR_UNKNOWN;
-        return false;
-    }
-    // set the socket option to reuse the address
-    setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (char *)&so_reuseaddr,
-        sizeof(so_reuseaddr));
-    // bind the server socket to a port
-    memset(&addr, 0, sizeof (addr));
-    addr.sin_family = domain;
-    addr.sin_port = htons(port);
-//    addr.sin_addr.s_addr = INADDR_ANY;
-    // The following replaces the line above. It forces the socket to be bound
-    // to the local interface only. Thus only the local machine will be allowed
-    // to connect to this socket.
-    addr.sin_addr.s_addr = inet_addr("127.0.0.1");
-    if (bind(s, (struct sockaddr *) &addr, sizeof(addr)) == -1)
-    {
-        errcode = CSERROR_CONNX_EXISTS;
-        return false;
-    }
-    // listen for a client at the port
-    if (listen(s, backlog) == -1)
-    {
-        errcode = CSERROR_INTERNAL;
+        c = -1;
         return false;
     }
 
@@ -539,97 +278,26 @@ bool SysServerStream::make(int port)
  *
  * @return True on an error, otherwise false
  */
-SysServerConnection *SysServerStream::connect()
+ApiConnection *SysServerSocketConnectionManager::acceptConnection()
 {
     struct sockaddr_in addr; // address structure
     socklen_t sz = sizeof(addr);
 
-    if (s == -1)
+    if (c == -1)
     {
         errcode = CSERROR_INTERNAL;
         return NULL;
     }
-    int c = accept(s, (struct sockaddr *) &addr, &sz);
-    if (c == -1)
+    int client = accept(c, (struct sockaddr *) &addr, &sz);
+    if (client == -1)
     {
         errcode = CSERROR_CONNX_FAILED;
         return NULL;
     }
 
     errcode = CSERROR_OK;
-    return new SysServerConnection(this, c);
-}
-
-
-/**
- * Close the server connection.
- *
- * @return True on an error, otherwise false
- */
-bool SysServerStream::close()
-{
-    if (s != -1)
-    {
-        ::close(s);
-        s = -1;
-    }
-    else
-    {
-        errcode = CSERROR_INTERNAL;
-        return false;
-    }
-    errcode = CSERROR_OK;
-    return true;
-}
-
-
-/**
- * Server connection constructor.
- *
- * @param s      The parent server connection.
- * @param socket The socket for the connection.
- */
-SysServerConnection::SysServerConnection(SysServerStream *s, int socket) : SysSocketConnection(socket)
-{
-    server = s;
-}
-
-/**
- * Standard destructor.
- */
-SysServerConnection::~SysServerConnection()
-{
-    disconnect();
-}
-
-
-/**
- * Is the connection with the localhost?
- *
- *
- * @return True if the client is at address 127.0.0.1, otherwise false
- */
-bool SysServerConnection::isLocalConnection()
-{
-    sockaddr_in  addr;
-    int          rc;
-    socklen_t    nameLen;
-
-    if (c == -1)
-    {
-        return false;
-    }
-    nameLen = sizeof(addr);
-    rc = getpeername(c,(struct sockaddr *)&addr,&nameLen);
-    if (rc)
-    {
-        return false;
-    }
-    if (strcmp("127.0.0.1", inet_ntoa(addr.sin_addr)) != 0)
-    {
-        return false;
-    }
-    return true;
+    // now create an object wrapper for this client connection.
+    return new SysSocketConnection(client);
 }
 
 
@@ -638,19 +306,168 @@ bool SysServerConnection::isLocalConnection()
  *
  * @return True on an error, otherwise false.
  */
-bool SysServerConnection::disconnect()
+bool SysServerSocketConnectionManager::disconnect()
 {
     if (c != -1)
     {
-        close(c);
+        ::close(c);
         c = -1;
+        // clean up service name from the file system before terminating
+        unlink(boundServiceName);
+        boundServiceName = NULL;
+        errcode = CSERROR_OK;
+        return true;
     }
     else
+    {
+        errcode = CSERROR_UNKNOWN;
+        return false;
+    }
+}
+
+
+/**
+ * Make a server connection.
+ *
+ * @param port   Port to use for the connection.
+ *
+ * @return True on an error, otherwise false
+ */
+bool SysServerLocalSocketConnectionManager::bind(const char *serviceName)
+{
+    // make sure we can get the file name for the service. If not, there
+    // is likely another instance of the daemon running.
+    if (!checkServiceName(serviceName))
     {
         errcode = CSERROR_INTERNAL;
         return false;
     }
+
+    // get a server socket
+    c = socket(AF_LOCAL, SOCK_STREAM, 0);
+    if (c == -1)
+    {
+        errcode = CSERROR_UNKNOWN;
+        return false;
+    }
+
+    // bind the server socket to a service name
+    struct sockaddr_un name; // address structure
+    name.sun_family = AF_LOCAL;
+    strncpy (name.sun_path, serviceName, sizeof (name.sun_path));
+    // make sure this is null terminated
+    name.sun_path[sizeof (name.sun_path) - 1] = '\0';
+
+    size_t size = (offsetof(sockaddr_un, sun_path)
+          + strlen (name.sun_path));
+
+    // do the bind operation
+    if (::bind(c, (struct sockaddr *) &name, size) == -1)
+    {
+        errcode = CSERROR_CONNX_EXISTS;
+        return false;
+    }
+    // listen for a client at the port
+    if (listen(c, 20) == -1)
+    {
+        errcode = CSERROR_INTERNAL;
+        return false;
+    }
+
+    // remember the service name we are bound to.
+    boundServiceName = serviceName;
     errcode = CSERROR_OK;
     return true;
 }
 
+
+/**
+ * Check for the availability of the file name used for this bound service,
+ * deleting stale versions if still there.
+ *
+ * @param serviceName
+ *               The target file path
+ *
+ * @return true if the file name is available for use, false otherwise.
+ */
+bool SysServerLocalSocketConnectionManager::checkServiceName(const char *serviceName)
+{
+    struct stat st;
+    int status = stat(serviceName, &st);
+    if (status == 0)
+    {
+       // A file already exists. Check if this file is a socket node.
+       //   * If yes: unlink it.
+       //   * If no: treat it as an error condition.
+       //
+       if ((st.st_mode & S_IFMT) == S_IFSOCK)
+       {
+          status = unlink(serviceName);
+          if (status != 0)
+          {
+              return false;
+          }
+          // unlinked the file, we're good
+          return true;
+       }
+       else
+       {
+           // we won't unlink a real file...we can't use this name.
+           return false;
+       }
+    }
+    else
+    {
+       if (errno == ENOENT)
+       {
+           // no file with our intended name, this works
+           return true;
+       }
+       else
+       {
+           // some other error, should not happen
+           return false;
+       }
+    }
+}
+
+
+/**
+ * Generate a unique string to be used for interprocess communications for this userid.
+ *
+ * @return A unique identifier used to create the named
+ *         AF_LOCAL services.
+ */
+const char *SysServerLocalSocketConnectionManager::generateServiceName()
+{
+    // if we've already generated this, we're done
+    if (userServiceName != NULL)
+    {
+        return userServiceName;
+    }
+
+    // a buffer for generating the name
+    char pipeNameBuffer[256];
+
+    // we create the file in the user's home path as a hidden file
+    const char *homePath;
+
+    // The recommended location is the XDG_RUNTIME_DIR, which will do a lot of
+    // automatic cleanup functions for us. If for some reason this env var is not
+    // set, fall back to placing this in the user's home directory
+    if ( (homePath = getenv("XDG_RUNTIME_DIR")) == NULL)
+    {
+        homePath = getpwuid(getuid())->pw_dir;
+    }
+
+    // this creates a hidden file in the user's home directory.
+    snprintf(pipeNameBuffer, sizeof(pipeNameBuffer), "%s/.ooRexx-%d.%d.%d-%s.service", homePath, ORX_VER, ORX_REL, ORX_MOD,
+#ifdef __REXX64__
+	    "64");
+#else
+		"32");
+#endif
+
+    userServiceName = strdup(pipeNameBuffer);
+    return userServiceName;
+}

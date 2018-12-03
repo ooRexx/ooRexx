@@ -42,7 +42,7 @@
 #include "rexx.h"
 #include "ServiceMessage.hpp"
 
-class SysClientStream;
+class ApiConnection;
 
 class ClientMessage : public ServiceMessage
 {
@@ -96,7 +96,7 @@ public:
     }
 
     void send();
-    void send(SysClientStream *pipe);
+    void send(ApiConnection *pipe);
 };
 
 #endif

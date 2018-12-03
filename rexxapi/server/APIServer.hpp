@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -52,12 +52,14 @@ class APIServerThread;
 class APIServer
 {
 public:
-    APIServer() : lock(), server(), serverActive(false), instances(NULL), terminatedThreads() { }
+    APIServer() : lock(), connectionManager(NULL), serverActive(false), instances(NULL), terminatedThreads() { }
     virtual ~APIServer() { ; }
+
     void terminateServer();
-    void initServer();
+    void initServer(ServerConnectionManager *c);
+
     void listenForConnections();
-    void processMessages(SysServerConnection *connection);
+    void processMessages(ApiConnection *connection);
     ServiceReturn shutdown();
     virtual bool isStoppable();
     void cleanupProcessResources(ServiceMessage &message);
@@ -72,7 +74,7 @@ public:
 protected:
 
     SysMutex  lock;                   // out server sync semaphore.
-    SysServerStream server;           // our server message pipeline
+    ServerConnectionManager *connectionManager; // our server message pipeline
     bool serverActive;                // the server is running
     APIServerInstance *instances;     // our chain of active instances
     std::list<APIServerThread *> terminatedThreads; // connection pool

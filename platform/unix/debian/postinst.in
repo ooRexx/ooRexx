@@ -1,7 +1,7 @@
 #!/bin/sh
 #/*----------------------------------------------------------------------------*/
 #/*                                                                            */
-#/* Copyright (c) 2007-2010 Rexx Language Association. All rights reserved.    */
+#/* Copyright (c) 2007-2018 Rexx Language Association. All rights reserved.    */
 #/*                                                                            */
 #/* This program and the accompanying materials are made available under       */
 #/* the terms of the Common Public License v1.0 which accompanies this         */
@@ -50,7 +50,7 @@ lib_dir=${orx_prefix}/lib
 bin_dir=${orx_prefix}/bin
 data_dir=${orx_prefix}/share/ooRexx
 
-#  On debian, we may not need to add links for the private libraries the 
+#  On debian, we may not need to add links for the private libraries the
 #  interpreter uses, they should be found automatically.  However, on some Linux
 #  distributions we do need all the links.  So, just add all of them.
 ln -sf ${lib_dir}/librexx.so ${lib_dir}/librexx.so.@ORX_SUBST_CURRENT@
@@ -88,16 +88,6 @@ ln -sf ${lib_dir}/librexxutil.so ${lib_dir}/librexxutil.so.3
 # be used like the other executables.
 ln -sf ${data_dir}/rexxtry.rex ${bin_dir}/rexxtry.rex
 
-# Debian specific set up for rxapid
-if [ -x /usr/bin/systemctl ] || [ -x /usr/sbin/systemctl ]; then
-   systemctl link /usr/share/ooRexx/rxapid.service
-   systemctl --system daemon-reload
-   systemctl start rxapid.service
-else
-   cp ${bin_dir}/rxapid       /etc/init.d
-   update-rc.d rxapid start 89 2 3 4 5 . stop 89 0 1 6 . > /dev/null 2>&1
-   /etc/init.d/rxapid start
-fi
 
 
 

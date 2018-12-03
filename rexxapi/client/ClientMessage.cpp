@@ -51,7 +51,7 @@ void ClientMessage::send()
     manager->getUserID(userid);
 
     // get an active connection to the server
-    SysClientStream *pipe = manager->getConnection();
+    ApiConnection *pipe = manager->getConnection();
 
     try
     {
@@ -75,7 +75,7 @@ void ClientMessage::send()
  *
  * @param pipe   The connection to use.
  */
-void ClientMessage::send(SysClientStream *pipe)
+void ClientMessage::send(ApiConnection *pipe)
 {
     // write the message, and wait for a response back
     writeMessage(*pipe);

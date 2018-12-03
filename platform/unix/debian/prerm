@@ -70,16 +70,4 @@ rm -f /usr/include/oorexxerrors.h
 rm -f /usr/bin/rexxtry.rex
 rm -rf /usr/share/ooRexx
 
-# Debian specific removal of rxapid
-if [ -x /usr/bin/systemctl ] || [ -x /usr/sbin/systemctl ]; then
-   systemctl stop rxapid.service
-   rm /etc/systemd/system/rxapid.service
-   systemctl --system daemon-reload
-else
-   if [ -e /etc/init.d/rxapid ]; then
-      /etc/init.d/rxapid stop
-   fi
-   rm -f /etc/init.d/rxapid
-   update-rc.d rxapid remove
-fi
 

@@ -510,8 +510,8 @@ set (common_rexxapi_sources
             ${build_rexxapi_client_platform_dir}/SysLocalAPIManager.cpp
             ${build_rexxapi_common_dir}/RegistrationTable.cpp
             ${build_rexxapi_common_dir}/ServiceMessage.cpp
+            ${build_rexxapi_common_dir}/CSStream.cpp
             ${build_rexxapi_common_platform_dir}/SysAPIManager.cpp
-            ${build_rexxapi_common_platform_dir}/SysCSStream.cpp
             ${build_rexxapi_common_platform_dir}/SysProcess.cpp
             ${build_common_dir}/Utilities.cpp
             ${build_common_platform_dir}/SysSemaphore.cpp
@@ -521,10 +521,13 @@ set (common_rexxapi_sources
 # additional source files required by specific platforms
 if (WIN32)
    set (platform_rexxapi_sources
+            ${build_rexxapi_common_platform_dir}/SysCSNamedPipeStream.cpp
             ${build_rexxapi_client_platform_dir}/rexxapi.def
             ${build_platform_dir}/verinfo.rc)
    set (platform_rexxapi_libs wsock32)
 else ()
+   set (platform_rexxapi_sources
+            ${build_rexxapi_common_platform_dir}/SysCSStream.cpp)
    set (platform_rexxapi_libs ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
 endif ()
 # Library definition
@@ -938,12 +941,14 @@ install(PROGRAMS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rexx.img COMPONENT Core DESTI
 if (WIN32)
    set (platform_rxapi_sources
             ${build_rexxapi_server_platform_dir}/APIService.cpp
+            ${build_rexxapi_common_platform_dir}/SysCSNamedPipeStream.cpp
             ${build_rexxapi_server_platform_dir}/rxapi.rc
             ${build_rexxapi_server_platform_dir}/rxapi.ico)
    set (rxapi_executable_type WIN32)
    set (platform_rxapi_libs wsock32 shlwapi)
 else ()
    set (platform_rxapi_sources
+            ${build_rexxapi_common_platform_dir}/SysCSStream.cpp
             ${build_rexxapi_server_platform_dir}/linux/APIService.cpp)
    set (platform_rxapi_libs ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
 endif ()
@@ -955,10 +960,10 @@ add_executable(rxapi ${rxapi_executable_type}
          ${build_rexxapi_server_dir}/MacroSpaceManager.cpp
          ${build_rexxapi_server_dir}/QueueManager.cpp
          ${build_rexxapi_server_dir}/RegistrationManager.cpp
+         ${build_rexxapi_common_dir}/CSStream.cpp
          ${build_rexxapi_common_dir}/RegistrationTable.cpp
          ${build_rexxapi_common_dir}/ServiceMessage.cpp
          ${build_rexxapi_common_platform_dir}/SysAPIManager.cpp
-         ${build_rexxapi_common_platform_dir}/SysCSStream.cpp
          ${build_rexxapi_common_platform_dir}/SysProcess.cpp
          ${build_common_dir}/Utilities.cpp
          ${build_common_platform_dir}/SysSemaphore.cpp
@@ -1715,11 +1720,8 @@ if (NOT WIN32)
    add_manpage (rxqueue 1)
    add_manpage (rxsubcom 1)
 
-   install(FILES rexxapi/server/platform/unix/rxapid DESTINATION ${INSTALL_EXECUTABLE_DIR} PERMISSIONS OWNER_EXECUTE GROUP_EXECUTE WORLD_EXECUTE OWNER_READ GROUP_READ WORLD_READ)
    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rexx.sh DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME} PERMISSIONS OWNER_EXECUTE GROUP_EXECUTE WORLD_EXECUTE OWNER_READ GROUP_READ WORLD_READ)
    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rexx.csh DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME} PERMISSIONS OWNER_EXECUTE GROUP_EXECUTE WORLD_EXECUTE OWNER_READ GROUP_READ WORLD_READ)
-   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rxapid.service DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME})
-   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/50-rxapid.preset DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME})
    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_samples_dir}/readme DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME})
 endif ()
 
@@ -2044,9 +2046,6 @@ if (BUILD_RPM)
    set(CPACK_RPM_PACKAGE_URL "http://www.oorexx.org/")
    set(CPACK_PACKAGE_CONTACT "sahananda@users.sf.net")
    set(CPACK_PACKAGING_INSTALL_PREXIX "${CMAKE_INSTALL_PREFIX}")
-   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/platform/unix/rpm_post.in ${CMAKE_CURRENT_SOURCE_DIR}/platform/unix/rpm_post)
-   set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/platform/unix/rpm_post)
-   set(CPACK_RPM_PRE_UNINSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/platform/unix/rpm_preun)
 # remove 'csh'-dependency as it doesn't seem to be required
 #  set(CPACK_RPM_PACKAGE_REQUIRES "csh")
    if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "s390x")

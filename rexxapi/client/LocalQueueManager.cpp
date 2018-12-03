@@ -124,9 +124,10 @@ void LocalQueueManager::terminateProcess()
         {
             deleteSessionQueue();    // try to delete this
         }
-        catch (ServiceException *)
+        catch (ServiceException *e)
         {
             // just ignore any errors here.
+            delete e;
         }
         // clear this out.
         sessionQueue = 0;

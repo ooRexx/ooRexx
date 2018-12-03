@@ -1,7 +1,7 @@
 #!/bin/sh
 #/*----------------------------------------------------------------------------*/
 #/*                                                                            */
-#/* Copyright (c) 2014-2014 Rexx Language Association. All rights reserved.    */
+#/* Copyright (c) 2014-2018 Rexx Language Association. All rights reserved.    */
 #/*                                                                            */
 #/* This program and the accompanying materials are made available under       */
 #/* the terms of the Common Public License v1.0 which accompanies this         */
@@ -36,13 +36,3 @@
 #/*                                                                            */
 #/*----------------------------------------------------------------------------*/
 
-# Debian specific set up for rxapid
-if [ -x /usr/bin/systemctl ] || [ -x /usr/sbin/systemctl ]; then
-   systemctl link @CMAKE_INSTALL_PREFIX@/share/ooRexx/rxapid.service
-   systemctl --system daemon-reload
-   systemctl start rxapid.service
-else
-   cp @INSTALL_EXECUTABLE_DIR@/rxapid       /etc/init.d
-   update-rc.d rxapid start 89 2 3 4 5 . stop 89 0 1 6 . > /dev/null 2>&1
-   /etc/init.d/rxapid start
-fi

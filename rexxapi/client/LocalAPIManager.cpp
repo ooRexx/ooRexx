@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -40,6 +40,7 @@
 #include "SysLocalAPIManager.hpp"
 #include "ClientMessage.hpp"
 #include "SynchronizedBlock.hpp"
+#include "SysThread.hpp"
 #include <list>
 #include <stdio.h>
 
@@ -159,7 +160,7 @@ void LocalAPIManager::shutdownConnections()
     // clean up the connection pools
     while (!connections.empty())
     {
-        SysClientStream *connection = connections.front();
+        ApiConnection *connection = connections.front();
         connections.pop_front();
         // tell the server we're going away and clean up
         closeConnection(connection);
@@ -229,9 +230,10 @@ void LocalAPIManager::establishServerConnection()
             connectionEstablished = true;
             return;
         }
-        catch (ServiceException *)
+        catch (ServiceException *e)
         {
-            // just fall through.
+            // just fall through, but get rid of the exception object first.
+            delete e;
         }
 
         // Unable to connect, so try to start the server process.  We're unsynchronized at this point,
@@ -239,8 +241,11 @@ void LocalAPIManager::establishServerConnection()
         // the listening port, the others will silently fail.
         SysLocalAPIManager::startServerProcess();
 
+        // give this a little time to get launched before trying to connect.
+        SysThread::sleep(50);
+
         // now loop multiple times, with a sleep interval, until we finally connect.
-        int count = 100;
+        int count = 200;
         while (count-- > 0)
         {
             try
@@ -256,10 +261,16 @@ void LocalAPIManager::establishServerConnection()
                 connectionEstablished = true;
                 return;
             }
-            catch (ServiceException *)
+            catch (ServiceException *e)
             {
                 // just fall through.
+                delete e;
             }
+
+            // use a minimal sleep time before trying again.
+            // if the server is truly casters up, this could result in a full
+            // second delay on every launch, but that really should not happen.
+            SysThread::sleep(10);
         }
         throw new ServiceException(API_FAILURE, "Object REXX API Manager could not be started.  This could be due to a version conflict!");
     }
@@ -270,7 +281,7 @@ void LocalAPIManager::establishServerConnection()
  *
  * @return An active connection to the data server.
  */
-SysClientStream *LocalAPIManager::getConnection()
+ApiConnection *LocalAPIManager::getConnection()
 {
     {
         Lock lock(messageLock);                     // make sure we single thread this
@@ -278,20 +289,14 @@ SysClientStream *LocalAPIManager::getConnection()
         // reuse it.
         if (!connections.empty())
         {
-            SysClientStream *connection = connections.front();
+            ApiConnection *connection = connections.front();
             connections.pop_front();
             return connection;
         }
     }
 
-    SysClientStream *connection = new SysClientStream();
-
-    // open the pipe to the connection->
-    if (!connection->open("localhost", REXX_API_PORT))
-    {
-        throw new ServiceException(SERVER_FAILURE, "Failure connecting to rxapi server");
-    }
-    return connection;
+    // get an appropriately configured connection from the system definitions
+    return SysLocalAPIManager::newClientConnection();
 }
 
 
@@ -300,7 +305,7 @@ SysClientStream *LocalAPIManager::getConnection()
  *
  * @param connection The returned connection.
  */
-void LocalAPIManager::returnConnection(SysClientStream *connection)
+void LocalAPIManager::returnConnection(ApiConnection *connection)
 {
     // if we've encountered an error, then just delete the connection
     if (!connection->isClean())
@@ -327,7 +332,7 @@ void LocalAPIManager::returnConnection(SysClientStream *connection)
  *
  * @param connection The connection to close.
  */
-void LocalAPIManager::closeConnection(SysClientStream *connection)
+void LocalAPIManager::closeConnection(ApiConnection *connection)
 {
     ClientMessage message(APIManager, CLOSE_CONNECTION);
 
@@ -335,9 +340,11 @@ void LocalAPIManager::closeConnection(SysClientStream *connection)
     {
         // this is a one-way message...we don't expect a reply
         message.writeMessage(*connection);
-    } catch (ServiceException *)
+    }
+    catch (ServiceException *e)
     {
         // ignored
+        delete e;
     }
     delete connection;
 }

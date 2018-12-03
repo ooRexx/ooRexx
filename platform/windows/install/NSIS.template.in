@@ -73,11 +73,6 @@
   Var Do_Upgrade_Quick_CK
   Var Do_Upgrade_Quick_CK_state
 
-  Var RxAPI_Install_Service_CK
-  Var RxAPI_Start_CK
-  Var RxAPIInstallService
-  Var RxAPIStartService
-
   Var StopRxAPI_CK
   Var StopRxAPI_CK_State
 
@@ -850,7 +845,6 @@ FunctionEnd
   Page custom InstallOptionsPage
   !insertmacro MUI_PAGE_DIRECTORY
 
-  Page custom Rxapi_Options_page Rxapi_Options_leave
   Page custom File_Associations_page File_Associations_leave
   Page custom SendTo_Items_page SendTo_Items_leave
   Page custom Associate_rexx_page Associate_rexx_leave
@@ -2108,120 +2102,6 @@ Function Finish_Page_show
 
   ${EndIf}
 
-FunctionEnd
-
-/** Rxapi_Options_page()  Custom page function.
- *
- * This function is used to display the custom page that asks the user if they
- * want to install rxapi as a service, and if they want rxapi started when the
- * installation finishes.  It checks if the user is an admin and skips the
- * page if not.  (Admin privileges are required to install a service. ? is that
- * true?)
- */
-Function Rxapi_Options_page
-
-  ${If} $IsAdminUser == 'false'
-    Abort
-  ${EndIf}
-
-  ; If doing an upgrade and rxapi was NOT previously installed as a service, we
-  ; skip this page.  If we are doing a quick upgrade and rxapi was installed as
-  ; a server, we start it automatically.
-  ${If} $DoUpgrade == 'true'
-    ${If} $RxapiIsService == 'false'
-      Abort
-    ${EndIf}
-    ${If} $DoUpgradeQuick == 'true'
-    ${andif} $RxapiIsService == 'true'
-      StrCpy $RxAPIStartService '1'
-      Abort
-    ${EndIf}
-  ${EndIf}
-
-  ${If} $DoUpgrade == 'true'
-    !insertmacro MUI_HEADER_TEXT "ooRexx rxapi is installed as a Windows Service." \
-                                 "Installation of rxapi as a service can not be changed during an upgrade, but \
-                                 you can choose whether to start the rxapi Service during installation."
-  ${else}
-    !insertmacro MUI_HEADER_TEXT "The ooRexx rxapi process." "Install rxapi as a Windows Service."
-  ${EndIf}
-
-  nsDialogs::Create /NOUNLOAD 1018
-  Pop $Dialog
-
-  ${If} $Dialog == error
-    Abort
-  ${EndIf}
-
-  ${NSD_OnBack} Rxapi_Options_leave
-
-  ${NSD_CreateLabel} 0 0 100% 80u \
-    "ooRexx starts a daemon process, rxapi.exe, the first time a Rexx program executes.  This \
-    process manages all data that can persist across interpreter invocations or is used for \
-    cross-process communications.  The rxapi process manages the Rexx data queues, the macrospace, \
-    and all of the external function, subcommand handler and exit registrations.$\n$\n\
-    On Windows, in all cases, it is best to install rxapi as a Windows service.  In Windows Vista \
-    and later operating systems, it is strongly recommmended that rxapi is always installed as a \
-    service."
-  Pop $Label_One
-
-  ${NSD_CreateCheckBox} 0 86u 100% 15u "Install rxapi as a Windows Service"
-  Pop $RxAPI_Install_Service_CK
-
-  ; If we are doing an upgrade, then we are only here if rxapi was previously
-  ; installed as a service.  If so we don't allow the user to change this.
-  ${If} $DoUpgrade == 'true'
-    ${NSD_SetState} $RxAPI_Install_Service_CK 1
-	  EnableWindow $RxAPI_Install_Service_CK 0
-	  EnableWindow $Label_One 0
-    Call PageDisableQuit
-  ${else}
-    ${NSD_SetState} $RxAPI_Install_Service_CK $RxAPIInstallService
-    ${NSD_OnClick} $RxAPI_Install_Service_CK EnableStartService
-  ${EndIf}
-
-  ${NSD_CreateCheckBox} 0 106u 100% 15u "Start the rxapi Service during installation"
-  Pop $RxAPI_Start_CK
-  ${NSD_SetState} $RxAPI_Start_CK $RxAPIStartService
-  ${If} $RxAPIInstallService == 0
-	  EnableWindow $RxAPI_Start_CK 0
-  ${EndIf}
-
-  nsDialogs::Show
-FunctionEnd
-
-/** EnableStartService()  Callback function.
- *
- * Called when the install rxap as a service check box is clicked.
- *
- * If the check box is checked, we enable the start the service check box, if it
- * is unchecked we disable the check box.
- *
- * Note: If we are doing an upgrade, then NSD_OnClick is not set.  So we don't
- *       need to worry about getting a click during an upgrade install.
- */
-Function EnableStartService
-	Pop $RxAPI_Install_Service_CK
-	${NSD_GetState} $RxAPI_Install_Service_CK $0
-
-	${If} $0 == 1
-	  EnableWindow $RxAPI_Start_CK 1
-    ${NSD_SetState} $RxAPI_Start_CK $RxAPIStartService
-	${Else}
-	  EnableWindow $RxAPI_Start_CK 0
-    ${NSD_Uncheck} $RxAPI_Start_CK
-	${EndIf}
-FunctionEnd
-
-/** Rxapi_Options_leave()  Call back function.
- *
- * Called by the installer when the user clicks Next or Back buttons on the
- * Rxapi_Options_page page.  We set the RxAPI option variables to match what the
- * user picked.
- */
-Function Rxapi_Options_leave
-  ${NSD_GetState} $RxAPI_Install_Service_CK $RxAPIInstallService
-  ${NSD_GetState} $RxAPI_Start_CK $RxAPIStartService
 FunctionEnd
 
 /** File_Associations_page()  Custom page function.
@@ -3541,27 +3421,6 @@ Function AddToPathExt
 
 FunctionEnd
 
-/** InstallRxapi()
- *
- * Installs rxapi as a service, if the user elected to do so.
- */
-Function InstallRxapi
-
-  ${If} $RxAPIInstallService == 1
-    ; User asked to install rxapi as a service.
-    DetailPrint "Installing rxapi as a Windows Service"
-    nsExec::ExecToLog "$INSTDIR\rxapi /i /s"
-    Pop $R0
-
-    ${If} $R0 == 0
-      DetailPrint "rxapi successfully installed as a Windows Service"
-      Call StartRxapi
-    ${else}
-      MessageBox MB_OK|MB_ICONEXCLAMATION|MB_TOPMOST "Failed to install rxapi as a Windows Service: $R0\n" /SD IDOK
-    ${EndIf}
-  ${EndIf}
-FunctionEnd
-
 /** CheckIsRxapiService()
  *
  * Determines if rxapi is installed as a service.  On return the variable
@@ -3609,26 +3468,6 @@ Function CheckIsRxapiRunning
       StrCpy $RxapiIsRunning 'unknown $R0'
     ${EndIf}
   ${EndIf}
-FunctionEnd
-
-/** StartRxapi()
- *
- * Starts the rxapi service process, if the user elected to do so.
- */
-Function StartRxapi
-
-  ${If} $RxAPIStartService == 1
-    ; User asked to start the rxapi service.
-    Services::SendServiceCommand 'start' 'RXAPI'
-    Pop $R0
-
-    ${If} $R0 == 'Ok'
-      DetailPrint "The rxapi service was successfully sent the start command"
-    ${else}
-      MessageBox MB_OK|MB_ICONEXCLAMATION|MB_TOPMOST "Failed to start the ooRexx rxapi service: $R0" /SD IDOK
-    ${EndIf}
-  ${EndIf}
-
 FunctionEnd
 
 /** StopRxapi()

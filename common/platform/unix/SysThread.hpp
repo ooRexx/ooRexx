@@ -89,6 +89,8 @@ public:
     bool equals(SysThread &other);
     inline size_t hash() { return (((size_t)_threadID) >> 8) * 37; }
     void waitForTermination();
+
+    static void sleep(int msecs);
     static uint64_t getMillisecondTicks()
     {
         struct timeval now;

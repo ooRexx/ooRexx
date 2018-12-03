@@ -189,3 +189,14 @@ void SysThread::waitForTermination()
         _threadID = 0;
     }
 }
+
+
+/**
+ * Platform wrapper around a simple sleep function.
+ *
+ * @param msecs  The number of milliseconds to sleep.
+ */
+void SysThread::sleep(int msecs)
+{
+    Sleep(msecs);
+}

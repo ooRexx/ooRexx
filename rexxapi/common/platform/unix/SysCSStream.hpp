@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -40,156 +40,82 @@
 #define SysCSStream_Included
 
 #include <netinet/in.h>
-
-
-// Client Server error codes
-typedef enum
-{
-    CSERROR_OK = 0,
-    CSERROR_CONNX_EXISTS,
-    CSERROR_CONNX_FAILED,
-    CSERROR_IO_FAILED,
-    CSERROR_OPEN_FAILED,
-    CSERROR_HOSTNAME_PORT,
-    CSERROR_INTERNAL,
-    CSERROR_UNKNOWN
-} CSErrorCodeT;
-
-class SysSocketConnection
-{
-public:
-    inline SysSocketConnection() : c(-1), errcode(CSERROR_OK), messageBuffer(NULL) { }
-    inline SysSocketConnection(int sock) : c(sock), errcode(CSERROR_OK), messageBuffer(NULL) { }
-    inline ~SysSocketConnection() { if (messageBuffer != NULL) { free(messageBuffer); } }
-    CSErrorCodeT getError()
-    {
-        return errcode;
-    };
-    bool read(void *buf, size_t bufsize, size_t *bytesread);
-    bool write(void *buf, size_t bufsize, size_t *byteswritten);
-    bool write(void *buf, size_t bufsize, void*buf2, size_t buf2size, size_t *byteswritten);
-
-protected:
-    enum
-    {
-        // somewhat arbitrary.  Should be large enough for "normal requests"
-        MAX_CACHED_BUFFER = 4096
-    };
-
-    char *getMessageBuffer(size_t size);
-    void returnMessageBuffer(void *);
-
-    int c; // stream socket
-    CSErrorCodeT errcode;  // error status
-    char *messageBuffer;   // a buffer for message sending
-};
-
-
-// This is the Client TCP/IP Stream class
-class SysClientStream : public SysSocketConnection
-{
-public:
-    SysClientStream();
-    SysClientStream(const char *name);
-    SysClientStream(const char *host, int port);
-    ~SysClientStream();
-    CSErrorCodeT getError()
-    {
-        return errcode;
-    };
-    bool open(const char *);
-    bool open(const char *, int);
-    bool close();
-    // the following APIs are usually not used but are here for completeness
-    // they should be called prior to calling the Open method
-    void setDomain(int newdomain)
-    {
-        domain = newdomain;
-    };
-    void setType(int newtype)
-    {
-        type = newtype;
-    };
-    void setProtocol(int newprotocol)
-    {
-        protocol = newprotocol;
-    };
-    inline bool isClean()
-    {
-        return errcode == CSERROR_OK;
-    }
-
-protected:
-    int domain; // the socket domain
-    int type; // the socket type
-    int protocol; // the socket protocol
-};
-
-class SysServerStream;
+#include "CSStream.hpp"
 
 /**
- * Class to manage a single instance of a server connection.
- * These are created any time a server stream object accepts
- * a connection.
+ * A socket implementation of a CSStream for Unix. This is a
+ * base class that reads writes to a socket independently of how
+ * the socket is instantiate.
  */
-class SysServerConnection : public SysSocketConnection
+class SysSocketConnection : public ApiConnection
 {
 public:
-    SysServerConnection(SysServerStream *s, int socket);
-    ~SysServerConnection();
+    inline SysSocketConnection() : c(-1), ApiConnection() { }
+    inline SysSocketConnection(int sock) : c(sock), ApiConnection() { }
+    inline ~SysSocketConnection() { }
 
-    bool isLocalConnection();
-    bool disconnect();
+    virtual bool read(void *buf, size_t bufsize, size_t *bytesread);
+    virtual bool write(void *buf, size_t bufsize, size_t *byteswritten);
+    virtual bool write(void *buf, size_t bufsize, void*buf2, size_t buf2size, size_t *byteswritten);
+
+    virtual bool disconnect();
 
 protected:
-    SysServerStream *server;
+    int c; // stream socket
 };
 
-// This is the Server TCP/IP Stream class
-class SysServerStream
-{
-protected:
-    CSErrorCodeT errcode;
-    int s;      // server socket
-    int domain; // the socket domain
-    int type; // the socket type
-    int protocol; // the socket protocol
-    int backlog; // backlog for connecting clients
 
+/**
+ * This is the client stream for an AF_LOCAL style connection.
+ */
+class SysLocalSocketConnection : public SysSocketConnection
+{
 public:
-    SysServerStream();
-    SysServerStream(const char *name);
-    SysServerStream(int port);
-    ~SysServerStream();
-    CSErrorCodeT getError()
-    {
-        return errcode;
-    };
-    bool make(const char *);
-    bool make(int);
-    SysServerConnection *connect();
-    bool close();
-    // the following APIs are usually not used but are here for completeness
-    // they should be called prior to calling the Make method
-    inline void setDomain(int newdomain)
-    {
-        domain = newdomain;
-    };
-    inline void setType(int newtype)
-    {
-        type = newtype;
-    };
-    inline void setProtocol(int newprotocol)
-    {
-        protocol = newprotocol;
-    };
-    inline void setBackLog(int newbacklog)
-    {
-        backlog = newbacklog;
-    };
-    inline bool isClean()
-    {
-        return errcode == CSERROR_OK;
-    }
+    SysLocalSocketConnection() : SysSocketConnection() { };
+    SysLocalSocketConnection(const char *service);
+    ~SysLocalSocketConnection() { };
+
+    bool connect(const char *serviceName);
+};
+
+
+/**
+ * Base class for all socket-based server connections. The subclasses
+ * provide all of the setup around the socket.
+ */
+class SysServerSocketConnectionManager : public ServerConnectionManager
+{
+public:
+    inline SysServerSocketConnectionManager() : c(-1) { }
+    inline ~SysServerSocketConnectionManager() { }
+
+    virtual bool disconnect();
+    virtual ApiConnection *acceptConnection();
+
+protected:
+    int c; // stream socket
+    const char *boundServiceName;        // the service we are bound to
+};
+
+/**
+ * Implementation class for a socket connection bound to
+ * an AF_LOCAL stream
+ */
+class SysServerLocalSocketConnectionManager : public SysServerSocketConnectionManager
+{
+public:
+    inline SysServerLocalSocketConnectionManager() { }
+    inline ~SysServerLocalSocketConnectionManager() { }
+
+    bool bind(const char *serviceName);
+
+    static const char *generateServiceName();
+
+protected:
+
+    bool checkServiceName(const char *serviceName);
+
+    const char *boundServiceName;        // the service name this instance is bound to.
+    static const char *userServiceName;  // the standard service name generated for each user.
 };
 #endif

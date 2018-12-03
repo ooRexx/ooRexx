@@ -41,6 +41,7 @@
 #endif
 
 #include "SysLocalAPIManager.hpp"
+#include "SysCSStream.hpp"
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -49,6 +50,9 @@
 #include <sys/stat.h>
 
 
+/**
+ * Start the rxapi daemon process.
+ */
 void SysLocalAPIManager::startServerProcess()
 {
     char apiExeName[] = "rxapi";
@@ -56,15 +60,19 @@ void SysLocalAPIManager::startServerProcess()
     apiExeArg[0] = apiExeName;
     apiExeArg[1] = NULL;
 
-	if (signal(SIGPIPE, SIG_IGN) == SIG_ERR) {
+	if (signal(SIGPIPE, SIG_IGN) == SIG_ERR)
+    {
 		return;
 	}
 
 	pid_t pid = fork();
-	if (pid < 0) {
+	if (pid < 0)
+    {
         throw new ServiceException(API_FAILURE, "Unable to start API server");
 	}
-	if (pid != 0) {
+
+	if (pid != 0)
+    {
         // we are the parent process
 		return;
 	}
@@ -76,12 +84,14 @@ void SysLocalAPIManager::startServerProcess()
     // housekeeping - chdir to the root subdir and close all open files
 	int ignore = chdir("/");
 	umask(0);
-	for(int i = 0; i < 1024; i++) {
+	for(int i = 0; i < 1024; i++)
+    {
 		close(i);
 	}
 
     // now start rxapi
-    if (execvp(apiExeName, apiExeArg) == -1) {
+    if (execvp(apiExeName, apiExeArg) == -1)
+    {
         throw new ServiceException(API_FAILURE, "Unable to start API server");
     }
 
@@ -123,5 +133,26 @@ void SysLocalAPIManager::setActiveSessionQueue(QueueHandle sessionQueue)
     // set this as an environment variable for programs we call
     sprintf(envbuffer, "%p", (void *)sessionQueue);
     setenv("RXQUEUESESSION", envbuffer, 1); // overwrite the old value
+}
+
+
+/**
+ * Create a new connection instance of the appropiate type for
+ * connection to the daemon process.
+ *
+ * @return A connection instance.
+ */
+ApiConnection *SysLocalAPIManager::newClientConnection()
+{
+    SysLocalSocketConnection *connection = new SysLocalSocketConnection();
+
+    // open the pipe to the server
+    if (!connection->connect(SysServerLocalSocketConnectionManager::generateServiceName()))
+    {
+        // don't leak memory!
+        delete connection;
+        throw new ServiceException(SERVER_FAILURE, "Failure connecting to rxapi server");
+    }
+    return connection;
 }
 

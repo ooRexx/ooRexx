@@ -181,3 +181,14 @@ void SysThread::waitForTermination()
     }
 }
 
+
+/**
+ * Platform wrapper around a simple sleep function.
+ *
+ * @param msecs  The number of milliseconds to sleep.
+ */
+void SysThread::sleep(int msecs)
+{
+    // usleep uses micro seconds, so we need to multiply.
+    usleep(msecs*1000);
+}

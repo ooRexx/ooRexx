@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -48,13 +48,10 @@
 /**
  * Initialize the server side of the operation.
  */
-void APIServer::initServer()
+void APIServer::initServer(ServerConnectionManager *c)
 {
-    // able to initialize our communications pipe?
-    if (!server.make(REXX_API_PORT))
-    {
-        throw new ServiceException(SERVER_FAILURE, "RexxAPIServer::initServer() Failure creating server stream");
-    }
+    // get our communications pipeline
+    connectionManager = c;
 
     lock.create(true);         // create the mutex.
     serverActive = true;
@@ -67,7 +64,9 @@ void APIServer::initServer()
 void APIServer::terminateServer()
 {
     // flip the sign over to the closed side.
-    server.close();
+    connectionManager->disconnect();
+    delete connectionManager;
+    connectionManager = NULL;
     serverActive = false;
 }
 
@@ -84,7 +83,7 @@ void APIServer::listenForConnections()
     while (serverActive)
     {
         // get a new connection.
-        SysServerConnection *connection = server.connect();
+        ApiConnection *connection = connectionManager->acceptConnection();
         // we might have some terminated threads waiting
         // for final resource cleanup...this is a good place to
         // check for this.
@@ -141,7 +140,7 @@ void APIServer::cleanupTerminatedSessions()
  * message is handled through to completion, so the message
  * queue is the synchronization point.
  */
-void APIServer::processMessages(SysServerConnection *connection)
+void APIServer::processMessages(ApiConnection *connection)
 {
     while (serverActive)
     {
@@ -150,7 +149,8 @@ void APIServer::processMessages(SysServerConnection *connection)
         {
             // read the message.
             message.readMessage(connection);
-        } catch (ServiceException *e)
+        }
+        catch (ServiceException *e)
         {
             // an error here is likely caused by the client closing the connection.
             // delete both the exception and the connection and terminate the thread.

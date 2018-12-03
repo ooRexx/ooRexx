@@ -65,7 +65,7 @@ ServiceMessage::ServiceMessage()
  *
  * @param server The server stream that has already received a connection message.
  */
-void ServiceMessage::readMessage(SysServerConnection *connection)
+void ServiceMessage::readMessage(ApiConnection *connection)
 {
     size_t actual = 0;
     size_t required = sizeof(ServiceMessage);
@@ -117,7 +117,7 @@ void ServiceMessage::readMessage(SysServerConnection *connection)
  *
  * @param server The server message stream used to receive the original message.
  */
-void ServiceMessage::writeResult(SysServerConnection *connection)
+void ServiceMessage::writeResult(ApiConnection *connection)
 {
     size_t expected = sizeof(ServiceMessage) + messageDataLength;
     size_t actual = 0;
@@ -138,7 +138,7 @@ void ServiceMessage::writeResult(SysServerConnection *connection)
  *
  * @param pipe   The pipe we've opened to write the message.
  */
-void ServiceMessage::writeMessage(SysClientStream &pipe)
+void ServiceMessage::writeMessage(ApiConnection &pipe)
 {
     size_t actual = 0;
     size_t expected = sizeof(ServiceMessage) + messageDataLength;
@@ -157,7 +157,7 @@ void ServiceMessage::writeMessage(SysClientStream &pipe)
  *
  * @param pipe   The connection used to send the original message.
  */
-void ServiceMessage::readResult(SysClientStream &pipe)
+void ServiceMessage::readResult(ApiConnection &pipe)
 {
     size_t actual = 0;
     size_t required = sizeof(ServiceMessage);

@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -170,76 +170,26 @@ bool SysSocketConnection::write(void *buf, size_t bufsize, void *buf2, size_t bu
     return true;
 }
 
+
 /**
- * Get a buffer for sending a buffered message.
+ * Close the server connection.
  *
- * @param size   The required size.
- *
- * @return A pointer to a buffer, or NULL if unable to allocate.
+ * @return True on an error, otherwise false
  */
-char *SysSocketConnection::getMessageBuffer(size_t size)
+bool SysSocketConnection::disconnect()
 {
-    // if larger than our cached buffer, return
-    if (size > MAX_CACHED_BUFFER)
+    if (c != -1)
     {
-        char *buffer = (char *)malloc(size);
-        if (buffer == NULL)
-        {
-            throw new ServiceException(SERVER_FAILURE, "Error allocating message buffer");
-        }
-        return buffer;
+        closesocket(c);
+        c = -1;
+        errcode = CSERROR_OK;
+        return true;
     }
-    // use our cached buffer, allocating it if required.
-    if (messageBuffer == NULL)
+    else
     {
-        messageBuffer = (char *)malloc(MAX_CACHED_BUFFER);
-        if (messageBuffer == NULL)
-        {
-            throw new ServiceException(SERVER_FAILURE, "Error allocating message buffer");
-        }
+        errcode = CSERROR_INTERNAL;
+        return false;
     }
-    return messageBuffer;
-}
-
-
-/**
- * Return a message buffer after sending a message.  This will
- * either cache the buffer, or release it, depending upon
- * how it was obtained in the first place.
- *
- * @param buffer The buffer to release.
- */
-void SysSocketConnection::returnMessageBuffer(void *buffer)
-{
-    if (buffer != messageBuffer)
-    {
-        free(buffer);
-    }
-}
-
-
-/**
- * Standard constructor.
- */
-SysClientStream::SysClientStream() : SysSocketConnection()
-{
-    domain = AF_INET;
-    type = SOCK_STREAM;
-    protocol = 0;
-}
-
-
-/**
- * Alternate constructor.
- *
- * @param name   Hostname and port in the form "hostname:port".
- */
-SysClientStream::SysClientStream(const char *name) : SysSocketConnection()
-{
-    domain = AF_INET;
-    type = SOCK_STREAM;
-    protocol = 0;
-    open(name);
 }
 
 
@@ -249,60 +199,9 @@ SysClientStream::SysClientStream(const char *name) : SysSocketConnection()
  * @param host   String name of the host.
  * @param port   Target port number.
  */
-SysClientStream::SysClientStream(const char *host, int port) : SysSocketConnection()
+SysInetSocketConnection::SysInetSocketConnection(const char *host, int port) : SysSocketConnection()
 {
-    domain = AF_INET;
-    type = SOCK_STREAM;
-    protocol = 0;
-    open(host, port);
-}
-
-
-/**
- * Standard destructor.
- */
-SysClientStream::~SysClientStream()
-{
-    if (c != -1)
-    {
-        close();
-    }
-}
-
-
-/**
- * Open a connection to a host/port.
- *
- * @param name   Hostname and port in the form "hostname:port".
- *
- * @return True on an error, otherwise false.
- */
-bool SysClientStream::open(const char *name)
-{
-    // copy the host name so we can separate the host and port values.
-    char *hostname = strdup(name);
-
-    char *portstr = strstr(hostname, ":");
-    if (portstr == NULL)
-    {
-        free(hostname);
-        errcode = CSERROR_HOSTNAME_PORT;
-        return false;
-    }
-    // split the two pieces with a null terminator.
-    *portstr = '\0';
-    portstr++;
-    int port = atoi(portstr);
-    if (port == 0)
-    {
-        free(hostname);
-        errcode = CSERROR_HOSTNAME_PORT;
-        return false;
-    }
-    // do the open and free the temp name value.
-    bool result = open(hostname, port);
-    free(hostname);
-    return result;
+    connect(host, port);
 }
 
 
@@ -314,7 +213,7 @@ bool SysClientStream::open(const char *name)
  *
  * @return True on an error, otherwise false.
  */
-bool SysClientStream::open(const char *host, int port)
+bool SysInetSocketConnection::connect(const char *host, int port)
 {
     struct sockaddr_in addr; // address structure
     struct hostent *phe; // pointer to a host entry
@@ -326,8 +225,15 @@ bool SysClientStream::open(const char *host, int port)
         errcode = CSERROR_UNKNOWN;
     }
 
+    // make sure we're not already connected.
+    if (c != -1)
+    {
+        errcode = CSERROR_ALREADY_CONNECTED;
+        return false;
+    }
+
     // get a socket
-    c = socket(domain, type, protocol);
+    c = socket(AF_INET, SOCK_STREAM, 0);
     if (c == -1)
     {
         errcode = CSERROR_INTERNAL;
@@ -350,181 +256,13 @@ bool SysClientStream::open(const char *host, int port)
         return false;
     }
     // connect to the remote host
-    addr.sin_family = domain;
+    addr.sin_family = AF_INET;
     addr.sin_port = htons(port);
-    if (connect(c, (struct sockaddr *) &addr, sizeof(addr)) == -1)
+    if (::connect(c, (struct sockaddr *) &addr, sizeof(addr)) == -1)
     {
         errcode = CSERROR_OPEN_FAILED;
         closesocket(c);
-        return false;
-    }
-
-    errcode = CSERROR_OK;
-    return true;
-}
-
-
-/**
- * Close the connection to the host.
- *
- * @return True on an error, otherwise false.
- */
-bool SysClientStream::close()
-{
-    if (c != -1)
-    {
-        closesocket(c);
-    }
-    else
-    {
-        errcode = CSERROR_UNKNOWN;
-        return false;
-    }
-    c = -1;
-    errcode = CSERROR_OK;
-    return true;
-}
-
-
-/**
- * Standard constructor.
- */
-SysServerStream::SysServerStream()
-{
-    errcode = CSERROR_OK;
-    s = -1;
-    domain = AF_INET;
-    type = SOCK_STREAM;
-    protocol = 0;
-    backlog = 20;
-}
-
-
-/**
- * Alternate constructor.
- *
- * @param name   Hostname and port in the form "hostname:port".
- */
-SysServerStream::SysServerStream(const char *name)
-{
-    errcode = CSERROR_OK;
-    s = -1;
-    domain = AF_INET;
-    type = SOCK_STREAM;
-    protocol = 0;
-    backlog = 20;
-    make(name);
-}
-
-
-/**
- * Alternate constructor.
- *
- * @param port   Port number to listen on.
- */
-SysServerStream::SysServerStream(int port)
-{
-    errcode = CSERROR_OK;
-    s = -1;
-    domain = AF_INET;
-    type = SOCK_STREAM;
-    protocol = 0;
-    backlog = 20;
-    make(port);
-}
-
-
-/**
- * Standard destructor.
- */
-SysServerStream::~SysServerStream()
-{
-    // close our server connection.
-    close();
-}
-
-
-/**
- * Make a sever connection.
- *
- * @param name   Hostname and port in the form "hostname:port".
- *
- * @return True on an error, otherwise false
- */
-bool SysServerStream::make(const char *name)
-{
-    char *hostname;
-    char *portstr;
-    int port;
-
-    // get host name and port strings
-    hostname = strdup(name);
-    portstr = strstr(hostname, ":");
-    if (portstr == NULL)
-    {
-        free(hostname);
-        errcode = CSERROR_HOSTNAME_PORT;
-        return false;
-    }
-    *portstr = '\0';
-    portstr++;
-    port = atoi(portstr);
-    free(hostname);
-    if (port == 0)
-    {
-        errcode = CSERROR_HOSTNAME_PORT;
-        return false;
-    }
-    return make(port);
-}
-
-
-/**
- * Make a server connection.
- *
- * @param port   Port to use for the connection.
- *
- * @return True on an error, otherwise false
- */
-bool SysServerStream::make(int port)
-{
-    struct sockaddr_in addr; // address structure
-    int so_reuseaddr = true; // socket reuse flag
-    WSADATA wsaData;
-
-    // initialize Win sockets
-    if (WSAStartup(MAKEWORD(2,0), &wsaData))
-    {
-        errcode = CSERROR_UNKNOWN;
-    }
-    // get a server socket
-    s = socket(domain, type, protocol);
-    if (s == -1)
-    {
-        errcode = CSERROR_UNKNOWN;
-        return false;
-    }
-    // set the socket option to reuse the address
-    setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (char *)&so_reuseaddr,
-        sizeof(so_reuseaddr));
-    // bind the server socket to a port
-    memset(&addr, 0, sizeof (addr));
-    addr.sin_family = domain;
-    addr.sin_port = htons(port);
-//    addr.sin_addr.s_addr = INADDR_ANY;
-    // The following replaces the line above. It forces the socket to be bound
-    // to the local interface only. Thus only the local machine will be allowed
-    // to connect to this socket.
-    addr.sin_addr.s_addr = inet_addr("127.0.0.1");
-    if (bind(s, (struct sockaddr *) &addr, sizeof(addr)) == -1)
-    {
-        errcode = CSERROR_CONNX_EXISTS;
-        return false;
-    }
-    // listen for a client at the port
-    if (listen(s, backlog) == -1)
-    {
-        errcode = CSERROR_INTERNAL;
+        c = -1;
         return false;
     }
 
@@ -538,17 +276,17 @@ bool SysServerStream::make(int port)
  *
  * @return True on an error, otherwise false
  */
-SysServerConnection *SysServerStream::connect()
+ApiConnection *SysServerSocketConnectionManager::acceptConnection()
 {
     struct sockaddr_in addr; // address structure
     int sz = sizeof(addr);
 
-    if (s == -1)
+    if (c == -1)
     {
         errcode = CSERROR_INTERNAL;
         return NULL;
     }
-    SOCKET client = accept(s, (struct sockaddr *) &addr, &sz);
+    SOCKET client = accept(c, (struct sockaddr *) &addr, &sz);
     if (client == -1)
     {
         errcode = CSERROR_CONNX_FAILED;
@@ -556,98 +294,81 @@ SysServerConnection *SysServerStream::connect()
     }
 
     errcode = CSERROR_OK;
-    return new SysServerConnection(this, client);
+    // now create an object wrapper for this client connection.
+    return new SysSocketConnection(client);
 }
 
 
 /**
- * Close the server connection.
+ * Close the connection to the host.
  *
- * @return True on an error, otherwise false
+ * @return True on an error, otherwise false.
  */
-bool SysServerStream::close()
-{
-    if (s != -1)
-    {
-        closesocket(s);
-        s = -1;
-    }
-    else
-    {
-        errcode = CSERROR_INTERNAL;
-        return false;
-    }
-    errcode = CSERROR_OK;
-    return true;
-}
-
-
-/**
- * Server connection constructor.
- *
- * @param s      The parent server connection.
- * @param socket The socket for the connection.
- */
-SysServerConnection::SysServerConnection(SysServerStream *s, SOCKET socket) : SysSocketConnection(socket)
-{
-    server = s;
-}
-
-/**
- * Standard destructor.
- */
-SysServerConnection::~SysServerConnection()
-{
-    disconnect();
-}
-
-
-/**
- * Is the connection with the localhost?
- *
- *
- * @return True if the client is at address 127.0.0.1, otherwise false
- */
-bool SysServerConnection::isLocalConnection()
-{
-    sockaddr_in  addr;
-    int          rc;
-
-    if (c == -1)
-    {
-        return false;
-    }
-    int nameLen = sizeof(addr);
-    rc = getpeername(c, (struct sockaddr *)&addr, &nameLen);
-    if (rc)
-    {
-        return false;
-    }
-    if (strcmp("127.0.0.1", inet_ntoa(addr.sin_addr)) != 0)
-    {
-        return false;
-    }
-    return true;
-}
-
-
-/**
- * Close the server connection.
- *
- * @return True on an error, otherwise false
- */
-bool SysServerConnection::disconnect()
+bool SysServerSocketConnectionManager::disconnect()
 {
     if (c != -1)
     {
         closesocket(c);
         c = -1;
+        errcode = CSERROR_OK;
+        return true;
     }
     else
+    {
+        errcode = CSERROR_UNKNOWN;
+        return false;
+    }
+}
+
+
+/**
+ * Make a server connection.
+ *
+ * @param port   Port to use for the connection.
+ *
+ * @return True on an error, otherwise false
+ */
+bool SysServerInetSocketConnectionManager::bind(int port)
+{
+    struct sockaddr_in addr; // address structure
+    int so_reuseaddr = true; // socket reuse flag
+    WSADATA wsaData;
+
+    // initialize Win sockets
+    if (WSAStartup(MAKEWORD(2,0), &wsaData))
+    {
+        errcode = CSERROR_UNKNOWN;
+    }
+    // get a server socket
+    c = socket(AF_INET, SOCK_STREAM, 0);
+    if (c == -1)
+    {
+        errcode = CSERROR_UNKNOWN;
+        return false;
+    }
+    // set the socket option to reuse the address
+    setsockopt(c, SOL_SOCKET, SO_REUSEADDR, (char *)&so_reuseaddr,
+        sizeof(so_reuseaddr));
+    // bind the server socket to a port
+    memset(&addr, 0, sizeof (addr));
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(port);
+    // This forces the socket to be bound
+    // to the local interface only. Thus only the local machine will be allowed
+    // to connect to this socket.
+    addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    if (::bind(c, (struct sockaddr *) &addr, sizeof(addr)) == -1)
+    {
+        errcode = CSERROR_CONNX_EXISTS;
+        return false;
+    }
+    // listen for a client at the port
+    if (listen(c, 20) == -1)
     {
         errcode = CSERROR_INTERNAL;
         return false;
     }
+
     errcode = CSERROR_OK;
     return true;
 }

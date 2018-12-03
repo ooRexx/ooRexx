@@ -154,7 +154,9 @@ Var UninstLog
   !define MUI_PAGE_CUSTOMFUNCTION_SHOW Directory_Page_show
   !insertmacro MUI_PAGE_DIRECTORY
 
+  /* rxapi service stuff no longer applies
   Page custom Rxapi_Options_page Rxapi_Options_leave
+  */
   Page custom File_Associations_page File_Associations_leave
   Page custom SendTo_Items_page SendTo_Items_leave
   Page custom Associate_rexx_page Associate_rexx_leave
@@ -388,18 +390,6 @@ Section "${LONGNAME} Core (required)" SecMain
 
     ; Set the environment variables, PATH, REXX_HOME, etc..
     Call DoEnvVariables
-
-    ; If an administrator, install rxapi as a service depending on what the user
-    ; selected.
-    ${If} $IsAdminUser == "true"
-      Call InstallRxapi
-    ${EndIf}
-  ${else}
-    ; We are doing an upgrade, but if rxapi was installed as a service
-    ; previously, the user has the choice of starting it.
-    ${If} $RxapiIsService == 'true'
-      Call StartRxapi
-    ${EndIf}
   ${EndIf}
 
 
@@ -3558,6 +3548,8 @@ FunctionEnd
  */
 Function InstallRxapi
 
+/*
+  rxapi no longer runs as a service, so we never install
   ${If} $RxAPIInstallService == 1
     ; User asked to install rxapi as a service.
     DetailPrint "Installing rxapi as a Windows Service"
@@ -3571,6 +3563,7 @@ Function InstallRxapi
       MessageBox MB_OK|MB_ICONEXCLAMATION|MB_TOPMOST "Failed to install rxapi as a Windows Service: $R0\n" /SD IDOK
     ${EndIf}
   ${EndIf}
+ */
 FunctionEnd
 
 /** CheckIsRxapiService()
@@ -3628,6 +3621,7 @@ FunctionEnd
  */
 Function StartRxapi
 
+  /*
   ${If} $RxAPIStartService == 1
     ; User asked to start the rxapi service.
     Services::SendServiceCommand 'start' 'RXAPI'
@@ -3640,6 +3634,7 @@ Function StartRxapi
     ${EndIf}
   ${EndIf}
 
+  */
 FunctionEnd
 
 /** StopRxapi()

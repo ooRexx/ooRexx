@@ -169,7 +169,6 @@ Var UninstLog
   !define MUI_PAGE_CUSTOMFUNCTION_SHOW Directory_Page_show
   !insertmacro MUI_PAGE_DIRECTORY
 
-  Page custom Rxapi_Options_page Rxapi_Options_leave
   Page custom File_Associations_page File_Associations_leave
   Page custom SendTo_Items_page SendTo_Items_leave
   Page custom Associate_rexx_page Associate_rexx_leave
@@ -242,11 +241,6 @@ Var Do_Upgrade_Type_CK
 Var Do_Upgrade_Type_CK_state
 Var Do_Upgrade_Quick_CK
 Var Do_Upgrade_Quick_CK_state
-
-Var RxAPI_Install_Service_CK
-Var RxAPI_Start_CK
-Var RxAPIInstallService
-Var RxAPIStartService
 
 Var StopRxAPI_CK
 Var StopRxAPI_CK_State
@@ -344,18 +338,6 @@ Section "${LONGNAME} Core (required)" SecMain
 
     ; Set the environment variables, PATH, REXX_HOME, etc..
     Call DoEnvVariables
-
-    ; If an administrator, install rxapi as a service depending on what the user
-    ; selected.
-    ${If} $IsAdminUser == "true"
-      Call InstallRxapi
-    ${EndIf}
-  ${else}
-    ; We are doing an upgrade, but if rxapi was installed as a service
-    ; previously, the user has the choice of starting it.
-    ${If} $RxapiIsService == 'true'
-      Call StartRxapi
-    ${EndIf}
   ${EndIf}
 
 
@@ -500,11 +482,6 @@ Function .onInit
   Pop $IsAdminUser
   ${If} $IsAdminUser == "true"
     SetShellVarContext all
-    StrCpy $RxAPIInstallService ${BST_CHECKED}
-    StrCpy $RxAPIStartService ${BST_CHECKED}
-  ${else}
-    StrCpy $RxAPIInstallService ${BST_UNCHECKED}
-    StrCpy $RxAPIStartService ${BST_UNCHECKED}
   ${EndIf}
 
   ReadRegStr $RegVal_uninstallString HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "UninstallString"
@@ -523,9 +500,7 @@ Function .onInit
   ; When the uninstaller and current installer are for different addressing
   ; modes, we have had reports of problems.  We try to prevent that by giving
   ; the user the chance to uninstall separately, then rerun the installer.  This
-  ; can only happen if the current platform is 64-bit.  And, I think it can only
-  ; happen if rxapi is *not* installed as a service.  We check for the former,
-  ; but not the later.
+  ; can only happen if the current platform is 64-bit.
   ${If} ${RunningX64}
     Call CheckBitnessMatch
     ${If} $UserRequestAbort == 'true'
@@ -1209,120 +1184,6 @@ Function Finish_Page_show
 
   ${EndIf}
 
-FunctionEnd
-
-/** Rxapi_Options_page()  Custom page function.
- *
- * This function is used to display the custom page that asks the user if they
- * want to install rxapi as a service, and if they want rxapi started when the
- * installation finishes.  It checks if the user is an admin and skips the
- * page if not.  (Admin privileges are required to install a service. ? is that
- * true?)
- */
-Function Rxapi_Options_page
-
-  ${If} $IsAdminUser == 'false'
-    Abort
-  ${EndIf}
-
-  ; If doing an upgrade and rxapi was NOT previously installed as a service, we
-  ; skip this page.  If we are doing a quick upgrade and rxapi was installed as
-  ; a server, we start it automatically.
-  ${If} $DoUpgrade == 'true'
-    ${If} $RxapiIsService == 'false'
-      Abort
-    ${EndIf}
-    ${If} $DoUpgradeQuick == 'true'
-    ${andif} $RxapiIsService == 'true'
-      StrCpy $RxAPIStartService '1'
-      Abort
-    ${EndIf}
-  ${EndIf}
-
-  ${If} $DoUpgrade == 'true'
-    !insertmacro MUI_HEADER_TEXT "ooRexx rxapi is installed as a Windows Service." \
-                                 "Installation of rxapi as a service can not be changed during an upgrade, but \
-                                 you can choose whether to start the rxapi Service during installation."
-  ${else}
-    !insertmacro MUI_HEADER_TEXT "The ooRexx rxapi process." "Install rxapi as a Windows Service."
-  ${EndIf}
-
-  nsDialogs::Create /NOUNLOAD 1018
-  Pop $Dialog
-
-  ${If} $Dialog == error
-    Abort
-  ${EndIf}
-
-  ${NSD_OnBack} Rxapi_Options_leave
-
-  ${NSD_CreateLabel} 0 0 100% 80u \
-    "ooRexx starts a daemon process, rxapi.exe, the first time a Rexx program executes.  This \
-    process manages all data that can persist across interpreter invocations or is used for \
-    cross-process communications.  The rxapi process manages the Rexx data queues, the macrospace, \
-    and all of the external function, subcommand handler and exit registrations.$\n$\n\
-    On Windows, in all cases, it is best to install rxapi as a Windows service.  In Windows Vista \
-    and later operating systems, it is strongly recommmended that rxapi is always installed as a \
-    service."
-  Pop $Label_One
-
-  ${NSD_CreateCheckBox} 0 86u 100% 15u "Install rxapi as a Windows Service"
-  Pop $RxAPI_Install_Service_CK
-
-  ; If we are doing an upgrade, then we are only here if rxapi was previously
-  ; installed as a service.  If so we don't allow the user to change this.
-  ${If} $DoUpgrade == 'true'
-    ${NSD_SetState} $RxAPI_Install_Service_CK 1
-	  EnableWindow $RxAPI_Install_Service_CK 0
-	  EnableWindow $Label_One 0
-    Call PageDisableQuit
-  ${else}
-    ${NSD_SetState} $RxAPI_Install_Service_CK $RxAPIInstallService
-    ${NSD_OnClick} $RxAPI_Install_Service_CK EnableStartService
-  ${EndIf}
-
-  ${NSD_CreateCheckBox} 0 106u 100% 15u "Start the rxapi Service during installation"
-  Pop $RxAPI_Start_CK
-  ${NSD_SetState} $RxAPI_Start_CK $RxAPIStartService
-  ${If} $RxAPIInstallService == 0
-	  EnableWindow $RxAPI_Start_CK 0
-  ${EndIf}
-
-  nsDialogs::Show
-FunctionEnd
-
-/** EnableStartService()  Callback function.
- *
- * Called when the install rxap as a service check box is clicked.
- *
- * If the check box is checked, we enable the start the service check box, if it
- * is unchecked we disable the check box.
- *
- * Note: If we are doing an upgrade, then NSD_OnClick is not set.  So we don't
- *       need to worry about getting a click during an upgrade install.
- */
-Function EnableStartService
-	Pop $RxAPI_Install_Service_CK
-	${NSD_GetState} $RxAPI_Install_Service_CK $0
-
-	${If} $0 == 1
-	  EnableWindow $RxAPI_Start_CK 1
-    ${NSD_SetState} $RxAPI_Start_CK $RxAPIStartService
-	${Else}
-	  EnableWindow $RxAPI_Start_CK 0
-    ${NSD_Uncheck} $RxAPI_Start_CK
-	${EndIf}
-FunctionEnd
-
-/** Rxapi_Options_leave()  Call back function.
- *
- * Called by the installer when the user clicks Next or Back buttons on the
- * Rxapi_Options_page page.  We set the RxAPI option variables to match what the
- * user picked.
- */
-Function Rxapi_Options_leave
-  ${NSD_GetState} $RxAPI_Install_Service_CK $RxAPIInstallService
-  ${NSD_GetState} $RxAPI_Start_CK $RxAPIStartService
 FunctionEnd
 
 /** File_Associations_page()  Custom page function.
@@ -2704,27 +2565,6 @@ Function AddToPathExt
 
 FunctionEnd
 
-/** InstallRxapi()
- *
- * Installs rxapi as a service, if the user elected to do so.
- */
-Function InstallRxapi
-
-  ${If} $RxAPIInstallService == 1
-    ; User asked to install rxapi as a service.
-    DetailPrint "Installing rxapi as a Windows Service"
-    nsExec::ExecToLog "$INSTDIR\rxapi /i /s"
-    Pop $R0
-
-    ${If} $R0 == 0
-      DetailPrint "rxapi successfully installed as a Windows Service"
-      Call StartRxapi
-    ${else}
-      MessageBox MB_OK|MB_ICONEXCLAMATION|MB_TOPMOST "Failed to install rxapi as a Windows Service: $R0\n" /SD IDOK
-    ${EndIf}
-  ${EndIf}
-FunctionEnd
-
 /** CheckIsRxapiService()
  *
  * Determines if rxapi is installed as a service.  On return the variable
@@ -2772,26 +2612,6 @@ Function CheckIsRxapiRunning
       StrCpy $RxapiIsRunning 'unknown $R0'
     ${EndIf}
   ${EndIf}
-FunctionEnd
-
-/** StartRxapi()
- *
- * Starts the rxapi service process, if the user elected to do so.
- */
-Function StartRxapi
-
-  ${If} $RxAPIStartService == 1
-    ; User asked to start the rxapi service.
-    Services::SendServiceCommand 'start' 'RXAPI'
-    Pop $R0
-
-    ${If} $R0 == 'Ok'
-      DetailPrint "The rxapi service was successfully sent the start command"
-    ${else}
-      MessageBox MB_OK|MB_ICONEXCLAMATION|MB_TOPMOST "Failed to start the ooRexx rxapi service: $R0" /SD IDOK
-    ${EndIf}
-  ${EndIf}
-
 FunctionEnd
 
 /** StopRxapi()
@@ -2880,20 +2700,6 @@ Section "Uninstall"
 
   /* If we are doing an upgrade type of install, we leave everything as it was. */
   ${If} $DoUpgrade == 'false'
-    ${If} $RxapiIsService == 'true'
-      Call un.InstallRxapiService
-      Pop $R0
-      ${If} $R0 != 0
-        MessageBox MB_OK|MB_ICONSTOP \
-        "Unexpected error removing the rxapi service.$\n$\n\
-        The uninstall will abort.  Report this error to$\n\
-        the ${SHORTNAME} developers:$\n$\n\
-        Uninstall as service failed: $R0" \
-        /SD IDOK
-        SetErrorLevel 3
-        Quit
-      ${EndIf}
-    ${EndIf}
 
     ; One last check, see if rxapi.exe is locked.  We do this here and below
     ; because we want to quit, if we are going to, before anything is undone.
@@ -3404,56 +3210,6 @@ Function un.Delete_Installed_Files
 
 FunctionEnd
 
-/** un.InstallRxapiService()
- * Removes the rxapi service.  Only called if RxapiIsService is true.
- *
- * The uninstaller always quits right at the beginning if it can not stop the
- * rxapi.  So logically, rxapi should be stopped, and if it isn't, it should be
- * stoppable.
- *
- * Pushes a return code to the top of the stack.  0 for success, otherwise an
- * error code.
- */
-Function un.InstallRxapiService
-  Call un.CheckIsRxapiRunning
-  ${If} $$RxapiIsRunning == 'true'
-    Services::SendServiceCommand 'stop' 'rxapi'
-    Pop $R0
-
-    ${If} $R0 != 'Ok'
-      ; Seems impossible to get here, but if we did, we'll try to kill rxapi.
-      ; If that fails we give up.
-      DetailPrint "Service Control Manager failed to stop rxapi, forcing termination"
-      ooRexxProcess::killProcess 'rxapi'
-      Pop $R0
-      ${If} $R0 != 0
-      ${andif} $R0 != 1
-        Push $R0
-        Return
-      ${EndIf}
-    ${EndIf}
-  ${EndIf}
-
-  DetailPrint "Uninstalling ooRexx rxapi Service"
-  nsExec::ExecToLog "$INSTDIR\rxapi /u /s"
-  Pop $R0
-
-  ${If} $R0 != 0
-    ; One reason for this could be that rxapi.exe, the file, has been deleted.
-    ; We'll try to handle this case by having the service manager delete the
-    ; service.  This can be done even if rxapi.exe is missing.
-    Services::SendServiceCommand 'delete' 'rxapi'
-    Pop $R0
-    ${If} $R0 != 'Ok'
-      DetailPrint "Failed to uninstall rxapi as a service.  Reason: $R0"
-      Push $R0
-      Return
-    ${EndIf}
-  ${EndIf}
-
-  DetailPrint "Uninstalled rxapi as a service"
-  Push 0
-FunctionEnd
 
 /** un.DeleteFileAssociations()
  *

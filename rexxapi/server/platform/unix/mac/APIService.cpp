@@ -71,8 +71,9 @@ void Run (bool asService)
         apiServer.initServer();               // start up the server
         apiServer.listenForConnections();     // go into the message loop
     }
-    catch (ServiceException *)
+    catch (ServiceException *e)
     {
+        delete e;
     }
     apiServer.terminateServer();     // shut everything down
 }
