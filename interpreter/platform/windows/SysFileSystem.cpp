@@ -105,17 +105,6 @@ bool SysFileSystem::searchFileName(const char *name, char *fullName)
 
 
 /**
- * Generate a temporary file name.
- *
- * @return The string name of the temporary file.
- */
-const char *SysFileSystem::getTempFileName()
-{
-    return tmpnam(NULL);
-}
-
-
-/**
  * Generate a fully qualified stream name.
  *
  * @param unqualifiedName

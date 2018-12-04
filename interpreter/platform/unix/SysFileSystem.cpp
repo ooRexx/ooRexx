@@ -164,16 +164,6 @@ bool SysFileSystem::searchFileName(const char* name, char *fullName )
     return false;
 }
 
-/**
- * Generate a temporary file name.
- *
- * @return
- */
-const char *SysFileSystem::getTempFileName()
-{
-    return tmpnam(NULL);
-}
-
 
 /**
  * Get the fully qualified name for a file.

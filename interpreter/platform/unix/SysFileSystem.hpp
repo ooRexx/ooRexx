@@ -86,7 +86,6 @@ public:
     static const char *EOL_Marker;    // the end-of-line marker
     static const char PathDelimiter;  // directory path delimiter
 
-    static const char *getTempFileName();
     static bool  searchFileName(const char * name, char *fullName);
     static void  qualifyStreamName(const char *unqualifiedName, char *qualifiedName, size_t bufferSize);
     static bool  fileExists(const char *name);
