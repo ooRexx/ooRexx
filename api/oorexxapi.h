@@ -2264,11 +2264,11 @@ struct RexxMethodContext_
     }
     RexxObjectPtr SetGuardOnWhenUpdated(CSTRING n)
     {
-        functions->SetGuardOnWhenUpdated(this, n);
+        return functions->SetGuardOnWhenUpdated(this, n);
     }
     RexxObjectPtr SetGuardOffWhenUpdated(CSTRING n)
     {
-        functions->SetGuardOffWhenUpdated(this, n);
+        return functions->SetGuardOffWhenUpdated(this, n);
     }
     RexxClassObject FindContextClass(CSTRING n)
     {
