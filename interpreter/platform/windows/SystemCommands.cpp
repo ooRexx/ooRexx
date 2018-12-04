@@ -188,12 +188,11 @@ public:
  * @param context    The Exit context.
  * @param errCode    The operating system error code.
  */
-RexxObjectPtr ErrorRedirection(RexxExitContext *context, int errCode)
+void ErrorRedirection(RexxExitContext *context, int errCode)
 {
     // raise 98.923 Address command redirection failed
     context->RaiseException1(Error_Execution_address_redirection_failed,
       context->Int32ToObject(errCode));
-    return NULLOBJECT;
 }
 
 
@@ -537,7 +536,8 @@ bool sysCommandNT(RexxExitContext *context,
                 // the INPUT thread may have encountered an error .. raise it now
                 if (inputThread.error != 0)
                 {
-                    return ErrorRedirection(context, inputThread.error);
+                    ErrorRedirection(context, inputThread.error);
+                    return false;
                 }
             }
 
@@ -554,7 +554,8 @@ bool sysCommandNT(RexxExitContext *context,
                 // the OUTPUT thread may have encountered an error .. raise it now
                 if (outputThread.error != 0)
                 {
-                    return ErrorRedirection(context, errorThread.error);
+                    ErrorRedirection(context, errorThread.error);
+                    return false;
                 }
             }
 
@@ -571,7 +572,8 @@ bool sysCommandNT(RexxExitContext *context,
                 // the ERROR thread may have encountered an error .. raise it now
                 if (errorThread.error != 0)
                 {
-                    return ErrorRedirection(context, errorThread.error);
+                    ErrorRedirection(context, errorThread.error);
+                    return false;
                 }
             }
         }

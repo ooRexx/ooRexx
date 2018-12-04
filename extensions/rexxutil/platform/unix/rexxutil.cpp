@@ -3149,7 +3149,7 @@ bool formatFile(RexxCallContext *c, RXTREEDATA *treeData, uint32_t options, stru
         if ( options & LONG_TIME )
         {
 
-            sprintf(treeData->fileTime, "%4d-%02d-%02d %02d:%02d:%02d  %10lu  ",
+            sprintf(treeData->fileTime, "%4d-%02d-%02d %02d:%02d:%02d  %10zu  ",
                       timestamp->tm_year + 1900,
                       timestamp->tm_mon + 1,
                       timestamp->tm_mday,
@@ -3162,7 +3162,7 @@ bool formatFile(RexxCallContext *c, RXTREEDATA *treeData, uint32_t options, stru
         {
             if ( options & EDITABLE_TIME )
             {
-                sprintf(treeData->fileTime, "%02d/%02d/%02d/%02d/%02d  %10lu  ",
+                sprintf(treeData->fileTime, "%02d/%02d/%02d/%02d/%02d  %10zu  ",
                           (timestamp->tm_year) % 100,
                           timestamp->tm_mon + 1,
                           timestamp->tm_mday,
@@ -3172,7 +3172,7 @@ bool formatFile(RexxCallContext *c, RXTREEDATA *treeData, uint32_t options, stru
             }
             else
             {
-                sprintf(treeData->fileTime, "%2d/%02d/%02d  %2d:%02d%c  %10lu  ",
+                sprintf(treeData->fileTime, "%2d/%02d/%02d  %2d:%02d%c  %10zu  ",
                           timestamp->tm_mon+1,
                           timestamp->tm_mday,
                           timestamp->tm_year % 100,
