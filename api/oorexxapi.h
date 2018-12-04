@@ -684,6 +684,8 @@ typedef struct
     void             (RexxEntry *FreeObjectMemory)(RexxMethodContext *, POINTER);
     POINTER          (RexxEntry *ReallocateObjectMemory)(RexxMethodContext *, POINTER, size_t);
     RexxVariableReferenceObject (RexxEntry *GetObjectVariableReference)(RexxMethodContext *, CSTRING);
+    RexxObjectPtr    (RexxEntry *SetGuardOnWhenUpdated)(RexxMethodContext *, CSTRING);
+    RexxObjectPtr    (RexxEntry *SetGuardOffWhenUpdated)(RexxMethodContext *, CSTRING);
 } MethodContextInterface;
 
 #define CALL_INTERFACE_VERSION 100
@@ -2259,6 +2261,14 @@ struct RexxMethodContext_
     void SetGuardOff()
     {
         functions->SetGuardOff(this);
+    }
+    RexxObjectPtr SetGuardOnWhenUpdated(CSTRING n)
+    {
+        functions->SetGuardOnWhenUpdated(this, n);
+    }
+    RexxObjectPtr SetGuardOffWhenUpdated(CSTRING n)
+    {
+        functions->SetGuardOffWhenUpdated(this, n);
     }
     RexxClassObject FindContextClass(CSTRING n)
     {

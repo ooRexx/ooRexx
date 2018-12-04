@@ -292,10 +292,38 @@ void RexxEntry FreeObjectMemory(RexxMethodContext *c, POINTER p)
     ApiContext context(c);
     try
     {
-        return context.context->freeObjectMemory(p);
+        context.context->freeObjectMemory(p);
     }
     catch (NativeActivation *)
     {
+    }
+}
+
+
+RexxObjectPtr RexxEntry SetGuardOnWhenUpdated(RexxMethodContext *c, CSTRING n)
+{
+    ApiContext context(c);
+    try
+    {
+        return context.ret(context.context->guardOnWhenUpdated((const char *)n));
+    }
+    catch (NativeActivation *)
+    {
+        return OREF_NULL;
+    }
+}
+
+
+RexxObjectPtr RexxEntry SetGuardOffWhenUpdated(RexxMethodContext *c, CSTRING n)
+{
+    ApiContext context(c);
+    try
+    {
+        return context.ret(context.context->guardOffWhenUpdated((const char *)n));
+    }
+    catch (NativeActivation *)
+    {
+        return OREF_NULL;
     }
 }
 
@@ -324,6 +352,9 @@ MethodContextInterface Activity::methodContextFunctions =
     AllocateObjectMemory,
     FreeObjectMemory,
     ReallocateObjectMemory,
+    GetObjectVariableReference,
+    SetGuardOnWhenUpdated,
+    SetGuardOffWhenUpdated,
 };
 
 

@@ -77,6 +77,8 @@ class RexxSimpleVariable : public RexxVariableBase
     virtual void drop(VariableDictionary *);
     virtual void setGuard(RexxActivation *);
     virtual void clearGuard(RexxActivation *);
+    virtual void setGuard(VariableDictionary *);
+    virtual void clearGuard(VariableDictionary *);
     virtual void expose(RexxActivation *, VariableDictionary *);
     virtual void procedureExpose(RexxActivation *, RexxActivation *);
     virtual void alias(RexxActivation *, RexxVariable *);

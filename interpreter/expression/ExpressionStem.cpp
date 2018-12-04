@@ -348,6 +348,32 @@ void RexxStemVariable::clearGuard(RexxActivation *context )
 
 
 /**
+ * Set a GUARD WHEN watch on a stem variable.
+ *
+ * @param dictionary The target dictionary
+ */
+void RexxStemVariable::setGuard(VariableDictionary *dictionary)
+{
+    // get the variable and ask for our activity to be notified.
+    RexxVariable *variable = dictionary->getStemVariable(stemName);
+    variable->inform(ActivityManager::currentActivity);
+}
+
+
+/**
+ * Remove a guard notification from a variable.
+ *
+ * @param dictionary The target dictionary
+ */
+void RexxStemVariable::clearGuard(VariableDictionary *dictionary)
+{
+    // look up the variable and remove the inform status for this activity.
+    RexxVariable *variable = dictionary->getStemVariable(stemName);
+    variable->uninform(ActivityManager::currentActivity);
+}
+
+
+/**
  * Alias a local variable name to a supplied variable reference
  * from another context.
  *

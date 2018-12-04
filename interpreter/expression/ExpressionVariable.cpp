@@ -350,6 +350,30 @@ void RexxSimpleVariable::clearGuard(RexxActivation *context)
 
 
 /**
+ * Set a guard notification on a simple variable.
+ *
+ * @param dictionary The target dictionary
+ */
+void RexxSimpleVariable::setGuard(VariableDictionary *dictionary)
+{
+    RexxVariable *variable = dictionary->getVariable(variableName);
+    variable->inform(ActivityManager::currentActivity);
+}
+
+
+/**
+ * Remove a GUARD WHEN watch from a simple variable.
+ *
+ * @param dictionary The target dictionary
+ */
+void RexxSimpleVariable::clearGuard(VariableDictionary *dictionary)
+{
+    RexxVariable *variable = dictionary->getVariable(variableName);
+    variable->uninform(ActivityManager::currentActivity); /* remove the notification           */
+}
+
+
+/**
  * Perform a PROCEDURE EXPOSE operation on a simple variable.
  *
  * @param context The current execution context.

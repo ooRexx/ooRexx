@@ -2216,9 +2216,6 @@ void NativeActivation::setFuzz(wholenumber_t _fuzz )
  * @param _form  The new form setting.
  */
 void NativeActivation::setForm(bool _form)
-/******************************************************************************/
-/* Function:  Set a new numeric form setting                                  */
-/******************************************************************************/
 {
     // only process if we're in a call context.
     if (activation != OREF_NULL)
@@ -2399,6 +2396,119 @@ void NativeActivation::guardOn()
         objectVariables->reserve(activity);
         objectScope = SCOPE_RESERVED;
     }
+}
+
+
+/**
+ * Wait for a variable in a guard expression to get updated.
+ */
+void NativeActivation::guardWait()
+{
+    // we need to wait without locking the variables.  If we
+    // held the lock before the wait, we reaquire it after we wake up.
+    GuardStatus initial_state = objectScope;
+
+    if (objectScope == SCOPE_RESERVED)
+    {
+        objectVariables->release(activity);
+        objectScope = SCOPE_RELEASED;
+    }
+    // clear the guard sem on the activity
+    activity->guardSet();
+    // wait to be woken up by an update
+    activity->guardWait();
+
+    // and reset once we get control back
+    activity->guardSet();
+    // if we released the scope before waiting, then we need to get it
+    // back before proceeding.
+    if (initial_state == SCOPE_RESERVED)
+    {
+        objectVariables->reserve(activity);
+        objectScope = SCOPE_RESERVED;
+    }
+}
+
+
+/**
+ * Wait for an object variable to be updated and return the new value. The guard state will be ON on return.
+ *
+ * @param name   The name of the variable (only simple or stem variables allowed)
+ *
+ * @return The new value of the variable.
+ */
+RexxObject *NativeActivation::guardOnWhenUpdated(const char *name)
+{
+    // if there's no receiver object, then this is not a true method call.
+    // there's nothing to lock
+    if (!isMethod())
+    {
+        return OREF_NULL;
+    }
+
+    // get a retriever for this variable
+    Protected<RexxVariableBase> retriever = getObjectVariableRetriever(name);
+    // if this didn't parse, it's an illegal name
+    // we also don't allow compound variables here because the source for
+    // resolving the tail pieces is not defined.
+    if (retriever == OREF_NULL)
+    {
+        return OREF_NULL;
+    }
+    // now use this to set the inform status on the variable
+    retriever->setGuard(objectVariables);
+    // clear the guard sem on the activity
+    activity->guardSet();
+    // our desired state is to have the guard, so set it now. The wait will release it and
+    // reaquire when the variable is updated
+    guardOn();
+
+    // now go perform the wait
+    guardWait();
+
+    // retrieve the value
+    return retriever->getRealValue(methodVariables());
+}
+
+
+/**
+ * Wait for an object variable to be updated and return the new
+ * value. The guard state will be OFF on return.
+ *
+ * @param name   The name of the variable (only simple or stem variables allowed)
+ *
+ * @return The new value of the variable.
+ */
+RexxObject *NativeActivation::guardOffWhenUpdated(const char *name)
+{
+    // if there's no receiver object, then this is not a true method call.
+    // there's nothing to lock
+    if (!isMethod())
+    {
+        return OREF_NULL;
+    }
+
+    // get a retriever for this variable
+    Protected<RexxVariableBase> retriever = getObjectVariableRetriever(name);
+    // if this didn't parse, it's an illegal name
+    // we also don't allow compound variables here because the source for
+    // resolving the tail pieces is not defined.
+    if (retriever == OREF_NULL)
+    {
+        return OREF_NULL;
+    }
+    // now use this to set the inform status on the variable
+    retriever->setGuard(objectVariables);
+    // clear the guard sem on the activity
+    activity->guardSet();
+    // our desired state is to have the guard off, so set it now.
+    guardOff();
+
+    // now go perform the wait
+    guardWait();
+
+    // retrieve the value
+    return retriever->getRealValue(methodVariables());
 }
 
 
@@ -2804,11 +2914,32 @@ DirectoryClass *NativeActivation::getAllContextVariables()
  */
 RexxObject *NativeActivation::getObjectVariable(const char *name)
 {
-    RexxString *target = new_string(name);
-    ProtectedObject p1(target);
+    // get a retriever for this variable
+    Protected<RexxVariableBase> retriever = getObjectVariableRetriever(name);
+    // if this didn't parse, it's an illegal name
+    // we also don't allow compound variables here because the source for
+    // resolving the tail pieces is not defined.
+    if (retriever == OREF_NULL)
+    {
+        return OREF_NULL;
+    }
+    // retrieve the value
+    return retriever->getRealValue(methodVariables());
+}
+
+
+/**
+ * Validate and retrieve an accessor for an object variable. Note, this only retrieves top-level variables (simple and stem variables).
+ *
+ * @param name   The name of the required variable.
+ *
+ * @return The variable retriever or OREF_NULL if this was not a valid variable.
+ */
+RexxVariableBase *NativeActivation::getObjectVariableRetriever(const char *name)
+{
+    Protected<RexxString> target = new_string(name);
     // get the REXX activation for the target context
-    RexxVariableBase *retriever = VariableDictionary::getVariableRetriever(target);
-    ProtectedObject p2(retriever);
+    Protected<RexxVariableBase>retriever = VariableDictionary::getVariableRetriever(target);
     // if this didn't parse, it's an illegal name
     // we also don't allow compound variables here because the source for
     // resolving the tail pieces is not defined.
@@ -2816,8 +2947,8 @@ RexxObject *NativeActivation::getObjectVariable(const char *name)
     {
         return OREF_NULL;
     }
-    // retrieve the value
-    return retriever->getRealValue(methodVariables());
+    // return the retriever
+    return retriever;
 }
 
 
@@ -2832,18 +2963,16 @@ RexxObject *NativeActivation::getObjectVariable(const char *name)
  */
 VariableReference *NativeActivation::getObjectVariableReference(const char *name)
 {
-    Protected<RexxString> target = new_string(name);
-
-    // get the REXX activation for the target context
-    RexxVariableBase *retriever = VariableDictionary::getVariableRetriever(target);
+    // get a retriever for this variable
+    Protected<RexxVariableBase> retriever = getObjectVariableRetriever(name);
     // if this didn't parse, it's an illegal name
     // we also don't allow compound variables here because the source for
     // resolving the tail pieces is not defined.
-    if (retriever == OREF_NULL || isString(retriever) || isOfClassType(CompoundVariableTerm, retriever))
+    if (retriever == OREF_NULL)
     {
         return OREF_NULL;
     }
-    // retrieve the value
+    // create a reference object for this variable
     return retriever->getVariableReference(methodVariables());
 }
 
@@ -2856,15 +2985,12 @@ VariableReference *NativeActivation::getObjectVariableReference(const char *name
  */
 void NativeActivation::setObjectVariable(const char *name, RexxObject *value)
 {
-    RexxString *target = new_string(name);
-    ProtectedObject p1(target);
-    // get the REXX activation for the target context
-    RexxVariableBase *retriever = VariableDictionary::getVariableRetriever(target);
-    ProtectedObject p2(retriever);
+    // get a retriever for this variable
+    Protected<RexxVariableBase> retriever = getObjectVariableRetriever(name);
     // if this didn't parse, it's an illegal name
     // we also don't allow compound variables here because the source for
     // resolving the tail pieces is not defined.
-    if (retriever == OREF_NULL || isString(retriever) || isOfClassType(CompoundVariableTerm, retriever))
+    if (retriever == OREF_NULL)
     {
         return;
     }
@@ -2880,19 +3006,16 @@ void NativeActivation::setObjectVariable(const char *name, RexxObject *value)
  */
 void NativeActivation::dropObjectVariable(const char *name)
 {
-    RexxString *target = new_string(name);
-    ProtectedObject p1(target);
-    // get the REXX activation for the target context
-    RexxVariableBase *retriever = VariableDictionary::getVariableRetriever(target);
-    ProtectedObject p2(retriever);
+    // get a retriever for this variable
+    Protected<RexxVariableBase> retriever = getObjectVariableRetriever(name);
     // if this didn't parse, it's an illegal name
     // we also don't allow compound variables here because the source for
     // resolving the tail pieces is not defined.
-    if (retriever == OREF_NULL || isString(retriever) || isOfClassType(CompoundVariableTerm, retriever))
+    if (retriever == OREF_NULL)
     {
         return;
     }
-    // do the assignment
+    // drop the variable
     retriever->drop(methodVariables());
 }
 

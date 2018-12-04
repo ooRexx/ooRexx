@@ -119,8 +119,12 @@ class NativeActivation : public ActivationBase
     void  *buffer();
     void  *pointer(RexxObject *);
     void  *pointerString(RexxObject *object, size_t position);
+    RexxVariableBase *getObjectVariableRetriever(const char *name);
+    RexxObject *guardOnWhenUpdated(const char *name);
+    RexxObject *guardOffWhenUpdated(const char *name);
     void   guardOff();
     void   guardOn();
+    void   guardWait();
     void   enableVariablepool();
     void   disableVariablepool();
     void   resetNext();
