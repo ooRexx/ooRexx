@@ -1,12 +1,12 @@
-.TH RXQUEUE 1 "July 2016" "Version 5.0.0"
+.TH RXQUEUE 1 "December 2018" "Version 5.0.0"
 .SH NAME
 \fBrxqueue\fP \- Open Object Rexx Queue Filter
 .SH SYNTAX
 .B rxqueue
-.RI [ queuename "] [/FIFO | /LIFO | /CLEAR]"
+.RI [ queuename "] [/fifo | /lifo | /clear]"
 .SH DESCRIPTION
 This program operates as a filter, placing the output of an operating system command onto an
-Open Object Rexx queue.
+external ooRexx queue.
 
 .PP
 The name of the queue to act upon is determined in the following order:
@@ -25,13 +25,13 @@ The default queue name
 
 .SH OPTIONS
 .TP
-.B /FIFO
+.B /fifo
 places lines onto the queue in first-in first out order. This is the default.
 .TP
-.B /LIFO
+.B /lifo
 places lines onto the queue in last-in first out order.
 .TP
-.B /CLEAR
+.B /clear
 removes all lines from the queue.
 
 .SH "SEE ALSO"
@@ -39,19 +39,28 @@ removes all lines from the queue.
 
 .SH EXAMPLES
 .TP
-ls | rxqueue MYQ /LIFO
-Place the output from the
+ls | rxqueue MYQ /lifo
+Places output from the
 .B ls
 command onto the
 .B MYQ
-queue in last-in first-out order
+queue in last-in first-out order.
+.B MYQ
+must have been created before it can be used.
 
 .TP
-export RXQUEUE=MYQ;rxqueue /CLEAR
-Clear the contents of
+export RXQUEUE=MYQ; rxqueue /clear
+Clears the contents of
+.B MYQ.
 .B MYQ
+must have been created before it can be used.
 
 .SH LICENSE
 Open Object Rexx is distributed under the terms of
 the Common Public License v1.0 which accompanies this distribution.
+http://www.oorexx.org/license.html
+
+This program and the accompanying materials are made available under
+the terms of the Common Public License v1.0 which accompanies this
+distribution. A copy is also available at the following address:
 http://www.oorexx.org/license.html
