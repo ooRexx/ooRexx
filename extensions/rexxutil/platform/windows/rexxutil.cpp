@@ -177,6 +177,7 @@
 #include <limits.h>
 #include <shlwapi.h>
 #include <math.h>                      // isnan(), HUGE_VAL
+#include <versionhelpers.h>
 
 #define OM_WAKEUP (WM_USER+10)
 VOID CALLBACK SleepTimerProc( HWND, UINT, UINT, DWORD);
@@ -3529,9 +3530,6 @@ size_t RexxEntry SysGetErrortext(const char *name, size_t numargs, CONSTRXSTRING
 
 size_t RexxEntry SysWinEncryptFile(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
-    ULONG  rc;                           /* Ret code of func           */
-    OSVERSIONINFO vi;
-
     if (numargs != 1)
     {
         /* If no args, then its an    */
@@ -3539,21 +3537,8 @@ size_t RexxEntry SysWinEncryptFile(const char *name, size_t numargs, CONSTRXSTRI
         return INVALID_ROUTINE;
     }
 
-    vi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-
-    if (rc = GetVersionEx(&vi))
-    {
-        /* allow this only on W2K or newer */
-        if (vi.dwPlatformId == VER_PLATFORM_WIN32_NT && vi.dwMajorVersion > 4)
-        {
-            rc = EncryptFile(args[0].strptr);
-        }
-        else
-        {
-            rc = 0;
-            SetLastError(ERROR_CANNOT_MAKE);
-        }
-    }
+    /* allow this only on W2K or newer */
+    ULONG rc = EncryptFile(args[0].strptr);
     if (rc)
     {
         sprintf(retstr->strptr, "%d", 0);
@@ -3580,25 +3565,12 @@ size_t RexxEntry SysWinEncryptFile(const char *name, size_t numargs, CONSTRXSTRI
 size_t RexxEntry SysWinDecryptFile(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
 
-  ULONG  rc;                           /* Ret code of func           */
-  OSVERSIONINFO vi;
-
   if (numargs != 1)
                                        /* If no args, then its an    */
                                        /* incorrect call             */
     return INVALID_ROUTINE;
 
-    vi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-
-  if (rc = GetVersionEx(&vi)) {
-    /* allow this only on W2K or newer */
-    if (vi.dwPlatformId == VER_PLATFORM_WIN32_NT && vi.dwMajorVersion > 4)
-      rc = DecryptFile(args[0].strptr,0);
-    else {
-      rc = 0;
-      SetLastError(ERROR_CANNOT_MAKE);
-    }
-  }
+  ULONG rc = DecryptFile(args[0].strptr,0);
 
   if (rc)
     sprintf(retstr->strptr, "%d", 0);
@@ -3620,27 +3592,39 @@ size_t RexxEntry SysWinDecryptFile(const char *name, size_t numargs, CONSTRXSTRI
 size_t RexxEntry SysWinVer(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
 
-  OSVERSIONINFO vi;                    /* Return RXSTRING            */
-    char chVerBuf[12];
-
-  vi.dwOSVersionInfoSize = sizeof(vi); /* if not set --> violation error */
-
   if (numargs != 0)                    /* validate arg count         */
     return INVALID_ROUTINE;
 
-  GetVersionEx(&vi);                /* get version with extended api */
-  if (vi.dwPlatformId == VER_PLATFORM_WIN32s)
-    strcpy(chVerBuf, "Windows");       /* Windows 3.1                */
-  else
-    if (vi.dwPlatformId == VER_PLATFORM_WIN32_NT)
-      strcpy(chVerBuf, "WindowsNT");   /* Windows NT               */
-  else strcpy(chVerBuf, "Windows95");  /* Windows 95               */
+  int majorVersion = 0;
+  int minorVersion = 0;
+
+  if (IsWindows10OrGreater())
+  {
+      majorVersion = 10;
+  }
+  else if (IsWindows8Point1OrGreater())
+  {
+      majorVersion = 6;
+      minorVersion = 3;
+  }
+  else if (IsWindows8OrGreater())
+  {
+      majorVersion = 6;
+      minorVersion = 2;
+  }
+  else if (IsWindows7OrGreater())
+  {
+      majorVersion = 6;
+      minorVersion = 1;
+  }
+  else if (IsWindowsVistaOrGreater())
+  {
+      majorVersion = 6;
+      minorVersion = 0;
+  }
 
                                        /* format into the buffer     */
-  wsprintf(retstr->strptr,"%s %lu.%02lu",
-             chVerBuf,
-             vi.dwMajorVersion,
-             vi.dwMinorVersion);
+  wsprintf(retstr->strptr,"Windows %d.%02d", majorVersion, minorVersion);
 
   retstr->strlength = strlen(retstr->strptr);
   return VALID_ROUTINE;
@@ -4043,8 +4027,8 @@ RexxRoutine3(RexxStringObject, SysTextScreenRead, int, row, int, col, OPTIONAL_i
 
 RexxRoutine5(RexxStringObject, SysTextScreenSize,
     OPTIONAL_CSTRING, optionString,
-    OPTIONAL_stringsize_t, rows, OPTIONAL_stringsize_t, columns,  
-    OPTIONAL_stringsize_t, rows2, OPTIONAL_stringsize_t, columns2)  
+    OPTIONAL_stringsize_t, rows, OPTIONAL_stringsize_t, columns,
+    OPTIONAL_stringsize_t, rows2, OPTIONAL_stringsize_t, columns2)
 {
     // check for valid option
     typedef enum { BUFFERSIZE, WINDOWRECT, MAXWINDOWSIZE } console_option;

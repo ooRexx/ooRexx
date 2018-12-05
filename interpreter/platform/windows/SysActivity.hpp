@@ -61,7 +61,7 @@ public:
     void close();
     void useCurrentThread();
     bool validateThread();
-    char *getStackBase(size_t stackSize);
+    char *getStackBase(int32_t *base, size_t stackSize);
     inline thread_id_t getThreadID() { return threadId; }
 
     static thread_id_t queryThreadID();

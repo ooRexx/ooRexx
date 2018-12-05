@@ -126,18 +126,12 @@ void SysActivity::useCurrentThread()
  * Return the pointer to the base of the current stack.
  * This is used for checking recursion overflows.
  *
+ * @param base      A local variable at the base of the stack.
+ * @param stackSize
+ *
  * @return The character pointer for the stack base.
  */
-char *SysActivity::getStackBase(size_t stackSize)
+char *SysActivity::getStackBase(int32_t *base, size_t stackSize)
 {
-    size_t temp;
-#pragma GCC diagnostic push
-// avoid CLANG warning: address of stack memory associated with local variable returned
-#pragma clang diagnostic ignored "-Wreturn-stack-address"
-// avoid CLANG warning: unknown warning group '-Wreturn-local-addr', ignored
-#pragma clang diagnostic ignored "-Wunknown-pragmas"
-// avoid GCC warning: function returns address of local variable
-#pragma GCC diagnostic ignored "-Wreturn-local-addr"
-    return (char *)&temp - stackSize;
-#pragma GCC diagnostic pop
+    return (char *)base - stackSize;
 }

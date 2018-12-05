@@ -77,7 +77,6 @@ public:
 
     virtual void attachThread();
     virtual void dispatch();
-    char *getStackBase();
     void terminate();
     void startup();
     void shutdown();

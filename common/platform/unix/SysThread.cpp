@@ -63,22 +63,6 @@ void SysThread::dispatch()
     // default dispatch returns immediately
 }
 
-
-char *SysThread::getStackBase()
-{
-   int32_t temp;
-#pragma GCC diagnostic push
-// avoid CLANG warning: address of stack memory associated with local variable returned
-#pragma clang diagnostic ignored "-Wreturn-stack-address"
-// avoid CLANG warning: unknown warning group '-Wreturn-local-addr', ignored
-#pragma clang diagnostic ignored "-Wunknown-pragmas"
-// avoid GCC warning: function returns address of local variable
-#pragma GCC diagnostic ignored "-Wreturn-local-addr"
-   return ((char *)(&temp)) - THREAD_STACK_SIZE;
-#pragma GCC diagnostic pop
-}
-
-
 void SysThread::terminate()
 {
     if (!attached && _threadID != 0)

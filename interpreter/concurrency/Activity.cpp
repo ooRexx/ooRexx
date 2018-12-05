@@ -159,8 +159,10 @@ void Activity::runThread()
 {
     // some things only occur on subsequent requests
     bool firstDispatch = true;
+
+    int32_t base;
     // establish the stack base pointer for control stack full detection.
-    stackBase = currentThread.getStackBase(TOTAL_STACK_SIZE);
+    stackBase = currentThread.getStackBase(&base, TOTAL_STACK_SIZE);
 
     for (;;)
     {
@@ -309,6 +311,8 @@ Activity::Activity(bool createThread)
     // active activity, which we can't guarantee at this point.
     GlobalProtectedObject p(this);
 
+    int32_t base;         // used for determining the stack base
+
     // globally clear the object because we could be reusing the
     // object storage
     clearObject();
@@ -355,7 +359,7 @@ Activity::Activity(bool createThread)
         // run on the current thread
         currentThread.useCurrentThread();
         // reset the stack base for this thread.
-        stackBase = currentThread.getStackBase(TOTAL_STACK_SIZE);
+        stackBase = currentThread.getStackBase(&base, TOTAL_STACK_SIZE);
     }
 }
 
@@ -3229,9 +3233,10 @@ void Activity::run(ActivityDispatcher &target)
 {
     // we unwind to the current activation depth on termination.
     size_t  startDepth;
+    int32_t base;         // used for determining the stack base
 
     // update the stack base
-    stackBase = currentThread.getStackBase(TOTAL_STACK_SIZE);
+    stackBase = currentThread.getStackBase(&base, TOTAL_STACK_SIZE);
     // get a new random seed
     generateRandomNumberSeed();
     startDepth = stackFrameDepth;

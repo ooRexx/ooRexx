@@ -113,18 +113,6 @@ void SysThread::attachThread()
 
 
 /**
- * Return a pointer to the current stack base.
- *
- * @return A pointer to the current stack position
- */
-char *SysThread::getStackBase()
-{
-   int32_t temp;
-   return ((char *)(&temp)) - THREAD_STACK_SIZE;
-}
-
-
-/**
  * Do any platform specific termination
  */
 void SysThread::terminate()

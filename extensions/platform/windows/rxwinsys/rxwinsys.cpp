@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -255,17 +255,6 @@ void pointer2string(PRXSTRING result, void *pointer)
         sprintf(result->strptr, "0x%p", pointer);
         result->strlength = strlen(result->strptr);
     }
-}
-
-
-BOOL IsRunningNT()
-{
-    OSVERSIONINFO version_info={0};
-
-    version_info.dwOSVersionInfoSize = sizeof(version_info);
-    GetVersionEx(&version_info);
-    if (version_info.dwPlatformId == VER_PLATFORM_WIN32_NT) return TRUE; // Windows NT
-    else return FALSE;                                              // Windows 95
 }
 
 
@@ -1481,24 +1470,12 @@ BOOL GetAllUserDesktopLocation ( LPBYTE szDesktopDir, LPDWORD  lpcbData )
    szDesktopDir[0] ='\0';         //initialize return
 
    // Test, if 95/98/Millenium or NT/Win2000
-   if ( IsRunningNT() )
-   {
-     rc = RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-                       IDS_REGISTRY_KEY_ALL_NT_SHELLFOLDER,
-                       0,
-                       KEY_QUERY_VALUE,
-                       &hKey) ;
-     lpValueName = IDS_ALL_NT_DESKTOP ;
-   }
-   else
-   {
-     rc = RegOpenKeyEx(HKEY_USERS,
-                       IDS_REGISTRY_KEY_ALL_9x_SHELLFOLDER,
-                       0,
-                       KEY_QUERY_VALUE,
-                       &hKey) ;
-     lpValueName = IDS_ALL_9x_DESKTOP ;
-   }
+   rc = RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+                   IDS_REGISTRY_KEY_ALL_NT_SHELLFOLDER,
+                   0,
+                   KEY_QUERY_VALUE,
+                   &hKey) ;
+   lpValueName = IDS_ALL_NT_DESKTOP ;
    if ( rc == ERROR_SUCCESS )
    {
       if ( (rc = RegQueryValueEx(hKey,                      // handle of key to query

@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2013-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2013-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -53,6 +53,7 @@
 #include <shlobj.h>
 #include "oodShared.hpp"
 #include "oodExecutable.hpp"
+#include <versionhelpers.h>
 
 #define WinMainDlg_BEGIN
 
@@ -516,17 +517,7 @@ uint32_t determineStatus(HWND hDlg, pConfigureArguments pca)
 
     pca->requiresElevation = true;
 
-    if ( ! GetVersionEx(&osver) )
-    {
-        rc = GetLastError();
-        reportError(hDlg, "GetVersionEx", OS_ERR_TITLE, rc);
-        goto done_out;
-    }
-
-    if (osver.dwMajorVersion >= 6)
-    {
-        pca->isVistaOrLater = true;
-    }
+    pca->isVistaOrLater = IsWindowsVistaOrGreater();
 
     pca->isInAdminGroup = isUserInAdminGroup(hDlg, pca->isVistaOrLater, &rc);
     if ( rc != ERROR_SUCCESS )

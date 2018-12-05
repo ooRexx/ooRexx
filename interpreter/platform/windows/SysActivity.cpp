@@ -125,10 +125,12 @@ void SysActivity::useCurrentThread()
  * Return the pointer to the base of the current stack.
  * This is used for checking recursion overflows.
  *
+ * @param base      A local variable at the base of the stack.
+ * @param stackSize
+ *
  * @return The character pointer for the stack base.
  */
-char *SysActivity::getStackBase(size_t stackSize)
+char *SysActivity::getStackBase(int32_t *base, size_t stackSize)
 {
-    size_t temp;
-    return(char *)&temp - stackSize;
+    return (char *)base - stackSize;
 }
