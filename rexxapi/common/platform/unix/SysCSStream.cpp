@@ -243,7 +243,7 @@ bool SysLocalSocketConnection::connect(const char *serviceName)
     }
 
     // get a socket
-    c = socket(AF_LOCAL, SOCK_STREAM, 0);
+    c = socket(AF_UNIX, SOCK_STREAM, 0);
     if (c == -1)
     {
         errcode = CSERROR_INTERNAL;
@@ -252,7 +252,7 @@ bool SysLocalSocketConnection::connect(const char *serviceName)
 
     // bind the server socket to a service name
     struct sockaddr_un name; // address structure
-    name.sun_family = AF_LOCAL;
+    name.sun_family = AF_UNIX;
     strncpy(name.sun_path, serviceName, sizeof (name.sun_path));
     // make sure this is null terminated
     name.sun_path[sizeof (name.sun_path) - 1] = '\0';
@@ -344,7 +344,7 @@ bool SysServerLocalSocketConnectionManager::bind(const char *serviceName)
     }
 
     // get a server socket
-    c = socket(AF_LOCAL, SOCK_STREAM, 0);
+    c = socket(AF_UNIX, SOCK_STREAM, 0);
     if (c == -1)
     {
         errcode = CSERROR_UNKNOWN;
@@ -353,7 +353,7 @@ bool SysServerLocalSocketConnectionManager::bind(const char *serviceName)
 
     // bind the server socket to a service name
     struct sockaddr_un name; // address structure
-    name.sun_family = AF_LOCAL;
+    name.sun_family = AF_UNIX;
     strncpy (name.sun_path, serviceName, sizeof (name.sun_path));
     // make sure this is null terminated
     name.sun_path[sizeof (name.sun_path) - 1] = '\0';
