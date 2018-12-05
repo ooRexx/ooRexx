@@ -67,6 +67,7 @@
 #include "StemClass.hpp"
 #include "NumberStringClass.hpp"
 #include "VariableReference.hpp"
+#include "StringTableClass.hpp"
 
 BEGIN_EXTERN_C()
 
@@ -1267,6 +1268,76 @@ logical_t RexxEntry IsDirectory(RexxThreadContext *c, RexxObjectPtr o)
     return false;
 }
 
+void  RexxEntry StringTablePut(RexxThreadContext *c, RexxStringTableObject t, RexxObjectPtr o, CSTRING i)
+{
+    ApiContext context(c);
+    try
+    {
+        RexxString *index = new_string(i);
+        ProtectedObject p(index);
+        ((StringTable *)t)->put((RexxObject *)o, index);
+    }
+    catch (NativeActivation *)
+    {
+    }
+}
+
+RexxObjectPtr RexxEntry StringTableAt(RexxThreadContext *c, RexxStringTableObject t, CSTRING i)
+{
+    ApiContext context(c);
+    try
+    {
+        RexxString *index = new_string(i);
+        ProtectedObject p(index);
+        return context.ret(((StringTable *)t)->get(index));
+    }
+    catch (NativeActivation *)
+    {
+    }
+    return OREF_NULL;
+}
+
+RexxObjectPtr RexxEntry StringTableRemove(RexxThreadContext *c, RexxStringTableObject t, CSTRING i)
+{
+    ApiContext context(c);
+    try
+    {
+        RexxString *index = new_string(i);
+        ProtectedObject p(index);
+        return context.ret(((StringTable *)t)->remove(index));
+    }
+    catch (NativeActivation *)
+    {
+    }
+    return OREF_NULL;
+}
+
+RexxStringTableObject RexxEntry NewStringTable(RexxThreadContext *c)
+{
+    ApiContext context(c);
+    try
+    {
+        return (RexxStringTableObject)context.ret(new_string_table());
+    }
+    catch (NativeActivation *)
+    {
+    }
+    return OREF_NULL;
+}
+
+logical_t RexxEntry IsStringTable(RexxThreadContext *c, RexxObjectPtr o)
+{
+    ApiContext context(c);
+    try
+    {
+        return isOfClass(StringTable, (RexxObject *)o);
+    }
+    catch (NativeActivation *)
+    {
+    }
+    return false;
+}
+
 RexxObjectPtr RexxEntry ArrayAt(RexxThreadContext *c, RexxArrayObject a, size_t i)
 {
     ApiContext context(c);
@@ -2159,6 +2230,7 @@ RexxThreadInterface Activity::threadContextFunctions =
     OREF_NULL,
     ObjectToCSelfScoped,
     DisplayCondition,
+
     MutableBufferData,
     MutableBufferLength,
     SetMutableBufferLength,
@@ -2166,8 +2238,15 @@ RexxThreadInterface Activity::threadContextFunctions =
     IsMutableBuffer,
     MutableBufferCapacity,
     SetMutableBufferCapacity,
+
     VariableReferenceName,
     VariableReferenceValue,
     SetVariableReferenceValue,
     IsVariableReference,
+
+    StringTablePut,
+    StringTableAt,
+    StringTableRemove,
+    NewStringTable,
+    IsStringTable,
 };

@@ -653,6 +653,12 @@ typedef struct
     void              (RexxEntry *SetVariableReferenceValue)(RexxThreadContext *, RexxVariableReferenceObject, RexxObjectPtr);
     logical_t         (RexxEntry *IsVariableReference)(RexxThreadContext *, RexxObjectPtr);
 
+    void             (RexxEntry *StringTablePut)(RexxThreadContext *, RexxStringTableObject, RexxObjectPtr, CSTRING);
+    RexxObjectPtr    (RexxEntry *StringTableAt)(RexxThreadContext *, RexxStringTableObject, CSTRING);
+    RexxObjectPtr    (RexxEntry *StringTableRemove)(RexxThreadContext *, RexxStringTableObject, CSTRING);
+    RexxStringTableObject  (RexxEntry *NewStringTable)(RexxThreadContext *);
+    logical_t        (RexxEntry *IsStringTable)(RexxThreadContext *, RexxObjectPtr);
+
 } RexxThreadInterface;
 
 
@@ -1223,6 +1229,27 @@ struct RexxThreadContext_
     logical_t IsDirectory(RexxObjectPtr o)
     {
         return functions->IsDirectory(this, o);
+    }
+
+    void StringTablePut(RexxStringTableObject diro, RexxObjectPtr o, CSTRING s)
+    {
+        functions->StringTablePut(this, diro, o, s);
+    }
+    RexxObjectPtr StringTableAt(RexxStringTableObject to, CSTRING s)
+    {
+        return functions->StringTableAt(this, to, s);
+    }
+    RexxObjectPtr StringTableRemove(RexxStringTableObject to, CSTRING s)
+    {
+        return functions->StringTableRemove(this, to, s);
+    }
+    RexxStringTableObject NewStringTable()
+    {
+        return functions->NewStringTable(this);
+    }
+    logical_t IsStringTable(RexxObjectPtr o)
+    {
+        return functions->IsStringTable(this, o);
     }
 
     RexxObjectPtr ArrayAt(RexxArrayObject ao, size_t n)
@@ -1934,6 +1961,27 @@ struct RexxMethodContext_
     logical_t IsDirectory(RexxObjectPtr o)
     {
         return threadContext->IsDirectory(o);
+    }
+
+    void StringTablePut(RexxStringTableObject diro, RexxObjectPtr o, CSTRING s)
+    {
+        threadContext->StringTablePut(diro, o, s);
+    }
+    RexxObjectPtr StringTableAt(RexxStringTableObject to, CSTRING s)
+    {
+        return threadContext->StringTableAt(to, s);
+    }
+    RexxObjectPtr StringTableRemove(RexxStringTableObject to, CSTRING s)
+    {
+        return threadContext->StringTableRemove(to, s);
+    }
+    RexxStringTableObject NewStringTable()
+    {
+        return threadContext->NewStringTable();
+    }
+    logical_t IsStringTable(RexxObjectPtr o)
+    {
+        return threadContext->IsStringTable(o);
     }
 
     RexxObjectPtr ArrayAt(RexxArrayObject ao, size_t n)
@@ -2730,6 +2778,27 @@ struct RexxCallContext_
         return threadContext->IsDirectory(o);
     }
 
+    void StringTablePut(RexxStringTableObject diro, RexxObjectPtr o, CSTRING s)
+    {
+        threadContext->StringTablePut(diro, o, s);
+    }
+    RexxObjectPtr StringTableAt(RexxStringTableObject to, CSTRING s)
+    {
+        return threadContext->StringTableAt(to, s);
+    }
+    RexxObjectPtr StringTableRemove(RexxStringTableObject to, CSTRING s)
+    {
+        return threadContext->StringTableRemove(to, s);
+    }
+    RexxStringTableObject NewStringTable()
+    {
+        return threadContext->NewStringTable();
+    }
+    logical_t IsStringTable(RexxObjectPtr o)
+    {
+        return threadContext->IsStringTable(o);
+    }
+
     RexxObjectPtr ArrayAt(RexxArrayObject ao, size_t n)
     {
         return threadContext->ArrayAt(ao, n);
@@ -3499,6 +3568,27 @@ struct RexxExitContext_
     logical_t IsDirectory(RexxObjectPtr o)
     {
         return threadContext->IsDirectory(o);
+    }
+
+    void StringTablePut(RexxStringTableObject diro, RexxObjectPtr o, CSTRING s)
+    {
+        threadContext->StringTablePut(diro, o, s);
+    }
+    RexxObjectPtr StringTableAt(RexxStringTableObject to, CSTRING s)
+    {
+        return threadContext->StringTableAt(to, s);
+    }
+    RexxObjectPtr StringTableRemove(RexxStringTableObject to, CSTRING s)
+    {
+        return threadContext->StringTableRemove(to, s);
+    }
+    RexxStringTableObject NewStringTable()
+    {
+        return threadContext->NewStringTable();
+    }
+    logical_t IsStringTable(RexxObjectPtr o)
+    {
+        return threadContext->IsStringTable(o);
     }
 
     RexxObjectPtr ArrayAt(RexxArrayObject ao, size_t n)
