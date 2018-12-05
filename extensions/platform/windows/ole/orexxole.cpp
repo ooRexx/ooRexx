@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -1767,7 +1767,7 @@ RexxObjectPtr Variant2Rexx(RexxThreadContext *context, VARIANT *pVariant)
                 if ( FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_MAX_WIDTH_MASK,
                                    NULL, hResult, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR)&tmpBuf, 0, NULL) )
                 {
-                    sprintf(szBuffer, "VT_ERROR (0x%08x) <%s>", hResult, tmpBuf);
+                    sprintf(szBuffer, "VT_ERROR (0x%08x) <%s>", hResult, (char *)tmpBuf);
                     LocalFree(tmpBuf);
                 }
                 else
@@ -5017,7 +5017,7 @@ RexxMethod2(RexxObjectPtr,                      // Return type
                         }
                         if (i>0)
                         {
-                            if (sscanf(pBuffer+i+1,"%d",&sMajor) != 1) sMajor = 1; // assume one if read in fails
+                            if (sscanf(pBuffer+i+1,"%hd",&sMajor) != 1) sMajor = 1; // assume one if read in fails
                         }
 
                     }

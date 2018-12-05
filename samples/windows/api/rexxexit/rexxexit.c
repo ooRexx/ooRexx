@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -150,12 +150,12 @@ RexxReturnCode REXXENTRY MY_IOEXIT(int ExitNumber, int Subfunction, PEXIT parmbl
             break;
         case RXSIOTRD:
             rparm = (RXSIOTRD_PARM * )parmblock ;
-            gets(rparm->rxsiotrd_retc.strptr);
+            gets_s(rparm->rxsiotrd_retc.strptr, rparm->rxsiotrd_retc.strlength);
             rparm->rxsiotrd_retc.strlength=strlen(rparm->rxsiotrd_retc.strptr);
             break;
         case RXSIODTR:
             dparm = (RXSIODTR_PARM * )parmblock ;
-            gets(dparm->rxsiodtr_retc.strptr);
+            gets_s(dparm->rxsiodtr_retc.strptr, dparm->rxsiodtr_retc.strlength);
             dparm->rxsiodtr_retc.strlength=strlen(dparm->rxsiodtr_retc.strptr);
             break;
         default:
