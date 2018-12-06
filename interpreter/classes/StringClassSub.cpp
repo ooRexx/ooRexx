@@ -117,7 +117,7 @@ RexxString *RexxString::center(RexxInteger *_length, RexxString *pad)
 RexxString *RexxString::delstr(RexxInteger *position, RexxInteger *_length)
 {
     size_t stringLen = getLength();
-    size_t deletePos = positionArgument(position, ARG_ONE);
+    size_t deletePos = optionalPositionArgument(position, 1, ARG_ONE);
     size_t deleteLen = optionalLengthArgument(_length, stringLen - deletePos + 1, ARG_TWO);
 
     // if the delete position is beyond the
@@ -125,6 +125,12 @@ RexxString *RexxString::delstr(RexxInteger *position, RexxInteger *_length)
     if (deletePos > stringLen)
     {
         return this;
+    }
+
+    // delete all characters?  This is a null string
+    if (deletePos == 1 && deleteLen >= stringLen)
+    {
+        return GlobalNames::NULLSTRING;
     }
 
     // easier to do if origin zero

@@ -112,7 +112,7 @@ BUILTIN(CENTRE)
 
 BUILTIN(DELSTR)
 {
-    const size_t DELSTR_Min = 2;
+    const size_t DELSTR_Min = 1;
     const size_t DELSTR_Max = 3;
     const size_t DELSTR_string = 1;
     const size_t DELSTR_n =      2;
@@ -121,7 +121,7 @@ BUILTIN(DELSTR)
     fix_args(DELSTR);
 
     RexxString *string = required_string(DELSTR, string);
-    RexxInteger *n = required_integer(DELSTR, n);
+    RexxInteger *n = optional_integer(DELSTR, n);
     RexxInteger *length = optional_integer(DELSTR, length);
 
     return string->delstr(n, length);
