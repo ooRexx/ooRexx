@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -45,22 +45,10 @@
 /*                                                                          */
 /****************************************************************************/
 
-/* Get system and version */
-ret = syswinver()
-parse var ret winsys winver
+regeditor = "REGEDIT"
 
-/* The registry editor name is different on NT 3.5 */
-if winver \= 4 then
-    regeditor = "REGEDT32"
-else regeditor = "REGEDIT"
-
-FileControl = "\control"
-FileNewKey = "\testuser"
-/* do not use file extension on 95 */
-if winsys = "WindowsNT" then do
-    FileControl = FileControl || ".reg"
-    FileNewKey = FileNewKey || ".reg"
-end
+FileControl = "\control.reg"
+FileNewKey = "\testuser.reg"
 
 r = .WindowsRegistry~new   /* create a new registry object */
 
@@ -179,16 +167,11 @@ if savekey \= 0 then do
    if saveret = 0 then
        say "\\HKEY_CURRENT_USER\TEST_USER has been saved to" FileNewKey
    r~close(savekey)
-   if winsys = "Windows95" then
-       /* On Windows 95 delete key TEST_USER including its subkeys*/
-       rc = r~Delete(r~Current_User,"TEST_USER")
-   else do
-       /* On NT it is not possible to delete a key and its subkeys at once, */
-       /* so delete the key's subkeys first step by step */
-       rc = r~Delete(r~Current_User,"TEST_USER\OREXX\DATA1")
-       rc = r~Delete(r~Current_User,"TEST_USER\OREXX")
-       rc = r~Delete(r~Current_User,"TEST_USER")  /* and now delete the key */
-   end
+   /* It is not possible to delete a key and its subkeys at once, */
+   /* so delete the key's subkeys first step by step */
+   rc = r~Delete(r~Current_User,"TEST_USER\OREXX\DATA1")
+   rc = r~Delete(r~Current_User,"TEST_USER\OREXX")
+   rc = r~Delete(r~Current_User,"TEST_USER")  /* and now delete the key */
 
    if rc = 0 then do
        ret = RxMessageBox("\\HKEY_CURRENT_USER\TEST_USER has been deleted.",
@@ -196,38 +179,17 @@ if savekey \= 0 then do
        regeditor
    end
    else say "Delete of key TEST_USER failed ("rc")"
-   /* Key restoring only supported by NT */
-   if winsys = "WindowsNT" then do
-       if r~create(r~Current_User,"TEST_USER") \= 0 then do   /* create key again to restore */
-           rc = r~Restore(,FileNewKey)   /* restore previously saved key */
-           if rc = 0 then do
-               ret = RxMessageBox("\\HKEY_CURRENT_USER\TEST_USER has been restored.",
-                    || " Explore and close RegEdit to continue.", "WindowsRegistry", "OK")
-               regeditor
-               say "Please remove \\HKEY_CURRENT_USER\TEST_USER using" RegEditor
-           end
-           else say "Restoring failed ("rc")"
-       end
-   end
-   else do /* Use Load and Unload on Windows 95 */
-       /* Load creates the specified key and adds the data stored in the file to it. */
-       /* The keys data is backed by the file which protects the file from being accessed (on NT only). */
-       /* Load can only create a key under HKEY_LOCAL_MACHINE or HKEY_USERS */
-       if r~Load(r~Local_Machine,"TEST_USER_LOAD",FileNewKey) = 0 then do   /* load previous key */
-           ret = RxMessageBox("Key TEST_USER has been loaded under \\HKEY_LOCAL_MACHINE\TEST_USER_LOAD.",
-                    || " Explore and close RegEdit to continue. Try to delete this key within" regeditor".",
-                    , "WindowsRegistry", "OK")
+   if r~create(r~Current_User,"TEST_USER") \= 0 then do   /* create key again to restore */
+       rc = r~Restore(,FileNewKey)   /* restore previously saved key */
+       if rc = 0 then do
+           ret = RxMessageBox("\\HKEY_CURRENT_USER\TEST_USER has been restored.",
+                || " Explore and close RegEdit to continue.", "WindowsRegistry", "OK")
            regeditor
-           /* The only way to remove a "loaded" key is by using Unload */
-           rc = r~Unload(r~Local_Machine,"TEST_USER_LOAD")
-           if rc = 0 then say "TEST_USER_LOAD has been unloaded."
-           else say "Unload failed ("rc")"
+           say "Please remove \\HKEY_CURRENT_USER\TEST_USER using" RegEditor
        end
        else say "Restoring failed ("rc")"
    end
    say "The files" FileControl "and" FileNewKey "have been created, please delete manually to cleanup."
-   if winsys = "Windows95" then
-       say "Notice that these files are hidden. Use attrib -s -h -r to change the attributes."
 end
 
 /* winsystm.cls contains the WindowsRegistry class definition */

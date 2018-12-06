@@ -3591,43 +3591,72 @@ size_t RexxEntry SysWinDecryptFile(const char *name, size_t numargs, CONSTRXSTRI
 
 size_t RexxEntry SysWinVer(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
+     if (numargs != 0)                    /* validate arg count         */
+     {
+         return INVALID_ROUTINE;
+     }
 
-  if (numargs != 0)                    /* validate arg count         */
-    return INVALID_ROUTINE;
+     char windowsDir[256];
+     char kernel32[256];
 
-  int majorVersion = 0;
-  int minorVersion = 0;
+     // get the value of the WINDOWS environment variable
+     DWORD windowsDirLength = GetEnvironmentVariable("windir", windowsDir, sizeof(windowsDir));
 
-  if (IsWindows10OrGreater())
-  {
-      majorVersion = 10;
-  }
-  else if (IsWindows8Point1OrGreater())
-  {
-      majorVersion = 6;
-      minorVersion = 3;
-  }
-  else if (IsWindows8OrGreater())
-  {
-      majorVersion = 6;
-      minorVersion = 2;
-  }
-  else if (IsWindows7OrGreater())
-  {
-      majorVersion = 6;
-      minorVersion = 1;
-  }
-  else if (IsWindowsVistaOrGreater())
-  {
-      majorVersion = 6;
-      minorVersion = 0;
-  }
+     // this should be there, but use the likely default if it isn't.
+     if (windowsDirLength == 0)
+     {
+         strcpy("C:\\Windows", windowsDir);
+     }
 
-                                       /* format into the buffer     */
-  wsprintf(retstr->strptr,"Windows %d.%02d", majorVersion, minorVersion);
+     // get the full path name of the kernel32.dll
+     snprintf(kernel32, sizeof(kernel32), "%s\\System32\\kernel32.dll", windowsDir);
 
-  retstr->strlength = strlen(retstr->strptr);
-  return VALID_ROUTINE;
+     // MS has deprecated GetVersionEx(). The only way to get the real version
+     // information now is by querying the version information of one of the system dlls.
+     DWORD  verHandle = 0;
+     UINT   size      = 0;
+     LPBYTE lpBuffer  = NULL;
+     // get the size of the version information for this dll.
+     DWORD  verSize   = GetFileVersionInfoSize(kernel32, &verHandle);
+
+     if (verSize != NULL)
+     {
+         LPSTR verData = new char[verSize];
+
+         // get the version information
+         if (GetFileVersionInfo(kernel32, verHandle, verSize, verData))
+         {
+             // the query the specific version information
+             if (VerQueryValue(verData,"\\",(void **)&lpBuffer, &size))
+             {
+                 if (size > 0)
+                 {
+                     VS_FIXEDFILEINFO *verInfo = (VS_FIXEDFILEINFO *)lpBuffer;
+                     if (verInfo->dwSignature == 0xfeef04bd)
+                     {
+                         // Doesn't matter if you are on 32 bit or 64 bit,
+                         // DWORD is always 32 bits, so first two revision numbers
+                         // come from dwFileVersionMS, last two come from dwFileVersionLS
+                         snprintf(retstr->strptr, retstr->strlength, "Windows %d.%02d.%d.%d",
+                             ( verInfo->dwFileVersionMS >> 16 ) & 0xffff,
+                             ( verInfo->dwFileVersionMS >>  0 ) & 0xffff,
+                             ( verInfo->dwFileVersionLS >> 16 ) & 0xffff,
+                             ( verInfo->dwFileVersionLS >>  0 ) & 0xffff);
+
+                         delete[] verData;
+
+                         retstr->strlength = strlen(retstr->strptr);
+                         return VALID_ROUTINE;
+                     }
+                 }
+             }
+         }
+         delete[] verData;
+     }
+
+     // just return a NULL if not able to get this
+     retstr->strlength = 0;
+     return VALID_ROUTINE;
 }
 
 /*************************************************************************

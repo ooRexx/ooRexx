@@ -1154,7 +1154,7 @@ if (WIN32)
    set (platform_rexxutil_sources
             ${build_extensions_rexxutil_platform_dir}/rexxutil.def
             ${build_platform_dir}/verinfo.rc)
-   set (platform_rexxutil_libs shlwapi)
+   set (platform_rexxutil_libs shlwapi version)
 else ()
    set (platform_rexxutil_libs ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
 endif ()
