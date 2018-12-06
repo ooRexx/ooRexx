@@ -40,6 +40,7 @@
 #/* Global settings                                                            */
 #/*----------------------------------------------------------------------------*/
 cmake_minimum_required (VERSION 2.8)
+cmake_policy(VERSION 2.8...3.3)
 include(CheckIncludeFile)
 include(CheckLibraryExists)
 include(CheckFunctionExists)
@@ -74,6 +75,35 @@ else ()
     set(ORX_ARCHITECTURE "32")
     message(STATUS "Building for a 32-bit architecture")
 endif ()
+
+
+# OOREXX_SHEBANG_PROGRAM default:
+set (OOREXX_SHEBANG_PROGRAM "/usr/bin/env rexx")
+
+# if ORX_SHEBANG defined change default shebang accordingly
+if (ORX_SHEBANG)
+   if (${ORX_SHEBANG} STREQUAL "1")
+      # set hard coded path to installation directory
+      if (WIN32)
+         # Windows does not use the shebang, let the default stay
+         message(STATUS "OOREXX_SHEBANG_PROGRAM: \"${OOREXX_SHEBANG_PROGRAM}\" (default: \"-DORX_SHEBANG=1\" gets ignored on Windows)")
+      else ()
+         if (APPLE)
+            # APPLE-special: install into homedirectory's Applications folder
+            set (OOREXX_SHEBANG_PROGRAM "$ENV{HOME}/Applications/ooRexx${ORX_VER_STR}/bin/rexx")
+         else ()
+            set (OOREXX_SHEBANG_PROGRAM "${CMAKE_INSTALL_PREFIX}/bin/rexx")
+         endif ()
+         message(STATUS "OOREXX_SHEBANG_PROGRAM: \"${OOREXX_SHEBANG_PROGRAM}\" (ORX_SHEBANG=1 hence hardcoded to installation directory)")
+      endif ()
+   else()
+      # use supplied string verbatim; note: the shebang "#!" is already supplied in the sample Rexx file
+      set (OOREXX_SHEBANG_PROGRAM "${ORX_SHEBANG}")
+      message(STATUS "OOREXX_SHEBANG_PROGRAM: \"${OOREXX_SHEBANG_PROGRAM}\" (value supplied via ORX_SHEBANG)")
+   endif ()
+else ()
+    message(STATUS "OOREXX_SHEBANG_PROGRAM: \"${OOREXX_SHEBANG_PROGRAM}\" (default)")
+endif()
 
 find_package(Subversion)
 if(SUBVERSION_FOUND)
@@ -192,8 +222,6 @@ if (WIN32)
      set(NSIS_COMPONENT_SHORTCUTS_Docs "${NSIS_COMPONENT_SHORTCUTS_Docs}\n!insertmacro ConfigureDocShortCut \"${name}\" \"${file}\"")
    ENDMACRO ()
 
-   set (OOREXX_SHEBANG_PROGRAM "/usr/bin/env rexx")
-
  else ()
    if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
      set(CMAKE_INSTALL_PREFIX
@@ -226,9 +254,6 @@ if (WIN32)
    set (INSTALL_INCLUDE_DIR ${CMAKE_INSTALL_PREFIX}/include)
    set (INSTALL_SAMPLES_DIR ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME})
    set (INSTALL_MAN_DIR ${CMAKE_INSTALL_PREFIX}/share/man)
-
-   # this may need adjusting for some platforms
-   set (OOREXX_SHEBANG_PROGRAM ${CMAKE_INSTALL_PREFIX}/bin/rexx)
 endif ()
 # Set compiler and linker flags common to all build environments
 include_directories(${PROJECT_BINARY_DIR})
