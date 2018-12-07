@@ -1935,7 +1935,7 @@ if (WIN32 AND DOC_SOURCE_DIR)
       file(TO_NATIVE_PATH ${DOC_SOURCE_DIR} NATIVE_DOC_DIR)
 
       # Name of the installer file we're going to create
-      set(INSTALLER_FILE "ooRexx.${ORX_VERSION_NSIS}-${NSIS_CPU}.exe")
+      set(INSTALLER_FILE "ooRexx.${ORX_VERSION_NSIS}-Windows-${NSIS_CPU}.exe")
       set(INSTALLER_SCRIPT "ooRexx.${ORX_VERSION_NSIS}-${NSIS_CPU}.nsi")
 
       # create an installer file from the template
