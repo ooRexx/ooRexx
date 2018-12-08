@@ -59,6 +59,7 @@
 #endif
 
 #define REXXENTRY
+#define REXXEXPORT
 
 typedef void *REXXPFN;
 typedef pid_t process_id_t;

@@ -1152,7 +1152,6 @@ install(TARGETS rxsubcom RUNTIME COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE
 # additional source files required by specific platforms
 if (WIN32)
    set (platform_rexxutil_sources
-            ${build_extensions_rexxutil_platform_dir}/rexxutil.def
             ${build_platform_dir}/verinfo.rc)
    set (platform_rexxutil_libs shlwapi version)
 else ()
@@ -1177,7 +1176,6 @@ set_target_properties(rexxutil PROPERTIES VERSION ${ORX_VERSION})
 # additional source files required by specific platforms
 if (WIN32)
    set (platform_rxmath_sources
-            ${build_platform_dir}/rxmath.def
             ${build_platform_dir}/verinfo.rc)
 endif ()
 # Sources for librxmath.so
@@ -1199,7 +1197,6 @@ set_target_properties(rxmath PROPERTIES VERSION ${ORX_VERSION})
 # additional source files required by specific platforms
 if (WIN32)
    set (platform_rxsock_sources
-            ${build_platform_dir}/rxsock.def
             ${build_platform_dir}/verinfo.rc)
 endif ()
 
@@ -1218,7 +1215,6 @@ set_target_properties(rxsock PROPERTIES VERSION ${ORX_VERSION})
 # additional source files required by specific platforms
 if (WIN32)
    set (platform_rxregexp_sources
-            ${build_platform_dir}/rxregexp.def
             ${build_platform_dir}/verinfo.rc)
 endif ()
 
@@ -1243,7 +1239,6 @@ set_target_properties(rxregexp PROPERTIES VERSION ${ORX_VERSION})
 # additional source files required by specific platforms
 if (WIN32)
    set (platform_hostemu_sources
-            ${build_platform_dir}/hostemu.def
             ${build_platform_dir}/verinfo.rc)
 else ()
    set (platform_hostemu_libs ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
@@ -1333,7 +1328,6 @@ if (WIN32)
    copy_build_file(winsystm.cls ${build_extensions_rxwinsys_dir})
    # Sources for rxwinwys.dll
    add_library(rxwinsys SHARED ${build_extensions_rxwinsys_dir}/rxwinsys.cpp
-                ${build_extensions_rxwinsys_dir}/rxwinsys.def
                 ${build_platform_dir}/verinfo.rc)
    # Include file definition
    target_include_directories(rxwinsys PUBLIC
@@ -1363,8 +1357,7 @@ if (WIN32)
                 ${build_extensions_oodialog_dir}/APICommon.cpp
                 ${build_extensions_oodialog_dir}/ooShapes.cpp
                 ${build_extensions_oodialog_dir}/ooShapesAid.cpp
-                ${build_extensions_oodialog_dir}/ooShapesPE.cpp
-                ${build_extensions_oodialog_dir}/ooShapes.def)
+                ${build_extensions_oodialog_dir}/ooShapesPE.cpp)
    # Override the compile definitions with ooShapes-exclusive defines
    set_property(TARGET ooshapes
           PROPERTY COMPILE_DEFINITIONS
@@ -1421,7 +1414,6 @@ if (WIN32)
                 ${build_extensions_oodialog_dir}/oodViewControls.cpp
 #               ${build_extensions_oodialog_dir}/ooShapes.cpp
 #               ${build_extensions_oodialog_dir}/ooShapesAid.cpp
-                ${build_extensions_oodialog_dir}/ooDialog.def
                 ${build_extensions_oodialog_dir}/ooDialog.rc)
    # Override the compile definitions with ooDialog-exclusive defines
    set_property(TARGET oodialog
