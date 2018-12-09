@@ -3342,7 +3342,7 @@ void RexxActivation::traceEntry()
     // is a method or a routine.
     if (isMethod())
     {
-        info = new_array(getMessageName(), scope->getId(), getPackage()->getProgramName());
+        info = new_array(getMessageName(), ((MethodClass *)executable)->getScopeName(), getPackage()->getProgramName());
     }
     else
     {
@@ -4690,7 +4690,7 @@ RexxString *RexxActivation::formatSourcelessTraceLine(RexxString *packageName)
     // if this is a method invocation, then we can give the method name and scope.
     if (isMethod())
     {
-        ArrayClass *info = new_array(getMessageName(), scope->getId(), packageName);
+        ArrayClass *info = new_array(getMessageName(), ((MethodClass *)executable)->getScopeName(), packageName);
         ProtectedObject p(info);
 
         return activity->buildMessage(Message_Translations_sourceless_method_invocation, info);

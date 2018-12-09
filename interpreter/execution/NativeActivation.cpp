@@ -3598,7 +3598,7 @@ StackFrameClass *NativeActivation::createStackFrame()
     }
     else
     {
-        ArrayClass *info = new_array(getMessageName(), getScope()->getId());
+        ArrayClass *info = new_array(getMessageName(), ((MethodClass *)executable)->getScopeName());
         ProtectedObject p(info);
 
         RexxString *message = activity->buildMessage(Message_Translations_compiled_method_invocation, info);

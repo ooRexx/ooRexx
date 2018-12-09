@@ -352,6 +352,18 @@ RexxObject *MethodClass::getScopeRexx()
 
 
 /**
+ * Retrieve a string name for the method scope. If the scope is .nil,
+ * then ".NIL" is returned, otherwise the class name is used.
+ *
+ * @return A string name for the scope.
+ */
+RexxString *MethodClass::getScopeName()
+{
+    return (RexxObject *)scope == TheNilObject ? GlobalNames::DOTNIL : scope->getId();
+}
+
+
+/**
  * Set the entire set of method attributes with one call.  Used
  * during source compilation.
  *
