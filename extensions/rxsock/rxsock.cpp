@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -631,6 +631,25 @@ RexxRoutine0(int, SockDie)
     return 0;
 }
 
+
+/**
+ * A loader to perform an startup initialization
+ *
+ * @param context The loader thread context
+ *
+ * @return nothing
+ */
+void RexxEntry loader(RexxThreadContext *context)
+{
+// Windows requires the sockets system to be updated on a per-process basis.
+#ifdef WIN32
+    WORD wVersionRequested;
+    WSADATA wsaData;
+    wVersionRequested = MAKEWORD( 1, 1 );
+    int rc = WSAStartup( wVersionRequested, &wsaData );
+#endif
+}
+
 /*------------------------------------------------------------------
  * declare external functions
  *------------------------------------------------------------------*/
@@ -706,8 +725,8 @@ RexxPackageEntry rxsock_package_entry =
     REXX_INTERPRETER_4_0_0,              // anything after 4.0.0 will work
     "rxsock",                            // name of the package
     "4.0",                               // package information
-    NULL,                                // no load/unload functions
-    NULL,
+    loader,                              // we have some load time initialization
+    NULL,                                // but nothing to do at unload
     rxsock_functions,                    // the exported functions
     NULL                                 // no methods in this package
 };
