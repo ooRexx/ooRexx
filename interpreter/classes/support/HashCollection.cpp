@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -985,7 +985,7 @@ RexxObject *StringHashCollection::unknownRexx(RexxString *message, ArrayClass *a
  * @param count     The count of arguments.
  * @param result    The return result protected object.
  */
-void StringHashCollection::processUnknown(RexxString *messageName, RexxObject **arguments, size_t count, ProtectedObject &result)
+void StringHashCollection::processUnknown(RexxErrorCodes error, RexxString *messageName, RexxObject **arguments, size_t count, ProtectedObject &result)
 {
     // if this is not a subclass, we can just directly compare the pointers.
     if (isBaseClass())
@@ -996,7 +996,7 @@ void StringHashCollection::processUnknown(RexxString *messageName, RexxObject **
     else
     {
         // this could be a subclass that overrides UNKNOWN, so do this the slow way
-        return RexxObject::processUnknown(messageName, arguments, count, result);
+        return RexxObject::processUnknown(error, messageName, arguments, count, result);
     }
 }
 

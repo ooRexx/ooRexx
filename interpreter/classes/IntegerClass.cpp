@@ -448,7 +448,7 @@ bool RexxInteger::logicalValue(logical_t &result)
  * @param count     The count of arguments.
  * @param result    The return result protected object.
  */
-void RexxInteger::processUnknown(RexxString *messageName, RexxObject **arguments, size_t count, ProtectedObject &result)
+void RexxInteger::processUnknown(RexxErrorCodes error, RexxString *messageName, RexxObject **arguments, size_t count, ProtectedObject &result)
 {
     // just send this as a message directly to the string object.
     stringValue()->messageSend(messageName, arguments, count, result);

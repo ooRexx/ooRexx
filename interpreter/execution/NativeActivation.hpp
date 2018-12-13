@@ -99,6 +99,8 @@ class NativeActivation : public ActivationBase
     virtual RexxActivation *getRexxContext();
     virtual RexxActivation *findRexxContext();
     virtual RexxObject *getReceiver();
+    virtual MethodClass *getMethod();
+    virtual PackageClass *getPackage() { return getPackageObject(); }
     virtual SecurityManager *getSecurityManager();
     virtual const NumericSettings *getNumericSettings();
 

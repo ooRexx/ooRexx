@@ -4988,6 +4988,24 @@ special character (such as a parenthesis).
       </SubMessage>
       <SubMessage>
         <Code>97</Code>
+        <Subcode>002</Subcode>
+        <MessageNumber>818</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_No_method_private</SymbolicName>
+        <Text>Object <q><Sub position="1" name="object"/></q> cannot accept private message <q><Sub position="2" name="message"/></q> from this context.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>97</Code>
+        <Subcode>003</Subcode>
+        <MessageNumber>819</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_No_method_package</SymbolicName>
+        <Text>Object <q><Sub position="1" name="object"/></q> cannot accept package scope message <q><Sub position="2" name="message"/></q> from a different package caller.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>97</Code>
         <Subcode>900</Subcode>
         <MessageNumber>646</MessageNumber>
         <Component>Rexx</Component>

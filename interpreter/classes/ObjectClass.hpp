@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -456,7 +456,7 @@ class RexxObject : public RexxInternalObject
     virtual RexxInternalObject *copy();
     virtual HashCode     hash();
     virtual RexxString  *stringValue();
-    virtual void processUnknown(RexxString *, RexxObject **, size_t, ProtectedObject &);
+    virtual void processUnknown(RexxErrorCodes, RexxString *, RexxObject **, size_t, ProtectedObject &);
 
     virtual bool isInstanceOf(RexxClass *);
     virtual MethodClass   *instanceMethod(RexxString *);
@@ -482,7 +482,8 @@ class RexxObject : public RexxInternalObject
 
     RexxObject  *messageSend(RexxString *, RexxObject **, size_t, ProtectedObject &);
     RexxObject  *messageSend(RexxString *, RexxObject **, size_t, RexxClass *, ProtectedObject &);
-    MethodClass *checkPrivate(MethodClass *);
+    MethodClass *checkPrivate(MethodClass *, RexxErrorCodes &);
+    MethodClass *checkPackage(MethodClass *, RexxErrorCodes &);
     void         checkRestrictedMethod(const char *methodName);
     void         processProtectedMethod(RexxString *, MethodClass *, RexxObject **, size_t, ProtectedObject &);
     RexxObject  *sendMessage(RexxString *, ArrayClass *, ProtectedObject &);

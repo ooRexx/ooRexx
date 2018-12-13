@@ -274,7 +274,7 @@ RexxObject *StemClass::unknownRexx(RexxString *message, ArrayClass *arguments)
  * @param count     The count of arguments.
  * @param result    The return result protected object.
  */
-void StemClass::processUnknown(RexxString *messageName, RexxObject **arguments, size_t count, ProtectedObject &result)
+void StemClass::processUnknown(RexxErrorCodes error, RexxString *messageName, RexxObject **arguments, size_t count, ProtectedObject &result)
 {
     // just send this as a message directly to the string object.
     value->messageSend(messageName, arguments, count, result);

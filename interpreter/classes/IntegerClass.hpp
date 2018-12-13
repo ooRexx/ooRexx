@@ -68,7 +68,7 @@ class RexxInteger : public RexxObject
     virtual bool unsignedNumberValue(size_t &result, wholenumber_t precision);
     virtual bool unsignedNumberValue(size_t &result);
     virtual bool doubleValue(double &result);
-    virtual void processUnknown(RexxString *, RexxObject **, size_t, ProtectedObject &);
+    virtual void processUnknown(RexxErrorCodes error, RexxString *, RexxObject **, size_t, ProtectedObject &);
     virtual wholenumber_t compareTo(RexxInternalObject *);
 
     virtual NumberString *numberString();

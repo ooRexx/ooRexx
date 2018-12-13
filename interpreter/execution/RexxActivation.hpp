@@ -140,7 +140,9 @@ class RexxActivation : public ActivationBase
    virtual RexxActivation  *getRexxContext();
    virtual RexxActivation  *findRexxContext();
    virtual RexxObject      *getReceiver();
+   virtual MethodClass     *getMethod();
    virtual bool             isRexxContext();
+   virtual PackageClass    *getPackage();
 
    void        inheritPackageSettings();
    void        allocateStackFrame();
@@ -279,7 +281,6 @@ class RexxActivation : public ActivationBase
        return isInterpret() ? executable->getPackageObject() : packageObject;
    }
 
-   PackageClass     *getPackage();
    RexxObject       *getLocalEnvironment(RexxString *name);
    void              setReturnStatus(ReturnStatus status);
 

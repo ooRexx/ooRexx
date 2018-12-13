@@ -81,7 +81,7 @@ class StemClass : public RexxObject
     virtual void flatten(Envelope*);
     virtual RexxInternalObject *copy();
 
-    virtual void processUnknown(RexxString *, RexxObject **, size_t, ProtectedObject &);
+    virtual void processUnknown(RexxErrorCodes error, RexxString *, RexxObject **, size_t, ProtectedObject &);
     virtual void copyFrom(CompoundVariableTable &_tails);
     virtual bool numberValue(wholenumber_t &result, wholenumber_t precision);
     virtual bool numberValue(wholenumber_t &result);

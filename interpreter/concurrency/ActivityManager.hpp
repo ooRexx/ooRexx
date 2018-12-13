@@ -305,11 +305,11 @@ inline void reportException(RexxErrorCodes error, const char *a1, RexxObject *a2
     ActivityManager::currentActivity->reportAnException(error, new_string(a1), a2, a3);
 }
 
-inline void reportNomethod(RexxString *message, RexxObject *receiver)
+inline void reportNomethod(RexxErrorCodes error, RexxString *message, RexxObject *receiver)
 {
     if (!ActivityManager::currentActivity->raiseCondition(GlobalNames::NOMETHOD, OREF_NULL, message, receiver, OREF_NULL))
     {
-        reportException(Error_No_method_name, receiver, message);
+        reportException(error, receiver, message);
     }
 }
 

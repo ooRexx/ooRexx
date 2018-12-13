@@ -1069,6 +1069,7 @@ StartClassDefinition(Method)
         AddMethod("SetPrivate", MethodClass::setPrivateRexx, 0);
         AddMethod("IsGuarded", MethodClass::isGuardedRexx, 0);
         AddMethod("IsPrivate", MethodClass::isPrivateRexx, 0);
+        AddMethod("IsPackage", MethodClass::isPackageRexx, 0);
         AddMethod("IsProtected", MethodClass::isProtectedRexx, 0);
         AddMethod("IsAbstract", MethodClass::isAbstractRexx, 0);
         AddMethod("IsConstant", MethodClass::isConstantRexx, 0);

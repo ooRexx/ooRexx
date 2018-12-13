@@ -730,6 +730,8 @@
 #define Error_Execution_address_redirection_not_supported_msg        815
 #define Error_Execution_using_rexxqueue_option_msg                   816
 #define Error_Execution_address_redirection_failed_msg               817
+#define Error_No_method_private_msg                                  818
+#define Error_No_method_package_msg                                  819
 
 
 #endif

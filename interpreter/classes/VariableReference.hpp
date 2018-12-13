@@ -67,7 +67,7 @@ public:
     virtual void liveGeneral(MarkReason reason);
     virtual void flatten(Envelope *);
 
-    virtual void processUnknown(RexxString *, RexxObject **, size_t, ProtectedObject &);
+    virtual void processUnknown(RexxErrorCodes error, RexxString *, RexxObject **, size_t, ProtectedObject &);
     virtual RexxString  *stringValue();
     virtual bool numberValue(wholenumber_t &result, wholenumber_t precision);
     virtual bool numberValue(wholenumber_t &result);

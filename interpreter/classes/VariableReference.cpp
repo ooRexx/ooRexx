@@ -238,7 +238,7 @@ RexxObject *VariableReference::unknownRexx(RexxString *message, ArrayClass *argu
  * @param count     The count of arguments.
  * @param result    The return result protected object.
  */
-void VariableReference::processUnknown(RexxString *messageName, RexxObject **arguments, size_t count, ProtectedObject &result)
+void VariableReference::processUnknown(RexxErrorCodes error, RexxString *messageName, RexxObject **arguments, size_t count, ProtectedObject &result)
 {
     // just send this as a message indirect variable value
     variable->getResolvedValue()->messageSend(messageName, arguments, count, result);

@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -204,27 +204,6 @@ bool LanguageParser::hasBody()
     }
     return result;
 }
-
-typedef enum
-{
-    DEFAULT_GUARD,                 // default guard
-    GUARDED_METHOD,                // guard specified
-    UNGUARDED_METHOD,              // unguarded specified
-} GuardFlag;
-
-typedef enum
-{
-    DEFAULT_PROTECTION,            // using defualt protection
-    PROTECTED_METHOD,              // security manager permission needed
-    UNPROTECTED_METHOD,            // no protection.
-} ProtectedFlag;
-
-typedef enum
-{
-    DEFAULT_ACCESS_SCOPE,          // using defualt scope
-    PUBLIC_SCOPE,                  // publicly accessible
-    PRIVATE_SCOPE,                 // private scope
-} AccessFlag;
 
 
 /**
@@ -715,6 +694,16 @@ void LanguageParser::methodDirective()
                     accessFlag = PRIVATE_SCOPE;
                     break;
 
+                // ::METHOD name PACKAGE
+                case SUBDIRECTIVE_PACKAGE:
+                    // has an access flag already been specified?
+                    if (accessFlag != DEFAULT_ACCESS_SCOPE)
+                    {
+                        syntaxError(Error_Invalid_subkeyword_method, token);
+                    }
+                    accessFlag = PACKAGE_SCOPE;
+                    break;
+
                 // ::METHOD name PUBLIC
                 case SUBDIRECTIVE_PUBLIC:
                     // has an access flag already been specified?
@@ -845,12 +834,10 @@ void LanguageParser::methodDirective()
             // need to check for duplicates on that too
             checkDuplicateMethod(setterName, isClass, Error_Translation_duplicate_method);
             // create the method pair and quit.
-            createDelegateMethod(setterName, retriever, isClass, accessFlag == PRIVATE_SCOPE,
-                protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD, true);
+            createDelegateMethod(setterName, retriever, isClass, accessFlag, protectedFlag, guardFlag, true);
         }
         // create the method pair and quit.
-        createDelegateMethod(internalname, retriever, isClass, accessFlag == PRIVATE_SCOPE,
-            protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD, isAttribute);
+        createDelegateMethod(internalname, retriever, isClass, accessFlag, protectedFlag, guardFlag, isAttribute);
         return;
     }
     // is this an attribute method?
@@ -871,14 +858,14 @@ void LanguageParser::methodDirective()
             decodeExternalMethod(internalname, externalname, library, procedure);
             // now create both getter and setting methods from the information.
             _method = createNativeMethod(internalname, library, procedure->concatToCstring("GET"));
-            _method->setAttributes(accessFlag == PRIVATE_SCOPE, protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD);
+            _method->setAttributes(accessFlag, protectedFlag, guardFlag);
             // mark this as an attribute method
             _method->setAttribute();
             // add to the compilation
             addMethod(internalname, _method, isClass);
 
             _method = createNativeMethod(setterName, library, procedure->concatToCstring("SET"));
-            _method->setAttributes(accessFlag == PRIVATE_SCOPE, protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD);
+            _method->setAttributes(accessFlag, protectedFlag, guardFlag);
             // add to the compilation
             addMethod(setterName, _method, isClass);
         }
@@ -888,10 +875,8 @@ void LanguageParser::methodDirective()
             RexxVariableBase *retriever = getRetriever(name);
 
             // create the method pair and quit.
-            createAttributeGetterMethod(internalname, retriever, isClass, accessFlag == PRIVATE_SCOPE,
-                protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD);
-            createAttributeSetterMethod(setterName, retriever, isClass, accessFlag == PRIVATE_SCOPE,
-                protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD);
+            createAttributeGetterMethod(internalname, retriever, isClass, accessFlag, protectedFlag, guardFlag);
+            createAttributeSetterMethod(setterName, retriever, isClass, accessFlag, protectedFlag, guardFlag);
         }
         return;
     }
@@ -932,7 +917,7 @@ void LanguageParser::methodDirective()
         // and make this into a method object.
         _method = createNativeMethod(name, library, procedure);
     }
-    _method->setAttributes(accessFlag == PRIVATE_SCOPE, protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD);
+    _method->setAttributes(accessFlag, protectedFlag, guardFlag);
     // add to the compilation
     addMethod(internalname, _method, isClass);
 }
@@ -1299,6 +1284,16 @@ void LanguageParser::attributeDirective()
                     accessFlag = PUBLIC_SCOPE;
                     break;
 
+                // define with package access
+                case SUBDIRECTIVE_PACKAGE:
+                    // must be first access specifier
+                    if (accessFlag != DEFAULT_ACCESS_SCOPE)
+                    {
+                        syntaxError(Error_Invalid_subkeyword_attribute, token);
+                    }
+                    accessFlag = PACKAGE_SCOPE;
+                    break;
+
                 // ::METHOD name PROTECTED
                 case SUBDIRECTIVE_PROTECTED:
                     // only one of PROTECTED UNPROTECTED
@@ -1417,14 +1412,14 @@ void LanguageParser::attributeDirective()
                 decodeExternalMethod(internalname, externalname, library, procedure);
                 // now create both getter and setting methods from the information.
                 MethodClass *_method = createNativeMethod(internalname, library, procedure->concatToCstring("GET"));
-                _method->setAttributes(accessFlag == PRIVATE_SCOPE, protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD);
+                _method->setAttributes(accessFlag, protectedFlag, guardFlag);
                 // mark this as an attribute method
                 _method->setAttribute();
                 // add to the compilation
                 addMethod(internalname, _method, isClass);
 
                 _method = createNativeMethod(setterName, library, procedure->concatToCstring("SET"));
-                _method->setAttributes(accessFlag == PRIVATE_SCOPE, protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD);
+                _method->setAttributes(accessFlag, protectedFlag, guardFlag);
                 // mark this as an attribute method
                 _method->setAttribute();
                 // add to the compilation
@@ -1434,10 +1429,8 @@ void LanguageParser::attributeDirective()
             else if (isAbstract)
             {
                 // create the method pair and quit.
-                createAbstractMethod(internalname, isClass, accessFlag == PRIVATE_SCOPE,
-                    protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD, true);
-                createAbstractMethod(setterName, isClass, accessFlag == PRIVATE_SCOPE,
-                    protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD, true);
+                createAbstractMethod(internalname, isClass, accessFlag, protectedFlag, guardFlag, true);
+                createAbstractMethod(setterName, isClass, accessFlag, protectedFlag, guardFlag, true);
             }
             // delegating these to another object
             else if (delegateName != OREF_NULL)
@@ -1445,19 +1438,15 @@ void LanguageParser::attributeDirective()
                 // the retriever is the delegate name, not the attribute name
                 retriever = getRetriever(delegateName);
                 // create the method pair and quit.
-                createDelegateMethod(internalname, retriever, isClass, accessFlag == PRIVATE_SCOPE,
-                    protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD, true);
+                createDelegateMethod(internalname, retriever, isClass, accessFlag, protectedFlag, guardFlag, true);
                 // create the method pair and quit.
-                createDelegateMethod(setterName, retriever, isClass, accessFlag == PRIVATE_SCOPE,
-                    protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD, true);
+                createDelegateMethod(setterName, retriever, isClass, accessFlag, protectedFlag, guardFlag, true);
             }
             else
             {
                 // create the method pair and quit.
-                createAttributeGetterMethod(internalname, retriever, isClass, accessFlag == PRIVATE_SCOPE,
-                    protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD);
-                createAttributeSetterMethod(setterName, retriever, isClass, accessFlag == PRIVATE_SCOPE,
-                    protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD);
+                createAttributeGetterMethod(internalname, retriever, isClass, accessFlag, protectedFlag, guardFlag);
+                createAttributeSetterMethod(setterName, retriever, isClass, accessFlag, protectedFlag, guardFlag);
             }
             break;
 
@@ -1481,7 +1470,7 @@ void LanguageParser::attributeDirective()
                 }
                 // now create both getter and setting methods from the information.
                 MethodClass *_method = createNativeMethod(internalname, library, procedure);
-                _method->setAttributes(accessFlag == PRIVATE_SCOPE, protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD);
+                _method->setAttributes(accessFlag, protectedFlag, guardFlag);
                 // mark this as an attribute method
                 _method->setAttribute();
                 // add to the compilation
@@ -1493,8 +1482,7 @@ void LanguageParser::attributeDirective()
                 // no code can follow abstract methods
                 checkDirective(Error_Translation_abstract_attribute);
                 // create the method pair and quit.
-                createAbstractMethod(internalname, isClass, accessFlag == PRIVATE_SCOPE,
-                    protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD, true);
+                createAbstractMethod(internalname, isClass, accessFlag, protectedFlag, guardFlag, true);
             }
             // delegating these to another object
             else if (delegateName != OREF_NULL)
@@ -1506,8 +1494,7 @@ void LanguageParser::attributeDirective()
                 checkDirective(Error_Translation_delegate_attribute);
 
                 // create the method pair and quit.
-                createDelegateMethod(internalname, retriever, isClass, accessFlag == PRIVATE_SCOPE,
-                    protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD, true);
+                createDelegateMethod(internalname, retriever, isClass, accessFlag, protectedFlag, guardFlag, true);
             }
             // either written in ooRexx or is automatically generated.
             else
@@ -1515,13 +1502,11 @@ void LanguageParser::attributeDirective()
                 // written in Rexx?  go create
                 if (hasBody())
                 {
-                    createMethod(internalname, isClass, accessFlag == PRIVATE_SCOPE,
-                        protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD, true);
+                    createMethod(internalname, isClass, accessFlag, protectedFlag, guardFlag, true);
                 }
                 else
                 {
-                    createAttributeGetterMethod(internalname, retriever, isClass, accessFlag == PRIVATE_SCOPE,
-                        protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD);
+                    createAttributeGetterMethod(internalname, retriever, isClass, accessFlag, protectedFlag, guardFlag);
                 }
             }
             break;
@@ -1548,7 +1533,7 @@ void LanguageParser::attributeDirective()
                 }
                 // now create both getter and setting methods from the information.
                 MethodClass *_method = createNativeMethod(setterName, library, procedure);
-                _method->setAttributes(accessFlag == PRIVATE_SCOPE, protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD);
+                _method->setAttributes(accessFlag, protectedFlag, guardFlag);
                 // mark this as an attribute method
                 _method->setAttribute();
                 // add to the compilation
@@ -1560,8 +1545,7 @@ void LanguageParser::attributeDirective()
                 // no code can follow abstract methods
                 checkDirective(Error_Translation_abstract_attribute);
                 // create the method pair and quit.
-                createAbstractMethod(setterName, isClass, accessFlag == PRIVATE_SCOPE,
-                    protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD, true);
+                createAbstractMethod(setterName, isClass, accessFlag, protectedFlag, guardFlag, true);
             }
             // delegating these to another object
             else if (delegateName != OREF_NULL)
@@ -1573,20 +1557,17 @@ void LanguageParser::attributeDirective()
                 checkDirective(Error_Translation_delegate_attribute);
 
                 // create the method pair and quit.
-                createDelegateMethod(setterName, retriever, isClass, accessFlag == PRIVATE_SCOPE,
-                    protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD, true);
+                createDelegateMethod(setterName, retriever, isClass, accessFlag, protectedFlag, guardFlag, true);
             }
             else
             {
                 if (hasBody())        // just the getter method
                 {
-                    createMethod(setterName, isClass, accessFlag == PRIVATE_SCOPE,
-                        protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD, true);
+                    createMethod(setterName, isClass, accessFlag, protectedFlag, guardFlag, true);
                 }
                 else
                 {
-                    createAttributeSetterMethod(setterName, retriever, isClass, accessFlag == PRIVATE_SCOPE,
-                        protectedFlag == PROTECTED_METHOD, guardFlag != UNGUARDED_METHOD);
+                    createAttributeSetterMethod(setterName, retriever, isClass, accessFlag, protectedFlag, guardFlag);
                 }
             }
             break;
@@ -2107,7 +2088,7 @@ void LanguageParser::resourceDirective()
  * @param isAttribute Indicates if this is an attribute method.
  */
 void LanguageParser::createMethod(RexxString *name, bool classMethod,
-    bool privateMethod, bool protectedMethod, bool guardedMethod, bool isAttribute)
+    AccessFlag privateMethod, ProtectedFlag protectedMethod, GuardFlag guardedMethod, bool isAttribute)
 {
     // NOTE:  It is necessary to translate the block and protect the code
     // before allocating the MethodClass object.  The new operator allocates the
@@ -2143,7 +2124,7 @@ void LanguageParser::createMethod(RexxString *name, bool classMethod,
  *                  The method's guarded attribute.
  */
 void LanguageParser::createAttributeGetterMethod(RexxString *name, RexxVariableBase *retriever,
-    bool classMethod, bool privateMethod, bool protectedMethod, bool guardedMethod)
+    bool classMethod, AccessFlag privateMethod, ProtectedFlag protectedMethod, GuardFlag guardedMethod)
 {
     // create the kernel method for the accessor
     BaseCode *code = new AttributeGetterCode(retriever);
@@ -2173,7 +2154,7 @@ void LanguageParser::createAttributeGetterMethod(RexxString *name, RexxVariableB
  *                  Indicates whether this is an attribute method.
  */
 void LanguageParser::createDelegateMethod(RexxString *name, RexxVariableBase *retriever,
-    bool classMethod, bool privateMethod, bool protectedMethod, bool guardedMethod, bool isAttribute)
+    bool classMethod, AccessFlag privateMethod, ProtectedFlag protectedMethod, GuardFlag guardedMethod, bool isAttribute)
 {
     // create the kernel method for the accessor
     BaseCode *code = new DelegateCode(retriever);
@@ -2199,7 +2180,7 @@ void LanguageParser::createDelegateMethod(RexxString *name, RexxVariableBase *re
  *               The method's guarded attribute.
  */
 void LanguageParser::createAttributeSetterMethod(RexxString *name, RexxVariableBase *retriever,
-    bool classMethod, bool privateMethod, bool protectedMethod, bool guardedMethod)
+    bool classMethod, AccessFlag privateMethod, ProtectedFlag protectedMethod, GuardFlag guardedMethod)
 {
     // create the kernel method for the accessor
     BaseCode *code = new AttributeSetterCode(retriever);
@@ -2228,7 +2209,7 @@ void LanguageParser::createAttributeSetterMethod(RexxString *name, RexxVariableB
  *               The method attribute status.
  */
 void LanguageParser::createAbstractMethod(RexxString *name,
-    bool classMethod, bool privateMethod, bool protectedMethod, bool guardedMethod, bool isAttribute)
+    bool classMethod, AccessFlag privateMethod, ProtectedFlag protectedMethod, GuardFlag guardedMethod, bool isAttribute)
 {
     // create the kernel method for the accessor
     // this uses a special code block

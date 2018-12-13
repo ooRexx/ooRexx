@@ -573,6 +573,8 @@
 #define Rexx_Error_Incorrect_method_invalid_value_for                     93975
 #define Rexx_Error_No_method                                              97000
 #define Rexx_Error_No_method_name                                         97001
+#define Rexx_Error_No_method_private                                      97002
+#define Rexx_Error_No_method_package                                      97003
 #define Rexx_Error_No_method_user_defined                                 97900
 #define Rexx_Error_Execution                                              98000
 #define Rexx_Error_Execution_user_defined                                 98900

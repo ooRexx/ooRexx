@@ -2344,6 +2344,19 @@ RexxObject *NativeActivation::getReceiver()
 
 
 /**
+ * Get the active method
+ *
+ * @return The method object for this frame..  Returns OREF_NULL
+ *         if this is not a message activation.
+ */
+MethodClass *NativeActivation::getMethod()
+
+{
+    return isMethod() ? (MethodClass *)executable : OREF_NULL;
+}
+
+
+/**
  * Get the security manager context
  *
  * @return The security manager, if there is one.

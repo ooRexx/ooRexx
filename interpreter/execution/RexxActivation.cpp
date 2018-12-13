@@ -2103,6 +2103,28 @@ RexxObject *RexxActivation::getReceiver()
 
 
 /**
+ * Get the active method object (if a method call)
+ *
+ * @return The frame method object.  Returns OREF_NULL if this
+ *         is not a message activation.
+ */
+MethodClass *RexxActivation::getMethod()
+{
+    // if this is an interpreter frame get this from the parent context.
+    if (isInterpret())
+    {
+        return parent->getMethod();
+    }
+    // only return the executable if this is a method call
+    if (isMethod())
+    {
+        (MethodClass *)executable;
+    }
+    return OREF_NULL;
+}
+
+
+/**
  * Return the current state for a trap as either ON, OFF, or DELAY
  *
  * @param condition The condition name.

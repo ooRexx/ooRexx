@@ -577,6 +577,8 @@ ERROR_MESSAGE Message_table[] = {      /* table of major and minor errors   */
       MINOR(Error_Incorrect_method_invalid_value_for)
   MAJOR(Error_No_method)
       MINOR(Error_No_method_name)
+      MINOR(Error_No_method_private)
+      MINOR(Error_No_method_package)
       MINOR(Error_No_method_user_defined)
   MAJOR(Error_Execution)
       MINOR(Error_Execution_user_defined)

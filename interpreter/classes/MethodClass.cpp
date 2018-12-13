@@ -292,6 +292,18 @@ RexxObject *MethodClass::isPrivateRexx( )
 
 
 /**
+ * Return the Package setting for a method object.
+ *
+ * @return .true if the method is package scope.  .false
+ *         otherwise.
+ */
+RexxObject *MethodClass::isPackageRexx( )
+{
+    return booleanObject(isPackageScope());
+}
+
+
+/**
  * Return the Protected setting for a method object.
  *
  * @return .true if the method is protected.  .false otherwise.
@@ -367,22 +379,34 @@ RexxString *MethodClass::getScopeName()
  * Set the entire set of method attributes with one call.  Used
  * during source compilation.
  *
- * @param _private   The private setting.
+ * @param _access   The access setting.
  * @param _protected The protected setting.
  * @param _guarded   The guarded setting.
  */
-void MethodClass::setAttributes(bool _private, bool _protected, bool _guarded)
+void MethodClass::setAttributes(AccessFlag _access, ProtectedFlag _protected, GuardFlag _guarded)
 {
-    if (_private)
+    switch (_access)
     {
-        setPrivate();
+        case PRIVATE_SCOPE:
+            setPrivate();
+            break;
+
+        case PACKAGE_SCOPE:
+            setPackageScope();
+            break;
+
+        // covers PUBLIC and DEFAULT
+        default:
+            break;
     }
-    if (_protected)
+
+    if (_protected == PROTECTED_METHOD)
     {
         setProtected();
     }
-    // guarded is the default, so we need to reverse this
-    if (!_guarded)
+
+    // both GUARDED and DEFAULT are guarded, so check for the reverse.
+    if (_guarded == UNGUARDED_METHOD)
     {
         setUnguarded();
     }

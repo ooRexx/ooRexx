@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -604,10 +604,11 @@ void RexxObject::copyObjectVariables(RexxObject *newObj)
  * Check a private method for accessibility.
  *
  * @param method The method object to check
+ * @param error  An error to be raised if this is not permitted.
  *
  * @return An executable method, or OREF_NULL if this cannot be called.
  */
-MethodClass *RexxObject::checkPrivate(MethodClass *method )
+MethodClass *RexxObject::checkPrivate(MethodClass *method, RexxErrorCodes &error)
 {
     // get the calling activation context
     ActivationBase *activation = ActivityManager::currentActivity->getTopStackFrame();
@@ -622,6 +623,7 @@ MethodClass *RexxObject::checkPrivate(MethodClass *method )
         // no sender means this is a routine or program context.  Definitely not allowed.
         if (sender == OREF_NULL)
         {
+            error = Error_No_method_private;
             return OREF_NULL;
         }
         // ok, now we check the various scope possibilities
@@ -643,6 +645,47 @@ MethodClass *RexxObject::checkPrivate(MethodClass *method )
         }
     }
     // can't touch this...
+    error = Error_No_method_private;
+    return OREF_NULL;
+}
+
+
+/**
+ * Check a package method for accessibility.
+ *
+ * @param method The method object to check
+ * @param error  The error to be raised if this is not permitted.
+ *
+ * @return An executable method, or OREF_NULL if this cannot be called.
+ */
+MethodClass *RexxObject::checkPackage(MethodClass *method, RexxErrorCodes &error )
+{
+    // get the calling activation context
+    ActivationBase *activation = ActivityManager::currentActivity->getTopStackFrame();
+
+    // likely a topLevel call via SendMessage() API which is contextless.
+    if (activation == OREF_NULL)
+    {
+        error = Error_No_method_package;
+        return OREF_NULL;
+    }
+    // get the package from that frame.
+    PackageClass *callerPackage = activation->getPackage();
+
+    // it is possible this is a special native activation, which means there
+    // is no caller context. This is a no-go.
+    if (callerPackage == OREF_NULL)
+    {
+        return OREF_NULL;
+    }
+
+    // defined in the same package, this is good.
+    if (method->isSamePackage(callerPackage))
+    {
+        return method;
+    }
+    // can't touch this...
+    error = Error_No_method_package;
     return OREF_NULL;
 }
 
@@ -813,6 +856,8 @@ RexxObject *RexxObject::messageSend(RexxString *msgname, RexxObject **arguments,
     // see if we have a method defined
     MethodClass *method_save = behaviour->methodLookup(msgname);
 
+    RexxErrorCodes error = Error_No_method_name;
+
     // method exists, but is is protected or private?
     if (method_save != OREF_NULL && method_save->isSpecial())
     {
@@ -820,7 +865,11 @@ RexxObject *RexxObject::messageSend(RexxString *msgname, RexxObject **arguments,
         // OREF_NULL if not allowed
         if (method_save->isPrivate())
         {
-            method_save = checkPrivate(method_save);
+            method_save = checkPrivate(method_save, error);
+        }
+        else if (method_save->isPackageScope())
+        {
+            method_save = checkPackage(method_save, error);
         }
         // a protected method...this gets special send handling
         if (method_save != OREF_NULL && method_save->isProtected())
@@ -838,7 +887,7 @@ RexxObject *RexxObject::messageSend(RexxString *msgname, RexxObject **arguments,
     else
     {
         // not found, so check for an unknown method
-        processUnknown(msgname, arguments, count, result);
+        processUnknown(error, msgname, arguments, count, result);
     }
     return result;
 }
@@ -862,14 +911,22 @@ RexxObject *RexxObject::messageSend(RexxString *msgname, RexxObject **arguments,
     // do the lookup using the starting scope
     MethodClass *method_save = superMethod(msgname, startscope);
 
+    RexxErrorCodes error = Error_No_method_name;
+
     // perform the same private/protected checks as the normal case
-    if (method_save != OREF_NULL && method_save->isProtected())
+    if (method_save != OREF_NULL && method_save->isSpecial())
     {
         if (method_save->isPrivate())
         {
-            method_save = checkPrivate(method_save);
+            method_save = checkPrivate(method_save, error);
         }
-        else
+        else if (method_save->isPackageScope())
+        {
+            method_save = checkPackage(method_save, error);
+        }
+
+        // a protected method...this gets special send handling
+        if (method_save != OREF_NULL && method_save->isProtected())
         {
             processProtectedMethod(msgname, method_save, arguments, count, result);
             return result;
@@ -882,7 +939,7 @@ RexxObject *RexxObject::messageSend(RexxString *msgname, RexxObject **arguments,
     }
     else
     {
-        processUnknown(msgname, arguments, count, result);
+        processUnknown(error, msgname, arguments, count, result);
     }
     return result;
 }
@@ -918,13 +975,14 @@ void RexxObject::processProtectedMethod(RexxString *messageName, MethodClass *ta
 /**
  * Process an unknown message condition on an object.
  *
+ * @param error     The error number to raise.
  * @param messageName
  *                  The target message name.
  * @param arguments The message arguments.
  * @param count     The count of arguments.
  * @param result    The return result protected object.
  */
-void RexxObject::processUnknown(RexxString *messageName, RexxObject **arguments, size_t count, ProtectedObject &result)
+void RexxObject::processUnknown(RexxErrorCodes error, RexxString *messageName, RexxObject **arguments, size_t count, ProtectedObject &result)
 {
     // first check to see if there is an unknown method on this object.
     MethodClass *method_save = behaviour->methodLookup(GlobalNames::UNKNOWN);
@@ -932,7 +990,7 @@ void RexxObject::processUnknown(RexxString *messageName, RexxObject **arguments,
     // check for a condition handler before issuing the syntax error.
     if (method_save == OREF_NULL)
     {
-        reportNomethod(messageName, this);
+        reportNomethod(error, messageName, this);
     }
     // we need to pass the arguments to the array as real arguments
     Protected<ArrayClass> argumentArray = new_array(count, arguments);

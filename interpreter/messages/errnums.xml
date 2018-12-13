@@ -3527,6 +3527,18 @@ special character (such as a parenthesis).
 </listitem>
 </varlistentry>
 <varlistentry>
+<term>002</term>
+<listitem>
+<para>Object "<emphasis role="italic">object</emphasis>" cannot accept private message "<emphasis role="italic">message</emphasis>" from this context.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>003</term>
+<listitem>
+<para>Object "<emphasis role="italic">object</emphasis>" cannot accept package scope message "<emphasis role="italic">message</emphasis>" from a different package caller.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
 <term>900</term>
 <listitem>
 <para>

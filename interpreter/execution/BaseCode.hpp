@@ -67,6 +67,8 @@ public:
     virtual RexxClass *findClass(RexxString *className);
     virtual BaseCode  *setPackageObject(PackageClass *s);
     virtual PackageClass *getPackage();
+
+    inline  bool isSamePackage(PackageClass *p) { return p == getPackage(); }
             void detachSource();
 
             PackageClass *package;             // source this is attached to

@@ -729,6 +729,8 @@ BEGIN
    98921    "Address environment ""&1"" does not support input/output redirection."
    98922    "REPLACE or APPEND cannot be specified with a RexxQueue object USING target."
    98923    "Address command redirection failed (&1)."
+   97002    "Object ""&1"" cannot accept private message ""&2"" from this context."
+   97003    "Object ""&1"" cannot accept package scope message ""&2"" from a different package caller."
    
 END
 

@@ -2081,6 +2081,12 @@ $ Error_Execution_using_rexxqueue_option
 $ Error_Execution_address_redirection_failed
 817 Address command redirection failed (&1).
 
+$ Error_No_method_private
+818 Object "&1" cannot accept private message "&2" from this context.
+
+$ Error_No_method_package
+819 Object "&1" cannot accept package scope message "&2" from a different package caller.
+
 
 $ * -------------------------------------------------------------------------- */
 $ * --            ==================================================        -- */

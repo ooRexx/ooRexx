@@ -201,7 +201,7 @@ class NumberString : public NumberStringBase
     virtual bool logicalValue(logical_t &);
 
     virtual bool  isEqual(RexxInternalObject *);
-    virtual void processUnknown(RexxString *, RexxObject **, size_t, ProtectedObject &);
+    virtual void processUnknown(RexxErrorCodes error, RexxString *, RexxObject **, size_t, ProtectedObject &);
     virtual wholenumber_t compareTo(RexxInternalObject *);
 
     wholenumber_t strictComp(RexxObject *);

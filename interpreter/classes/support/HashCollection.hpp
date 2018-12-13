@@ -191,7 +191,7 @@ public:
     virtual RexxInternalObject *entry(RexxString *index);
     virtual RexxInternalObject *removeEntry(RexxString *index);
     virtual RexxObject *unknown(RexxString *msgname, RexxObject **arguments, size_t count);
-    virtual void processUnknown(RexxString *, RexxObject **, size_t, ProtectedObject &);
+    virtual void processUnknown(RexxErrorCodes error, RexxString *, RexxObject **, size_t, ProtectedObject &);
 
     // Rexx stubs for these additional functions.
     RexxObject *entryRexx(RexxObject *entryName);
