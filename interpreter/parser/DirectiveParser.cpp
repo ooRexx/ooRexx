@@ -765,20 +765,13 @@ void LanguageParser::methodDirective()
                         syntaxError(Error_Invalid_subkeyword_method, token);
                     }
 
-                    // cannot have an abstract attribute here...this can
-                    // be defined with ::ATTRIBUTE.
-                    if (isAbstract)
-                    {
-                        // ABSTRACT and ATTRIBUTE are mutually exclusive
-                        syntaxError(Error_Invalid_subkeyword_method, token);
-                    }
                     isAttribute = true;
                     break;
 
                 // ::METHOD name ABSTRACT
                 case SUBDIRECTIVE_ABSTRACT:
-                    // can't have dups or external name or be an attributed
-                    if (isAbstract || externalname != OREF_NULL || delegateName != OREF_NULL || isAttribute)
+                    // can't have dups or external name or be a delegate
+                    if (isAbstract || externalname != OREF_NULL || delegateName != OREF_NULL)
                     {
                         syntaxError(Error_Invalid_subkeyword_method, token);
                     }
@@ -824,7 +817,7 @@ void LanguageParser::methodDirective()
         // now get a variable retriever to get the property
         RexxVariableBase *retriever = getRetriever(delegateName);
 
-        // cannot have code following an method with the delegateb keyword
+        // cannot have code following an method with the delegate keyword
         checkDirective(Error_Translation_delegate_method);
 
         if (isAttribute)
@@ -868,6 +861,13 @@ void LanguageParser::methodDirective()
             _method->setAttributes(accessFlag, protectedFlag, guardFlag);
             // add to the compilation
             addMethod(setterName, _method, isClass);
+        }
+        // an abstract method as an attribute
+        else if (isAbstract)
+        {
+            // create the method pair and quit.
+            createAbstractMethod(internalname, isClass, accessFlag, protectedFlag, guardFlag, true);
+            createAbstractMethod(setterName, isClass, accessFlag, protectedFlag, guardFlag, true);
         }
         else
         {
