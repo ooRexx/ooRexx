@@ -1078,8 +1078,15 @@ RexxCode *LanguageParser::translateBlock()
 
     pushDo(instruction);
 
+    // get a location for this block of code from the first and last instructions
+    SourceLocation blockLocation;
+
+    // save the block start position
+    blockLocation.setStart(lineNumber, lineOffset);
+
     // time to start actual parsing.  Continue until we reach the end
     nextClause();
+
     for (;;)
     {
         // start with no instruction
@@ -1491,14 +1498,12 @@ RexxCode *LanguageParser::translateBlock()
         labels = OREF_NULL;
     }
 
-    // get a location for this block of code from the first and last instructions
-    SourceLocation blockLocation;
     // a code block need not have any instructions, so only grab
     // the location information if we have anything.  Otherwise, this will be
     // all zeros.
     if (firstInstruction != OREF_NULL)
     {
-        blockLocation = firstInstruction->getLocation();
+        // we already set the start, now get the end.
         SourceLocation endLocation = lastInstruction->getLocation();
         // set the end location
         blockLocation.setEnd(endLocation);
