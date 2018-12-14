@@ -3381,6 +3381,9 @@ RexxInternalObject *LanguageParser::parseMessageTerm()
  */
 RexxInternalObject *LanguageParser::parseMessageSubterm(int terminators)
 {
+    // with very complex instructions, it is possible to recurse quite deeply here.
+    // so give a look at the stack space on each call so we can terminate "nicely"
+    ActivityManager::currentActivity->checkStackSpace();
     // get the first token.  If we've hit a terminator here, this could be
     // the real end of the expression.  The caller context will figure out
     // how to handle that.
@@ -3506,6 +3509,10 @@ RexxInternalObject *LanguageParser::parseMessageSubterm(int terminators)
  */
 RexxInternalObject *LanguageParser::parseSubTerm(int terminators)
 {
+    // with very complex instructions, it is possible to recurse quite deeply here.
+    // so give a look at the stack space on each call so we can terminate "nicely"
+    ActivityManager::currentActivity->checkStackSpace();
+
     // get the first token and make sure we really have something here.
     // The caller knows how to deal with a missing term.
     RexxToken *token = nextToken();
