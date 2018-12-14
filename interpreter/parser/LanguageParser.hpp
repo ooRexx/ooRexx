@@ -193,7 +193,7 @@ class LanguageParser: public RexxInternalObject
     inline void  reclaimClause()  { flags.set(reclaimed); };
     inline bool  atEnd() { return !flags.test(reclaimed) && !moreLines(); };
 
-           void setInterpret() { flags.set(interpret); }
+           void setInterpret() { flags.set(interpret); flags.set(noDirectives); }
     inline bool isInterpret() { return flags.test(interpret); }
     inline bool noClauseAvailable() { return flags.test(noClause); }
     inline bool clauseAvailable() { return !flags.test(noClause); }
