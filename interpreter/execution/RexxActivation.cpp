@@ -1611,7 +1611,6 @@ void RexxActivation::raise(RexxString *condition, RexxObject *rc, RexxString *de
     // are we propagating an an existing condition?
     if (condition->strCompare(GlobalNames::PROPAGATE))
     {
-
         // get the original condition name
         condition = (RexxString *)conditionobj->get(GlobalNames::CONDITION);
         propagated = true;
@@ -1622,35 +1621,33 @@ void RexxActivation::raise(RexxString *condition, RexxObject *rc, RexxString *de
         {
             resultObj = (RexxObject *)conditionobj->get(GlobalNames::RESULT);
         }
+        // now fill in other pieces from the raise instruction                                  /
+        if (rc != OREF_NULL)
+        {
+            conditionobj->put(rc, GlobalNames::RC);
+        }
+        if (description != OREF_NULL)
+        {
+            conditionobj->put(description, GlobalNames::DESCRIPTION);
+        }
+        if (additional != OREF_NULL)
+        {
+            conditionobj->put(additional, GlobalNames::ADDITIONAL);
+        }
+        if (resultObj != OREF_NULL)
+        {
+            conditionobj->put(resultObj, GlobalNames::RESULT);
+        }
     }
     else
     {
         // build a condition object for the condition
-        p = conditionobj = new_directory();
+        p = activity->createConditionObject(condition, rc, description, additional, result);
 
         conditionobj = p;
-        conditionobj->put(condition, GlobalNames::CONDITION);
-        conditionobj->put(GlobalNames::NULLSTRING, GlobalNames::DESCRIPTION);
         conditionobj->put(TheFalseObject, GlobalNames::PROPAGATED);
         // not propagated
         propagated = false;
-    }
-    // now fill in other pieces from the raise instruction
-    if (rc != OREF_NULL)
-    {
-        conditionobj->put(rc, GlobalNames::RC);
-    }
-    if (description != OREF_NULL)
-    {
-        conditionobj->put(description, GlobalNames::DESCRIPTION);
-    }
-    if (additional != OREF_NULL)
-    {
-        conditionobj->put(additional, GlobalNames::ADDITIONAL);
-    }
-    if (resultObj != OREF_NULL)
-    {
-        conditionobj->put(resultObj, GlobalNames::RESULT);
     }
 
     // is this a SYNTAX error?  These get special handling
