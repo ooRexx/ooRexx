@@ -1,6 +1,6 @@
 #/*----------------------------------------------------------------------------*/
 #/*                                                                            */
-#/* Copyright (c) 2014-2014 Rexx Language Association. All rights reserved.    */
+#/* Copyright (c) 2014-2018 Rexx Language Association. All rights reserved.    */
 #/*                                                                            */
 #/* This program and the accompanying materials are made available under       */
 #/* the terms of the Common Public License v1.0 which accompanies this         */
@@ -47,7 +47,7 @@ project (oorexxtest)
 
 # handy macro for generating test executable targets
 macro (generate_test_library target)
-   if (WIN32)
+   if (WIN32 AND ${ARGC} GREATER 1)
      set (PLATFORM_EXTRA  ${PROJECT_SOURCE_DIR}/${target}.def)
    endif ()
    add_library(${target} SHARED
@@ -64,7 +64,7 @@ endmacro (generate_test_library)
 generate_test_library(orxfunction)
 generate_test_library(orxmethod)
 generate_test_library(orxclassic)
-generate_test_library(orxclassic1)
+generate_test_library(orxclassic1 def)
 
 
 # this library is linked to other test libraries
@@ -83,11 +83,7 @@ target_include_directories(orxexits PUBLIC
 target_link_libraries(orxexits rexx rexxapi)
 
 # this library has the orxexits dependency
-if (WIN32)
-  set (PLATFORM_EXTRA  ${PROJECT_SOURCE_DIR}/orxinvocation.def)
-endif ()
 add_library(orxinvocation SHARED
-   ${PLATFORM_EXTRA}
    ${PROJECT_SOURCE_DIR}/orxinvocation)
 # Include file definition
 target_include_directories(orxinvocation PUBLIC
