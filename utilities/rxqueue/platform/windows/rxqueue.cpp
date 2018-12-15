@@ -145,7 +145,11 @@ int __cdecl main(
 
     if (quename == NULL)         /* if there is no queue specified:    */
     {
-        quename = "SESSION";     /* No name -> this is a session queue */
+                                  /* scan current environment           */
+        if (!(quename = getenv("RXQUEUE")) || !quename)
+        {
+            quename = "SESSION";     /* use session if not found           */
+        }
     }
 
 /*********************************************************************/
