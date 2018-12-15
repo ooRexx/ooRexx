@@ -441,12 +441,13 @@ void BufferProgramSource::buildDescriptors()
     OrefSet(this, this->descriptorArea, indices->getBuffer());
 
     // now we need to see if we've got a shebang line.  If we find
-    // this, zero the length of the line to make this just a blank line
-    // we want to keep the line so we don't throw off the line counts.
+    // this, tell the language parser to start parsing on the second line.
+    // This will cause the line to be ignored, but it will be left in the
+    // lines returned by sourceline.
     if (bufferArea[0] == '#' && bufferArea[1] == '!')
     {
-        LineDescriptor &firstLine = getDescriptor(1);
-        firstLine.length = 0;
+        // start parsing with the second line
+        firstLine = 2;
     }
 }
 
