@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2008 Rexx Language Association. All rights reserved.         */
+/* Copyright (c) 2008-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -1289,6 +1289,60 @@ RexxMethod1(logical_t,
     return context->IsDirectory(o);
 }
 
+// StringTable tests, added with 5.0
+
+RexxMethod3(int,
+            TestStringTablePut,
+            RexxObjectPtr, st,
+            RexxObjectPtr, value,
+            CSTRING, index)
+{
+    context->StringTablePut((RexxStringTableObject)st, value, index);
+    return 0;
+}
+
+
+RexxMethod2(RexxObjectPtr,
+            TestStringTableAt,
+            RexxObjectPtr, st,
+            CSTRING, index)
+{
+    RexxObjectPtr value = context->StringTableAt((RexxStringTableObject)st, index);
+    if (value == NULLOBJECT) {
+        context->RaiseException1(Rexx_Error_Invalid_argument_user_defined, context->NewStringFromAsciiz("Conversion error"));
+        return NULLOBJECT;
+    }
+    return value;
+}
+
+
+RexxMethod2(RexxObjectPtr,
+            TestStringTableRemove,
+            RexxObjectPtr, st,
+            CSTRING, index)
+{
+    RexxObjectPtr value = context->StringTableRemove((RexxStringTableObject)st, index);
+    if (value == NULLOBJECT) {
+        context->RaiseException1(Rexx_Error_Invalid_argument_user_defined, context->NewStringFromAsciiz("Conversion error"));
+        return NULLOBJECT;
+    }
+    return value;
+}
+
+
+RexxMethod0(RexxObjectPtr,
+            TestNewStringTable)
+{
+    return (RexxObjectPtr)context->NewStringTable();
+}
+
+RexxMethod1(logical_t,
+            TestIsStringTable,
+            RexxObjectPtr, o)
+{
+    return context->IsStringTable(o);
+}
+
 RexxMethod1(int,                       // Return type
             TestOptionalIntArg,        // Object_method name
             OPTIONAL_int, arg1)        // Argument
@@ -2293,6 +2347,11 @@ RexxMethodEntry orxtest_methods[] = {
     REXX_METHOD(TestDirectoryRemove,         TestDirectoryRemove),
     REXX_METHOD(TestNewDirectory,            TestNewDirectory),
     REXX_METHOD(TestIsDirectory,             TestIsDirectory),
+    REXX_METHOD(TestStringTablePut,          TestStringTablePut),
+    REXX_METHOD(TestStringTableAt,           TestStringTableAt),
+    REXX_METHOD(TestStringTableRemove,       TestStringTableRemove),
+    REXX_METHOD(TestNewStringTable,          TestNewStringTable),
+    REXX_METHOD(TestIsStringTable,           TestIsStringTable),
     REXX_METHOD(TestSendMessage,             TestSendMessage),
     REXX_METHOD(TestSendMessage0,            TestSendMessage0),
     REXX_METHOD(TestSendMessage1,            TestSendMessage1),
