@@ -191,7 +191,7 @@ if (WIN32)
    set(NSIS_INSTALLER_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/${ORX_PLATFORM_DIR}/install)
 
    # NSIS version identifier that includes the build level
-   set (ORX_VERSION_NSIS ${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL}.${ORX_BLD_LVL})
+   set (ORX_VERSION_NSIS ${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL}-${ORX_BLD_LVL})
 
    # The DOC source dir is usually specified in native form...need to convert it
    # to the CMAKE format for the install commands.
@@ -1927,8 +1927,8 @@ if (WIN32 AND DOC_SOURCE_DIR)
       file(TO_NATIVE_PATH ${DOC_SOURCE_DIR} NATIVE_DOC_DIR)
 
       # Name of the installer file we're going to create
-      set(INSTALLER_FILE "ooRexx.${ORX_VERSION_NSIS}-Windows-${NSIS_CPU}.exe")
-      set(INSTALLER_SCRIPT "ooRexx.${ORX_VERSION_NSIS}-${NSIS_CPU}.nsi")
+      set(INSTALLER_FILE "ooRexx-${ORX_VERSION_NSIS}.windows.${NSIS_CPU}.exe")
+      set(INSTALLER_SCRIPT "ooRexx-${ORX_VERSION_NSIS}.windows.${NSIS_CPU}.nsi")
 
       # create an installer file from the template
       message(STATUS "Building NSIS template ${INSTALLER_SCRIPT}")
