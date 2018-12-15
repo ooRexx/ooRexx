@@ -1082,7 +1082,7 @@ RexxCode *LanguageParser::translateBlock()
     SourceLocation blockLocation;
 
     // save the block start position
-    blockLocation.setStart(lineNumber, lineOffset);
+    blockLocation.setStart(lineNumber == 0 ? 1 : lineNumber, lineOffset);
 
     // time to start actual parsing.  Continue until we reach the end
     nextClause();
