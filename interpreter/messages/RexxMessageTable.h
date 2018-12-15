@@ -582,6 +582,7 @@ ERROR_MESSAGE Message_table[] = {      /* table of major and minor errors   */
       MINOR(Error_No_method_user_defined)
   MAJOR(Error_Execution)
       MINOR(Error_Execution_user_defined)
+      MINOR(Error_Execution_noinit)
       MINOR(Error_Execution_nodouble)
       MINOR(Error_Execution_library)
       MINOR(Error_Execution_terminate)

@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -43,6 +43,32 @@
 #include "RexxCore.h"                  /* global REXX declarations          */
 #include "StringClass.hpp"
 
+
+/**
+ * Retrieve the name of the queue. Raises an exception if the variable is not set.
+ *
+ * @param context The current message context.
+ *
+ * @return a success indicator and the CSTRING version of the queue name.
+ */
+bool getQueueName(RexxMethodContext *context, CSTRING &name)
+{
+    // this should be set to a variable
+    RexxObjectPtr queue_name = (RexxStringObject)context->GetObjectVariable("NAMED_QUEUE");
+    // this could be a super class override that never forwarded the INIT message.
+    if (queue_name == NULL)
+    {
+        // raise an exception and return a failure
+        context->RaiseException1(Rexx_Error_Execution_noinit, context->GetSelf());
+        return false;
+    }
+    // return the name
+    name = context->ObjectToStringValue(queue_name);
+    return true;
+}
+
+
+
 /********************************************************************************************/
 /* Rexx_query_queue                                                                         */
 /********************************************************************************************/
@@ -50,10 +76,15 @@ RexxMethod0(size_t, rexx_query_queue)
 {
    size_t count = 0;                   /* count of lines                    */
 
-                                       /* get the queue name                */
-   RexxObjectPtr queue_name = (RexxStringObject)context->GetObjectVariable("NAMED_QUEUE");
+   // the queue name is stored as an object variable, retrieve and convert to
+   // CSTRING form.
+   CSTRING queue_name;
+   if (!getQueueName(context, queue_name))
+   {
+       return 0;
+   }
                                        /* query the queue                   */
-   RexxQueryQueue(context->ObjectToStringValue(queue_name), &count);
+   RexxQueryQueue(queue_name, &count);
 
    return count;
 }
@@ -66,13 +97,18 @@ RexxMethod0(RexxObjectPtr, rexx_pull_queue)
    RXSTRING buf;                       /* pulled line buffer                */
    RexxReturnCode rc;                  /* pull return code                  */
 
-                                       /* get the queue name                */
-   RexxObjectPtr queue_name = context->GetObjectVariable("NAMED_QUEUE");
+   // the queue name is stored as an object variable, retrieve and convert to
+   // CSTRING form.
+   CSTRING queue_name;
+   if (!getQueueName(context, queue_name))
+   {
+       return NULL;
+   }
 
    buf.strptr = NULL;                  /* ask for a returned buffer         */
    buf.strlength = 0;
                                        /* pull a line                       */
-   rc = RexxPullFromQueue(context->ObjectToStringValue(queue_name), &buf, NULL, RXQUEUE_NOWAIT);
+   rc = RexxPullFromQueue(queue_name, &buf, NULL, RXQUEUE_NOWAIT);
 
    if (!rc)
    {                                   /* get a pulled line?                */
@@ -91,12 +127,15 @@ RexxMethod0(RexxObjectPtr, rexx_pull_queue)
 /********************************************************************************************/
 RexxMethod0(RexxObjectPtr, rexx_linein_queue)
 {
-   RexxReturnCode rc;                  /* pull return code                  */
-   RexxObjectPtr queue_name;           /* current queue name                */
-   RXSTRING buf;
+   // the queue name is stored as an object variable, retrieve and convert to
+   // CSTRING form.
+   CSTRING queue_name;
+   if (!getQueueName(context, queue_name))
+   {
+       return NULL;
+   }
 
-                                       /* get the queue name                */
-   queue_name = context->GetObjectVariable("NAMED_QUEUE");
+   RXSTRING buf;
 
    buf.strptr = NULL;                  /* ask for a returned buffer         */
    buf.strlength = 0;
@@ -105,7 +144,7 @@ RexxMethod0(RexxObjectPtr, rexx_linein_queue)
    // guard so we don't lock up other threads.
    context->SetGuardOff();
                                        /* pull a line                       */
-   rc = RexxPullFromQueue(context->ObjectToStringValue(queue_name), &buf, NULL, RXQUEUE_WAIT);
+   RexxReturnCode rc = RexxPullFromQueue(queue_name, &buf, NULL, RXQUEUE_WAIT);
 
    if (!rc)                            /* get a pulled line?                */
    {
@@ -140,10 +179,18 @@ wholenumber_t rexx_add_queue(
    {
        MAKERXSTRING(rx_string, context->StringData(queue_line), context->StringLength(queue_line));
    }
-                                       /* get the queue name                */
-   RexxObjectPtr queue_name = context->GetObjectVariable("NAMED_QUEUE");
+
+   // the queue name is stored as an object variable, retrieve and convert to
+   // CSTRING form.
+   CSTRING queue_name;
+   if (!getQueueName(context, queue_name))
+   {
+       // this raises an exception, so the return value is irrelevant.
+       return 0;
+   }
+
                                        /*  move the line to the queue       */
-   rc = RexxAddQueue(context->ObjectToStringValue(queue_name), &rx_string, order);
+   rc = RexxAddQueue(queue_name, &rx_string, order);
    if (rc != 0)                        /* stream error?                     */
    {
        context->RaiseException1(Rexx_Error_System_service_service, context->NewStringFromAsciiz("SYSTEM QUEUE"));

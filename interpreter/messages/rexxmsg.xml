@@ -5036,6 +5036,15 @@ special character (such as a parenthesis).
       </SubMessage>
       <SubMessage>
         <Code>98</Code>
+        <Subcode>901</Subcode>
+        <MessageNumber>820</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Execution_noinit</SymbolicName>
+        <Text>Object <q><Sub position="1" name="object"/></q> was not correctly initialized.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>98</Code>
         <Subcode>902</Subcode>
         <MessageNumber>478</MessageNumber>
         <Component>Rexx</Component>

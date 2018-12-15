@@ -2087,6 +2087,9 @@ $ Error_No_method_private
 $ Error_No_method_package
 819 Object "&1" cannot accept package scope message "&2" from a different package caller.
 
+$ Error_Execution_noinit
+820 Object "&1" was not correctly initialized.
+
 
 $ * -------------------------------------------------------------------------- */
 $ * --            ==================================================        -- */

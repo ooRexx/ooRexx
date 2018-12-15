@@ -732,6 +732,7 @@
 #define Error_Execution_address_redirection_failed_msg               817
 #define Error_No_method_private_msg                                  818
 #define Error_No_method_package_msg                                  819
+#define Error_Execution_noinit_msg                                   820
 
 
 #endif

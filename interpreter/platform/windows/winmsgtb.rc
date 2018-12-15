@@ -731,6 +731,7 @@ BEGIN
    98923    "Address command redirection failed (&1)."
    97002    "Object ""&1"" cannot accept private message ""&2"" from this context."
    97003    "Object ""&1"" cannot accept package scope message ""&2"" from a different package caller."
+   98901    "Object ""&1"" was not correctly initialized."
    
 END
 

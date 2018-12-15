@@ -3563,6 +3563,12 @@ special character (such as a parenthesis).
 </listitem>
 </varlistentry>
 <varlistentry>
+<term>901</term>
+<listitem>
+<para>Object "<emphasis role="italic">object</emphasis>" was not correctly initialized.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
 <term>902</term>
 <listitem>
 <para>Unable to convert object "<emphasis role="italic">object</emphasis>" to a double-float value.</para>

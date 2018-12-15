@@ -578,6 +578,7 @@
 #define Rexx_Error_No_method_user_defined                                 97900
 #define Rexx_Error_Execution                                              98000
 #define Rexx_Error_Execution_user_defined                                 98900
+#define Rexx_Error_Execution_noinit                                       98901
 #define Rexx_Error_Execution_nodouble                                     98902
 #define Rexx_Error_Execution_library                                      98903
 #define Rexx_Error_Execution_terminate                                    98904
