@@ -333,7 +333,6 @@ if (NOT WIN32)
   check_function_exists(getpgrp HAVE_GETPGRP)
   check_function_exists(getpwuid HAVE_GETPWUID)
   check_function_exists(gettimeofday HAVE_GETTIMEOFDAY)
-  check_function_exists(getuserattr HAVE_GETUSERATTR)
   check_function_exists(IDtouser HAVE_IDTOUSER)
   find_library(HAVE_LIBPTHREAD pthread)
   find_library(HAVE_LIBRT rt)
@@ -974,7 +973,7 @@ if (WIN32)
 else ()
    set (platform_rxapi_sources
             ${build_rexxapi_common_platform_dir}/SysCSStream.cpp
-            ${build_rexxapi_server_platform_dir}/linux/APIService.cpp)
+            ${build_rexxapi_server_platform_dir}/APIService.cpp)
    set (platform_rxapi_libs ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
 endif ()
 # Sources for rxapi
