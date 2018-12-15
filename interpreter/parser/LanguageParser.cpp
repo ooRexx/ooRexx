@@ -670,6 +670,9 @@ void LanguageParser::initializeForParsing()
     // all syntax errors to be reported on the correct line.
     lineNumber = source->getFirstLine();
 
+    // position at the start of that line
+    position(lineNumber, 0);
+
     // handy stack for temporary values...this is a push through
     holdStack = new (HOLDSIZE) PushThroughStack(HOLDSIZE);
 
