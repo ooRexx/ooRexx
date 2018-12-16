@@ -86,7 +86,7 @@ public:
     void *operator new(size_t);
     inline void  operator delete(void *) { ; }
 
-    ProgramSource() : lineCount(0) { };
+    ProgramSource() : firstLine(1), lineCount(0) { };
     inline ProgramSource(RESTORETYPE restoreType) { ; };
 
     // each subclass will need to implement this.
@@ -103,16 +103,17 @@ public:
     virtual bool isTraceable() { return false; }
     // provides the starting line location.  Can be non-zero
     // if this is an interpret
-    virtual size_t getFirstLine() { return 1; }
+    virtual size_t getFirstLine() { return firstLine; }
     size_t getLineCount() { return lineCount; }
 
     RexxString *getStringLine(size_t lineNumber);
     RexxString *getStringLine(size_t position, size_t startOffset, size_t endOffset = SIZE_MAX);
     RexxString *extract(SourceLocation &location);
-    ArrayClass  *extractSourceLines(SourceLocation &location);
+    ArrayClass *extractSourceLines(SourceLocation &location);
 
 protected:
 
+    size_t firstLine;               // the first line of the for parsing
     size_t lineCount;               // count of lines in the source file.
 };
 
@@ -127,7 +128,7 @@ class BufferProgramSource: public ProgramSource
     void *operator new(size_t);
     inline void  operator delete(void *) { ; }
 
-    BufferProgramSource(BufferClass *b) : firstLine(1), buffer(b), descriptorArea(OREF_NULL), ProgramSource() { }
+    BufferProgramSource(BufferClass *b) : buffer(b), descriptorArea(OREF_NULL), ProgramSource() { }
     inline BufferProgramSource(RESTORETYPE restoreType) { ; };
 
     virtual void live(size_t);
@@ -138,7 +139,6 @@ class BufferProgramSource: public ProgramSource
     virtual void setup();
     virtual void getLine(size_t lineNumber, const char *&data, size_t &length);
     virtual bool isTraceable() { return true; }
-    virtual size_t getFirstLine() { return firstLine; }
 
     const char *getBufferPointer();
     void getBuffer(const char *&data, size_t &length);
@@ -149,7 +149,6 @@ class BufferProgramSource: public ProgramSource
 
 protected:
 
-    size_t firstLine;              // the first line for parsing
     BufferClass *descriptorArea;   // our table of line descriptors
     BufferClass *buffer;           // the buffer where the source data is installed
 };
@@ -202,7 +201,6 @@ class ArrayProgramSource: public ProgramSource
     virtual void setup();
     virtual void getLine(size_t lineNumber, const char *&data, size_t &length);
     virtual bool isTraceable() { return true; }
-    virtual size_t getFirstLine() { return interpretAdjust; }
 
  protected:
 

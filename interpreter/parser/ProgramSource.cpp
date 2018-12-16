@@ -158,7 +158,7 @@ RexxString *ProgramSource::extract(SourceLocation &location )
     }
 
     // make sure this is within range of the lines we have.
-    if (location.getLineNumber() <= getFirstLine() || location.getLineNumber() > lineCount)
+    if (location.getLineNumber() < getFirstLine() || location.getLineNumber() > lineCount)
     {
         return GlobalNames::NULLSTRING;
     }
@@ -570,30 +570,35 @@ void ArrayProgramSource::flatten(Envelope *envelope)
  */
 void ArrayProgramSource::setup()
 {
+    size_t adjust = 0;
+
     // if we have an interpret adjustment, back it off one
     if (interpretAdjust > 0)
     {
-        interpretAdjust --;
+        adjust = interpretAdjust - 1;
     }
 
     // set the line count to the number of items
     lineCount = array->lastIndex();
 
     // fake things out by the interpret adjustment amount
-    lineCount += interpretAdjust;
+    lineCount += adjust;
+
+    // also adjust the first line
+    firstLine += adjust;
 
     // it is possible that the array version might include a shebang line (sigh).
     // if we detect that, replace it with a null line so it will be ignored.
     // BUT, we don't do this if we're an interpret.
-    if (lineCount > 0 && interpretAdjust > 0)
+    if (lineCount > 0 && interpretAdjust == 0)
     {
-        RexxString *firstLine = (RexxString *)array->get(1);
+        RexxString *line = (RexxString *)array->get(1);
         // now we need to see if we've got a shebang line.  If we find
-        // this, zero the length of the line to make this just a null line
+        // this, bump the start line by one so we start parsing after the shebang
         // we want to keep the line so we don't throw off the line counts.
-        if (firstLine->getChar(0) == '#' && firstLine->getChar(1) == '!')
+        if (line->startsWith("#!"))
         {
-            array->put(GlobalNames::NULLSTRING, 1);
+            firstLine++;
         }
     }
 }
@@ -612,7 +617,7 @@ void ArrayProgramSource::setup()
  */
 void ArrayProgramSource::getLine(size_t lineNumber, const char *&linePointer, size_t &lineLength)
 {
-    if (lineNumber > lineCount || lineNumber <= interpretAdjust)
+    if (lineNumber > lineCount || lineNumber < interpretAdjust)
     {
         // null out the line information and quit
         linePointer = NULL;
@@ -621,7 +626,7 @@ void ArrayProgramSource::getLine(size_t lineNumber, const char *&linePointer, si
     }
 
     // adjust for the interpret offset
-    size_t targetLine = lineNumber - interpretAdjust;
+    size_t targetLine = lineNumber - (interpretAdjust > 0 ? interpretAdjust - 1 : 0);
 
     // get the line from the array, making sure we adjust for interpret line numbers.
     RexxString *line = (RexxString *)(array->get(targetLine));

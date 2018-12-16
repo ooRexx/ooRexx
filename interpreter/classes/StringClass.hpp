@@ -554,6 +554,7 @@ class RexxString : public RexxObject
            void  copyToRxstring(RXSTRING &r);
     inline bool  endsWith(char c) const { return length > 0 && stringData[length - 1] == c; }
     inline bool  startsWith(char c) const { return length > 0 && stringData[0] == c; }
+    inline bool  startsWith(const char *c) const { size_t clen = strlen(c); return length >=clen && memcmp(getStringData(), c, clen) == 0; }
 
     inline int sortCompare(RexxString *other)
     {

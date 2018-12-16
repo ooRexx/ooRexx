@@ -655,11 +655,7 @@ void LanguageParser::initializeForParsing()
 {
     // create a package object that we'll be filling in.
     package = new PackageClass(name, source);
-    package->setup();
-
-    // have the source object do any required initialization
-    source->setup();
-    // the package has setup to perform as well
+    // do setup, which also initializes the program source.
     package->setup();
 
     // get the count of lines
