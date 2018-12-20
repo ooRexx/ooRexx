@@ -431,6 +431,8 @@ void RexxActivation::inheritPackageSettings()
 {
     // just copy the whole initial settings piece.
     settings.packageSettings = packageObject->getSettings();
+    // if tracing intermediates, turn on the special fast check flag
+    settings.intermediateTrace = settings.packageSettings.traceSettings.tracingIntermediates();
 }
 
 

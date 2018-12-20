@@ -169,7 +169,7 @@ void RexxInstructionTrace::execute(RexxActivation *context, ExpressionStack *sta
         RexxObject *result = expression->evaluate(context, stack);
         // Even trace gets traced :-)
         context->traceKeywordResult(GlobalNames::VALUE, result);
-        RexxString *value = result->requestString();
+        Protected<RexxString> value = result->requestString();
         // again, we don't change anything if we're already in debug mode.
         if (!context->inDebug())
         {
