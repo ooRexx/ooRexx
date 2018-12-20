@@ -811,7 +811,7 @@ RexxObjectPtr ErrorFailure(RexxExitContext *context, CSTRING commandString)
  */
 RexxObjectPtr RexxEntry ioCommandHandler(RexxExitContext *context, RexxStringObject address, RexxStringObject command, RexxIORedirectorContext *ioContext)
 {
-    int pid;
+    pid_t pid;
     int status;
     char* argv[MAX_COMMAND_ARGS + 1];
     // If SYSSHELLPATH could ever grow longer than 128 chars
