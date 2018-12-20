@@ -216,9 +216,10 @@ void RexxInstructionDynamicSignal::execute(RexxActivation *context, ExpressionSt
     // expression results require tracing
     context->traceKeywordResult(GlobalNames::VALUE, result);
     // force to a string value
-    ProtectedObject stringResult = result->requestString();
+    RexxString *stringResult = result->requestString();
+    stack->push(stringResult);
     // the context handles locating the target label
-    context->signalValue((RexxString *)stringResult);
+    context->signalValue(stringResult);
 }
 
 

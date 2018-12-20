@@ -255,6 +255,8 @@ RexxString *RexxInstructionExpression::evaluateStringExpression(RexxActivation *
         RexxObject *result = expression->evaluate(context, stack);
         // force to string form, trace, and return the string version
         RexxString *stringResult = result->requestString();
+        // protect on the stack
+        stack->push(stringResult);
         context->traceResult(stringResult);
         return stringResult;
     }

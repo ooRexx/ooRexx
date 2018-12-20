@@ -85,14 +85,14 @@ void ForLoop::setup(RexxActivation *context,
     else
     {
         // first get the string version and and request a string version
-        NumberString *strResult = result->requestString()->numberString();
+        Protected<NumberString> strResult = result->requestString()->numberString();
         // non-numeric value, this is an error
         if (strResult == OREF_NULL)
         {
             reportException(forKeyword ? Error_Invalid_whole_number_for : Error_Invalid_whole_number_repeat, result);
         }
         // force rounding
-        RexxObject *rounded = strResult->callOperatorMethod(OPERATOR_PLUS, OREF_NULL);
+        Protected<RexxObject> rounded = strResult->callOperatorMethod(OPERATOR_PLUS, OREF_NULL);
         // now convert the rounded value to an integer, if possible
         if (!rounded->requestNumber(count, number_digits()))
         {
