@@ -222,6 +222,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <Class id="UseArgVariableRef" class="UseArgVariableRef" include="UseArgVariableRef.hpp"/>
 <Class id="CommandIOConfiguration" class="CommandIOConfiguration" include="CommandIOConfiguration.hpp"/>
 <Class id="AddressWithInstruction" class="RexxInstructionAddressWith" include="AddressWithInstruction.hpp"/>
+<Class id="ConstantDirective" class="ConstantDirective" include="ConstantDirective.hpp"/>
 </Internal>
 <Transient>
 <Class id="Memory" class="MemoryObject" include="RexxMemory.hpp" objectvirtual="true"/>

@@ -2090,6 +2090,15 @@ $ Error_No_method_package
 $ Error_Execution_noinit
 820 Object "&1" was not correctly initialized.
 
+$ Error_No_method_constant
+821 Constant "&2" of object "&1" has not been initialized.
+
+$ Error_Invalid_expression_missing_constant
+822 Missing expression on ::CONSTANT directive.
+
+$ Error_Translation_constant_no_class
+823 A ::CONSTANT directive with an expression requires a matching ::CLASS directive.
+
 
 $ * -------------------------------------------------------------------------- */
 $ * --            ==================================================        -- */

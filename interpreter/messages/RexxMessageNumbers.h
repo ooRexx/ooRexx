@@ -733,6 +733,9 @@
 #define Error_No_method_private_msg                                  818
 #define Error_No_method_package_msg                                  819
 #define Error_Execution_noinit_msg                                   820
+#define Error_No_method_constant_msg                                 821
+#define Error_Invalid_expression_missing_constant_msg                822
+#define Error_Translation_constant_no_class_msg                      823
 
 
 #endif

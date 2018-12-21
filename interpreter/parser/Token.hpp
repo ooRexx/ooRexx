@@ -254,6 +254,7 @@ typedef enum
     KEYWORD_LIBRARY,
     KEYWORD_REQUIRES,
     KEYWORD_USE_LOCAL,
+    KEYWORD_CONSTANT,
 } InstructionKeyword;
 
 // instruction subkeyword types

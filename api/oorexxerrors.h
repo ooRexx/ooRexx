@@ -346,6 +346,7 @@
 #define Rexx_Error_Invalid_expression_select_case                         35933
 #define Rexx_Error_Invalid_expression_case_when_list                      35934
 #define Rexx_Error_Invalid_expression_missing_general                     35935
+#define Rexx_Error_Invalid_expression_missing_constant                    35936
 #define Rexx_Error_Unmatched_parenthesis                                  36000
 #define Rexx_Error_Unmatched_parenthesis_user_defined                     36900
 #define Rexx_Error_Unmatched_parenthesis_paren                            36901
@@ -575,6 +576,7 @@
 #define Rexx_Error_No_method_name                                         97001
 #define Rexx_Error_No_method_private                                      97002
 #define Rexx_Error_No_method_package                                      97003
+#define Rexx_Error_No_method_constant                                     97004
 #define Rexx_Error_No_method_user_defined                                 97900
 #define Rexx_Error_Execution                                              98000
 #define Rexx_Error_Execution_user_defined                                 98900
@@ -645,6 +647,7 @@
 #define Rexx_Error_Translation_duplicate_routine                          99903
 #define Rexx_Error_Translation_duplicate_requires                         99904
 #define Rexx_Error_Translation_missing_class                              99905
+#define Rexx_Error_Translation_constant_no_class                          99906
 #define Rexx_Error_Translation_expose                                     99907
 #define Rexx_Error_Translation_expose_interpret                           99908
 #define Rexx_Error_Translation_guard                                      99909

@@ -2006,6 +2006,12 @@ special character (such as a parenthesis).
 <para>Missing expression following <emphasis role="italic">keyword</emphasis> keyword of a <emphasis role="italic">instruction</emphasis> instruction.</para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>936</term>
+<listitem>
+<para>Missing expression on ::CONSTANT directive.</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 <section id="ERR36">
@@ -3539,6 +3545,12 @@ special character (such as a parenthesis).
 </listitem>
 </varlistentry>
 <varlistentry>
+<term>004</term>
+<listitem>
+<para>Constant "<emphasis role="italic">name</emphasis>" of object "<emphasis role="italic">object</emphasis>" has not been initialized.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
 <term>900</term>
 <listitem>
 <para>
@@ -3967,6 +3979,12 @@ special character (such as a parenthesis).
 <term>905</term>
 <listitem>
 <para>CLASS keyword on ::METHOD directive requires a matching ::CLASS directive.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>906</term>
+<listitem>
+<para>A ::CONSTANT directive with an expression requires a matching ::CLASS directive.</para>
 </listitem>
 </varlistentry>
 <varlistentry>

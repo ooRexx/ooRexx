@@ -363,6 +363,7 @@ void *ConstantGetterCode::operator new(size_t size)
 void ConstantGetterCode::live(size_t liveMark)
 {
     memory_mark(constantValue);
+    memory_mark(constantName);
 }
 
 
@@ -374,6 +375,7 @@ void ConstantGetterCode::live(size_t liveMark)
 void ConstantGetterCode::liveGeneral(MarkReason reason)
 {
     memory_mark_general(constantValue);
+    memory_mark_general(constantName);
 }
 
 
@@ -387,6 +389,7 @@ void ConstantGetterCode::flatten(Envelope *envelope)
     setUpFlatten(ConstantGetterCode)
 
     flattenRef(constantValue);
+    flattenRef(constantName);
 
     cleanUpFlatten
 }
@@ -412,6 +415,13 @@ void ConstantGetterCode::run(Activity *activity, MethodClass *method, RexxObject
     {
         reportException(Error_Incorrect_method_maxarg, (wholenumber_t)0);
     }
+    // if this constant is initialized via a dynamic expression, it is possible that the
+    // initialization never completed. Treat this as a NO METHOD situation, but with a special error code.
+    if (constantValue == OREF_NULL)
+    {
+        reportNomethod(Error_No_method_constant, constantName, receiver);
+    }
+
     result = constantValue;
 }
 

@@ -157,6 +157,7 @@
 #include "UseArgVariableRef.hpp"
 #include "CommandIOConfiguration.hpp"
 #include "AddressWithInstruction.hpp"
+#include "ConstantDirective.hpp"
 #include "RexxMemory.hpp"
 #include "InternalStack.hpp"
 #include "MemoryStack.hpp"
@@ -727,6 +728,9 @@ void MemoryObject::buildVirtualFunctionTable()
    
    objectPtr = ::new (objectLoc) RexxInstructionAddressWith(RESTOREIMAGE);
    virtualFunctionTable[T_AddressWithInstruction] = getVftPointer(objectLoc);
+   
+   objectPtr = ::new (objectLoc) ConstantDirective(RESTOREIMAGE);
+   virtualFunctionTable[T_ConstantDirective] = getVftPointer(objectLoc);
    
    objectPtr = ::new (objectLoc) RexxObject(RESTOREIMAGE);
    virtualFunctionTable[T_Memory] = getVftPointer(objectLoc);

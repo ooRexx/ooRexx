@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -49,7 +49,9 @@
 #include "FlagSet.hpp"
 
 class RexxClass;
+class RexxCode;
 class MethodClass;
+class Activity;
 
 /**
  * A class representing a directive instruction inside
@@ -78,7 +80,9 @@ class ClassDirective : public RexxDirective
 
 
     inline RexxString *getName() { return publicName; }
-    RexxClass *install(PackageClass *package, RexxActivation *activation);
+    void install(PackageClass *package, RexxActivation *activation);
+    void resolveConstants(PackageClass *package, Activity *activity);
+    void activate();
 
     void addDependencies(StringTable *class_directives);
     void checkDependency(ClassResolver *classReference, StringTable *class_directives);
@@ -99,6 +103,7 @@ class ClassDirective : public RexxDirective
     void addInherits(ClassResolver *name);
     void addMethod(RexxString *name, MethodClass *method, bool classMethod);
     void addConstantMethod(RexxString *name, MethodClass *method);
+    void addConstantMethod(RexxString *name, MethodClass *method, RexxInstruction *directive, size_t maxStack, size_t variableIndex);
     bool checkDuplicateMethod(RexxString *name, bool classMethod);
     MethodClass *findMethod(RexxString *name);
     MethodClass *findClassMethod(RexxString *name);
@@ -120,6 +125,8 @@ protected:
     StringTable *annotations;        // any attached annotations
     StringTable  *dependencies;      // in-package dependencies
     FlagSet<ClassProperties, 32> classFlags; // class attributes
+    RexxCode *constantInitializer;   // The code object used to resolve expression constants
+    RexxClass *classObject;          // the class object created at install time
 };
 
 #endif

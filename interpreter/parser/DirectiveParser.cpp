@@ -49,6 +49,7 @@
 #include "ClassDirective.hpp"
 #include "RequiresDirective.hpp"
 #include "LibraryDirective.hpp"
+#include "ConstantDirective.hpp"
 #include "MethodClass.hpp"
 #include "RoutineClass.hpp"
 #include "CPPCode.hpp"
@@ -352,6 +353,18 @@ void LanguageParser::classDirective()
 
     // create a class directive and add this to the dependency list
     activeClass = new ClassDirective(name, public_name, clause);
+
+    // if we have any computed constants associated with this class, we need to
+    // keep some special information about the constant expressions.
+
+    // a table of variables...starting with the special variables we allocated space for.
+    // we use the initial "clean" version, then save it after each parse constant associated
+    // with the class.
+    constantVariables = OREF_NULL;
+    // also start with the default index counter
+    constantVariableIndex = RexxLocalVariables::FIRST_VARIABLE_INDEX;
+    // and also the largest stack needed to evaluate these.
+    constantMaxStack = 0;
     // add this to our directives list.
     addClassDirective(public_name, activeClass);
 
@@ -808,7 +821,7 @@ void LanguageParser::methodDirective()
     // go check for a duplicate and validate the use of the CLASS modifier
     checkDuplicateMethod(internalname, isClass, Error_Translation_duplicate_method);
 
-    MethodClass *_method = OREF_NULL;
+    Protected<MethodClass> _method;
 
     // handle delegates first.  A delegate method can also be an attribute, which really
     // just means we produce two delegate methods
@@ -886,7 +899,7 @@ void LanguageParser::methodDirective()
         // check that there is no code following this method.
         checkDirective(Error_Translation_abstract_method);
         // this uses a special code block
-        BaseCode *code = new AbstractCode();
+        Protected<BaseCode> code = new AbstractCode();
         _method = new MethodClass(name, code);
         // make sure the method is marked abstract
         _method->setAbstract();
@@ -1119,7 +1132,7 @@ void LanguageParser::optionsDirective()
  */
 MethodClass *LanguageParser::createNativeMethod(RexxString *name, RexxString *library, RexxString *procedure)
 {
-    NativeCode *nmethod = PackageManager::resolveMethod(library, procedure);
+    Protected<NativeCode> nmethod = PackageManager::resolveMethod(library, procedure);
     // raise an exception if this entry point is not found.
     if (nmethod == OREF_NULL)
     {
@@ -1150,7 +1163,7 @@ void LanguageParser::decodeExternalMethod(RexxString *methodName, RexxString *ex
     // convert into an array of words
     // NOTE:  This method makes all of the words part of the
     // common string pool
-    ArrayClass *_words = words(externalSpec);
+    Protected<ArrayClass> _words = words(externalSpec);
     // not 'LIBRARY library [entry]' form?
     if (((RexxString *)(_words->get(1)))->strCompare("LIBRARY"))
     {
@@ -1411,7 +1424,7 @@ void LanguageParser::attributeDirective()
                 RexxString *procedure = OREF_NULL;
                 decodeExternalMethod(internalname, externalname, library, procedure);
                 // now create both getter and setting methods from the information.
-                MethodClass *_method = createNativeMethod(internalname, library, procedure->concatToCstring("GET"));
+                Protected<MethodClass> _method = createNativeMethod(internalname, library, procedure->concatToCstring("GET"));
                 _method->setAttributes(accessFlag, protectedFlag, guardFlag);
                 // mark this as an attribute method
                 _method->setAttribute();
@@ -1469,7 +1482,7 @@ void LanguageParser::attributeDirective()
                     procedure = procedure->concatToCstring("GET");
                 }
                 // now create both getter and setting methods from the information.
-                MethodClass *_method = createNativeMethod(internalname, library, procedure);
+                Protected<MethodClass> _method = createNativeMethod(internalname, library, procedure);
                 _method->setAttributes(accessFlag, protectedFlag, guardFlag);
                 // mark this as an attribute method
                 _method->setAttribute();
@@ -1532,7 +1545,7 @@ void LanguageParser::attributeDirective()
                     procedure = procedure->concatToCstring("SET");
                 }
                 // now create both getter and setting methods from the information.
-                MethodClass *_method = createNativeMethod(setterName, library, procedure);
+                Protected<MethodClass> _method = createNativeMethod(setterName, library, procedure);
                 _method->setAttributes(accessFlag, protectedFlag, guardFlag);
                 // mark this as an attribute method
                 _method->setAttribute();
@@ -1594,7 +1607,8 @@ void LanguageParser::constantDirective()
 
     // we only expect just a single value token here
     token = nextReal();
-    RexxObject *value;
+    RexxObject *value = OREF_NULL;
+    RexxInternalObject *expression = OREF_NULL;
 
     // the value omitted?  Just use the literal name of the constant.
     if (token->isEndOfClause())
@@ -1602,6 +1616,12 @@ void LanguageParser::constantDirective()
         value = name;
         // push the EOC token back
         previousToken();
+    }
+    // this could be an expression that needs to
+    else if (token->isLeftParen())
+    {
+        // we have an expression in parens, parse it as a subexpression.
+        expression = translateConstantExpression(token, Error_Invalid_expression_missing_constant);
     }
     // no a symbol or literal...we have special checks for signed numbers
     else if (!token->isSymbolOrLiteral())
@@ -1635,6 +1655,10 @@ void LanguageParser::constantDirective()
     // nothing more permitted after this
     requiredEndOfClause(Error_Invalid_data_constant_dir);
 
+    // save the current location before checking for a body, since that
+    // gets the next clause, which will update the location.
+    SourceLocation directiveLocation = clause->getLocation();
+
     // this directive does not allow a body
     checkDirective(Error_Translation_constant_body);
 
@@ -1647,7 +1671,7 @@ void LanguageParser::constantDirective()
     }
 
     // create the method pair and quit.
-    createConstantGetterMethod(internalname, value);
+    createConstantGetterMethod(internalname, value, expression, directiveLocation);
 }
 
 
@@ -1936,7 +1960,7 @@ void LanguageParser::processAnnotation(RexxToken *token, StringTable *table)
 
     // we only expect just a single value token here
     token = nextReal();
-    RexxObject *value;
+    Protected<RexxObject> value;
 
     // the value omitted?  This is an error
     if (token->isEndOfClause())
@@ -2096,11 +2120,10 @@ void LanguageParser::createMethod(RexxString *name, bool classMethod,
     // Since the translateBlock() call will allocate a lot of new objects before returning,
     // there's a high probability that the method object can get garbage collected before
     // there is any opportunity to protect the object.
-    RexxCode *code = translateBlock();
-    ProtectedObject p(code);
+    Protected<RexxCode> code = translateBlock();
 
     // convert into a method object
-    MethodClass *_method = new MethodClass(name, code);
+    Protected<MethodClass> _method = new MethodClass(name, code);
     _method->setAttributes(privateMethod, protectedMethod, guardedMethod);
     // mark with the attribute state
     _method->setAttribute(isAttribute);
@@ -2127,8 +2150,8 @@ void LanguageParser::createAttributeGetterMethod(RexxString *name, RexxVariableB
     bool classMethod, AccessFlag privateMethod, ProtectedFlag protectedMethod, GuardFlag guardedMethod)
 {
     // create the kernel method for the accessor
-    BaseCode *code = new AttributeGetterCode(retriever);
-    MethodClass *_method = new MethodClass(name, code);
+    Protected<BaseCode> code = new AttributeGetterCode(retriever);
+    Protected<MethodClass> _method = new MethodClass(name, code);
     _method->setAttributes(privateMethod, protectedMethod, guardedMethod);
     // mark as an attribute method
     _method->setAttribute();
@@ -2157,8 +2180,8 @@ void LanguageParser::createDelegateMethod(RexxString *name, RexxVariableBase *re
     bool classMethod, AccessFlag privateMethod, ProtectedFlag protectedMethod, GuardFlag guardedMethod, bool isAttribute)
 {
     // create the kernel method for the accessor
-    BaseCode *code = new DelegateCode(retriever);
-    MethodClass *_method = new MethodClass(name, code);
+    Protected<BaseCode> code = new DelegateCode(retriever);
+    Protected<MethodClass> _method = new MethodClass(name, code);
     _method->setAttributes(privateMethod, protectedMethod, guardedMethod);
     // mark with the attribute state
     _method->setAttribute(isAttribute);
@@ -2183,8 +2206,8 @@ void LanguageParser::createAttributeSetterMethod(RexxString *name, RexxVariableB
     bool classMethod, AccessFlag privateMethod, ProtectedFlag protectedMethod, GuardFlag guardedMethod)
 {
     // create the kernel method for the accessor
-    BaseCode *code = new AttributeSetterCode(retriever);
-    MethodClass *_method = new MethodClass(name, code);
+    Protected<BaseCode> code = new AttributeSetterCode(retriever);
+    Protected<MethodClass> _method = new MethodClass(name, code);
     _method->setAttributes(privateMethod, protectedMethod, guardedMethod);
     // mark as an attribute method
     _method->setAttribute();
@@ -2213,8 +2236,8 @@ void LanguageParser::createAbstractMethod(RexxString *name,
 {
     // create the kernel method for the accessor
     // this uses a special code block
-    BaseCode *code = new AbstractCode();
-    MethodClass * _method = new MethodClass(name, code);
+    Protected<BaseCode> code = new AbstractCode();
+    Protected<MethodClass> _method = new MethodClass(name, code);
     _method->setAttributes(privateMethod, protectedMethod, guardedMethod);
     // mark with the attribute state
     _method->setAttribute(isAttribute);
@@ -2228,26 +2251,51 @@ void LanguageParser::createAbstractMethod(RexxString *name,
 /**
  * Create a CONSTANT "get" method.
  *
- * @param target The target method directory.
- * @param name   The name of the attribute.
+ * @param name       The name of the attribute.
+ * @param value      A potential expression that needs to be evaluated at run time.
+ * @param expression An expression to evaluate if this is the dynamic form.
+ * @param location   The clause location information.
  */
-void LanguageParser::createConstantGetterMethod(RexxString *name, RexxObject *value)
+void LanguageParser::createConstantGetterMethod(RexxString *name, RexxObject *value, RexxInternalObject *expression, SourceLocation &location)
 {
-    ConstantGetterCode *code = new ConstantGetterCode(value);
+    Protected<ConstantGetterCode> code = new ConstantGetterCode(name, value);
     // add this as an unguarded method
-    MethodClass *method = new MethodClass(name, code);
+    Protected<MethodClass> method = new MethodClass(name, code);
     method->setUnguarded();
     // mark as a constant method
     method->setConstant();
+
+    // if we do not have an active class, only real constants are allowed.
     if (activeClass == OREF_NULL)
     {
+        // if this is the evaluated form, we can't process this outside of the
+        // context of a class object.
+        if (expression != OREF_NULL)
+        {
+            syntaxError(Error_Translation_constant_no_class, name);
+        }
         addMethod(name, method, false);
     }
     else
     {
         // connect this to the source package before adding to the class.
         method->setPackageObject(package);
-        activeClass->addConstantMethod(name, method);
+        // if we have an expression, then value was null and the method completed
+        // above is incomplete. We need to create a new ConstantDirective instruction
+        // that will evaluate this expression when the package is installed.
+        if (expression != OREF_NULL)
+        {
+            // this gets added to the active class for evaluation later
+            Protected<ConstantDirective> directive = new ConstantDirective(code, expression, clause);
+            // the clause we provided is the wrong location, so set the correct position.
+            directive->setLocation(location);
+            activeClass->addConstantMethod(name, method, directive, constantMaxStack, constantVariableIndex);
+        }
+        else
+        {
+            // just a normal "constant" constant
+            activeClass->addConstantMethod(name, method);
+        }
     }
 }
 
@@ -2339,7 +2387,7 @@ void LanguageParser::routineDirective()
         {
             // convert external into words (this also adds the strings
             // to the common string pool)
-            ArrayClass *_words = words(externalname);
+            Protected<ArrayClass> _words = words(externalname);
             // ::ROUTINE foo EXTERNAL "LIBRARY libbar [foo]"
             // NOTE:  decodeMethodLibrary doesn't really work for routines
             // because we have a second form.  Not really worth writing
@@ -2444,9 +2492,8 @@ void LanguageParser::routineDirective()
             // Since the translateBlock() call will allocate a lot of new objects before returning,
             // there's a high probability that the method object can get garbage collected before
             // there is any opportunity to protect the object.
-            RexxCode *code = translateBlock();
-            ProtectedObject p(code);
-            RoutineClass *routine = new RoutineClass(name, code);
+            Protected<RexxCode> code = translateBlock();
+            Protected<RoutineClass> routine = new RoutineClass(name, code);
             // make sure this is attached to the source object for context information
             routine->setPackageObject(package);
             // add to the routine directory

@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -87,6 +87,8 @@ class RexxInstruction : public RexxInternalObject
     // NOTE:  This method is only used during program translation, so we can skip using
     // OrefSet to set this variable.
     inline void setNext(RexxInstruction *next) { nextInstruction = next; };
+    inline RexxInstruction *next() { return nextInstruction; }
+    inline bool isLast() { return nextInstruction == OREF_NULL; }
     void        setStart(size_t line, size_t off) { instructionLocation.setStart(line, off); }
     void        setEnd(size_t line, size_t off) { instructionLocation.setEnd(line, off); }
     inline      void        setType(InstructionKeyword type) { instructionType = type; };

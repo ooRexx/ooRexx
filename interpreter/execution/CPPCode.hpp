@@ -124,16 +124,19 @@ public:
     void *operator new(size_t);
     inline void operator delete(void *) { }
 
-    inline ConstantGetterCode(RexxObject * v) { constantValue = v; }
+    inline ConstantGetterCode(RexxString *n, RexxObject * v) { constantName = n; constantValue = v; }
     inline ConstantGetterCode(RESTORETYPE restoreType) { }
 
     virtual void live(size_t);
     virtual void liveGeneral(MarkReason reason);
     virtual void flatten(Envelope*);
 
-    void run(Activity *, MethodClass *, RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
+    virtual void run(Activity *, MethodClass *, RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
+
+    void setValue(RexxObject *v) { constantValue = v; }
 
 protected:
+    RexxString *constantName;         // the name of the constant
     RexxObject *constantValue;        // the returned constant value
 };
 

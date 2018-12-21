@@ -2852,6 +2852,15 @@ special character (such as a parenthesis).
         <SymbolicName>Error_Invalid_expression_missing_general</SymbolicName>
         <Text>Missing expression following <Sub position="1" name="keyword"/> keyword of a <Sub position="1" name="instruction"/> instruction.</Text>
       </SubMessage>
+      <SubMessage>
+        <Code>35</Code>
+        <Subcode>936</Subcode>
+        <MessageNumber>822</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Invalid_expression_missing_constant</SymbolicName>
+        <Text>Missing expression on ::CONSTANT directive.</Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>
@@ -5006,6 +5015,15 @@ special character (such as a parenthesis).
       </SubMessage>
       <SubMessage>
         <Code>97</Code>
+        <Subcode>004</Subcode>
+        <MessageNumber>821</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_No_method_constant</SymbolicName>
+        <Text>Constant <q><Sub position="2" name="name"/></q> of object <q><Sub position="1" name="object"/></q> has not been initialized.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>97</Code>
         <Subcode>900</Subcode>
         <MessageNumber>646</MessageNumber>
         <Component>Rexx</Component>
@@ -5639,6 +5657,15 @@ special character (such as a parenthesis).
         <Severity>Warning</Severity>
         <SymbolicName>Error_Translation_missing_class</SymbolicName>
         <Text>CLASS keyword on ::METHOD directive requires a matching ::CLASS directive.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>99</Code>
+        <Subcode>906</Subcode>
+        <MessageNumber>823</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Translation_constant_no_class</SymbolicName>
+        <Text>A ::CONSTANT directive with an expression requires a matching ::CLASS directive.</Text>
       </SubMessage>
       <SubMessage>
         <Code>99</Code>

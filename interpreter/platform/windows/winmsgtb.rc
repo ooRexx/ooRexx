@@ -2,7 +2,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -37,9 +37,6 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX WIN 95 / NT support                                                   */
-/*                                                                            */
-/*                                                                            */
 /*             -- Message resource file for ooRexx interpreter                */
 /******************************************************************************/
 
@@ -732,7 +729,10 @@ BEGIN
    97002    "Object ""&1"" cannot accept private message ""&2"" from this context."
    97003    "Object ""&1"" cannot accept package scope message ""&2"" from a different package caller."
    98901    "Object ""&1"" was not correctly initialized."
-   
+   97004    "Constant ""&2"" of object ""&1"" has not been initialized."
+   35936    "Missing expression on ::CONSTANT directive."
+   99906    "A ::CONSTANT directive with an expression requires a matching ::CLASS directive."
+
 END
 
 1 VERSIONINFO
@@ -756,7 +756,7 @@ BEGIN
             VALUE "FileDescription", "Open Object Rexx Interpreter (main)\0"
             VALUE "FileVersion", ORX_VER_STR "\0"
             VALUE "InternalName", "REXX\0"
-            VALUE "LegalCopyright", "Copyright Â© RexxLA " OOREXX_COPY_YEAR ".\0"
+            VALUE "LegalCopyright", "Copyright © RexxLA " OOREXX_COPY_YEAR ".\0"
             VALUE "OriginalFilename", "REXX.DLL\0"
             VALUE "ProductName", "Open Object Rexx for Windows\0"
             VALUE "ProductVersion",  ORX_VER_STR "\0"
@@ -773,4 +773,3 @@ END
 /* --            DO NOT CHANGE THIS FILE, ALL CHANGES WILL BE LOST!        -- */
 /* --            ==================================================        -- */
 /* -------------------------------------------------------------------------- */
-   

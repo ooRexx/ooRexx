@@ -1231,25 +1231,31 @@ void PackageClass::processInstall(RexxActivation *activation)
         setField(installedClasses, new_string_table());
         /* and the public classes            */
         setField(installedPublicClasses, new_string_table());
-        Protected<ArrayClass> createdClasses = new_array(classes->items());
-
         size_t count = classes->items();
         for (size_t i = 1; i <= count; i++)
         {
             /* get the class info                */
             ClassDirective *current_class = (ClassDirective *)classes->get(i);
-            // save the newly created class in our array so we can send the activate
-            // message at the end
-            RexxClass *newClass = current_class->install(this, activation);
-            createdClasses->put(newClass, i);
+            // have the directive create the class object
+            current_class->install(this, activation);
         }
-        // now send an activate message to each of these classes
-        count = createdClasses->items();
+
+        // now do any installation time constant calculations
         for (size_t i = 1; i <= count; i++)
         {
-            RexxClass *clz = (RexxClass *)createdClasses->get(i);
-            ProtectedObject result;
-            clz->sendMessage(GlobalNames::ACTIVATE, result);
+            /* get the class info                */
+            ClassDirective *current_class = (ClassDirective *)classes->get(i);
+            // have the directive create the class object
+            current_class->resolveConstants(this, activation->getActivity());
+        }
+        // now send an activate message to each of these classes
+        // this might also evaluate any dynamically created ::CONSTANT methods.
+        for (size_t i = 1; i <= count; i++)
+        {
+            // the directive now holds the class object, but there's an
+            // additional level of completiong required
+            ClassDirective *current_class = (ClassDirective *)classes->get(i);
+            current_class->activate();
         }
     }
 }

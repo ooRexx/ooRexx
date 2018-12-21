@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -49,6 +49,7 @@
 #include "RexxActivation.hpp"
 #include "MethodClass.hpp"
 #include "ExpressionClassResolver.hpp"
+#include "ConstantDirective.hpp"
 
 
 /**
@@ -73,6 +74,8 @@ void ClassDirective::live(size_t liveMark)
 {
     // must be first one marked (though normally null)
     memory_mark(nextInstruction);
+    // good idea to this second, for the same reason
+    memory_mark(constantInitializer);
     memory_mark(publicName);
     memory_mark(idName);
     memory_mark(metaclassName);
@@ -81,6 +84,7 @@ void ClassDirective::live(size_t liveMark)
     memory_mark(instanceMethods);
     memory_mark(classMethods);
     memory_mark(dependencies);
+    memory_mark(classObject);
 }
 
 
@@ -93,6 +97,8 @@ void ClassDirective::liveGeneral(MarkReason reason)
 {
     // must be first one marked (though normally null)
     memory_mark_general(nextInstruction);
+    // good idea to this second, for the same reason
+    memory_mark_general(constantInitializer);
     memory_mark_general(publicName);
     memory_mark_general(idName);
     memory_mark_general(metaclassName);
@@ -101,6 +107,7 @@ void ClassDirective::liveGeneral(MarkReason reason)
     memory_mark_general(instanceMethods);
     memory_mark_general(classMethods);
     memory_mark_general(dependencies);
+    memory_mark_general(classObject);
 }
 
 
@@ -114,6 +121,7 @@ void ClassDirective::flatten(Envelope *envelope)
     setUpFlatten(ClassDirective)
 
     flattenRef(nextInstruction);
+    flattenRef(constantInitializer);
     flattenRef(publicName);
     flattenRef(idName);
     flattenRef(metaclassName);
@@ -123,13 +131,15 @@ void ClassDirective::flatten(Envelope *envelope)
     flattenRef(classMethods);
     // we don't carry this one forward
     newThis->dependencies = OREF_NULL;
+    // and not the class object either
+    newThis->classObject = OREF_NULL;
 
     cleanUpFlatten
 }
 
 
 /**
- * Allocate a new requires directive.
+ * Allocate a new ::CLASS directive.
  *
  * @param size   The size of the object.
  *
@@ -146,9 +156,10 @@ void *ClassDirective::operator new(size_t size)
  * will resolve the directive and merge all of the public information
  * from the resolved file into this program context.
  *
+ * @param package    The package doing the install (used to resolve class references)
  * @param activation The activation we're running under for the install.
  */
-RexxClass *ClassDirective::install(PackageClass *package, RexxActivation *activation)
+void ClassDirective::install(PackageClass *package, RexxActivation *activation)
 {
     RexxClass *metaclass = OREF_NULL;
     RexxClass *subclass = TheObjectClass;
@@ -177,8 +188,6 @@ RexxClass *ClassDirective::install(PackageClass *package, RexxActivation *activa
             reportException(Error_Execution_noclass, subclassName->getName());
         }
     }
-
-    RexxClass *classObject;       // the class object we're creating
 
     // create the class object using the appropriate mechanism
 
@@ -236,9 +245,44 @@ RexxClass *ClassDirective::install(PackageClass *package, RexxActivation *activa
     {
         classObject->makeAbstract();
     }
+}
 
-    // the source needs this at the end so it call call the activate methods
-    return classObject;
+
+/**
+ * Resolve any dynamically generated ::CONSTANT directives for the class.
+ */
+void ClassDirective::resolveConstants(PackageClass *package, Activity *activity)
+{
+    // no dynamic constants? This is easy.
+    if (constantInitializer == OREF_NULL)
+    {
+        return;
+    }
+
+    // this was created without a package originally, so attach the package to it.
+    constantInitializer->setPackageObject(package);
+
+
+    // In order to install, we need to call something.  We manage this by
+    // creating a dummy stub routine that we can call to force things to install
+    Protected<MethodClass> code = new MethodClass(GlobalNames::CONSTANT_DIRECTIVE, constantInitializer);
+    // this is given the class object as a scope so that super will get set correctly.
+    code->setScope(classObject);
+    ProtectedObject dummy;
+    // run this as a method against the target class object.
+    code->run(activity, classObject, GlobalNames::CONSTANT_DIRECTIVE, NULL, 0, dummy);
+}
+
+
+
+/**
+ * Perform the last-stage activation for a class object.
+ */
+void ClassDirective::activate()
+{
+    // call the class ACTIVATE method
+    ProtectedObject result;
+    classObject->sendMessage(GlobalNames::ACTIVATE, result);
 }
 
 
@@ -475,6 +519,37 @@ void ClassDirective::addConstantMethod(RexxString *name, MethodClass *method)
     // this gets added as both a class and instance method
     addMethod(name, method, false);
     addMethod(name, method, true);
+}
+
+
+/**
+ * Add a method to a class definition that is evaluated at
+ * install time.
+ *
+ * @param name      The name to add.
+ * @param method    The method object that maps to this name.
+ * @param directive The directive instruction that will resolve the constant.
+ */
+void ClassDirective::addConstantMethod(RexxString *name, MethodClass *method, RexxInstruction *directive, size_t maxStack, size_t variableIndex)
+{
+    // this gets added as both a class and instance method
+    addMethod(name, method, false);
+    addMethod(name, method, true);
+
+    // if the first one of these, create an empty RexxCode object
+    // to accumulate these
+    if (constantInitializer == OREF_NULL)
+    {
+        // this is a dummy location for this code, it will not have sourceline() support.
+        SourceLocation loc;
+        // the package object gets added later at install time
+        constantInitializer = new RexxCode(OREF_NULL, loc, OREF_NULL);
+    }
+    // add this instruction to the end of the initializer
+    constantInitializer->addInstruction(directive, maxStack, variableIndex);
+
+    // the methods added will give an error when invoked. The initialization is done by
+    // running a special method composed of a chain of ::CONSTANT directive instructions.
 }
 
 

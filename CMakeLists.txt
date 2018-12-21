@@ -705,6 +705,7 @@ set (instructions_sources  ${build_instructions_dir}/AddressInstruction.cpp
             ${build_instructions_dir}/CommandInstruction.cpp
             ${build_instructions_dir}/CommandIOContext.cpp
             ${build_instructions_dir}/CommandIOConfiguration.cpp
+            ${build_instructions_dir}/ConstantDirective.cpp
             ${build_instructions_dir}/InputRedirector.cpp
             ${build_instructions_dir}/OutputRedirector.cpp
             ${build_instructions_dir}/DoBlock.cpp

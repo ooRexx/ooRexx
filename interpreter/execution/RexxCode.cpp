@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -262,3 +262,43 @@ RexxCode *RexxCode::interpret(RexxString *source, size_t lineNumber)
 {
     return LanguageParser::translateInterpret(source, package, labels, lineNumber);
 }
+
+
+/**
+ * Add an instruction to the end of this code object.
+ *
+ * @param i      The instruction to add
+ * @param m      The maximum stack size required by this instruction.
+ * @param v      The size of the variables frame.
+ */
+void RexxCode::addInstruction(RexxInstruction *i, size_t m, size_t v)
+{
+    // first instruction? just set the chain head
+    if (start == OREF_NULL)
+    {
+        start = i;
+        // we have a single instruction, so that is the bounds of the source
+        location.setLocation(i->getLocation());
+    }
+    // run the chain and add this to the end
+    else
+    {
+        RexxInstruction *current = start;
+        while (!current->isLast())
+        {
+            current = current->next();
+        }
+
+        current->setNext(i);
+        // update the bounds of the source location.
+        location.setLocation(i->getLocation());
+    }
+
+    // the max stack needs to be the largest value required by any of the
+    // instructions. This is managed by the parser as the constants are
+    // processed, so just take the latest value.
+    maxStack = m + MINIMUM_STACK_FRAME;
+    // we also need to variable dictionary frame size.
+    vdictSize = v;
+}
+

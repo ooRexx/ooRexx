@@ -116,10 +116,12 @@ class LanguageParser: public RexxInternalObject
     void        compileSource();
     void        initializeForParsing();
     void        initializeForDirectives();
+    void        initializeForTranslation();
     void        resolveDependencies();
     void        flushControl(RexxInstruction *);
     RexxCode   *translateBlock();
     RexxCode   *translateInterpret(PackageClass *sourceContext, StringTable *contextLabels);
+    RexxInternalObject *translateConstantExpression(RexxToken *token, RexxErrorCodes error);
     RoutineClass *generateProgram(PackageClass *sourceContext = OREF_NULL);
     RoutineClass *generateRoutine(PackageClass *sourceContext = OREF_NULL);
     MethodClass *generateMethod(PackageClass *sourceContext = OREF_NULL);
@@ -183,6 +185,7 @@ class LanguageParser: public RexxInternalObject
     RexxVariableBase *addVariable(RexxToken *);
     RexxVariableBase *requiredVariable(RexxToken *, const char *);
     void        addClause(RexxInstruction *);
+    void        resolveCalls();
     void        addLabel(RexxInstruction *, RexxString *);
     RexxInstruction *findLabel(RexxString *);
     void        setGuard();
@@ -337,7 +340,7 @@ class LanguageParser: public RexxInternalObject
     void        createAttributeGetterMethod(RexxString *name, RexxVariableBase *retriever, bool classMethod, AccessFlag privateMethod, ProtectedFlag protectedMethod, GuardFlag guardedMethod);
     void        createAttributeSetterMethod(RexxString *name, RexxVariableBase *retriever, bool classMethod, AccessFlag privateMethod, ProtectedFlag protectedMethod, GuardFlag guardedMethod);
     void        createDelegateMethod(RexxString *name, RexxVariableBase *retriever, bool classMethod, AccessFlag privateMethod, ProtectedFlag protectedMethod, GuardFlag guardedMethod, bool isAttribute);
-    void        createConstantGetterMethod(RexxString *name, RexxObject *value);
+    void        createConstantGetterMethod(RexxString *name, RexxObject *value, RexxInternalObject *expression, SourceLocation &location);
     void        createAbstractMethod(RexxString *name, bool classMethod, AccessFlag privateMethod, ProtectedFlag protectedMethod, GuardFlag guardedMethod, bool isAttribute);
     void        checkDuplicateMethod(RexxString *name, bool classMethod, RexxErrorCodes errorMsg);
     void        addMethod(RexxString *name, MethodClass *method, bool classMethod);
@@ -503,6 +506,9 @@ protected:
     size_t           currentStack;       // current expression stack depth
     size_t           maxStack;           // maximum stack depth
     size_t           variableIndex;      // current variable index slot
+    size_t           constantMaxStack;           // maximum stack depth for the evaluated constants
+    size_t           constantVariableIndex;      // current variable index slot for evaluated constants
+    StringTable     *constantVariables;          // root of associated variable list for evaluated constants.
 
     // table of character values
     static int characterTable[];
