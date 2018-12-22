@@ -316,13 +316,24 @@ RexxObject *RexxInfo::getRelease()
 
 
 /**
- * Get the revision level for this interpreter.
+ * Get the modification level for this interpreter.
  *
- * @return The revision level as an Integer object.
+ * @return The modification level as an Integer object.
+ */
+RexxObject *RexxInfo::getModification()
+{
+    return new_integer(ORX_MOD);
+}
+
+
+/**
+ * Get the source-control revision for this interpreter.
+ *
+ * @return The revision as an Integer object.
  */
 RexxObject *RexxInfo::getRevision()
 {
-    return new_integer(ORX_MOD);
+    return new_integer(ORX_BLD);
 }
 
 

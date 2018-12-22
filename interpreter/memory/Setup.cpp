@@ -1231,6 +1231,7 @@ StartClassDefinition(RexxInfo)
         AddMethod("CaseSensitiveFiles", RexxInfo::getCaseSensitiveFiles, 0);
         AddMethod("MajorVersion", RexxInfo::getMajorVersion, 0);
         AddMethod("Release", RexxInfo::getRelease, 0);
+        AddMethod("Modification", RexxInfo::getModification, 0);
         AddMethod("Revision", RexxInfo::getRevision, 0);
         AddMethod("internalMaxNumber", RexxInfo::getInternalMaxNumber, 0);
         AddMethod("internalMinNumber", RexxInfo::getInternalMinNumber, 0);
