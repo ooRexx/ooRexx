@@ -2,7 +2,7 @@
 <title>RXQUEUE Utility Program</title>
 <para>RXQUEUE issues the following errors:</para>
 <section id="ERR119">
-<title>Error 119 - The REXX queuing system is not initialized.</title>
+<title>Error 119 - The REXX rxapi queuing system is not available.</title>
 <para> </para>
 </section>
 <section id="ERR120">

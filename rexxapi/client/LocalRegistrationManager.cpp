@@ -354,6 +354,14 @@ RexxReturnCode LocalRegistrationManager::resolveCallback(RegistrationType type, 
  */
 RexxReturnCode LocalRegistrationManager::processServiceException(ServiceException *e)
 {
+    switch (e->getErrorCode())
+    {
+        case CONNECTION_FAILURE:
+            return RXAPI_NORXAPI;
+
+        default:
+            return RXAPI_MEMFAIL;
+    }
     return RXAPI_MEMFAIL;
 }
 

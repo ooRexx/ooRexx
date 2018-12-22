@@ -403,7 +403,7 @@ void ServerMacroSpaceManager::dispatch(ServiceMessage &message)
             nextImage(message);
             break;
         default:
-            message.setExceptionInfo(SERVER_FAILURE, "Invalid macro space manager operation");
+            message.setExceptionInfo(INVALID_OPERATION, "Invalid macro space manager operation");
             break;
     }
 }

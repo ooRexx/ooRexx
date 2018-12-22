@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -689,9 +689,6 @@ RexxReturnCode LocalMacroSpaceManager::processServiceException(ServiceException 
         case MACROSPACE_VERSION_ERROR:
         case MACROSPACE_SIGNATURE_ERROR:
             return RXMACRO_SIGNATURE_ERROR;
-
-        case MACRO_DOES_NOT_EXIST:
-            return RXMACRO_NOT_FOUND;
 
         case MACRO_LOAD_REXX:
         default:

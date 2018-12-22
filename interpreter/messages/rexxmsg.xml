@@ -6449,7 +6449,7 @@ special character (such as a parenthesis).
         <Component>RXQUEUE</Component>
         <Severity>Error</Severity>
         <SymbolicName>Error_RXQUE_notinit</SymbolicName>
-        <Text>The REXX queuing system is not initialized.</Text>
+        <Text>The REXX rxapi queuing system is not available.</Text>
       </SubMessage>
       <SubMessage>
         <Code>999</Code>

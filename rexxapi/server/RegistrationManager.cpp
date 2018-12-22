@@ -76,7 +76,7 @@ void ServerRegistrationManager::dispatch(ServiceMessage &message)
             table = &commandHandlers;
             break;
         default:
-            message.setExceptionInfo(SERVER_FAILURE, "Invalid registration type");
+            message.setExceptionInfo(INVALID_OPERATION, "Invalid registration type");
             return;
     }
 
@@ -112,7 +112,7 @@ void ServerRegistrationManager::dispatch(ServiceMessage &message)
             break;
 
         default:
-            message.setExceptionInfo(SERVER_FAILURE, "Invalid registration manager operation");
+            message.setExceptionInfo(INVALID_OPERATION, "Invalid registration manager operation");
             // make sure the data message buffer is not passed back.
             message.freeMessageData();
             break;

@@ -124,8 +124,8 @@ RexxReturnCode LocalAPIManager::processServiceException(ServerManager t, Service
 
         case APIManager:   // these should be screened out ahead of time
         {
-            // all global exceptions are memory failures
-            return RXAPI_MEMFAIL;
+            // all global exceptions are rxapi failures
+            return RXAPI_NORXAPI;
         }
     }
     return RXAPI_MEMFAIL;    // a catch-all return code

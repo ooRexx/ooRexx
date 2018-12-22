@@ -120,7 +120,7 @@ BEGIN
    999001    "The RXSUBCOM parameter REGISTER is incorrect."
    999002    "The RXSUBCOM parameter DROP is incorrect."
    999003    "The RXSUBCOM parameter LOAD is incorrect."
-   999004    "The REXX queuing system is not initialized."
+   999004    "The REXX rxapi queuing system is not available."
    999005    "The size of the data is incorrect."
    999006    "Storage for data queues is exhausted."
    999007    "The name %1 is not a valid queue name."
@@ -732,7 +732,7 @@ BEGIN
    97004    "Constant ""&2"" of object ""&1"" has not been initialized."
    35936    "Missing expression on ::CONSTANT directive."
    99906    "A ::CONSTANT directive with an expression requires a matching ::CLASS directive."
-
+   
 END
 
 1 VERSIONINFO
@@ -756,7 +756,7 @@ BEGIN
             VALUE "FileDescription", "Open Object Rexx Interpreter (main)\0"
             VALUE "FileVersion", ORX_VER_STR "\0"
             VALUE "InternalName", "REXX\0"
-            VALUE "LegalCopyright", "Copyright © RexxLA " OOREXX_COPY_YEAR ".\0"
+            VALUE "LegalCopyright", "Copyright Â© RexxLA " OOREXX_COPY_YEAR ".\0"
             VALUE "OriginalFilename", "REXX.DLL\0"
             VALUE "ProductName", "Open Object Rexx for Windows\0"
             VALUE "ProductVersion",  ORX_VER_STR "\0"
@@ -773,3 +773,4 @@ END
 /* --            DO NOT CHANGE THIS FILE, ALL CHANGES WILL BE LOST!        -- */
 /* --            ==================================================        -- */
 /* -------------------------------------------------------------------------- */
+   

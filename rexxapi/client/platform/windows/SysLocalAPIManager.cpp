@@ -190,7 +190,7 @@ ApiConnection *SysLocalAPIManager::newClientConnection()
     {
         // don't leak memory!
         delete connection;
-        throw new ServiceException(SERVER_FAILURE, "Failure connecting to rxapi server");
+        throw new ServiceException(CONNECTION_FAILURE, "Failure connecting to rxapi server");
     }
     return connection;
 }

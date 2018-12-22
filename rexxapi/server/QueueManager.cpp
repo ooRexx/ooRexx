@@ -921,7 +921,7 @@ void ServerQueueManager::dispatch(ServiceMessage &message)
                 addToSessionQueue(message);
                 break;
             default:
-                message.setExceptionInfo(SERVER_FAILURE, "Invalid queue manager operation");
+                message.setExceptionInfo(INVALID_OPERATION, "Invalid queue manager operation");
                 break;
         }
     }

@@ -57,7 +57,7 @@ char *ApiConnection::getMessageBuffer(size_t size)
         char *buffer = (char *)malloc(size);
         if (buffer == NULL)
         {
-            throw new ServiceException(SERVER_FAILURE, "Error allocating message buffer");
+            throw new ServiceException(MEMORY_ERROR, "Error allocating message buffer");
         }
         return buffer;
     }
@@ -67,7 +67,7 @@ char *ApiConnection::getMessageBuffer(size_t size)
         messageBuffer = (char *)malloc(MAX_CACHED_BUFFER);
         if (messageBuffer == NULL)
         {
-            throw new ServiceException(SERVER_FAILURE, "Error allocating message buffer");
+            throw new ServiceException(MEMORY_ERROR, "Error allocating message buffer");
         }
     }
     return messageBuffer;

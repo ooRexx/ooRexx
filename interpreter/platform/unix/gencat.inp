@@ -264,7 +264,7 @@ $ Error_RXSUBC_load
 118 The RXSUBCOM parameter LOAD is incorrect.
 
 $ Error_RXQUE_notinit
-119 The REXX queuing system is not initialized.
+119 The REXX rxapi queuing system is not available.
 
 $ Error_RXQUE_size
 120 The size of the data is incorrect.

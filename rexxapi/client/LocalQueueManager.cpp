@@ -532,6 +532,9 @@ RexxReturnCode LocalQueueManager::processServiceException(ServiceException *e)
 {
     switch (e->getErrorCode())
     {
+        case CONNECTION_FAILURE:
+            return RXAPI_NORXAPI;
+
         case INVALID_QUEUE_NAME:
             return RXQUEUE_BADQNAME;
 

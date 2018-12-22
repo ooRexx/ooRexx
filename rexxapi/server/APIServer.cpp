@@ -245,7 +245,7 @@ void APIServer::dispatch(ServiceMessage &message)
         }
 
         default:
-            message.setExceptionInfo(SERVER_FAILURE, "Invalid API manager operation");
+            message.setExceptionInfo(INVALID_OPERATION, "Invalid API manager operation");
             break;
     }
 }

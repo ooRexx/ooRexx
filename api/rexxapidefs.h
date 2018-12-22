@@ -59,6 +59,7 @@
 
 #define RXAPI_OK 0
 #define RXAPI_MEMFAIL 1002
+#define RXAPI_NORXAPI 1004
 
 /*** Call type codes for use on interpreter startup                  */
 #define RXCOMMAND       0              /* Program called as Command  */
@@ -81,7 +82,7 @@
 #define RXSUBCOM_BADENTRY    1001     /* Invalid Entry Conditions    */
 #define RXSUBCOM_NOEMEM      RXAPI_MEMFAIL  /* failure in memory manager   */
 #define RXSUBCOM_BADTYPE     1003     /* Bad registration type.      */
-#define RXSUBCOM_NOTINIT     1004     /* API system not initialized. */
+#define RXSUBCOM_NOTINIT     RXAPI_NORXAPI     /* API system not initialized. */
 #define RXSUBCOM_OK           0       /* Function Complete           */
 #define RXSUBCOM_DUP         10       /* Duplicate Environment Name- */
                                       /* but Registration Completed  */
@@ -131,9 +132,9 @@
 #define RXFUNC_NOTREG        30        /* Funct Not Registered in AFT*/
 #define RXFUNC_MODNOTFND     40        /* Funct Dll Module Not Found */
 #define RXFUNC_ENTNOTFND     50        /* Funct Entry Point Not Found*/
-#define RXFUNC_NOTINIT       60        /* API not initialized        */
 #define RXFUNC_BADTYPE       70        /* Bad function type          */
 #define RXFUNC_NOEMEM      RXAPI_MEMFAIL  /* failure in memory manager  */
+#define RXFUNC_NOTINIT     RXAPI_NORXAPI  /* rxapi not available        */
 
 /***    Drop Authority for Rexx Exit interface */
 
@@ -154,7 +155,7 @@
 #define RXEXIT_BADENTRY      1001     /* Invalid Entry Conditions    */
 #define RXEXIT_NOEMEM        RXAPI_MEMFAIL  /* failure in memory manager   */
 #define RXEXIT_BADTYPE       1003     /* Bad registration type.      */
-#define RXEXIT_NOTINIT       1004     /* API system not initialized. */
+#define RXEXIT_NOTINIT       RXAPI_NORXAPI   /* API system not initialized. */
 #define RXEXIT_OK             0       /* Function Complete           */
 #define RXEXIT_DUP           10       /* Duplicate Exit Name-        */
                                       /* but Registration Completed  */
@@ -232,7 +233,7 @@
 #define RXMACRO_SIGNATURE_ERROR    6  /* Incorrect format for load   */
 #define RXMACRO_SOURCE_NOT_FOUND   7  /* Requested cannot be found   */
 #define RXMACRO_INVALID_POSITION   8  /* Invalid search order pos    */
-#define RXMACRO_NOT_INIT           9  /* API not initialized         */
+#define RXMACRO_NOT_INIT           RXAPI_NORXAPI /* API not initialized         */
 
 /***    Request flags for External Data Queue access */
 
@@ -246,7 +247,7 @@
 /***    Return Codes from RxQueue interface */
 
 #define RXQUEUE_OK            0        /* Successful return           */
-#define RXQUEUE_NOTINIT       1000     /* Queues not initialized      */
+#define RXQUEUE_NOTINIT    RXAPI_NORXAPI  /* Queues not initialized      */
 
 #define RXQUEUE_STORAGE       1        /* Ret info buf not big enough */
 #define RXQUEUE_SIZE          2        /* Data size > 64K-64          */

@@ -59,6 +59,14 @@ public:
 
     virtual RexxReturnCode processServiceException(ServiceException *e)
     {
+        switch (e->getErrorCode())
+        {
+            case CONNECTION_FAILURE:
+                return RXAPI_NORXAPI;
+
+            default:
+                return RXAPI_MEMFAIL;
+        }
         return RXAPI_MEMFAIL;
     }
 
