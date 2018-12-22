@@ -126,6 +126,7 @@ RexxReturnCode LocalAPIManager::processServiceException(ServerManager t, Service
         {
             // all global exceptions are rxapi failures
             return RXAPI_NORXAPI;
+
         }
     }
     return RXAPI_MEMFAIL;    // a catch-all return code

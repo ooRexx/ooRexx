@@ -243,6 +243,7 @@ static void options_error(int type,      /* Error type.                */
     /* substitute an empty string for the parameter.                   */
     /*******************************************************************/
     /* Begin assign message numbers to error codes */
+
     switch (type)
     {
         case 0: /* invocation error */

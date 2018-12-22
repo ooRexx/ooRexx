@@ -71,9 +71,14 @@ RexxReturnCode LocalAPIContext::processServiceException(ServiceException *e)
         delete e;         // make sure we delete the exception object
         return rc;
     }
-    // in theory, this should never happen.  For some reason, we got a non-global
-    // failure, but the local manager doesn't exist.  Ok, just consider this a
-    // memory error.
+
+    // set a default return code, then check for a connection problem
+    RexxReturnCode rc = RXAPI_MEMFAIL;
+    // connection failures are rxapi not available
+    if (e->getErrorCode() == CONNECTION_FAILURE)
+    {
+        rc = RXAPI_NORXAPI;
+    }
     delete e;                     // make sure it's deleted
-    return RXAPI_MEMFAIL;
+    return rc;
 }
