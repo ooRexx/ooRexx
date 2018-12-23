@@ -2508,7 +2508,7 @@ RexxInternalObject *LanguageParser::parseConstantExpression()
     {
         // parse our a subexpression, terminating on the end of clause or
         // a right paren (the right paren is actually the required terminator)
-        RexxInternalObject *exp = parseSubExpression(TERM_RIGHT);
+        RexxInternalObject *exp = parseFullSubExpression(TERM_RIGHT);
         // now verify that the terminator token was a right paren.  If not,
         // issue an error message using the original opening token so we know
         // which one is an issue.
