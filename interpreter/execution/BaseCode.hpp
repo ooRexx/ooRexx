@@ -49,6 +49,7 @@
 
 class ProtectedObject;
 class RoutineClass;
+class ProgramSource;
 
 /**
  * Base class for a code object.  Code objects can be invoked as
@@ -69,7 +70,8 @@ public:
     virtual PackageClass *getPackage();
 
     inline  bool isSamePackage(PackageClass *p) { return p == getPackage(); }
-            void detachSource();
+            ProgramSource *detachSource();
+            void attachSource(ProgramSource *);
 
             PackageClass *package;             // source this is attached to
 };

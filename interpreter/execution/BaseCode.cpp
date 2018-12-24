@@ -213,11 +213,25 @@ PackageClass *BaseCode::getPackage()
 /**
  * Detach the source from a code object.
  */
-void BaseCode::detachSource()
+ProgramSource *BaseCode::detachSource()
 {
     if (package != OREF_NULL)
     {
-        package->detachSource();
+        return package->detachSource();
     }
+    return OREF_NULL;
 }
 
+
+/**
+ * Attach the code to a program source object.
+ *
+ * @param s      The source program source object.
+ */
+void BaseCode::attachSource(ProgramSource *s)
+{
+    if (package != OREF_NULL)
+    {
+        package->attachSource(s);
+    }
+}

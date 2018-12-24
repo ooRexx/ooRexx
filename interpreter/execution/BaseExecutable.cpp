@@ -139,9 +139,20 @@ ArrayClass *BaseExecutable::source()
 /**
  * Detach the source code from an executable package
  */
-void BaseExecutable::detachSource()
+ProgramSource *BaseExecutable::detachSource()
 {
-    code->detachSource();
+    return code->detachSource();
+}
+
+
+/**
+ * Attach a source object to an executable.
+ *
+ * @param s      The new source object.
+ */
+void BaseExecutable::attachSource(ProgramSource *s)
+{
+    code->attachSource(s);
 }
 
 

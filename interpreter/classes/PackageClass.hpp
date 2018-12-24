@@ -173,7 +173,8 @@ public:
     inline RoutineClass *getMain() { return (RoutineClass *)mainExecutable; }
 
            RexxString    *getTrace();
-           void           detachSource();
+           ProgramSource *detachSource();
+           void           attachSource(ProgramSource *s);
            PackageClass  *newRexx(RexxObject **init_args, size_t argCount);
            RexxString    *getSourceLineRexx(RexxObject *position);
            RexxInteger   *getSourceSizeRexx();

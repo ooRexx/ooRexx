@@ -62,6 +62,7 @@
 #include "LanguageParser.hpp"
 #include "MethodArguments.hpp"
 #include <stdio.h>
+#include "ProgramSource.hpp"
 
 
 // singleton class instance
@@ -285,12 +286,14 @@ RexxObject *RoutineClass::setSecurityManager(RexxObject *manager)
 BufferClass *RoutineClass::save()
 {
     // detach the source from this routine object before saving
-    detachSource();
+    Protected<ProgramSource> source = detachSource();
 
-    Envelope *envelope = new Envelope;
-    ProtectedObject p(envelope);
+    Protected<Envelope> envelope = new Envelope;
     // now pack into an envelope;
-    return envelope->pack(this);
+    Protected<BufferClass> result = envelope->pack(this);
+    // reattach the source because we might still execute this
+    attachSource(source);
+    return result;
 }
 
 

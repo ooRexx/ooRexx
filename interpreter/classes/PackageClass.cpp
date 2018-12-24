@@ -1428,12 +1428,30 @@ void PackageClass::attachSource(BufferClass *s)
 
 /**
  * Convert this package to a sourceless form.
+ *
+ * @return The current source object.
  */
-void PackageClass::detachSource()
+ProgramSource *PackageClass::detachSource()
 {
+    // this is our return value
+    ProgramSource *oldSource = source;
+
     // replace this with the base program source, which
     // does not return anything.
     source = new ProgramSource();
+    // return the old source
+    return oldSource;
+}
+
+
+/**
+ * Reconnect this package to a source object.
+ *
+ * @param s      The source object.
+ */
+void PackageClass::attachSource(ProgramSource *s)
+{
+    source = s;
 }
 
 

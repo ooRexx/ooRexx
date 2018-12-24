@@ -67,7 +67,8 @@ public:
     RexxClass *findClass(RexxString *className);
     BaseExecutable *setPackageObject(PackageClass *s);
     RexxString *getName() { return executableName; }
-    void detachSource();
+    ProgramSource *detachSource();
+    void attachSource(ProgramSource *s);
 
     StringTable *getAnnotations();
     RexxString  *getAnnotation(RexxString *name);
