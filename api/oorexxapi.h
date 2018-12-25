@@ -465,6 +465,7 @@ typedef struct
 } RexxCondition;
 
 #define INSTANCE_INTERFACE_VERSION_4_0_0 100
+#define INSTANCE_INTERFACE_VERSION_5_0_0 101
 #define INSTANCE_INTERFACE_VERSION 101
 
 #define DIRECT_COMMAND_ENVIRONMENT 1
@@ -485,7 +486,8 @@ typedef struct
 
 #define THREAD_INTERFACE_VERSION_4_0_0 100
 #define THREAD_INTERFACE_VERSION_4_1_1 101
-#define THREAD_INTERFACE_VERSION_5_0_0 101
+#define THREAD_INTERFACE_VERSION_4_2_0 102
+#define THREAD_INTERFACE_VERSION_5_0_0 103
 #define THREAD_INTERFACE_VERSION 103
 
 BEGIN_EXTERN_C()
@@ -665,7 +667,7 @@ typedef struct
 #define METHOD_INTERFACE_VERSION_4_0_0 100
 #define METHOD_INTERFACE_VERSION_4_2_0 101
 #define METHOD_INTERFACE_VERSION_5_0_0 102
-#define METHOD_INTERFACE_VERSION 103
+#define METHOD_INTERFACE_VERSION 102
 
 typedef struct
 {
@@ -694,6 +696,7 @@ typedef struct
     RexxObjectPtr    (RexxEntry *SetGuardOffWhenUpdated)(RexxMethodContext *, CSTRING);
 } MethodContextInterface;
 
+#define CALL_INTERFACE_VERSION_4_0_0 100
 #define CALL_INTERFACE_VERSION 100
 
 typedef struct
@@ -717,6 +720,7 @@ typedef struct
     RexxClassObject  (RexxEntry *FindContextClass)(RexxCallContext *, CSTRING);
 } CallContextInterface;
 
+#define EXIT_INTERFACE_VERSION_4_0_0 100
 #define EXIT_INTERFACE_VERSION 100
 
 typedef struct
@@ -731,6 +735,7 @@ typedef struct
 
 
 // the interface for I/O redirection
+#define REDIRECT_INTERFACE_VERSION_5_0_0 100
 #define REDIRECT_INTERFACE_VERSION 100
 typedef struct
 {
