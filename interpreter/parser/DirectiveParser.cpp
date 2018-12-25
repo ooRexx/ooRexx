@@ -859,18 +859,22 @@ void LanguageParser::methodDirective()
         // this might be externally defined setters and getters.
         if (externalname != OREF_NULL)
         {
-            RexxString *library = OREF_NULL;
-            RexxString *procedure = OREF_NULL;
-            decodeExternalMethod(internalname, externalname, library, procedure);
+            RexxString *l = OREF_NULL;
+            RexxString *p = OREF_NULL;
+            decodeExternalMethod(internalname, externalname, l, p);
+            Protected<RexxString> library = l;
+            Protected<RexxString> procedure = p;
+            Protected<RexxString> getName = procedure->concatToCstring("GET");
+            Protected<RexxString> setName = procedure->concatToCstring("SET");
             // now create both getter and setting methods from the information.
-            _method = createNativeMethod(internalname, library, procedure->concatToCstring("GET"));
+            _method = createNativeMethod(internalname, library, getName);
             _method->setAttributes(accessFlag, protectedFlag, guardFlag);
             // mark this as an attribute method
             _method->setAttribute();
             // add to the compilation
             addMethod(internalname, _method, isClass);
 
-            _method = createNativeMethod(setterName, library, procedure->concatToCstring("SET"));
+            _method = createNativeMethod(setterName, library, setName);
             _method->setAttributes(accessFlag, protectedFlag, guardFlag);
             // add to the compilation
             addMethod(setterName, _method, isClass);
@@ -921,9 +925,11 @@ void LanguageParser::methodDirective()
     // external method
     else
     {
-        RexxString *library = OREF_NULL;
-        RexxString *procedure = OREF_NULL;
-        decodeExternalMethod(internalname, externalname, library, procedure);
+        RexxString *l = OREF_NULL;
+        RexxString *p = OREF_NULL;
+        decodeExternalMethod(internalname, externalname, l, p);
+        Protected<RexxString> library = l;
+        Protected<RexxString> procedure = p;
 
         // check that there this is only followed by other directives.
         checkDirective(Error_Translation_external_method);
@@ -1420,18 +1426,23 @@ void LanguageParser::attributeDirective()
             checkDirective(Error_Translation_body_error);
             if (externalname != OREF_NULL)
             {
-                RexxString *library = OREF_NULL;
-                RexxString *procedure = OREF_NULL;
-                decodeExternalMethod(internalname, externalname, library, procedure);
+                RexxString *l = OREF_NULL;
+                RexxString *p = OREF_NULL;
+                decodeExternalMethod(internalname, externalname, l, p);
+                Protected<RexxString> library = l;
+                Protected<RexxString> procedure = p;
+                Protected<RexxString> getName = procedure->concatToCstring("GET");
+                Protected<RexxString> setName = procedure->concatToCstring("SET");
+
                 // now create both getter and setting methods from the information.
-                Protected<MethodClass> _method = createNativeMethod(internalname, library, procedure->concatToCstring("GET"));
+                Protected<MethodClass> _method = createNativeMethod(internalname, library, getName);
                 _method->setAttributes(accessFlag, protectedFlag, guardFlag);
                 // mark this as an attribute method
                 _method->setAttribute();
                 // add to the compilation
                 addMethod(internalname, _method, isClass);
 
-                _method = createNativeMethod(setterName, library, procedure->concatToCstring("SET"));
+                _method = createNativeMethod(setterName, library, setName);
                 _method->setAttributes(accessFlag, protectedFlag, guardFlag);
                 // mark this as an attribute method
                 _method->setAttribute();
@@ -1473,9 +1484,11 @@ void LanguageParser::attributeDirective()
             {
                 // no code can follow external methods
                 checkDirective(Error_Translation_external_attribute);
-                RexxString *library = OREF_NULL;
-                RexxString *procedure = OREF_NULL;
-                decodeExternalMethod(internalname, externalname, library, procedure);
+                RexxString *l = OREF_NULL;
+                RexxString *p = OREF_NULL;
+                decodeExternalMethod(internalname, externalname, l, p);
+                Protected<RexxString> library = l;
+                Protected<RexxString> procedure = p;
                 // if there was no procedure explicitly given, create one using the GET/SET convention
                 if (internalname == procedure)
                 {
@@ -1536,9 +1549,11 @@ void LanguageParser::attributeDirective()
             {
                 // no code can follow external methods
                 checkDirective(Error_Translation_external_attribute);
-                RexxString *library = OREF_NULL;
-                RexxString *procedure = OREF_NULL;
-                decodeExternalMethod(internalname, externalname, library, procedure);
+                RexxString *l = OREF_NULL;
+                RexxString *p = OREF_NULL;
+                decodeExternalMethod(internalname, externalname, l, p);
+                Protected<RexxString> library = l;
+                Protected<RexxString> procedure = p;
                 // if there was no procedure explicitly given, create one using the GET/SET convention
                 if (internalname == procedure)
                 {

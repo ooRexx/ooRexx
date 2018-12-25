@@ -265,10 +265,10 @@ void LibraryPackage::loadRoutines(RexxRoutineEntry *table)
         // table names tend to be specified in friendly form, we need to
         // convert them to uppercase because "normal" Rexx function names
         // tend to be uppercase.
-        RexxString *target = new_upper_string(table->name);
-        RexxString *routineName = new_string(table->name);
+        Protected<RexxString> target = new_upper_string(table->name);
+        Protected<RexxString> routineName = new_string(table->name);
 
-        BaseNativeRoutine *func = OREF_NULL;
+        Protected<BaseNativeRoutine> func;
         if (table->style == ROUTINE_CLASSIC_STYLE)
         {
             func = new RegisteredRoutine(libraryName, routineName, (RexxRoutineHandler *)table->entryPoint);
@@ -278,7 +278,7 @@ void LibraryPackage::loadRoutines(RexxRoutineEntry *table)
             func = new NativeRoutine(libraryName, routineName, (PNATIVEROUTINE)table->entryPoint);
         }
 
-        RoutineClass *routine = new RoutineClass(routineName, func);
+        Protected<RoutineClass> routine = new RoutineClass(routineName, func);
         // add this to our local table.  Our local table needs to keep the original case,
         // since those will be referenced by ::ROUTINE statements.
         routines->put(routine, routineName);
@@ -373,7 +373,7 @@ NativeMethod *LibraryPackage::resolveMethod(RexxString *name)
     }
 
     // see if this is in the table yet.
-    NativeMethod *code = (NativeMethod *)methods->get(name);
+    Protected<NativeMethod> code = (NativeMethod *)methods->get(name);
     if (code == OREF_NULL)
     {
         // find the package definition
