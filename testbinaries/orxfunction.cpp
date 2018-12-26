@@ -36,6 +36,7 @@
 /*----------------------------------------------------------------------------*/
 
 #include <oorexxapi.h>
+#include <string.h>
 
 RexxRoutine0(int,                       // Return type
             TestZeroIntArgs)            // Object_method name
@@ -490,7 +491,6 @@ RexxRoutine1(RexxClassObject,
     return value;
 }
 
-#include <stdio.h>
 // test command handler for TestAddCommandEnvironment
 // just sets a return code identifying various I/O context functions
 RexxObjectPtr RexxEntry rcHandler(RexxExitContext *context,
