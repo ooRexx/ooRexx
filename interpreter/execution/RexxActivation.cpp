@@ -2117,7 +2117,7 @@ MethodClass *RexxActivation::getMethod()
     // only return the executable if this is a method call
     if (isMethod())
     {
-        (MethodClass *)executable;
+        return (MethodClass *)executable;
     }
     return OREF_NULL;
 }
