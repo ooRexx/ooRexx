@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2008 Rexx Language Association. All rights reserved.         */
+/* Copyright (c) 2008-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -490,6 +490,60 @@ RexxRoutine1(RexxClassObject,
     return value;
 }
 
+#include <stdio.h>
+// test command handler for TestAddCommandEnvironment
+// just sets a return code identifying various I/O context functions
+RexxObjectPtr RexxEntry rcHandler(RexxExitContext *context,
+                                  RexxStringObject address,
+                                  RexxStringObject command,
+                                  RexxIORedirectorContext *ioContext)
+{
+    size_t rc = 0;
+    // we don't do actual redirection, but we want to return a five-digit
+    // number with each digit in sequence representing the status of:
+    // - IsRedirectionRequested()
+    // - IsInputRedirected()
+    // - IsOutputRedirected()
+    // - IsErrorRedirected()
+    // - AreOutputAndErrorSameTarget()
+    // if we have been installed as "redirecting" all is fine
+    // but if we have been installed as "direct" we must not try to
+    // use the I/O context, because we have been called *without* it
+    // (ignoring this will make us crash)
+    // so we only do this if our address contains the string "redirect"
+    if (strstr(context->StringData(address), "redirect"))
+    {
+      rc = rc * 10 + ioContext->IsRedirectionRequested();
+      rc = rc * 10 + ioContext->IsInputRedirected();
+      rc = rc * 10 + ioContext->IsOutputRedirected();
+      rc = rc * 10 + ioContext->IsErrorRedirected();
+      rc = rc * 10 + ioContext->AreOutputAndErrorSameTarget();
+    }
+    else
+    {
+      rc = -1;
+    }
+
+    return context->WholeNumberToObject(rc);
+}
+
+
+RexxRoutine2(RexxObjectPtr,
+            TestAddCommandEnvironment,
+            CSTRING, name,
+            CSTRING, type)
+{
+    if (type[0] == 'd' || type[0] == 'D')
+    {
+        context->AddCommandEnvironment(name, (REXXPFN)rcHandler, DIRECT_COMMAND_ENVIRONMENT);
+    }
+    if (type[0] == 'r' || type[0] == 'R')
+    {
+        context->AddCommandEnvironment(name, (REXXPFN)rcHandler, REDIRECTING_COMMAND_ENVIRONMENT);
+    }
+    return NULLOBJECT;
+}
+
 
 RexxRoutineEntry orxtest_funcs[] = {
     REXX_TYPED_ROUTINE(TestZeroIntArgs,       TestZeroIntArgs),
@@ -546,6 +600,7 @@ RexxRoutineEntry orxtest_funcs[] = {
     REXX_TYPED_ROUTINE(TestGetContextDigits,  TestGetContextDigits),
     REXX_TYPED_ROUTINE(TestResolveStemVariable, TestResolveStemVariable),
     REXX_TYPED_ROUTINE(TestFindContextClass,  TestFindContextClass),
+    REXX_TYPED_ROUTINE(TestAddCommandEnvironment, TestAddCommandEnvironment),
     REXX_LAST_ROUTINE()
 };
 
