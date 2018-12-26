@@ -223,30 +223,29 @@ if (WIN32)
    ENDMACRO ()
 
  else ()
-   if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-     set(CMAKE_INSTALL_PREFIX
-       $<IF:$<PLATFORM_ID:Darwin>,$ENV{HOME}/Applications/ooRexx${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL},/usr>
-       CACHE
-       PATH
-       "Default install path"
-       FORCE)
-   endif()
+   # if the user didn't specify a CMAKE_INSTALL_PREFIX
+   # we override the CMake default of /usr/local, instead using:
+   # * $HOME/Applications/ooRexxV.R.M on macOS
+   # * /usr on other Unix-like systems
    if (APPLE)
      if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-       set (INSTALL_LIB_DIR ${CMAKE_INSTALL_PREFIX}/bin)
-       set (CMAKE_INSTALL_RPATH @executable_path)
-     else ()
-       set (INSTALL_LIB_DIR ${CMAKE_INSTALL_PREFIX}/lib)
-       set (CMAKE_INSTALL_RPATH ${INSTALL_LIB_DIR})
-     endif ()
+       set (CMAKE_INSTALL_PREFIX $ENV{HOME}/Applications/ooRexx${ORX_VERSION}
+         CACHE PATH "Default install path" FORCE)
+     endif()
+     set (INSTALL_LIB_DIR ${CMAKE_INSTALL_PREFIX}/lib)
+     set (CMAKE_INSTALL_RPATH ${INSTALL_LIB_DIR})
    else ()
-     set (CMAKE_INSTALL_PREFIX /usr)
+     if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+       set (CMAKE_INSTALL_PREFIX /usr CACHE PATH "Default install path" FORCE)
+     endif()
      find_path(INSTALL_LIB_DIR libc.so PATHS ${CMAKE_INSTALL_PREFIX}/lib ${CMAKE_INSTALL_PREFIX}/lib64)
      # at least on Ubuntu above doesn't seem to work; use fallback:
      if (${INSTALL_LIB_DIR} STREQUAL "INSTALL_LIB_DIR-NOTFOUND")
        set (INSTALL_LIB_DIR ${CMAKE_INSTALL_PREFIX}/lib)
      endif ()
    endif ()
+   message(STATUS "CMAKE_INSTALL_PREFIX is ${CMAKE_INSTALL_PREFIX}")
+   message(STATUS "INSTALL_LIB_DIR is ${INSTALL_LIB_DIR}")
 
    set (INSTALL_EXECUTABLE_DIR ${CMAKE_INSTALL_PREFIX}/bin)
    set (catdir ${INSTALL_EXECUTABLE_DIR})
