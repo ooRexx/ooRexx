@@ -436,7 +436,7 @@ bool SysServerLocalSocketConnectionManager::checkServiceName(const char *service
  * Generate a unique string to be used for interprocess communications for this userid.
  *
  * @return A unique identifier used to create the named
- *         AF_LOCAL services.
+ *         AF_UNIX services.
  */
 const char *SysServerLocalSocketConnectionManager::generateServiceName()
 {
@@ -447,27 +447,60 @@ const char *SysServerLocalSocketConnectionManager::generateServiceName()
     }
 
     // a buffer for generating the name
-    char pipeNameBuffer[256];
-
-    // we create the file in the user's home path as a hidden file
-    const char *homePath;
-
-    // The recommended location is the XDG_RUNTIME_DIR, which will do a lot of
-    // automatic cleanup functions for us. If for some reason this env var is not
-    // set, fall back to placing this in the user's home directory
-    if ( (homePath = getenv("XDG_RUNTIME_DIR")) == NULL)
-    {
-        homePath = getpwuid(getuid())->pw_dir;
-    }
-
-    // this creates a hidden file in the user's home directory.
-    snprintf(pipeNameBuffer, sizeof(pipeNameBuffer), "%s/.ooRexx-%d.%d.%d-%s.service", homePath, ORX_VER, ORX_REL, ORX_MOD,
-#ifdef __REXX64__
-	    "64");
-#else
-		"32");
-#endif
+    char pipeNameBuffer[PATH_MAX];
+    // the location of the bound file
+    char pipePath[PATH_MAX];
+    // determine the best place to put this
+    getServiceLocation(pipePath, sizeof(pipePath));
+    snprintf(pipeNameBuffer, sizeof(pipeNameBuffer), "%s.service", pipePath);
 
     userServiceName = strdup(pipeNameBuffer);
     return userServiceName;
+}
+
+
+/**
+ * Determine the location of the service name files generated for
+ * this user. The preferred location is in the XDG_RUNTIME_DIR, but
+ * the fallback is to use /tmp for the file.
+ * We don't create this in the user's home directory, as it is fairly
+ * common practice for home directories to be mounted on an NFS, which
+ * means the file would be visible cross system.
+ *
+ * @param path   The buffer for the returned path.
+ * @param len    The length of the buffer
+ */
+void SysServerLocalSocketConnectionManager::getServiceLocation(char *path, size_t len)
+{
+    // The recommended location is the XDG_RUNTIME_DIR, which will do a lot of
+    // automatic cleanup functions for us.
+    const char *homePath;
+    if ( (homePath = getenv("XDG_RUNTIME_DIR")) == NULL)
+    {
+        homePath = "/tmp";
+    }
+
+    // Get the current user's name.  In the unlikely event that this fails,
+    // use the user's uid.
+    char uid_buffer[20];
+    char *name;
+    uid_t uid = getuid();    // getuid() is always successful
+    passwd *pw = getpwuid(uid);
+    if (pw == NULL)
+    {
+        snprintf(uid_buffer, sizeof(uid_buffer), "%d", uid);
+        name = uid_buffer;
+    }
+    else
+    {
+        name = pw->pw_name;
+    }
+
+    snprintf(path, len, "%s/.ooRexx-%d.%d.%d-%s-%s", homePath, ORX_VER, ORX_REL, ORX_MOD,
+    #ifdef __REXX64__
+            "64",
+    #else
+            "32",
+    #endif
+            name);
 }

@@ -109,7 +109,7 @@ void releaseLock (const char *lockFileName, int lockFd)
 
 
 /**
- * The main entry point.
+ * The rxapi main entry point.
  *
  * @param argc   The command line arguments
  * @param argv   The arguments
@@ -118,35 +118,30 @@ void releaseLock (const char *lockFileName, int lockFd)
  */
 int main(int argc, char *argv[])
 {
+    if (argc > 1)
+    {
+        printf("rxapi: no args allowed\n");
+    }
+
     // a buffer for generating the name
     char lockFileName[PATH_MAX];
 
-    // we create the file in the user's home path as a hidden file
-    const char *homePath;
-
-    // The recommended location is the XDG_RUNTIME_DIR, which will do a lot of
-    // automatic cleanup functions for us. If for some reason this env var is not
-    // set, fall back to placing this in the user's home directory
-    if ( (homePath = getenv("XDG_RUNTIME_DIR")) == NULL)
-    {
-        homePath = getpwuid(getuid())->pw_dir;
-    }
-
-    // this creates a hidden file in the user's home directory.
-    snprintf(lockFileName, sizeof(lockFileName), "%s/.ooRexx-%d.%d.%d-%s.lock", homePath, ORX_VER, ORX_REL, ORX_MOD,
-#ifdef __REXX64__
-	    "64");
-#else
-		"32");
-#endif
+    // the location of the lock file
+    char pipePath[PATH_MAX];
+    // determine the best place to put this
+    SysServerLocalSocketConnectionManager::getServiceLocation(pipePath, sizeof(pipePath));
+    snprintf(lockFileName, sizeof(lockFileName), "%s.lock", pipePath);
+    printf("rxapi: lockfile path is %s\n", lockFileName);
 
     // see if we can get the lock file before proceeding. This is one
     // file per user.
     int fd;
-    if ((fd = acquireLock (lockFileName)) == -1)
+    if ((fd = acquireLock(lockFileName)) == -1)
     {
+        printf("rxapi: lockfile is locked by another rxapi instance; exiting\n");
         return EACCES;
     }
+    printf("rxapi: lockfile lock acquired\n");
 
     struct sigaction sa;
 
@@ -157,6 +152,7 @@ int main(int argc, char *argv[])
     sa.sa_handler = Stop;
     if (sigaction(SIGTERM, &sa, NULL) == -1)
     {
+        printf("rxapi: sigaction(SIGTERM) failed; exiting\n");
         exit(1);
     }
 
@@ -169,13 +165,17 @@ int main(int argc, char *argv[])
         // create a connection object that will be the server target
         SysServerLocalSocketConnectionManager *c = new SysServerLocalSocketConnectionManager();
         // try to create the named pipe used for this server. If this fails, we
-        // likely have a instance of the daemon already running, so just fail quietly.
-        if (!c->bind(SysServerLocalSocketConnectionManager::generateServiceName()))
+        // likely have an instance of the daemon already running, so just fail quietly.
+        const char *service = SysServerLocalSocketConnectionManager::generateServiceName();
+        printf("rxapi: service path is %s\n", service);
+        if (!c->bind(service))
         {
+            printf("rxapi: service is locked by another rxapi instance; exiting\n");
             delete c;
             return EACCES;
         }
         apiServer.initServer(c);              // start up the server
+        printf("rxapi: service successfully started; listening\n");
         apiServer.listenForConnections();     // go into the message loop
     }
     catch (ServiceException *e)
@@ -184,6 +184,7 @@ int main(int argc, char *argv[])
     }
     apiServer.terminateServer();     // shut everything down
     releaseLock(lockFileName, fd);   // release the exclusive lock
+    printf("rxapi: service stopped and lockfile released; exiting\n");
 
     return 0;
 }

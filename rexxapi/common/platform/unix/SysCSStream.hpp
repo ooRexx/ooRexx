@@ -66,7 +66,7 @@ protected:
 
 
 /**
- * This is the client stream for an AF_LOCAL style connection.
+ * This is the client stream for an AF_UNIX style connection.
  */
 class SysLocalSocketConnection : public SysSocketConnection
 {
@@ -99,7 +99,7 @@ protected:
 
 /**
  * Implementation class for a socket connection bound to
- * an AF_LOCAL stream
+ * an AF_UNIX stream
  */
 class SysServerLocalSocketConnectionManager : public SysServerSocketConnectionManager
 {
@@ -110,6 +110,7 @@ public:
     bool bind(const char *serviceName);
 
     static const char *generateServiceName();
+    static void getServiceLocation(char *path, size_t len);
 
 protected:
 
