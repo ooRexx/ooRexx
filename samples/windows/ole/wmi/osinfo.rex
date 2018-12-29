@@ -125,8 +125,6 @@ do object over objects
   call print "Maximum number of processes:", object~MaxNumberOfProcesses
   call print "Numer of processes:", object~NumberOfProcesses
   call print "Maximal process memory size:", object~MaxProcessMemorySize
-  call print "Quantum length:", object~QuantumLength, qLengthArray
-  call print "Quantum type:", object~QuantumType, qTypeArray
   call print "Organization:", object~Organization
   call print "Registered User:", object~RegisteredUser
   call print "OS language:", object~OSLanguage
