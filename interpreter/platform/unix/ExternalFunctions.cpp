@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -65,6 +65,7 @@
 #include <errno.h>
 #include <sys/types.h>
 #include <pwd.h>
+#include <stdlib.h>
 
 #include "RexxCore.h"                         /* global REXX definitions        */
 #include "StringClass.hpp"
@@ -111,9 +112,10 @@ int putflag = 0;                            /* static or dynamic env memory   */
 
 RexxRoutine2(CSTRING, sysBeep, OPTIONAL_wholenumber_t, Frequency, OPTIONAL_wholenumber_t, Duration)
 {
-                                        /* console beep for Unix     */
-  printf("\a");
-  return "";                            /* always returns a null     */
+
+
+    printf("\a");
+    return "";
 }
 
 

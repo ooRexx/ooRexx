@@ -78,7 +78,7 @@ class RexxInteger : public RexxObject
     bool         hasMethod(RexxString *) override;
     RexxString  *primitiveMakeString() override;
     RexxString  *stringValue() override;
-    virtual ArrayClass  *makeArray();
+    ArrayClass  *makeArray() override;
     bool truthValue(RexxErrorCodes) override;
     bool logicalValue(logical_t &) override;
     bool isInstanceOf(RexxClass *) override;

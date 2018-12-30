@@ -78,7 +78,7 @@ class RexxInstructionBaseDo : public RexxBlockInstruction
 
     // specific to Do loops.  Most subclasses can rely on the default
     virtual void reExecute(RexxActivation *, ExpressionStack *, DoBlock *);
-    virtual void terminate(RexxActivation *, DoBlock *);
+    void terminate(RexxActivation *, DoBlock *) override;
 
     // most loops will want to override these two
     virtual void setup(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock);

@@ -442,7 +442,7 @@ class NormalSegmentSet : public MemorySegmentSet
     void addDeadObject(DeadObject *object) override;
     void addDeadObject(char *object, size_t length) override;
     void prepareForSweep() override;
-    void completeSweepOperation();
+    void completeSweepOperation() override;
 
   private:
 
@@ -571,7 +571,7 @@ protected:
     size_t suggestMemoryExpansion() override;
     void expandSegmentSet(size_t allocationLength);
     void prepareForSweep() override;
-    void completeSweepOperation();
+    void completeSweepOperation() override;
 
   private:
 

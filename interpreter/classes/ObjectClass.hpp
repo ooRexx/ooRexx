@@ -441,26 +441,27 @@ class RexxObject : public RexxInternalObject
 
             RexxObject  *defineInstanceMethod(RexxString *, MethodClass *, RexxClass *);
             RexxObject  *deleteInstanceMethod(RexxString *msgname);
-    virtual RexxString  *defaultName();
+            RexxString  *defaultName() override;
     virtual bool         hasMethod(RexxString *msg);
             RexxObject  *hasMethodRexx(RexxString *);
             bool         hasUninitMethod();
 
     RexxObject *initRexx();
-    virtual void uninit();
 
-            void live(size_t) override;
-            void liveGeneral(MarkReason reason) override;
-            void flatten(Envelope *) override;
+    void uninit() override;
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope *) override;
 
-            RexxInternalObject *copy() override;
-            HashCode     hash() override;
-            RexxString  *stringValue() override;
+    RexxInternalObject *copy() override;
+    HashCode     hash() override;
+    RexxString  *stringValue() override;
+
     virtual void processUnknown(RexxErrorCodes, RexxString *, RexxObject **, size_t, ProtectedObject &);
 
-    virtual bool isInstanceOf(RexxClass *);
-    virtual MethodClass   *instanceMethod(RexxString *);
-    virtual SupplierClass *instanceMethods(RexxClass *);
+    bool isInstanceOf(RexxClass *) override;
+    MethodClass   *instanceMethod(RexxString *) override;
+    SupplierClass *instanceMethods(RexxClass *) override;
     RexxObject  *isInstanceOfRexx(RexxClass *);
     RexxObject  *isNilRexx();
     MethodClass   *instanceMethodRexx(RexxString *);
