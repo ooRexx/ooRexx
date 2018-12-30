@@ -62,31 +62,31 @@ class RexxCompoundVariable : public RexxVariableBase
     RexxCompoundVariable(RexxString *, size_t, QueueClass *, size_t);
     inline RexxCompoundVariable(RESTORETYPE restoreType) { ; };
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope *);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope *) override;
 
     // evaluation method from RexxInternalObject
-    virtual RexxObject *evaluate(RexxActivation *, ExpressionStack *);
-    virtual RexxObject *getValue(RexxActivation *context);
-    virtual RexxObject *getValue(VariableDictionary *context);
-    virtual RexxObject *getRealValue(VariableDictionary *);
-    virtual RexxObject *getRealValue(RexxActivation *);
+    RexxObject *evaluate(RexxActivation *, ExpressionStack *) override;
+    RexxObject *getValue(RexxActivation *context) override;
+    RexxObject *getValue(VariableDictionary *context) override;
+    RexxObject *getRealValue(VariableDictionary *) override;
+    RexxObject *getRealValue(RexxActivation *) override;
 
     // RexxVariabeBase methods to perform variable operations
-    virtual bool exists(RexxActivation *);
-    virtual void set(RexxActivation *, RexxObject *) ;
-    virtual void set(VariableDictionary *, RexxObject *);
-    virtual void assign(RexxActivation *, RexxObject *);
-    virtual void drop(RexxActivation *);
-    virtual void drop(VariableDictionary *);
-    virtual void setGuard(RexxActivation *);
-    virtual void clearGuard(RexxActivation *);
-    virtual void expose(RexxActivation *,  VariableDictionary *);
-    virtual void procedureExpose(RexxActivation *, RexxActivation *);
+    bool exists(RexxActivation *) override;
+    void set(RexxActivation *, RexxObject *)  override;
+    void set(VariableDictionary *, RexxObject *) override;
+    void assign(RexxActivation *, RexxObject *) override;
+    void drop(RexxActivation *) override;
+    void drop(VariableDictionary *) override;
+    void setGuard(RexxActivation *) override;
+    void clearGuard(RexxActivation *) override;
+    void expose(RexxActivation *,  VariableDictionary *) override;
+    void procedureExpose(RexxActivation *, RexxActivation *) override;
 
     // implemented only for compound variables.
-    inline RexxString * variableStem() {return stemName;};
+    inline RexxString * variableStem() { return stemName; };
 
 protected:
 

@@ -55,9 +55,9 @@ public:
     inline UninitDispatcher(RexxInternalObject *t) : target(t) { }
     virtual ~UninitDispatcher() { ; }
 
-    virtual void run();
-    virtual void handleError(wholenumber_t, DirectoryClass *);
-    virtual void handleError(DirectoryClass *);
+    void run() override;
+    void handleError(wholenumber_t, DirectoryClass *) override;
+    void handleError(DirectoryClass *) override;
 
 protected:
     RexxInternalObject *target;  // the object we're invoking

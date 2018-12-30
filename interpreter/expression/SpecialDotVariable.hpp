@@ -59,13 +59,13 @@ class SpecialDotVariable : public RexxVariableBase
     SpecialDotVariable(RexxString *, RexxObject *);
     inline SpecialDotVariable(RESTORETYPE restoreType) { ; };
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope *);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope *) override;
 
     // part of RexxVariableBase...rest of the methods default
-    virtual RexxObject *evaluate(RexxActivation *, ExpressionStack *);
-    virtual RexxObject *getValue(RexxActivation *);
+    RexxObject *evaluate(RexxActivation *, ExpressionStack *) override;
+    RexxObject *getValue(RexxActivation *) override;
 
  protected:
 

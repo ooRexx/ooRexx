@@ -58,13 +58,13 @@ class ListClass : public RexxObject
     ListClass(size_t capacity = DefaultListSize);
     ListClass(bool fromRexx) { }
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope *);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope *) override;
 
-    virtual RexxInternalObject *copy();
-    virtual ArrayClass *makeArray();
-    virtual ArrayClass *requestArray();
+    RexxInternalObject *copy() override;
+    ArrayClass *makeArray() override;
+    ArrayClass *requestArray() override;
 
     // APIS for use from other parts of the interpreter
     void put(RexxInternalObject *value, size_t index);

@@ -73,14 +73,14 @@ public:
     inline ConditionTrappingDispatcher(TrapInvoker &t) : invoker(t), errorCode(0) { }
     virtual ~ConditionTrappingDispatcher() { ; }
 
-    virtual void run();
-    virtual void handleError(wholenumber_t, DirectoryClass *);
-    virtual void handleError(DirectoryClass *);
-    virtual bool trapConditions() { return true; }
+    void run() override;
+    void handleError(wholenumber_t, DirectoryClass *) override;
+    void handleError(DirectoryClass *) override;
+    bool trapConditions() override { return true; }
 
-            bool errorOccurred()  { return errorCode != 0; }
-            bool conditionOccurred() { return conditionData != OREF_NULL; }
-            DirectoryClass *getCondition() { return conditionData; }
+    bool errorOccurred()  { return errorCode != 0; }
+    bool conditionOccurred() { return conditionData != OREF_NULL; }
+    DirectoryClass *getCondition() { return conditionData; }
 
 protected:
     TrapInvoker &invoker;          // that invokes the method call.

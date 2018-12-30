@@ -63,8 +63,8 @@ class DoBlock : public RexxInternalObject
     DoBlock(RexxBlockInstruction *, size_t);
     inline DoBlock(RESTORETYPE restoreType) { ; };
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
 
     inline RexxBlockInstruction * getParent() {return this->parent;};
     inline void setPrevious(DoBlock *block) { previous = block; }

@@ -338,7 +338,8 @@ class NormalSegmentSet : public MemorySegmentSet
     NormalSegmentSet()  { ; }
     NormalSegmentSet(MemoryObject *memory);
     virtual ~NormalSegmentSet() { ; }
-    virtual void   dumpMemoryProfile(FILE *outfile);
+
+    void   dumpMemoryProfile(FILE *outfile) override;
     inline RexxInternalObject *allocateObject(size_t allocationLength)
     {
         DeadObject *newObject;
@@ -432,16 +433,16 @@ class NormalSegmentSet : public MemorySegmentSet
         return OREF_NULL;
     }
 
-            RexxInternalObject *handleAllocationFailure(size_t allocationLength);
-    virtual DeadObject *donateObject(size_t allocationLength);
+    RexxInternalObject *handleAllocationFailure(size_t allocationLength);
+    DeadObject *donateObject(size_t allocationLength) override;
     void    getInitialSet();
-    virtual size_t suggestMemoryExpansion();
+    size_t suggestMemoryExpansion() override;
 
   protected:
-    virtual void addDeadObject(DeadObject *object);
-    virtual void addDeadObject(char *object, size_t length);
-    virtual void prepareForSweep();
-            void completeSweepOperation();
+    void addDeadObject(DeadObject *object) override;
+    void addDeadObject(char *object, size_t length) override;
+    void prepareForSweep() override;
+    void completeSweepOperation();
 
   private:
 
@@ -534,7 +535,8 @@ class LargeSegmentSet : public MemorySegmentSet
     LargeSegmentSet()  { ; }
     LargeSegmentSet(MemoryObject *memory);
     virtual ~LargeSegmentSet() { ; }
-    virtual void   dumpMemoryProfile(FILE *outfile);
+
+    void   dumpMemoryProfile(FILE *outfile) override;
     RexxInternalObject *handleAllocationFailure(size_t allocationLength);
     inline RexxInternalObject *allocateObject(size_t allocationLength)
     {
@@ -555,7 +557,7 @@ class LargeSegmentSet : public MemorySegmentSet
         return OREF_NULL;                    /* we couldn't get this              */
     }
 
-    virtual DeadObject *donateObject(size_t allocationLength);
+    DeadObject *donateObject(size_t allocationLength) override;
     void    getInitialSet();
 
 protected:
@@ -563,13 +565,13 @@ protected:
     // initial allocation size for large space.
     static const size_t InitialLargeSegmentSpace;
 
-    virtual void addDeadObject(DeadObject *object);
-    virtual void addDeadObject(char *object, size_t length);
-    virtual MemorySegment *allocateSegment(size_t requestLength, size_t minimumLength);
-    virtual size_t suggestMemoryExpansion();
+    void addDeadObject(DeadObject *object) override;
+    void addDeadObject(char *object, size_t length) override;
+    MemorySegment *allocateSegment(size_t requestLength, size_t minimumLength) override;
+    size_t suggestMemoryExpansion() override;
     void expandSegmentSet(size_t allocationLength);
-    virtual void prepareForSweep();
-            void completeSweepOperation();
+    void prepareForSweep() override;
+    void completeSweepOperation();
 
   private:
 
@@ -599,16 +601,17 @@ class SingleObjectSegmentSet : public MemorySegmentSet
     SingleObjectSegmentSet()  { ; }
     SingleObjectSegmentSet(MemoryObject *memory);
     virtual ~SingleObjectSegmentSet() { ; }
-    virtual void   dumpMemoryProfile(FILE *outfile);
+
+    void   dumpMemoryProfile(FILE *outfile) override;
     RexxInternalObject *handleAllocationFailure(size_t allocationLength);
     RexxInternalObject *allocateObject(size_t allocationLength);
 
 protected:
 
-    virtual void addDeadObject(DeadObject *object);
-    virtual void addDeadObject(char *object, size_t length);
-    virtual MemorySegment *allocateSegment(size_t requestLength, size_t minimumLength);
-    virtual void completeSweepOperation();
+    void addDeadObject(DeadObject *object) override;
+    void addDeadObject(char *object, size_t length) override;
+    MemorySegment *allocateSegment(size_t requestLength, size_t minimumLength) override;
+    void completeSweepOperation() override;
 
   private:
 
@@ -634,13 +637,14 @@ class OldSpaceSegmentSet : public MemorySegmentSet
     OldSpaceSegmentSet()  { ; }
     OldSpaceSegmentSet(MemoryObject *memory);
     virtual ~OldSpaceSegmentSet() { ; }
-            RexxInternalObject *allocateObject(size_t allocationLength);
+
+    RexxInternalObject *allocateObject(size_t allocationLength);
 
     void markOldSpaceObjects();
 
   protected:
-    virtual void addDeadObject(DeadObject *object);
-    virtual void addDeadObject(char *object, size_t length);
+    void addDeadObject(DeadObject *object) override;
+    void addDeadObject(char *object, size_t length) override;
     RexxInternalObject *findObject(size_t allocationLength);
 
   private:

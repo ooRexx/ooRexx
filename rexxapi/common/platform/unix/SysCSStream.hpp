@@ -54,11 +54,11 @@ public:
     inline SysSocketConnection(int sock) : c(sock), ApiConnection() { }
     inline ~SysSocketConnection() { }
 
-    virtual bool read(void *buf, size_t bufsize, size_t *bytesread);
-    virtual bool write(void *buf, size_t bufsize, size_t *byteswritten);
-    virtual bool write(void *buf, size_t bufsize, void*buf2, size_t buf2size, size_t *byteswritten);
+    bool read(void *buf, size_t bufsize, size_t *bytesread) override;
+    bool write(void *buf, size_t bufsize, size_t *byteswritten) override;
+    bool write(void *buf, size_t bufsize, void*buf2, size_t buf2size, size_t *byteswritten) override;
 
-    virtual bool disconnect();
+    bool disconnect() override;
 
 protected:
     int c; // stream socket
@@ -89,8 +89,8 @@ public:
     inline SysServerSocketConnectionManager() : c(-1) { }
     inline ~SysServerSocketConnectionManager() { }
 
-    virtual bool disconnect();
-    virtual ApiConnection *acceptConnection();
+    bool disconnect() override;
+    ApiConnection *acceptConnection() override;
 
 protected:
     int c; // stream socket

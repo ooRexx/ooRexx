@@ -306,12 +306,12 @@ class RexxString : public RexxObject
     inline RexxString() {;} ;
     inline RexxString(RESTORETYPE restoreType) { ; }
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope *envelope);
-    virtual RexxInternalObject *unflatten(Envelope *);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope *envelope) override;
+    RexxInternalObject *unflatten(Envelope *) override;
 
-    virtual HashCode getHashValue();
+    HashCode getHashValue() override;
 
     inline HashCode getStringHash()
     {
@@ -335,30 +335,31 @@ class RexxString : public RexxObject
 
     HashCode getObjectHashCode();
 
-    virtual bool numberValue(wholenumber_t &result, wholenumber_t precision);
-    virtual bool numberValue(wholenumber_t &result);
-    virtual bool unsignedNumberValue(size_t &result, wholenumber_t precision);
-    virtual bool unsignedNumberValue(size_t &result);
-    virtual bool doubleValue(double &result);
-    virtual NumberString *numberString();
-    virtual RexxInteger *integerValue(wholenumber_t);
-    virtual RexxString  *makeString();
-    virtual ArrayClass  *makeArray();
-    virtual RexxString  *primitiveMakeString();
-    virtual void         copyIntoTail(CompoundVariableTail *buffer);
-    virtual RexxString  *stringValue();
-    virtual bool  truthValue(RexxErrorCodes);
-    virtual bool logicalValue(logical_t &);
+    bool numberValue(wholenumber_t &result, wholenumber_t precision) override;
+    bool numberValue(wholenumber_t &result) override;
+    bool unsignedNumberValue(size_t &result, wholenumber_t precision) override;
+    bool unsignedNumberValue(size_t &result) override;
+    bool doubleValue(double &result) override;
+    NumberString *numberString() override;
+    RexxInteger *integerValue(wholenumber_t) override;
+    RexxString  *makeString() override;
+    ArrayClass  *makeArray() override;
+    RexxString  *primitiveMakeString() override;
+    void         copyIntoTail(CompoundVariableTail *buffer) override;
+    RexxString  *stringValue() override;
+    bool  truthValue(RexxErrorCodes) override;
+    bool logicalValue(logical_t &) override;
 
     // comparison methods
-    virtual bool isEqual(RexxInternalObject *);
+    bool isEqual(RexxInternalObject *) override;
+
     bool        primitiveIsEqual(RexxObject *);
     bool        primitiveCaselessIsEqual(RexxObject *);
     wholenumber_t strictComp(RexxObject *);
     wholenumber_t comp(RexxObject *);
     wholenumber_t primitiveStrictComp(RexxObject *);
     wholenumber_t stringComp(RexxString *);
-    virtual wholenumber_t compareTo(RexxInternalObject *);
+    wholenumber_t compareTo(RexxInternalObject *) override;
     RexxObject  *equal(RexxObject *);
     RexxObject  *strictEqual(RexxObject *);
     RexxObject  *notEqual(RexxObject *);
@@ -416,11 +417,12 @@ class RexxString : public RexxObject
     RexxObject *format(RexxObject *Integers, RexxObject *Decimals, RexxObject *MathExp, RexxObject *ExpTrigger);
     RexxObject *logicalOperation(RexxObject *, RexxObject *, unsigned int);
     RexxString *extract(size_t offset, size_t sublength) { return newString(getStringData() + offset, sublength); }
-    virtual RexxObject *evaluate(RexxActivation *, ExpressionStack *);
-    virtual RexxObject *getValue(RexxActivation *);
-    virtual RexxObject *getValue(VariableDictionary *);
-    virtual RexxObject *getRealValue(RexxActivation *);
-    virtual RexxObject *getRealValue(VariableDictionary *);
+
+    RexxObject *evaluate(RexxActivation *, ExpressionStack *) override;
+    RexxObject *getValue(RexxActivation *) override;
+    RexxObject *getValue(VariableDictionary *) override;
+    RexxObject *getRealValue(RexxActivation *) override;
+    RexxObject *getRealValue(VariableDictionary *) override;
                                         /* the following methods are in    */
                                         /* OKBSUBS                         */
     RexxString  *center(RexxInteger *, RexxString *);

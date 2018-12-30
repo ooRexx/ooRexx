@@ -68,8 +68,8 @@ public:
     LibraryPackage(RexxString *n, RexxPackageEntry *p);
     inline LibraryPackage(RESTORETYPE restoreType) { ; };
 
-    virtual void live(size_t liveMark);
-    virtual void liveGeneral(MarkReason reason);
+    void live(size_t liveMark) override;
+    void liveGeneral(MarkReason reason) override;
 
     bool load();
     void unload();
@@ -112,7 +112,7 @@ public:
     inline LibraryLoaderDispatcher(RexxPackageLoader l) : loader(l) { }
     virtual ~LibraryLoaderDispatcher() { ; }
 
-    virtual void run();
+    void run() override;
 
 protected:
     RexxPackageLoader loader;
@@ -128,7 +128,7 @@ public:
     inline LibraryUnloaderDispatcher(RexxPackageUnloader u) : unloader(u) { }
     virtual ~LibraryUnloaderDispatcher() { ; }
 
-    virtual void run();
+    void run() override;
 
 protected:
     RexxPackageUnloader unloader;

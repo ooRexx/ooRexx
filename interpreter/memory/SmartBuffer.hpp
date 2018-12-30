@@ -53,9 +53,9 @@ class SmartBuffer : public RexxInternalObject
     SmartBuffer(size_t);
     inline SmartBuffer(RESTORETYPE restoreType) { ; };
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope*);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope*) override;
 
     size_t copyData(void *, size_t);
 

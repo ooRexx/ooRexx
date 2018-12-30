@@ -56,9 +56,10 @@ class UseArgVariableRef : public RexxVariableBase
     inline UseArgVariableRef(RESTORETYPE restoreType) { ; };
     UseArgVariableRef(RexxVariableBase *base);
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope *);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope *) override;
+
     void aliasVariable(RexxActivation *, RexxVariable *);
     bool isStem();
     RexxString *getName();

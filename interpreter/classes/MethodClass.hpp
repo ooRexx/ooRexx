@@ -90,9 +90,9 @@ class MethodClass : public BaseExecutable
     MethodClass(RexxString *name, BaseCode *_code);
     inline MethodClass(RESTORETYPE restoreType) { ; }
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope*);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope*) override;
 
     void         run(Activity *,  RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
     MethodClass *newScope(RexxClass  *);

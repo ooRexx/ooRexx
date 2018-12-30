@@ -55,9 +55,9 @@ class RequiresDirective : public RexxDirective
     RequiresDirective(RexxString *n, RexxString *l, RexxClause *clause);
     inline RequiresDirective(RESTORETYPE restoreType) { ; };
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope *);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope *) override;
 
     inline RexxString *getName() { return name; }
     void install(PackageClass *package, RexxActivation *context);

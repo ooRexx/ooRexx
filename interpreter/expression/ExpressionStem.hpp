@@ -62,33 +62,33 @@ class RexxStemVariable : public RexxVariableBase
     inline RexxStemVariable(RESTORETYPE restoreType) { ; };
     RexxStemVariable(RexxString *, size_t);
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope *);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope *) override;
 
     // overrides of RexxInternalObject evaluaton methods
-    virtual RexxObject *evaluate(RexxActivation *, ExpressionStack *);
-    virtual RexxObject *getValue(VariableDictionary *);
-    virtual RexxObject *getValue(RexxActivation *);
-    virtual RexxObject *getRealValue(VariableDictionary *);
-    virtual RexxObject *getRealValue(RexxActivation *);
-    virtual VariableReference *getVariableReference(VariableDictionary *);
-    virtual VariableReference *getVariableReference(RexxActivation *);
+    RexxObject *evaluate(RexxActivation *, ExpressionStack *) override;
+    RexxObject *getValue(VariableDictionary *) override;
+    RexxObject *getValue(RexxActivation *) override;
+    RexxObject *getRealValue(VariableDictionary *) override;
+    RexxObject *getRealValue(RexxActivation *) override;
+    VariableReference *getVariableReference(VariableDictionary *) override;
+    VariableReference *getVariableReference(RexxActivation *) override;
 
     // overrides of RexxVariableBase methods
-    virtual bool exists(RexxActivation *);
-    virtual void set(RexxActivation *, RexxObject *) ;
-    virtual void set(VariableDictionary *, RexxObject *) ;
-    virtual void assign(RexxActivation *, RexxObject *);
-    virtual void drop(RexxActivation *);
-    virtual void drop(VariableDictionary *);
-    virtual void setGuard(RexxActivation *);
-    virtual void clearGuard(RexxActivation *);
-    virtual void setGuard(VariableDictionary *);
-    virtual void clearGuard(VariableDictionary *);
-    virtual void expose(RexxActivation *, VariableDictionary *);
-    virtual void procedureExpose(RexxActivation *, RexxActivation *);
-    virtual void alias(RexxActivation *, RexxVariable *);
+    bool exists(RexxActivation *) override;
+    void set(RexxActivation *, RexxObject *)  override;
+    void set(VariableDictionary *, RexxObject *)  override;
+    void assign(RexxActivation *, RexxObject *) override;
+    void drop(RexxActivation *) override;
+    void drop(VariableDictionary *) override;
+    void setGuard(RexxActivation *) override;
+    void clearGuard(RexxActivation *) override;
+    void setGuard(VariableDictionary *) override;
+    void clearGuard(VariableDictionary *) override;
+    void expose(RexxActivation *, VariableDictionary *) override;
+    void procedureExpose(RexxActivation *, RexxActivation *) override;
+    void alias(RexxActivation *, RexxVariable *) override;
 
     // class-specific methods
     bool sort(RexxActivation *context, RexxString *prefix, int order, int type, size_t start, size_t end, size_t firstcol, size_t lastcol);

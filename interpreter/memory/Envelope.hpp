@@ -58,8 +58,8 @@ class Envelope : public RexxInternalObject
     Envelope() { }
     inline Envelope(RESTORETYPE restoreType) { }
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
 
     void flattenReference(void *, size_t, void *);
     BufferClass *pack(RexxInternalObject *);

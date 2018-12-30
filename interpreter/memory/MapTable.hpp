@@ -55,10 +55,10 @@ class MapTable : public RexxInternalObject
     MapTable(size_t entries);
     inline MapTable(RESTORETYPE restoreType) { ; };
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
 
-    virtual RexxInternalObject *copy();
+    RexxInternalObject *copy() override;
 
     inline size_t get(RexxInternalObject *key) { return contents->get(key); }
            void   put(size_t value, RexxInternalObject *key);

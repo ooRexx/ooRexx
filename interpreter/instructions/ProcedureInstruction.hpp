@@ -51,11 +51,11 @@ class RexxInstructionProcedure : public RexxInstruction {
     RexxInstructionProcedure(size_t, QueueClass *);
     inline RexxInstructionProcedure(RESTORETYPE restoreType) { ; };
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope*);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope*) override;
 
-    virtual void execute(RexxActivation *, ExpressionStack *);
+    void execute(RexxActivation *, ExpressionStack *) override;
 
 protected:
 

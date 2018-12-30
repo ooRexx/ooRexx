@@ -59,10 +59,10 @@ public:
     CPPCode(size_t, PCPPM, size_t);
     inline CPPCode(RESTORETYPE restoreType) { ; };
 
-    virtual void live(size_t mark);
-    virtual void liveGeneral(MarkReason reason);
+    void live(size_t mark) override;
+    void liveGeneral(MarkReason reason) override;
 
-    virtual void run(Activity *, MethodClass *, RexxObject *, RexxString *, RexxObject **, size_t, ProtectedObject &);
+    void run(Activity *, MethodClass *, RexxObject *, RexxString *, RexxObject **, size_t, ProtectedObject &) override;
 
     static CPPCode *resolveExportedMethod(const char *name, PCPPM targetMethod, size_t argcount, const char* entryPointName);
     // The table of exported methods.
@@ -88,11 +88,11 @@ public:
     inline AttributeGetterCode(RexxVariableBase *a) { attribute = a; }
     inline AttributeGetterCode(RESTORETYPE restoreType) { ; };
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope*);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope*) override;
 
-    virtual void run(Activity *, MethodClass *, RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
+    void run(Activity *, MethodClass *, RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &) override;
 
 protected:
     RexxVariableBase *attribute;      // method attribute info
@@ -111,7 +111,7 @@ public:
     inline AttributeSetterCode(RexxVariableBase *a) : AttributeGetterCode(a) { }
     inline AttributeSetterCode(RESTORETYPE restoreType) : AttributeGetterCode(restoreType) { }
 
-    virtual void run(Activity *, MethodClass *, RexxObject *, RexxString *,  RexxObject **, size_t,  ProtectedObject &);
+    void run(Activity *, MethodClass *, RexxObject *, RexxString *,  RexxObject **, size_t,  ProtectedObject &) override;
 };
 
 
@@ -127,11 +127,11 @@ public:
     inline ConstantGetterCode(RexxString *n, RexxObject * v) { constantName = n; constantValue = v; }
     inline ConstantGetterCode(RESTORETYPE restoreType) { }
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope*);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope*) override;
 
-    virtual void run(Activity *, MethodClass *, RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
+    void run(Activity *, MethodClass *, RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &) override;
 
     void setValue(RexxObject *v) { constantValue = v; }
 
@@ -153,7 +153,7 @@ public:
     inline AbstractCode() { }
     inline AbstractCode(RESTORETYPE restoreType) { }
 
-    virtual void run(Activity *, MethodClass *, RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
+    void run(Activity *, MethodClass *, RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &) override;
 };
 
 
@@ -169,11 +169,11 @@ public:
     inline DelegateCode(RexxVariableBase *a) { attribute = a; }
     inline DelegateCode(RESTORETYPE restoreType) { ; };
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope*);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope*) override;
 
-    virtual void run(Activity *, MethodClass *, RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
+    void run(Activity *, MethodClass *, RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &) override;
 
 protected:
     RexxVariableBase *attribute;      // method attribute info

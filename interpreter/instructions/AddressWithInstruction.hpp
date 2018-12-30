@@ -54,11 +54,11 @@ class RexxInstructionAddressWith : public RexxInstructionAddress
     RexxInstructionAddressWith(RexxInternalObject *, RexxString *, RexxInternalObject *, CommandIOConfiguration *);
     inline RexxInstructionAddressWith(RESTORETYPE restoreType) { ; };
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope *);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope *) override;
 
-    virtual CommandIOConfiguration *getIOConfig() { return ioConfig; }
+    CommandIOConfiguration *getIOConfig() override { return ioConfig; }
 
     CommandIOConfiguration *ioConfig;         // a potential I/O configuration
 };

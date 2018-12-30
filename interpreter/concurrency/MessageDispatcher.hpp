@@ -50,8 +50,8 @@ public:
     inline MessageDispatcher(MessageClass *m) : ActivityDispatcher(), message(m) { ; }
     virtual ~MessageDispatcher() { ; }
 
-    virtual void run();
-    virtual void handleError(wholenumber_t, DirectoryClass *);
+    void run() override;
+    void handleError(wholenumber_t, DirectoryClass *) override;
 
 protected:
     MessageClass *message;         // the dispatchable message

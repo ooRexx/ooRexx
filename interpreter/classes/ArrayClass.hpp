@@ -127,7 +127,7 @@ class ArrayClass : public RexxObject
     {
     public:
         inline WithSortComparator(RexxObject *c) : comparator(c) { }
-        virtual wholenumber_t compare(RexxInternalObject *first, RexxInternalObject *second);
+        wholenumber_t compare(RexxInternalObject *first, RexxInternalObject *second) override;
     protected:
         RexxObject *comparator;
     };
@@ -149,14 +149,14 @@ class ArrayClass : public RexxObject
 
     inline ~ArrayClass() { ; };
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope *);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope *) override;
 
-    virtual RexxInternalObject *copy();
-    virtual ArrayClass *makeArray();
-    virtual RexxString *primitiveMakeString();
-    virtual RexxString *makeString();
+    RexxInternalObject *copy() override;
+    ArrayClass *makeArray() override;
+    RexxString *primitiveMakeString() override;
+    RexxString *makeString() override;
 
     ArrayClass   *allItems();
     ArrayClass   *allIndexes();

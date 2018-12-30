@@ -55,10 +55,11 @@ class QueueClass : public ArrayClass
      inline QueueClass() {;};
      inline QueueClass(RESTORETYPE restoreType) { ; };
 
-     virtual RexxString *primitiveMakeString();
-     virtual RexxString *makeString();
-     virtual bool validateIndex(RexxObject **index, size_t indexCount, size_t argPosition, size_t boundsError, size_t &position);
-     virtual void checkInsertIndex(size_t position);
+     RexxString *primitiveMakeString() override;
+     RexxString *makeString() override;
+     bool validateIndex(RexxObject **index, size_t indexCount, size_t argPosition, size_t boundsError, size_t &position) override;
+     void checkInsertIndex(size_t position) override;
+
      RexxObject *pullRexx();
      RexxObject *pushRexx(RexxObject *item);
      RexxObject *queueRexx(RexxObject *item);
@@ -70,7 +71,8 @@ class QueueClass : public ArrayClass
      inline RexxInternalObject *pull() { return deleteItem(1);}
      inline void push(RexxInternalObject *obj) { addFirst(obj); }
      inline void queue(RexxInternalObject *obj) { addLast(obj); }
-     virtual RexxInternalObject *remove(size_t index);
+     RexxInternalObject *remove(size_t index) override;
+
      RexxObject *newRexx(RexxObject **init_args, size_t argCount);
      QueueClass *ofRexx(RexxObject **args, size_t argCount);
 

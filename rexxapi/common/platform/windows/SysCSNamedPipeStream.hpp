@@ -49,11 +49,11 @@ public:
     inline SysNamedPipeConnection(const char *pipe) : pipeHandle(INVALID_HANDLE_VALUE), ApiConnection() { connect(pipe); }
     inline ~SysNamedPipeConnection() { }
 
-    virtual bool read(void *buf, size_t bufsize, size_t *bytesread);
-    virtual bool write(void *buf, size_t bufsize, size_t *byteswritten);
-    virtual bool write(void *buf, size_t bufsize, void*buf2, size_t buf2size, size_t *byteswritten);
+    bool read(void *buf, size_t bufsize, size_t *bytesread) override;
+    bool write(void *buf, size_t bufsize, size_t *byteswritten) override;
+    bool write(void *buf, size_t bufsize, void*buf2, size_t buf2size, size_t *byteswritten) override;
 
-    virtual bool disconnect();
+    bool disconnect() override;
 
     bool connect(const char *pipeName);
 
@@ -73,8 +73,8 @@ public:
     inline SysServerNamedPipeConnectionManager() : serverMutexHandle(INVALID_HANDLE_VALUE), ServerConnectionManager() { generatePipeName(); }
     inline ~SysServerNamedPipeConnectionManager() { }
 
-    virtual bool disconnect();
-    virtual ApiConnection *acceptConnection();
+    bool disconnect() override;
+    ApiConnection *acceptConnection() override;
 
     bool bind();
 

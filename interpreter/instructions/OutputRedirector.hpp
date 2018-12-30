@@ -97,13 +97,13 @@ class StemOutputTarget : public OutputRedirector
     StemOutputTarget(StemClass *stem, OutputOption::Enum o);
     inline StemOutputTarget(RESTORETYPE restoreType) { ; };
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
 
-    virtual void init ();
-    virtual void writeLine(RexxString *v);
-    virtual RedirectionType::Enum type() { return RedirectionType::STEM_VARIABLE; }
-    virtual RexxObject *target() { return stem; }
+    void init () override;
+    void writeLine(RexxString *v) override;
+    RedirectionType::Enum type() override { return RedirectionType::STEM_VARIABLE; }
+    RexxObject *target() override { return stem; }
 
 protected:
     StemClass *stem;      // the stem we're handling
@@ -125,12 +125,12 @@ class StreamObjectOutputTarget : public OutputRedirector
     inline StreamObjectOutputTarget(RESTORETYPE restoreType) { ; };
     StreamObjectOutputTarget(RexxObject *s, OutputOption::Enum o);
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
 
-    virtual void writeLine(RexxString *v);
-    virtual RedirectionType::Enum type() { return RedirectionType::STREAM_OBJECT; }
-    virtual RexxObject *target() { return stream; }
+    void writeLine(RexxString *v) override;
+    RedirectionType::Enum type() override { return RedirectionType::STREAM_OBJECT; }
+    RexxObject *target() override { return stream; }
 
 protected:
     RexxObject *stream;   // the stream object
@@ -151,12 +151,12 @@ class RexxQueueOutputTarget : public OutputRedirector
     inline RexxQueueOutputTarget(RESTORETYPE restoreType) { ; };
     RexxQueueOutputTarget(RexxObject *s);
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
 
-    virtual void writeLine(RexxString *v);
-    virtual RedirectionType::Enum type() { return RedirectionType::REXXQUEUE_OBJECT; }
-    virtual RexxObject *target() { return queue; }
+    void writeLine(RexxString *v) override;
+    RedirectionType::Enum type() override { return RedirectionType::REXXQUEUE_OBJECT; }
+    RexxObject *target() override { return queue; }
 
 protected:
     RexxObject *queue;   // the queue object
@@ -176,15 +176,15 @@ class StreamOutputTarget : public StreamObjectOutputTarget
     StreamOutputTarget(RexxString *n, OutputOption::Enum o);
     inline StreamOutputTarget(RESTORETYPE restoreType) { ; };
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
 
-    virtual bool needsBuffering(InputRedirector *d);
-    virtual void init();
-    virtual void cleanup();
-    virtual RedirectionType::Enum type() { return RedirectionType::STREAM_NAME; }
-    virtual RexxObject *target() { return name; }
-    virtual bool isSameTarget(OutputRedirector *e);
+    bool needsBuffering(InputRedirector *d) override;
+    void init() override;
+    void cleanup() override;
+    RedirectionType::Enum type() override { return RedirectionType::STREAM_NAME; }
+    RexxObject *target() override { return name; }
+    bool isSameTarget(OutputRedirector *e);
 
 protected:
     RexxString *name;     // the stream name
@@ -204,13 +204,13 @@ class CollectionOutputTarget : public OutputRedirector
     CollectionOutputTarget(RexxObject *c, OutputOption::Enum o);
     inline CollectionOutputTarget(RESTORETYPE restoreType) { ; };
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
 
-    virtual void init();
-    virtual void writeLine(RexxString *v);
-    virtual RedirectionType::Enum type() { return RedirectionType::COLLECTION_OBJECT; }
-    virtual RexxObject *target() { return collection; }
+    void init() override;
+    void writeLine(RexxString *v) override;
+    RedirectionType::Enum type() override { return RedirectionType::COLLECTION_OBJECT; }
+    RexxObject *target() override { return collection; }
 
 protected:
     RexxObject *collection;  // the target collection object
@@ -231,12 +231,12 @@ class BufferingOutputTarget : public OutputRedirector
     BufferingOutputTarget(OutputRedirector *t);
     inline BufferingOutputTarget(RESTORETYPE restoreType) { ; };
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
 
-    virtual void init();
-    virtual void writeLine(RexxString *v);
-    virtual void cleanup();
+    void init() override;
+    void writeLine(RexxString *v) override;
+    void cleanup() override;
 
 protected:
     ArrayClass *collector;       // the buffer used for collection

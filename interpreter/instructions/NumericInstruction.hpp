@@ -62,7 +62,8 @@ class RexxInstructionNumeric : public RexxInstructionExpression
  public:
     RexxInstructionNumeric(RexxInternalObject *, FlagSet<NumericInstructionFlags, 32>);
     inline RexxInstructionNumeric(RESTORETYPE restoreType) { ; };
-    virtual void execute(RexxActivation *, ExpressionStack *);
+
+    void execute(RexxActivation *, ExpressionStack *) override;
 
  protected:
 

@@ -105,8 +105,8 @@ class Activity : public RexxInternalObject
     Activity();
     Activity(bool);
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
 
     void reset();
     void runThread();

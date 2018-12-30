@@ -59,10 +59,10 @@ class RexxBehaviour : public RexxInternalObject
     inline RexxBehaviour() {;};
     inline RexxBehaviour(RESTORETYPE restoreType) { ; };
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope*);
-    virtual RexxInternalObject *copy();
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope*) override;
+    RexxInternalObject *copy() override;
 
     void         copyBehaviour();
     void         copyBehaviour(RexxBehaviour *source);

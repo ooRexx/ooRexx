@@ -56,7 +56,7 @@ class RelationClass : public EqualityHashCollection
            RelationClass(size_t capacity = HashCollection::DefaultTableSize);
            RelationClass(bool fromRexx) { }
 
-    virtual HashContents *allocateContents(size_t bucketSize, size_t capacity);
+    HashContents *allocateContents(size_t bucketSize, size_t capacity) override;
 
     RexxObject *newRexx(RexxObject **, size_t);
 

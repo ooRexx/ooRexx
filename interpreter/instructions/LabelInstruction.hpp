@@ -46,12 +46,13 @@
 
 #include "RexxInstruction.hpp"
 
-class RexxInstructionLabel : public RexxInstruction {
+class RexxInstructionLabel : public RexxInstruction
+{
  public:
 
     inline RexxInstructionLabel() {;};
     inline RexxInstructionLabel(RESTORETYPE restoreType) { ; };
 
-    virtual void execute(RexxActivation *, ExpressionStack *);
+    void execute(RexxActivation *, ExpressionStack *) override;
 };
 #endif

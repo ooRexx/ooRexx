@@ -276,6 +276,8 @@ if (WIN32)
             /D_CRT_NONSTDC_NO_DEPRECATE
 # suppress warning C4291: no matching operator delete found; memory will not be freed if initialization throws an exception
             /wd4291
+# give errors for missing override specifications or method hiding with warning level 3
+#           /w34263 /w34266
             /DWIN32 /D_WINDOWS /DHAVE_CONFIG_H)
    if (${ORX_ARCHITECTURE} STREQUAL "64")
       set (EXE_MANIFEST_FILE ${CMAKE_CURRENT_SOURCE_DIR}/${ORX_PLATFORM_DIR}/rexx64.exe.manifest)

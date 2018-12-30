@@ -100,8 +100,8 @@ class MemoryObject : public RexxInternalObject
     inline operator RexxObject*() { return (RexxObject *)this; };
     inline RexxObject *operator=(DeadObject *d) { return (RexxObject *)this; };
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
 
     void        initialize(bool restoringImage);
     MemorySegment *newSegment(size_t requestLength);
@@ -317,7 +317,7 @@ public:
     ImageRestoreMarkHandler(char *r) : relocation(r) { }
 
     // pure virtual method for handling the mark operation.
-    virtual void mark(RexxInternalObject **field, RexxInternalObject *object)
+    void mark(RexxInternalObject **field, RexxInternalObject *object) override
     {
         // the object reference is an offset.  Add in the address
         // of the buffer start
@@ -339,7 +339,7 @@ public:
     UnflatteningMarkHandler(char *r, size_t m) : relocation(r), markWord(m) { }
 
     // pure virtual method for handling the mark operation.
-    virtual void mark(RexxInternalObject **field, RexxInternalObject *object)
+    void mark(RexxInternalObject **field, RexxInternalObject *object) override
     {
         // At this point, the object pointer is actually an offset and
         // the base buffer pointer is our location value
@@ -365,7 +365,7 @@ public:
     EnvelopeMarkHandler(Envelope *e) : envelope(e) { }
 
     // pure virtual method for handling the mark operation.
-    virtual void mark(RexxInternalObject **field, RexxInternalObject *object)
+    void mark(RexxInternalObject **field, RexxInternalObject *object) override
     {
         // do the unflatten operation
         *field = object->unflatten(envelope);
@@ -384,8 +384,7 @@ public:
     ImageSaveMarkHandler(MemoryObject *m, size_t mw, char *b, size_t o) : memory(m), markWord(mw), imageBuffer(b), imageOffset(o) { }
 
     // pure virtual method for handling the mark operation.
-    virtual void mark(RexxInternalObject **pMarkObject, RexxInternalObject *markObject);
-
+    void mark(RexxInternalObject **pMarkObject, RexxInternalObject *markObject) override;
 
     MemoryObject *memory;    // the memory object
     size_t markWord;         // the current mark word
@@ -403,7 +402,7 @@ public:
     TracingMarkHandler(MemoryObject *m, size_t mw) : memory(m), markWord(mw) { }
 
     // pure virtual method for handling the mark operation.
-    virtual void mark(RexxInternalObject **pMarkObject, RexxInternalObject *markObject)
+    void mark(RexxInternalObject **pMarkObject, RexxInternalObject *markObject) override
     {
         // Save image processing.  We only handle this if the object has not
         // already been marked.

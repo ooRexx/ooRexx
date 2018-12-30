@@ -55,10 +55,10 @@ class PointerTable : public RexxInternalObject
     PointerTable(size_t entries = DefaultPointerTableSize);
     inline PointerTable(RESTORETYPE restoreType) { ; };
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
 
-    virtual RexxInternalObject *copy();
+    RexxInternalObject *copy() override;
 
     inline RexxInternalObject *get(void *key) { return contents->get(key); }
            void   put(RexxInternalObject *value, void *key);

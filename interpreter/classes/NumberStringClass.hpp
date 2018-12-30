@@ -179,30 +179,31 @@ class NumberString : public NumberStringBase
     NumberString(size_t) ;
     NumberString(size_t, size_t) ;
     inline NumberString(RESTORETYPE restoreType) { ; };
-    virtual HashCode getHashValue();
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope *);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope *) override;
 
-    virtual bool numberValue(wholenumber_t &result, wholenumber_t precision);
-    virtual bool numberValue(wholenumber_t &result);
-    virtual bool unsignedNumberValue(size_t &result, wholenumber_t precision);
-    virtual bool unsignedNumberValue(size_t &result);
-    virtual bool doubleValue(double &result);
-    virtual inline NumberString *numberString() { return this; }
-    virtual RexxInteger *integerValue(wholenumber_t);
-    virtual RexxString  *makeString();
-    virtual ArrayClass  *makeArray();
-    virtual bool         hasMethod(RexxString *);
-    virtual RexxString  *primitiveMakeString();
-    virtual RexxString  *stringValue();
-    virtual bool         truthValue(RexxErrorCodes);
-    virtual bool logicalValue(logical_t &);
+    HashCode getHashValue() override;
 
-    virtual bool  isEqual(RexxInternalObject *);
-    virtual void processUnknown(RexxErrorCodes error, RexxString *, RexxObject **, size_t, ProtectedObject &);
-    virtual wholenumber_t compareTo(RexxInternalObject *);
+    bool numberValue(wholenumber_t &result, wholenumber_t precision) override;
+    bool numberValue(wholenumber_t &result) override;
+    bool unsignedNumberValue(size_t &result, wholenumber_t precision) override;
+    bool unsignedNumberValue(size_t &result) override;
+    bool doubleValue(double &result) override;
+    inline NumberString *numberString() override { return this; }
+    RexxInteger *integerValue(wholenumber_t) override;
+    RexxString  *makeString() override;
+    ArrayClass  *makeArray() override;
+    bool         hasMethod(RexxString *) override;
+    RexxString  *primitiveMakeString() override;
+    RexxString  *stringValue() override;
+    bool         truthValue(RexxErrorCodes) override;
+    bool logicalValue(logical_t &) override;
+
+    bool  isEqual(RexxInternalObject *) override;
+    void processUnknown(RexxErrorCodes error, RexxString *, RexxObject **, size_t, ProtectedObject &) override;
+    wholenumber_t compareTo(RexxInternalObject *) override;
 
     wholenumber_t strictComp(RexxObject *);
     wholenumber_t comp(RexxObject *, size_t fuzz);
@@ -225,12 +226,13 @@ class NumberString : public NumberStringBase
     RexxString *formatRexx(RexxObject *, RexxObject *, RexxObject *, RexxObject *);
     RexxString *formatInternal(wholenumber_t, wholenumber_t, wholenumber_t, wholenumber_t, NumberString *, wholenumber_t, bool);
     RexxObject *operatorNot(RexxObject *);
-    virtual RexxObject *evaluate(RexxActivation *, ExpressionStack *);
-    virtual RexxObject *getValue(RexxActivation *context);
-    virtual RexxObject *getValue(VariableDictionary *dictionary);
-    virtual RexxObject *getRealValue(RexxActivation *);
-    virtual RexxObject *getRealValue(VariableDictionary *);
-    virtual bool isInstanceOf(RexxClass *);
+
+    RexxObject *evaluate(RexxActivation *, ExpressionStack *) override;
+    RexxObject *getValue(RexxActivation *context) override;
+    RexxObject *getValue(VariableDictionary *dictionary) override;
+    RexxObject *getRealValue(RexxActivation *) override;
+    RexxObject *getRealValue(VariableDictionary *) override;
+    bool isInstanceOf(RexxClass *) override;
 
     RexxObject *trunc(RexxObject *);
     RexxObject *truncInternal(wholenumber_t);
@@ -240,8 +242,10 @@ class NumberString : public NumberStringBase
     RexxObject *ceilingInternal();
     RexxObject *round();
     RexxObject *roundInternal();
-    virtual MethodClass *instanceMethod(RexxString *);
-    virtual SupplierClass *instanceMethods(RexxClass *);
+
+    MethodClass *instanceMethod(RexxString *) override;
+    SupplierClass *instanceMethods(RexxClass *) override;
+
     RexxClass  *classObject();
     inline NumberString *checkNumber(wholenumber_t digits)
     {
@@ -334,6 +338,7 @@ class NumberString : public NumberStringBase
     bool        parseNumber(const char *number, size_t length);
     void        formatNumber(wholenumber_t integer);
     void        formatUnsignedNumber(size_t);
+
     inline void setZero()
     {
         numberDigits[0] = '\0';         // Make value a zero.

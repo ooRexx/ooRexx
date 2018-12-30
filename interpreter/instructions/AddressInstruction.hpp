@@ -57,11 +57,11 @@ class RexxInstructionAddress : public RexxInstruction
     RexxInstructionAddress(RexxInternalObject *, RexxString *, RexxInternalObject *);
     inline RexxInstructionAddress(RESTORETYPE restoreType) { ; };
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope *);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope *) override;
 
-    virtual void execute(RexxActivation *, ExpressionStack *);
+    void execute(RexxActivation *, ExpressionStack *) override;
     virtual CommandIOConfiguration *getIOConfig() { return OREF_NULL; }
 
     RexxInternalObject *dynamicAddress;      // ADDRESS VALUE expression

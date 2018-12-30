@@ -52,7 +52,7 @@ class RexxInstructionOtherwise : public RexxInstruction
     RexxInstructionOtherwise(RexxToken *);
     inline RexxInstructionOtherwise(RESTORETYPE restoreType) { ; };
 
-    virtual bool isBlock() { return true; }
-    virtual void execute(RexxActivation *, ExpressionStack *);
+    bool isBlock() override { return true; }
+    void execute(RexxActivation *, ExpressionStack *) override;
 };
 #endif

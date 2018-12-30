@@ -55,11 +55,11 @@ class RexxExpressionLogical : public RexxInternalObject
     RexxExpressionLogical(size_t, QueueClass *);
     inline RexxExpressionLogical(RESTORETYPE restoreType) { ; };
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope *);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope *) override;
 
-    RexxObject *evaluate(RexxActivation*, ExpressionStack *);
+    RexxObject *evaluate(RexxActivation*, ExpressionStack *) override;
 
 protected:
 

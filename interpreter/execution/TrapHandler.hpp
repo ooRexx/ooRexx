@@ -59,8 +59,8 @@ class TrapHandler : public RexxInternalObject
     TrapHandler(RexxString *condition, RexxInstructionTrapBase *handler);
     inline TrapHandler(RESTORETYPE restoreType) { ; };
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
 
     bool canHandle(RexxString *c);
     RexxString *instructionName();

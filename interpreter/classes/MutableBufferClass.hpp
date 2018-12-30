@@ -61,11 +61,11 @@ class MutableBuffer : public RexxObject
            MutableBuffer(size_t, size_t);
     inline MutableBuffer(RESTORETYPE restoreType) { ; };
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope *envelope);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope *envelope) override;
 
-    virtual RexxInternalObject *copy();
+    RexxInternalObject *copy() override;
     void        ensureCapacity(size_t addedLength);
 
     RexxObject *lengthRexx();
@@ -91,9 +91,11 @@ class MutableBuffer : public RexxObject
     RexxInteger   *getBufferSize() { return new_integer(bufferLength); }
     RexxObject    *setBufferSize(RexxInteger*);
     ArrayClass    *makeArrayRexx(RexxString *div);
-    virtual ArrayClass *makeArray();
-    virtual RexxString *makeString();
-    virtual RexxString *primitiveMakeString();
+
+    ArrayClass *makeArray() override;
+    RexxString *makeString() override;
+    RexxString *primitiveMakeString() override;
+
     RexxInteger   *countStrRexx(RexxString *needle);
     RexxInteger   *caselessCountStrRexx(RexxString *needle);
     MutableBuffer *changeStr(RexxString *needle, RexxString *newNeedle, RexxInteger *countArg);

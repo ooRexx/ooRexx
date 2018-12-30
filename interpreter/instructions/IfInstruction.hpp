@@ -54,14 +54,14 @@ class RexxInstructionIf : public RexxInstructionSet
     RexxInstructionIf(RexxInternalObject *, RexxToken *);
     inline RexxInstructionIf(RESTORETYPE restoreType) { ; };
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope*);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope*) override;
 
-    virtual void execute(RexxActivation *, ExpressionStack *);
+    void execute(RexxActivation *, ExpressionStack *) override;
     // We consider this a control instruction only if it is an IF.
     // WHENs are part of SELECT and thus not a top-level control type.
-    virtual bool isControl() { return isType(KEYWORD_IF) ; }
+    bool isControl() override { return isType(KEYWORD_IF) ; }
 
     void setEndInstruction(RexxInstructionEndIf *);
     inline void fixWhen(RexxInstructionEndIf *partner) { else_location->setEndInstruction(partner); };

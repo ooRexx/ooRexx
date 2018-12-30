@@ -55,13 +55,13 @@ class RexxInstructionEndIf : public RexxInstructionSet
     RexxInstructionEndIf(RexxInstructionIf *);
     inline RexxInstructionEndIf(RESTORETYPE restoreType) { ; };
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope*);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope*) override;
 
-    virtual void execute(RexxActivation *, ExpressionStack *);
+    void execute(RexxActivation *, ExpressionStack *) override;
 
-    virtual void setEndInstruction(RexxInstructionEndIf *);
+    void setEndInstruction(RexxInstructionEndIf *) override;
 
  protected:
 

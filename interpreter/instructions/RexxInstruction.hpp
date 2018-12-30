@@ -70,9 +70,9 @@ class RexxInstruction : public RexxInternalObject
     inline RexxInstruction(RESTORETYPE restoreType) { ; };
     inline RexxInstruction() { ; }
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope *);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope *) override;
 
     virtual void execute(RexxActivation *, ExpressionStack *) { ; };
     // indicates whether this is a block instruction type that requires
@@ -129,9 +129,10 @@ class RexxBlockInstruction : public RexxInstruction
 
     // virtual functions required by subclasses to override.
 
-    virtual bool isBlock() { return true; }
+    bool isBlock() override { return true; }
     // all block instructions are also control instructions.
-    virtual bool isControl() { return true; }
+    bool isControl() override { return true; }
+
     virtual EndBlockType getEndStyle() = 0;
     virtual bool isLoop() { return false; };
     virtual void matchEnd(RexxInstructionEnd *, LanguageParser *) { ; };
@@ -172,9 +173,9 @@ class RexxInstructionExpression : public RexxInstruction
     RexxInstructionExpression() { ; };
     RexxInstructionExpression(RESTORETYPE restoreType) { ; };
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope *);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope *) override;
 
     RexxObject *evaluateExpression(RexxActivation *context, ExpressionStack *stack);
     RexxString *evaluateStringExpression(RexxActivation *context, ExpressionStack *stack);

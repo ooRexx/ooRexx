@@ -57,8 +57,8 @@ public:
     inline SecurityManager(RexxObject *m) { manager = m; }
     inline SecurityManager(RESTORETYPE restoreType) { ; };
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
 
     RexxObject  *checkLocalAccess(RexxString *index);
     RexxObject  *checkEnvironmentAccess(RexxString *index);

@@ -48,8 +48,8 @@ public:
     inline TranslateDispatcher() : ActivityDispatcher() { ; }
     virtual ~TranslateDispatcher() { ; }
 
-    virtual void run();
-    virtual void handleError(wholenumber_t, DirectoryClass *);
+    void run() override;
+    void handleError(wholenumber_t, DirectoryClass *) override;
 
     const char *programName;             /* REXX program to run               */
     PRXSTRING  instore;                  /* Instore array                     */
@@ -63,8 +63,8 @@ public:
     inline TranslateInstoreDispatcher() : ActivityDispatcher() { ; }
     virtual ~TranslateInstoreDispatcher() { ; }
 
-    virtual void run();
-    virtual void handleError(wholenumber_t, DirectoryClass *);
+    void run() override;
+    void handleError(wholenumber_t, DirectoryClass *) override;
 
     const char *programName;             /* REXX program to run               */
     CONSTRXSTRING *source;               // the image to translate

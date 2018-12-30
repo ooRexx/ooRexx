@@ -61,8 +61,9 @@ public:
     RexxObject  *notEqual(RexxObject *other);
 
     RexxObject  *isNull();
-    virtual HashCode getHashValue();
-    virtual RexxString *stringValue();
+
+    HashCode getHashValue() override;
+    RexxString *stringValue() override;
 
     RexxObject *newRexx(RexxObject **args, size_t argc);
 

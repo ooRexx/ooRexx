@@ -59,15 +59,15 @@ class RexxVariable : public RexxInternalObject
     inline RexxVariable(RexxString *n) : variableName(n), variableValue(OREF_NULL), creator(OREF_NULL), dependents(OREF_NULL) {;};
     inline RexxVariable(RESTORETYPE restoreType) { ; };
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope *);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope *) override;
 
-    void         inform(Activity *);
-    void         drop();
-    void         notify();
-    void         uninform(Activity *);
-    void         setStem(RexxObject *);
+    void inform(Activity *);
+    void drop();
+    void notify();
+    void uninform(Activity *);
+    void setStem(RexxObject *);
 
     inline void set(RexxObject *value)
     {

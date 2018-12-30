@@ -66,7 +66,7 @@ public:
 
     RexxReturnCode resolveCallback(RegistrationType type, const char *name, const char *module, REXXPFN &entryPoint);
     RexxReturnCode mapReturnResult(ServiceMessage &m);
-    virtual RexxReturnCode processServiceException(ServiceException *e);
+    RexxReturnCode processServiceException(ServiceException *e) override;
 
 protected:
 

@@ -68,16 +68,16 @@ class RexxCode : public BaseCode
    RexxCode(PackageClass *s, SourceLocation &loc, RexxInstruction *i, StringTable *l = OREF_NULL, size_t f = 0, size_t v = RexxLocalVariables::FIRST_VARIABLE_INDEX);
    inline RexxCode(RESTORETYPE restoreType) { ; };
 
-   virtual void live(size_t);
-   virtual void liveGeneral(MarkReason reason);
-   virtual void flatten(Envelope *);
+   void live(size_t) override;
+   void liveGeneral(MarkReason reason) override;
+   void flatten(Envelope *) override;
 
    // overrides for BaseCode methods
-   virtual void run(Activity *, MethodClass *, RexxObject *, RexxString *, RexxObject **,  size_t, ProtectedObject &);
-   virtual void call(Activity *, RoutineClass *, RexxString *,  RexxObject **, size_t, RexxString *, RexxString *, ActivationContext, ProtectedObject &);
-   virtual void call(Activity *, RoutineClass *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
-   virtual ArrayClass *getSource();
-   virtual RexxObject *setSecurityManager(RexxObject *);
+   void run(Activity *, MethodClass *, RexxObject *, RexxString *, RexxObject **,  size_t, ProtectedObject &) override;
+   void call(Activity *, RoutineClass *, RexxString *,  RexxObject **, size_t, RexxString *, RexxString *, ActivationContext, ProtectedObject &) override;
+   void call(Activity *, RoutineClass *, RexxString *,  RexxObject **, size_t, ProtectedObject &) override;
+   ArrayClass *getSource() override;
+   RexxObject *setSecurityManager(RexxObject *) override;
 
    RexxString      *getProgramName();
 

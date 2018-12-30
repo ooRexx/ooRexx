@@ -58,34 +58,34 @@ class RexxInteger : public RexxObject
 
     void *operator new(size_t);
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope*);
-    virtual HashCode getHashValue();
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope*) override;
+    HashCode getHashValue() override;
 
-    virtual bool numberValue(wholenumber_t &result, wholenumber_t precision);
-    virtual bool numberValue(wholenumber_t &result);
-    virtual bool unsignedNumberValue(size_t &result, wholenumber_t precision);
-    virtual bool unsignedNumberValue(size_t &result);
-    virtual bool doubleValue(double &result);
-    virtual void processUnknown(RexxErrorCodes error, RexxString *, RexxObject **, size_t, ProtectedObject &);
-    virtual wholenumber_t compareTo(RexxInternalObject *);
+    bool numberValue(wholenumber_t &result, wholenumber_t precision) override;
+    bool numberValue(wholenumber_t &result) override;
+    bool unsignedNumberValue(size_t &result, wholenumber_t precision) override;
+    bool unsignedNumberValue(size_t &result) override;
+    bool doubleValue(double &result) override;
+    void processUnknown(RexxErrorCodes error, RexxString *, RexxObject **, size_t, ProtectedObject &) override;
+    wholenumber_t compareTo(RexxInternalObject *) override;
 
-    virtual NumberString *numberString();
-    virtual RexxInteger *integerValue(wholenumber_t);
-    virtual RexxString  *makeString();
-    virtual void         copyIntoTail(CompoundVariableTail *);
-    virtual bool         hasMethod(RexxString *);
-    virtual RexxString  *primitiveMakeString();
-    virtual RexxString  *stringValue();
+    NumberString *numberString() override;
+    RexxInteger *integerValue(wholenumber_t) override;
+    RexxString  *makeString() override;
+    void         copyIntoTail(CompoundVariableTail *) override;
+    bool         hasMethod(RexxString *) override;
+    RexxString  *primitiveMakeString() override;
+    RexxString  *stringValue() override;
     virtual ArrayClass  *makeArray();
-    virtual bool truthValue(RexxErrorCodes);
-    virtual bool logicalValue(logical_t &);
-    virtual bool isInstanceOf(RexxClass *);
-    virtual MethodClass *instanceMethod(RexxString *);
-    virtual SupplierClass *instanceMethods(RexxClass *);
+    bool truthValue(RexxErrorCodes) override;
+    bool logicalValue(logical_t &) override;
+    bool isInstanceOf(RexxClass *) override;
+    MethodClass *instanceMethod(RexxString *) override;
+    SupplierClass *instanceMethods(RexxClass *) override;
 
-    virtual bool  isEqual(RexxInternalObject *);
+    bool  isEqual(RexxInternalObject *) override;
     wholenumber_t strictComp(RexxObject *);
     bool          strictEquality(RexxObject *);
     wholenumber_t comp(RexxObject *other);
@@ -130,11 +130,13 @@ class RexxInteger : public RexxObject
     RexxObject *format(RexxObject *, RexxObject *, RexxObject *, RexxObject *);
     RexxObject *d2c(RexxInteger *);
     RexxObject *d2x(RexxInteger *);
-    virtual RexxObject *evaluate(RexxActivation *, ExpressionStack *);
-    virtual RexxObject *getValue(RexxActivation *);
-    virtual RexxObject *getValue(VariableDictionary *);
-    virtual RexxObject *getRealValue(RexxActivation *);
-    virtual RexxObject *getRealValue(VariableDictionary *);
+
+    RexxObject *evaluate(RexxActivation *, ExpressionStack *) override;
+    RexxObject *getValue(RexxActivation *) override;
+    RexxObject *getValue(VariableDictionary *) override;
+    RexxObject *getRealValue(RexxActivation *) override;
+    RexxObject *getRealValue(VariableDictionary *) override;
+
     RexxString *concat(RexxString *);
     RexxString *concatBlank(RexxString *);
     void        setString(RexxString *string);
@@ -195,8 +197,8 @@ class RexxIntegerClass : public RexxClass
         }
     }
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
 
     void initCache();
 

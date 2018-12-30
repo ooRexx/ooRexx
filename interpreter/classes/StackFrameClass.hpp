@@ -57,9 +57,9 @@ public:
     StackFrameClass(const char *type, RexxString *name, BaseExecutable *p, RexxObject *target, ArrayClass *arguments, RexxString *t, size_t l);
     inline StackFrameClass(RESTORETYPE restoreType) { ; };
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope*);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope*) override;
 
     static void createInstance();
     static RexxClass *classInstance;
@@ -72,8 +72,8 @@ public:
     RexxString *getTraceLine();
     ArrayClass  *getArguments();
     PackageClass *getPackageObject();
-    virtual RexxString *makeString();
-    virtual RexxString *stringValue();
+    RexxString *makeString() override;
+    RexxString *stringValue() override;
 
     RexxObject *newRexx(RexxObject **args, size_t argc);
 

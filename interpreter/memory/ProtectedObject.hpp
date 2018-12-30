@@ -76,8 +76,8 @@ class ProtectedObject : public ProtectedBase
     inline ProtectedObject(RexxInternalObject *o, Activity *a) : protectedObject(o), ProtectedBase(a) { }
     inline ~ProtectedObject() { }
 
-    virtual void mark(size_t liveMark) { memory_mark(protectedObject); }
-    virtual void markGeneral(int reason) { memory_mark_general(protectedObject); }
+    void mark(size_t liveMark) override { memory_mark(protectedObject); }
+    void markGeneral(int reason) override { memory_mark_general(protectedObject); }
 
     inline ProtectedBase & operator=(RexxInternalObject *o)
     {
@@ -193,8 +193,8 @@ public:
 
     inline ~Protected() { }
 
-    virtual void mark(size_t liveMark) { memory_mark(protectedObject); }
-    virtual void markGeneral(int reason) { memory_mark_general(protectedObject); }
+    void mark(size_t liveMark) override { memory_mark(protectedObject); }
+    void markGeneral(int reason) override { memory_mark_general(protectedObject); }
 
     inline ProtectedBase & operator=(objType *o)
     {

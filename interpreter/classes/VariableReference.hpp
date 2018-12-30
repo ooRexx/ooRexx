@@ -63,19 +63,19 @@ public:
     VariableReference(RexxVariable *);
     inline VariableReference(RESTORETYPE restoreType) { ; };
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope *);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope *) override;
 
-    virtual void processUnknown(RexxErrorCodes error, RexxString *, RexxObject **, size_t, ProtectedObject &);
-    virtual RexxString  *stringValue();
-    virtual bool numberValue(wholenumber_t &result, wholenumber_t precision);
-    virtual bool numberValue(wholenumber_t &result);
-    virtual bool unsignedNumberValue(size_t &result, wholenumber_t precision);
-    virtual bool unsignedNumberValue(size_t &result);
-    virtual bool doubleValue(double &result);
-    virtual NumberString *numberString();
-    virtual RexxInteger *integerValue(wholenumber_t);
+    void processUnknown(RexxErrorCodes error, RexxString *, RexxObject **, size_t, ProtectedObject &) override;
+    RexxString  *stringValue() override;
+    bool numberValue(wholenumber_t &result, wholenumber_t precision) override;
+    bool numberValue(wholenumber_t &result) override;
+    bool unsignedNumberValue(size_t &result, wholenumber_t precision) override;
+    bool unsignedNumberValue(size_t &result) override;
+    bool doubleValue(double &result) override;
+    NumberString *numberString() override;
+    RexxInteger *integerValue(wholenumber_t) override;
 
     RexxObject *newRexx(RexxObject **args, size_t argc);
 

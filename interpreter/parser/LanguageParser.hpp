@@ -108,8 +108,8 @@ class LanguageParser: public RexxInternalObject
     LanguageParser(RexxString *name, ProgramSource *s);
     inline LanguageParser(RESTORETYPE restoreType) { ; };
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
 
     // main execution methods
     void        translate();

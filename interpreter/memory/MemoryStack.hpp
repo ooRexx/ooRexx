@@ -142,10 +142,10 @@ class PushThroughStack : public RexxInternalObject
     inline PushThroughStack(RESTORETYPE restoreType) { ; };
     PushThroughStack(size_t size);
 
-    void         init(size_t);
+    void init(size_t);
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
 
     // the position is origin zero, relative to the current.  Current
     // is the position of the last item pushed on to the stack.

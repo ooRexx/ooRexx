@@ -61,7 +61,7 @@ class BagClass : public IndexOnlyHashCollection
            BagClass(size_t capacity = HashCollection::DefaultTableSize);
            BagClass(bool fromRexx) { }
 
-    virtual HashContents *allocateContents(size_t bucketSize, size_t capacity);
+    HashContents *allocateContents(size_t bucketSize, size_t capacity) override;
 
     RexxObject *newRexx(RexxObject **, size_t);
     BagClass   *ofRexx(RexxObject **, size_t);

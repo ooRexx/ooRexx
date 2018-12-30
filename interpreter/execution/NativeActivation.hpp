@@ -79,31 +79,31 @@ class NativeActivation : public ActivationBase
            NativeActivation(Activity *_activity, RexxActivation *_activation);
            NativeActivation(Activity *_activity);
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
 
-    virtual void run(MethodClass *_method, NativeMethod *_code, RexxObject  *_receiver,
+    void run(MethodClass *_method, NativeMethod *_code, RexxObject  *_receiver,
         RexxString  *_msgname, RexxObject **_arglist, size_t _argcount, ProtectedObject &resultObj);
 
-    virtual RexxObject *dispatch();
-    virtual wholenumber_t digits();
-    virtual wholenumber_t fuzz();
-    virtual bool form();
-    virtual void setDigits(wholenumber_t);
-    virtual void setFuzz(wholenumber_t);
-    virtual void setForm(bool);
-    virtual bool trap(RexxString *, DirectoryClass *);
-    virtual bool willTrap(RexxString *);
-    virtual void termination() { guardOff();}
-    virtual bool isStackBase();
-    virtual RexxActivation *getRexxContext();
-    virtual RexxActivation *findRexxContext();
-    virtual RexxObject *getReceiver();
-    virtual MethodClass *getMethod();
-    virtual PackageClass *getPackage() { return getPackageObject(); }
-    virtual SecurityManager *getSecurityManager();
-    virtual const NumericSettings *getNumericSettings();
+    RexxObject *dispatch() override;
+    wholenumber_t digits() override;
+    wholenumber_t fuzz() override;
+    bool form() override;
+    void setDigits(wholenumber_t) override;
+    void setFuzz(wholenumber_t) override;
+    void setForm(bool) override;
+    bool trap(RexxString *, DirectoryClass *) override;
+    bool willTrap(RexxString *) override;
+    void termination() override { guardOff(); }
+    bool isStackBase() override;
+    RexxActivation *getRexxContext() override;
+    RexxActivation *findRexxContext() override;
+    RexxObject *getReceiver() override;
+    PackageClass *getPackage() override { return getPackageObject(); }
+    SecurityManager *getSecurityManager() override;
+    const NumericSettings *getNumericSettings() override;
 
+    MethodClass *getMethod();
     void run(ActivityDispatcher &dispatcher);
     void run(CallbackDispatcher &dispatcher);
     void run(TrappingDispatcher &dispatcher);

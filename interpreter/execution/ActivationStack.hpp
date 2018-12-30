@@ -60,8 +60,8 @@ class ActivationFrameBuffer : public RexxInternalObject
      ActivationFrameBuffer(size_t entries);
      inline ActivationFrameBuffer(RESTORETYPE restoreType) { ; }
 
-     virtual void live(size_t);
-     virtual void liveGeneral(MarkReason reason);
+     void live(size_t) override;
+     void liveGeneral(MarkReason reason) override;
 
      inline bool hasCapacity(size_t entries) { return size - next >= entries; }
      inline RexxInternalObject **allocateFrame(size_t entries)

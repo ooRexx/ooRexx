@@ -57,12 +57,12 @@ class RexxExpressionMessage : public RexxVariableBase
     RexxExpressionMessage(RexxInternalObject *, RexxString *, RexxInternalObject *, size_t, QueueClass *, bool);
     inline RexxExpressionMessage(RESTORETYPE restoreType) { ; };
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope *);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope *) override;
 
-    virtual RexxObject *evaluate(RexxActivation *, ExpressionStack *);
-    virtual void assign(RexxActivation *, RexxObject *);
+    RexxObject *evaluate(RexxActivation *, ExpressionStack *) override;
+    void assign(RexxActivation *, RexxObject *) override;
 
     void makeAssignment(LanguageParser *parser);
     bool isDoubleTilde() { return doubleTilde; }

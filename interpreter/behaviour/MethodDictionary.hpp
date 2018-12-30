@@ -61,11 +61,11 @@ class MethodDictionary: public StringHashCollection
     inline MethodDictionary(RESTORETYPE restoreType) { ; }
            MethodDictionary(size_t capacity = DefaultTableSize);
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope *);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope *) override;
 
-    virtual RexxInternalObject *copy();
+    RexxInternalObject *copy() override;
     MethodClass *getMethod(RexxString *methodName) { return (MethodClass *)get(methodName); }
     void addMethod(RexxString *methodName, MethodClass *method);
     void replaceMethod(RexxString *methodName, MethodClass *method);

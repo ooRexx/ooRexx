@@ -76,22 +76,23 @@ class StemClass : public RexxObject
     StemClass(RexxString *);
     inline StemClass(RESTORETYPE restoreType) { ; };
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope*);
-    virtual RexxInternalObject *copy();
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope*) override;
+    RexxInternalObject *copy() override;
 
-    virtual void processUnknown(RexxErrorCodes error, RexxString *, RexxObject **, size_t, ProtectedObject &);
-    virtual void copyFrom(CompoundVariableTable &_tails);
-    virtual bool numberValue(wholenumber_t &result, wholenumber_t precision);
-    virtual bool numberValue(wholenumber_t &result);
-    virtual bool unsignedNumberValue(size_t &result, wholenumber_t precision);
-    virtual bool unsignedNumberValue(size_t &result);
-    virtual bool doubleValue(double &result);
-    virtual NumberString *numberString();
-    virtual RexxInteger *integerValue(wholenumber_t);
-    virtual RexxString  *stringValue();
-    virtual ArrayClass  *makeArray();
+    void processUnknown(RexxErrorCodes error, RexxString *, RexxObject **, size_t, ProtectedObject &) override;
+    void copyFrom(CompoundVariableTable &_tails);
+
+    bool numberValue(wholenumber_t &result, wholenumber_t precision) override;
+    bool numberValue(wholenumber_t &result) override;
+    bool unsignedNumberValue(size_t &result, wholenumber_t precision) override;
+    bool unsignedNumberValue(size_t &result) override;
+    bool doubleValue(double &result) override;
+    NumberString *numberString() override;
+    RexxInteger *integerValue(wholenumber_t) override;
+    RexxString  *stringValue() override;
+    ArrayClass  *makeArray() override;
     ArrayClass   *allItems();
     ArrayClass   *allIndexes();
     SupplierClass *supplier();

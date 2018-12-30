@@ -92,7 +92,7 @@ class RexxInstructionTrapBase : public RexxInstructionCallBase
 {
  public:
     inline RexxInstructionTrapBase() { ; };
-    virtual void trap(RexxActivation *, DirectoryClass *) { ; };
+    virtual void trap(RexxActivation *, DirectoryClass *) { ; }
 
  protected:
 
@@ -110,12 +110,12 @@ class RexxInstructionCall : public RexxInstructionCallBase
     RexxInstructionCall(RexxString *, size_t, QueueClass *, BuiltinCode);
     inline RexxInstructionCall(RESTORETYPE restoreType) { ; };
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope*);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope*) override;
 
-    virtual void execute(RexxActivation *, ExpressionStack *);
-    virtual void resolve(StringTable *);
+    void execute(RexxActivation *, ExpressionStack *) override;
+    void resolve(StringTable *) override;
 
 protected:
 
@@ -136,11 +136,11 @@ class RexxInstructionDynamicCall : public RexxInstructionDynamicCallBase
     RexxInstructionDynamicCall(RexxInternalObject *, size_t, QueueClass *);
     inline RexxInstructionDynamicCall(RESTORETYPE restoreType) { ; };
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope*);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope*) override;
 
-    virtual void execute(RexxActivation *, ExpressionStack *);
+    void execute(RexxActivation *, ExpressionStack *) override;
 
 protected:
 
@@ -159,11 +159,11 @@ class RexxInstructionQualifiedCall : public RexxInstruction
     RexxInstructionQualifiedCall(RexxString *, RexxString *, size_t, QueueClass *);
     inline RexxInstructionQualifiedCall(RESTORETYPE restoreType) { ; };
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope*);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope*) override;
 
-    virtual void execute(RexxActivation *, ExpressionStack *);
+    void execute(RexxActivation *, ExpressionStack *) override;
 
 protected:
 
@@ -184,14 +184,14 @@ class RexxInstructionCallOn : public RexxInstructionTrapBase
     RexxInstructionCallOn(RexxString*, RexxString *, BuiltinCode);
     inline RexxInstructionCallOn(RESTORETYPE restoreType) { ; };
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope*);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope*) override;
 
-    virtual void execute(RexxActivation *, ExpressionStack *);
-    virtual void resolve(StringTable *);
+    void execute(RexxActivation *, ExpressionStack *) override;
+    void resolve(StringTable *) override;
 
-    virtual void trap(RexxActivation *context, DirectoryClass  *conditionObj);
+    void trap(RexxActivation *context, DirectoryClass  *conditionObj) override;
 
 protected:
 

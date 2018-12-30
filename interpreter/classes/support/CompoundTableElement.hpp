@@ -58,9 +58,10 @@ class CompoundTableElement : public RexxVariable
 
     inline CompoundTableElement(RexxString *name) { variableName = name; }
     inline CompoundTableElement(RESTORETYPE restoreType) { ; };
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope *);
+
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope *) override;
 
     inline CompoundTableElement *realVariable() { return realElement != OREF_NULL ? realElement : this; }
     inline void setParent(CompoundTableElement *parentElement) { setField(parent, parentElement); }

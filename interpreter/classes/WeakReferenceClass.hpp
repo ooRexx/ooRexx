@@ -61,11 +61,11 @@ public:
 
            void *operator new(size_t);
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason);
-    virtual void flatten(Envelope *);
-    virtual RexxInternalObject *unflatten(Envelope *);
-    virtual RexxInternalObject *copy();
+    void live(size_t) override;
+    void liveGeneral(MarkReason) override;
+    void flatten(Envelope *) override;
+    RexxInternalObject *unflatten(Envelope *) override;
+    RexxInternalObject *copy() override;
 
     RexxInternalObject *value();
     inline RexxInternalObject *get() { return referentObject; }

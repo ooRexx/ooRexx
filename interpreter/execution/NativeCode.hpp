@@ -57,13 +57,13 @@ class NativeCode : public BaseCode
     inline NativeCode() { }
     NativeCode(RexxString *p, RexxString *n);
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope *envelope);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope *envelope) override;
 
-    virtual BaseCode  *setPackageObject(PackageClass *s);
+    BaseCode  *setPackageObject(PackageClass *s) override;
 
-    SecurityManager   *getSecurityManager();
+    SecurityManager *getSecurityManager();
 
 protected:
 
@@ -84,13 +84,13 @@ class NativeMethod : public NativeCode
     inline NativeMethod(RESTORETYPE restoreType) { ; };
     inline NativeMethod(RexxString *p, RexxString *n, PNATIVEMETHOD e) : NativeCode(p, n), entry(e) { }
 
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope *envelope);
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope *envelope) override;
 
     inline PNATIVEMETHOD getEntry() { return entry; }
 
-    virtual void run(Activity *activity, MethodClass *method, RexxObject *receiver, RexxString *messageName,
-        RexxObject **argPtr, size_t count, ProtectedObject &result);
+    void run(Activity *activity, MethodClass *method, RexxObject *receiver, RexxString *messageName,
+        RexxObject **argPtr, size_t count, ProtectedObject &result) override;
 
 protected:
 
@@ -108,8 +108,6 @@ class BaseNativeRoutine : public NativeCode
 
     inline BaseNativeRoutine() { }
     inline BaseNativeRoutine(RexxString *p, RexxString *n) : NativeCode(p, n) { }
-
-    virtual void call(Activity *, RoutineClass *, RexxString *, RexxObject **, size_t, ProtectedObject &) = 0;
 };
 
 
@@ -125,12 +123,12 @@ class NativeRoutine : public BaseNativeRoutine
     inline NativeRoutine(RESTORETYPE restoreType) { ; };
     inline NativeRoutine(RexxString *p, RexxString *n, PNATIVEROUTINE e) : BaseNativeRoutine(p, n), entry(e) { }
 
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope *envelope);
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope *envelope) override;
 
     inline PNATIVEROUTINE getEntry() { return entry; }
 
-    virtual void call(Activity *, RoutineClass *, RexxString *, RexxObject **, size_t, ProtectedObject &);
+    void call(Activity *, RoutineClass *, RexxString *, RexxObject **, size_t, ProtectedObject &) override;
 
 protected:
 
@@ -151,10 +149,10 @@ class RegisteredRoutine : public BaseNativeRoutine
     RegisteredRoutine(RexxString *n, RexxRoutineHandler *e)  : BaseNativeRoutine(OREF_NULL, n), entry(e) { }
     RegisteredRoutine(RexxString *p, RexxString *n, RexxRoutineHandler *e)  : BaseNativeRoutine(p, n), entry(e) { }
 
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope *envelope);
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope *envelope) override;
 
-    virtual void call(Activity *, RoutineClass *, RexxString *, RexxObject **, size_t, ProtectedObject &);
+    void call(Activity *, RoutineClass *, RexxString *, RexxObject **, size_t, ProtectedObject &) override;
 
     inline RexxRoutineHandler *getEntry() { return entry; }
 

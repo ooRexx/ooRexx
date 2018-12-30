@@ -61,20 +61,20 @@ class RexxInstructionBaseDo : public RexxBlockInstruction
  public:
     inline RexxInstructionBaseDo() { ; }
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope *);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope *) override;
 
     // required by RexxInstruction.  For most subclasses, the default
     // is sufficient.
-    virtual void execute(RexxActivation *, ExpressionStack *);
+    void execute(RexxActivation *, ExpressionStack *) override;
 
     // methods required by RexxBlockInstruction;
-    virtual void matchEnd(RexxInstructionEnd *, LanguageParser *);
+    void matchEnd(RexxInstructionEnd *, LanguageParser *) override;
     // most DO blocks are loops.  The simple styles will need to override.
-    virtual EndBlockType getEndStyle() { return LOOP_BLOCK; }
+    EndBlockType getEndStyle() override { return LOOP_BLOCK; }
     // Most DOs are loops...Simple DO will override again.
-    virtual bool isLoop() { return true; };
+    bool isLoop() override { return true; };
 
     // specific to Do loops.  Most subclasses can rely on the default
     virtual void reExecute(RexxActivation *, ExpressionStack *, DoBlock *);
@@ -102,12 +102,12 @@ class RexxInstructionSimpleDo : public RexxInstructionBaseDo
            RexxInstructionSimpleDo(RexxString *l);
 
     // required by RexxInstruction
-    virtual void execute(RexxActivation *, ExpressionStack *);
+    void execute(RexxActivation *, ExpressionStack *) override;
 
     // methods required by RexxBlockInstruction;
-    virtual bool isLoop() { return false; }
+    bool isLoop() override { return false; }
     // most DO blocks are loops.  The simple styles will need to override.
-    virtual EndBlockType getEndStyle() { return DO_BLOCK; }
+    EndBlockType getEndStyle() override { return DO_BLOCK; }
 };
 
 
@@ -135,13 +135,13 @@ class RexxInstructionDoOver : public RexxInstructionBaseDo
     inline RexxInstructionDoOver(RESTORETYPE restoreType) { ; };
            RexxInstructionDoOver(RexxString *l, OverLoop &o);
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope *);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope *) override;
 
     // Methods needed for loop iteration
-    virtual void setup(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock);
-    virtual bool iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first);
+    void setup(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock) override;
+    bool iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first) override;
 
  protected:
 
@@ -160,13 +160,13 @@ class RexxInstructionDoOverFor : public RexxInstructionDoOver
     inline RexxInstructionDoOverFor(RESTORETYPE restoreType) { ; };
            RexxInstructionDoOverFor(RexxString *l, OverLoop &o, ForLoop &f);
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope *);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope *) override;
 
     // Methods needed for loop iteration
-    virtual void setup(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock);
-    virtual bool iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first);
+    void setup(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock) override;
+    bool iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first) override;
 
  protected:
 
@@ -185,12 +185,12 @@ class RexxInstructionDoOverUntil : public RexxInstructionDoOver
     inline RexxInstructionDoOverUntil(RESTORETYPE restoreType) { ; };
            RexxInstructionDoOverUntil(RexxString *l, OverLoop &o, WhileUntilLoop &w);
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope *);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope *) override;
 
     // Methods needed for loop iteration
-    virtual bool iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first);
+    bool iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first) override;
 
 protected:
 
@@ -210,12 +210,12 @@ class RexxInstructionDoOverForUntil : public RexxInstructionDoOverFor
     inline RexxInstructionDoOverForUntil(RESTORETYPE restoreType) { ; };
            RexxInstructionDoOverForUntil(RexxString *l, OverLoop &o, ForLoop &f, WhileUntilLoop &w);
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope *);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope *) override;
 
     // Methods needed for loop iteration
-    virtual bool iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first);
+    bool iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first) override;
 
 protected:
 
@@ -235,7 +235,7 @@ class RexxInstructionDoOverWhile : public RexxInstructionDoOverUntil
            RexxInstructionDoOverWhile(RexxString *l, OverLoop &o, WhileUntilLoop &w);
 
     // Methods needed for loop iteration
-    virtual bool iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first);
+    bool iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first) override;
 };
 
 
@@ -252,7 +252,7 @@ class RexxInstructionDoOverForWhile : public RexxInstructionDoOverForUntil
            RexxInstructionDoOverForWhile(RexxString *l, OverLoop &o, ForLoop &f, WhileUntilLoop &w);
 
     // Methods needed for loop iteration
-    virtual bool iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first);
+    bool iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first) override;
 };
 
 
@@ -267,13 +267,13 @@ class RexxInstructionControlledDo: public RexxInstructionBaseDo
     inline RexxInstructionControlledDo(RESTORETYPE restoreType) { ; };
            RexxInstructionControlledDo(RexxString *l, ControlledLoop &c);
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope *);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope *) override;
 
     // Methods needed for loop iteration
-    virtual void setup(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock);
-    virtual bool iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first);
+    void setup(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock) override;
+    bool iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first) override;
 
  protected:
 
@@ -291,12 +291,12 @@ class RexxInstructionControlledDoUntil : public RexxInstructionControlledDo
     inline RexxInstructionControlledDoUntil(RESTORETYPE restoreType) { ; };
            RexxInstructionControlledDoUntil(RexxString *l, ControlledLoop &c, WhileUntilLoop &w);
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope *);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope *) override;
 
     // Methods needed for loop iteration
-    virtual bool iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first);
+    bool iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first) override;
 
  protected:
 
@@ -314,7 +314,7 @@ class RexxInstructionControlledDoWhile : public RexxInstructionControlledDoUntil
     inline RexxInstructionControlledDoWhile(RESTORETYPE restoreType) { ; };
            RexxInstructionControlledDoWhile(RexxString *l, ControlledLoop &c, WhileUntilLoop &w);
 
-    virtual bool iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first);
+    bool iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first) override;
 };
 
 
@@ -328,12 +328,12 @@ class RexxInstructionDoWhile: public RexxInstructionBaseDo
     inline RexxInstructionDoWhile(RESTORETYPE restoreType) { ; };
            RexxInstructionDoWhile(RexxString *l, WhileUntilLoop &w);
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope *);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope *) override;
 
     // Methods needed for loop iteration
-    virtual bool iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first);
+    bool iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first) override;
 
  protected:
 
@@ -352,7 +352,7 @@ class RexxInstructionDoUntil : public RexxInstructionDoWhile
     inline RexxInstructionDoUntil(RESTORETYPE restoreType) { ; };
            RexxInstructionDoUntil(RexxString *l, WhileUntilLoop &w);
 
-    virtual bool iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first);
+    bool iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first) override;
 };
 
 
@@ -367,13 +367,13 @@ class RexxInstructionDoCount : public RexxInstructionBaseDo
     inline RexxInstructionDoCount(RESTORETYPE restoreType) { ; };
            RexxInstructionDoCount(RexxString *l, ForLoop &f);
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope *);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope *) override;
 
     // Methods needed for loop iteration
-    virtual void setup(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock);
-    virtual bool iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first);
+    void setup(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock) override;
+    bool iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first) override;
 
  protected:
 
@@ -391,12 +391,12 @@ class RexxInstructionDoCountUntil : public RexxInstructionDoCount
     inline RexxInstructionDoCountUntil(RESTORETYPE restoreType) { ; };
            RexxInstructionDoCountUntil(RexxString *l, ForLoop &f, WhileUntilLoop &w);
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope *);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope *) override;
 
     // Methods needed for loop iteration
-    virtual bool iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first);
+    bool iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first) override;
 
  protected:
 
@@ -416,7 +416,7 @@ class RexxInstructionDoCountWhile : public RexxInstructionDoCountUntil
            RexxInstructionDoCountWhile(RexxString *l, ForLoop &f, WhileUntilLoop &w);
 
     // Methods needed for loop iteration
-    virtual bool iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first);
+    bool iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first) override;
 };
 
 
@@ -431,13 +431,13 @@ class RexxInstructionDoWith : public RexxInstructionBaseDo
     inline RexxInstructionDoWith(RESTORETYPE restoreType) { ; };
            RexxInstructionDoWith(RexxString *l, WithLoop &o);
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope *);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope *) override;
 
     // Methods needed for loop iteration
-    virtual void setup(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock);
-    virtual bool iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first);
+    void setup(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock) override;
+    bool iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first) override;
 
  protected:
 
@@ -456,13 +456,13 @@ class RexxInstructionDoWithFor : public RexxInstructionDoWith
     inline RexxInstructionDoWithFor(RESTORETYPE restoreType) { ; };
            RexxInstructionDoWithFor(RexxString *l, WithLoop &o, ForLoop &f);
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope *);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope *) override;
 
     // Methods needed for loop iteration
-    virtual void setup(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock);
-    virtual bool iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first);
+    void setup(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock) override;
+    bool iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first) override;
 
  protected:
 
@@ -481,12 +481,12 @@ class RexxInstructionDoWithUntil : public RexxInstructionDoWith
     inline RexxInstructionDoWithUntil(RESTORETYPE restoreType) { ; };
            RexxInstructionDoWithUntil(RexxString *l, WithLoop &o, WhileUntilLoop &w);
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope *);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope *) override;
 
     // Methods needed for loop iteration
-    virtual bool iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first);
+    bool iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first) override;
 
 protected:
 
@@ -506,12 +506,12 @@ class RexxInstructionDoWithForUntil : public RexxInstructionDoWithFor
     inline RexxInstructionDoWithForUntil(RESTORETYPE restoreType) { ; };
            RexxInstructionDoWithForUntil(RexxString *l, WithLoop &o, ForLoop &f, WhileUntilLoop &w);
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope *);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope *) override;
 
     // Methods needed for loop iteration
-    virtual bool iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first);
+    bool iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first) override;
 
 protected:
 
@@ -531,7 +531,7 @@ class RexxInstructionDoWithWhile : public RexxInstructionDoWithUntil
            RexxInstructionDoWithWhile(RexxString *l, WithLoop &o, WhileUntilLoop &w);
 
     // Methods needed for loop iteration
-    virtual bool iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first);
+    bool iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first) override;
 };
 
 
@@ -548,6 +548,6 @@ class RexxInstructionDoWithForWhile : public RexxInstructionDoWithForUntil
            RexxInstructionDoWithForWhile(RexxString *l, WithLoop &o, ForLoop &f, WhileUntilLoop &w);
 
     // Methods needed for loop iteration
-    virtual bool iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first);
+    bool iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first) override;
 };
 #endif

@@ -66,8 +66,8 @@ class MapBucket : public RexxInternalObject
     MapBucket(size_t entries);
     inline MapBucket(RESTORETYPE restoreType) { ; };
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
 
     void         empty();
     bool         isEmpty() { return itemCount == 0; }

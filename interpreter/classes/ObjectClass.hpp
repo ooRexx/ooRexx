@@ -374,7 +374,7 @@ class RexxInternalObject : public RexxVirtualBase
     RexxInteger *requestInteger(wholenumber_t digits = Numerics::ARGUMENT_DIGITS);
     bool         requestNumber(wholenumber_t &, wholenumber_t);
     bool         requestUnsignedNumber(size_t &, wholenumber_t);
-    ArrayClass  *requestArray();
+    virtual ArrayClass  *requestArray();
 
     ObjectHeader header;              // memory management header
     RexxBehaviour *behaviour;         // the object's behaviour
@@ -449,13 +449,13 @@ class RexxObject : public RexxInternalObject
     RexxObject *initRexx();
     virtual void uninit();
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope *);
+            void live(size_t) override;
+            void liveGeneral(MarkReason reason) override;
+            void flatten(Envelope *) override;
 
-    virtual RexxInternalObject *copy();
-    virtual HashCode     hash();
-    virtual RexxString  *stringValue();
+            RexxInternalObject *copy() override;
+            HashCode     hash() override;
+            RexxString  *stringValue() override;
     virtual void processUnknown(RexxErrorCodes, RexxString *, RexxObject **, size_t, ProtectedObject &);
 
     virtual bool isInstanceOf(RexxClass *);
@@ -601,7 +601,7 @@ public:
     inline RexxNilObject(RESTORETYPE restoreType) { ; };
     virtual ~RexxNilObject() {;};
 
-    virtual HashCode getHashValue();
+    HashCode getHashValue() override;
 
     static RexxObject *nilObject;
 

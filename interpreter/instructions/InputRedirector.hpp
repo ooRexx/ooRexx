@@ -88,13 +88,13 @@ class StemInputSource : public InputRedirector
     StemInputSource(StemClass *stem);
     inline StemInputSource(RESTORETYPE restoreType) { ; };
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
 
-    virtual void init ();
-    virtual RexxString *read(NativeActivation *context);
-    virtual RedirectionType::Enum type() { return RedirectionType::STEM_VARIABLE; }
-    virtual RexxObject *target() { return stem; }
+    void init () override;
+    RexxString *read(NativeActivation *context) override;
+    RedirectionType::Enum type() override { return RedirectionType::STEM_VARIABLE; }
+    RexxObject *target() override { return stem; }
 
 protected:
     StemClass  *stem;      // the stem we're handling
@@ -119,13 +119,13 @@ class StreamObjectInputSource : public InputRedirector
     StreamObjectInputSource(RexxObject *s);
     inline StreamObjectInputSource(RESTORETYPE restoreType) { ; };
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
 
-    virtual void init() { hitEnd = false; }
-    virtual RexxString *read(NativeActivation *context);
-    virtual RedirectionType::Enum type() { return RedirectionType::STREAM_OBJECT; }
-    virtual RexxObject *target() { return stream; }
+    void init() override { hitEnd = false; }
+    RexxString *read(NativeActivation *context) override;
+    RedirectionType::Enum type() override { return RedirectionType::STREAM_OBJECT; }
+    RexxObject *target() override { return stream; }
 
 protected:
     RexxObject *stream;   // the stream object
@@ -147,13 +147,13 @@ class StreamInputSource : public StreamObjectInputSource
     StreamInputSource(RexxString *n);
     inline StreamInputSource(RESTORETYPE restoreType) { ; };
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
 
-    virtual void init ();
-    virtual void cleanup();
-    virtual RedirectionType::Enum type() { return RedirectionType::STREAM_NAME; }
-    virtual RexxObject *target() { return name; }
+    void init () override;
+    void cleanup() override;
+    RedirectionType::Enum type() override { return RedirectionType::STREAM_NAME; }
+    RexxObject *target() override { return name; }
 
 protected:
     RexxString *name;     // the stream name
@@ -173,13 +173,13 @@ class ArrayInputSource : public InputRedirector
     ArrayInputSource(ArrayClass *a);
     inline ArrayInputSource(RESTORETYPE restoreType) { ; };
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
 
-    virtual void init ();
-    virtual RexxString *read(NativeActivation *context);
-    virtual RedirectionType::Enum type() { return RedirectionType::ARRAY_OBJECT; }
-    virtual RexxObject *target() { return array; }
+    void init () override;
+    RexxString *read(NativeActivation *context) override;
+    RedirectionType::Enum type() override { return RedirectionType::ARRAY_OBJECT; }
+    RexxObject *target() override { return array; }
 
 protected:
     ArrayClass *array;          // the source array object

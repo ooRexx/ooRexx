@@ -119,30 +119,31 @@ class RexxActivation : public ActivationBase
    RexxActivation(Activity *_activity, RoutineClass *_routine, RexxCode *_code, RexxString *calltype, RexxString *env, ActivationContext context);
    RexxActivation(Activity *_activity, RexxActivation *_parent, RexxCode *_code, ActivationContext context);
 
-   virtual void live(size_t);
-   virtual void liveGeneral(MarkReason reason);
+   void live(size_t) override;
+   void liveGeneral(MarkReason reason) override;
 
-   virtual RexxObject *dispatch();
-   virtual wholenumber_t digits();
-   virtual wholenumber_t fuzz();
-   virtual bool form();
-   virtual void setDigits(wholenumber_t);
-   virtual void setFuzz(wholenumber_t);
-   virtual void setForm(bool);
-   virtual bool trap(RexxString *, DirectoryClass *);
-   virtual bool willTrap(RexxString *);
+   RexxObject *dispatch() override;
+   wholenumber_t digits() override;
+   wholenumber_t fuzz() override;
+   bool form() override;
+   void setDigits(wholenumber_t) override;
+   void setFuzz(wholenumber_t) override;
+   void setForm(bool) override;
+   bool trap(RexxString *, DirectoryClass *) override;
+   bool willTrap(RexxString *) override;
 
-   virtual void setObjNotify(MessageClass *);
-   virtual void termination();
-   virtual SecurityManager *getSecurityManager();
-   virtual bool isForwarded() { return settings.isForwarded(); }
-   virtual const NumericSettings *getNumericSettings();
-   virtual RexxActivation  *getRexxContext();
-   virtual RexxActivation  *findRexxContext();
-   virtual RexxObject      *getReceiver();
-   virtual MethodClass     *getMethod();
-   virtual bool             isRexxContext();
-   virtual PackageClass    *getPackage();
+   void setObjNotify(MessageClass *) override;
+   void termination() override;
+   SecurityManager *getSecurityManager() override;
+   bool isForwarded() override { return settings.isForwarded(); }
+   const NumericSettings *getNumericSettings() override;
+   RexxActivation  *getRexxContext() override;
+   RexxActivation  *findRexxContext() override;
+   RexxObject      *getReceiver() override;
+   bool             isRexxContext() override;
+   PackageClass    *getPackage() override;
+
+   MethodClass     *getMethod();
 
    void        inheritPackageSettings();
    void        allocateStackFrame();

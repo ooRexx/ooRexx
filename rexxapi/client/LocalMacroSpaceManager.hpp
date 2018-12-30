@@ -183,7 +183,7 @@ public:
     void translateRexxProgram(const char *sourcefile, ManagedRxstring &imageData);
     void readRxstringFromFile(SysFile *file, ManagedRxstring &target, size_t size);
     RexxReturnCode mapReturnResult(ServiceMessage &m);
-    virtual RexxReturnCode processServiceException(ServiceException *e);
+    RexxReturnCode processServiceException(ServiceException *e) override;
 };
 
 

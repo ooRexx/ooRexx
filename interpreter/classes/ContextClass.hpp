@@ -63,8 +63,8 @@ public:
     RexxContext(RexxActivation *);
     inline RexxContext(RESTORETYPE restoreType) { ; };
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
 
     PackageClass *getPackage();
     RexxObject *getDigits();

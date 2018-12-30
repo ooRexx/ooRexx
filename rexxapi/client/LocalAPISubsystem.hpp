@@ -48,6 +48,7 @@ class LocalAPISubsystem
 {
 public:
     virtual ~LocalAPISubsystem() { ; }
+
     virtual void initializeLocal(LocalAPIManager *a)
     {
         apiManager = a;

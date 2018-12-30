@@ -131,14 +131,14 @@ class BufferProgramSource: public ProgramSource
     BufferProgramSource(BufferClass *b) : buffer(b), descriptorArea(OREF_NULL), ProgramSource() { }
     inline BufferProgramSource(RESTORETYPE restoreType) { ; };
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope *);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope *) override;
 
     // virtual definitions
-    virtual void setup();
-    virtual void getLine(size_t lineNumber, const char *&data, size_t &length);
-    virtual bool isTraceable() { return true; }
+    void setup() override;
+    void getLine(size_t lineNumber, const char *&data, size_t &length) override;
+    bool isTraceable() override { return true; }
 
     const char *getBufferPointer();
     void getBuffer(const char *&data, size_t &length);
@@ -169,12 +169,12 @@ class FileProgramSource: public BufferProgramSource
     FileProgramSource(RexxString *f) : fileName(f), BufferProgramSource(OREF_NULL) { }
     inline FileProgramSource(RESTORETYPE restoreType) : BufferProgramSource(restoreType) { ; };
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope *);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope *) override;
 
     // virtual definitions
-    virtual void setup();
+    void setup() override;
 
 protected:
 
@@ -194,13 +194,13 @@ class ArrayProgramSource: public ProgramSource
     ArrayProgramSource(ArrayClass *a, size_t adjust = 0) : interpretAdjust(adjust), array(a), ProgramSource() { };
     inline ArrayProgramSource(RESTORETYPE restoreType) { ; };
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope *);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope *) override;
 
-    virtual void setup();
-    virtual void getLine(size_t lineNumber, const char *&data, size_t &length);
-    virtual bool isTraceable() { return true; }
+    void setup() override;
+    void getLine(size_t lineNumber, const char *&data, size_t &length) override;
+    bool isTraceable() override { return true; }
 
  protected:
 

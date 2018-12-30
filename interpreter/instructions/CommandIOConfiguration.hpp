@@ -95,9 +95,9 @@ class CommandIOConfiguration : public RexxInternalObject
     CommandIOConfiguration();
     inline CommandIOConfiguration(RESTORETYPE restoreType) { ; };
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope *);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope *) override;
 
     CommandIOContext *createIOContext(RexxActivation *context, ExpressionStack *stack, CommandIOConfiguration *commandConfig);
     InputRedirector  *createInputSource(RexxActivation *context, ExpressionStack *stack, CommandIOConfiguration *mainConfig);

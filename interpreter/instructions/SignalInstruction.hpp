@@ -57,12 +57,12 @@ class RexxInstructionSignal : public RexxInstructionCallBase
     RexxInstructionSignal(RexxString *);
     inline RexxInstructionSignal(RESTORETYPE restoreType) { ; };
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope *);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope *) override;
 
-    virtual void execute(RexxActivation *, ExpressionStack *);
-    virtual void resolve (StringTable *);
+    void execute(RexxActivation *, ExpressionStack *) override;
+    void resolve (StringTable *) override;
 };
 
 
@@ -77,11 +77,11 @@ class RexxInstructionDynamicSignal : public RexxInstructionDynamicCallBase
     RexxInstructionDynamicSignal(RexxInternalObject *);
     inline RexxInstructionDynamicSignal(RESTORETYPE restoreType) { ; };
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope*);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope*) override;
 
-    virtual void execute(RexxActivation *, ExpressionStack *);
+    void execute(RexxActivation *, ExpressionStack *) override;
 };
 
 
@@ -95,13 +95,13 @@ class RexxInstructionSignalOn : public RexxInstructionTrapBase
     RexxInstructionSignalOn(RexxString*, RexxString *);
     inline RexxInstructionSignalOn(RESTORETYPE restoreType) { ; };
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope*);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope*) override;
 
-    virtual void execute(RexxActivation *, ExpressionStack *);
-    virtual void resolve(StringTable *);
+    void execute(RexxActivation *, ExpressionStack *) override;
+    void resolve(StringTable *) override;
 
-    virtual void trap(RexxActivation *context, DirectoryClass  *conditionObj);
+    void trap(RexxActivation *context, DirectoryClass  *conditionObj) override;
 };
 #endif

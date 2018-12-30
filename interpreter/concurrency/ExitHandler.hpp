@@ -95,7 +95,7 @@ public:
     inline ExitHandlerDispatcher(REXXPFN e, int code, int subcode, void *a) { entryPoint = e; major = code; minor = subcode; parms = a; }
     virtual ~ExitHandlerDispatcher() { ; }
 
-    virtual void run();
+    void run() override;
 
     int        rc;                        // handler return code
     int        major;                     // major exit code
@@ -111,7 +111,7 @@ public:
     inline ContextExitHandlerDispatcher(REXXPFN e, int code, int subcode, void *a) : ExitHandlerDispatcher(e, code, subcode, a) { }
     virtual ~ContextExitHandlerDispatcher() { ; }
 
-    virtual void run();
+    void run() override;
 };
 
 #endif

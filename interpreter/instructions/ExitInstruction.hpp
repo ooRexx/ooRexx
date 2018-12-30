@@ -52,7 +52,7 @@ class RexxInstructionExit : public RexxInstructionExpression
     inline RexxInstructionExit(RESTORETYPE restoreType) { ; };
     RexxInstructionExit(RexxInternalObject *);
 
-    virtual void execute(RexxActivation *, ExpressionStack *);
+    void execute(RexxActivation *, ExpressionStack *) override;
 
 };
 #endif

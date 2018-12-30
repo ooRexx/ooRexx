@@ -60,20 +60,20 @@ public:
     RexxInstructionSelect(RexxString *);
     inline RexxInstructionSelect(RESTORETYPE restoreType) { ; };
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope*);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope*) override;
 
     // required by RexxInstructon
-    virtual void execute(RexxActivation *, ExpressionStack *);
+    void execute(RexxActivation *, ExpressionStack *) override;
 
     // required by RexxBlockinstruction;
-    virtual void matchEnd(RexxInstructionEnd *, LanguageParser *);
-    virtual bool isLoop();
-    virtual void terminate(RexxActivation *, DoBlock *);
+    void matchEnd(RexxInstructionEnd *, LanguageParser *) override;
+    bool isLoop() override;
+    void terminate(RexxActivation *, DoBlock *) override;
 
     // all select instructions do the same thing here
-    virtual EndBlockType getEndStyle() { return SELECT_BLOCK; }
+    EndBlockType getEndStyle() override { return SELECT_BLOCK; }
 
     // specific to the SELECT instruction
     void addWhen(RexxInstructionIf *);
@@ -94,12 +94,12 @@ public:
     RexxInstructionSelectCase(RexxString *label, RexxInternalObject *condition);
     inline RexxInstructionSelectCase(RESTORETYPE restoreType) { ; };
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope*);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope*) override;
 
     // required by RexxInstructon
-    virtual void execute(RexxActivation *, ExpressionStack *);
+    void execute(RexxActivation *, ExpressionStack *) override;
 
     RexxInternalObject *caseExpr;  // the SELECT CASE expression.
 };

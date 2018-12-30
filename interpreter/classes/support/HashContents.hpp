@@ -174,9 +174,9 @@ public:
     inline HashContents() { ; };
            HashContents(size_t entries, size_t total);
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope *);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope *) override;
 
 
     // default index comparison method
@@ -424,21 +424,21 @@ public:
            EqualityHashContents(size_t entries, size_t total) : HashContents(entries, total) { }
 
     // default index comparison method
-    virtual bool isIndexEqual(RexxInternalObject *target, RexxInternalObject *entryIndex)
+    bool isIndexEqual(RexxInternalObject *target, RexxInternalObject *entryIndex) override
     {
         // compare using object equality
         return target->equalValue(entryIndex);
     }
 
     // default item comparison method
-    virtual bool isItemEqual(RexxInternalObject *target, RexxInternalObject *entryItem)
+    bool isItemEqual(RexxInternalObject *target, RexxInternalObject *entryItem) override
     {
         // compare using object equality
         return target->equalValue(entryItem);
     }
 
     // Use the full hash() method processing to determine this.
-    virtual ItemLink hashIndex(RexxInternalObject *index)
+    ItemLink hashIndex(RexxInternalObject *index) override
     {
         return (ItemLink)(index->hash() % bucketSize);
     }
@@ -461,7 +461,7 @@ public:
            MultiValueContents(size_t entries, size_t total) : EqualityHashContents(entries, total) { }
 
     // remap the put method to the multi-value type
-    virtual void put(RexxInternalObject *value, RexxInternalObject *index)
+    void put(RexxInternalObject *value, RexxInternalObject *index) override
     {
         addFront(value, index);
     }
@@ -483,7 +483,7 @@ public:
            StringHashContents(size_t entries, size_t total) : EqualityHashContents(entries, total) { }
 
     // default index comparison method
-    virtual bool isIndexEqual(RexxInternalObject *target, RexxInternalObject *entryIndex)
+    bool isIndexEqual(RexxInternalObject *target, RexxInternalObject *entryIndex) override
     {
         // compare using fast string comparisons
         return ((RexxString *)target)->memCompare((RexxString *)entryIndex);
@@ -491,7 +491,7 @@ public:
 
     // Take advantage of the knowledge that indexes are all strings and
     // do directly to the string hash method, which might be inlined.
-    virtual ItemLink hashIndex(RexxInternalObject *index)
+    ItemLink hashIndex(RexxInternalObject *index) override
     {
         return (ItemLink)(((RexxString *)index)->getStringHash() % bucketSize);
     }

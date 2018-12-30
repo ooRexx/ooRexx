@@ -56,7 +56,7 @@ class StringTable;
 class BaseExecutable : public RexxObject
 {
 public:
-    virtual RexxInternalObject *copy();
+    RexxInternalObject *copy() override;
 
     inline PackageClass *getPackageObject() { return code->getPackageObject(); };
     inline BaseCode   *getCode() { return code; }

@@ -52,6 +52,6 @@ class RexxInstructionInterpret : public RexxInstructionExpression
     RexxInstructionInterpret(RexxInternalObject *);
     inline RexxInstructionInterpret(RESTORETYPE restoreType) { ; };
 
-    virtual void execute(RexxActivation *, ExpressionStack *);
+    void execute(RexxActivation *, ExpressionStack *) override;
 };
 #endif

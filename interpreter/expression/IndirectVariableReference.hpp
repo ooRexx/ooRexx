@@ -57,14 +57,14 @@ class RexxVariableReference : public RexxVariableBase
     inline RexxVariableReference(RESTORETYPE restoreType) { ; };
     RexxVariableReference(RexxVariableBase *);
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope *);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope *) override;
 
     // methods implemented from RexxVariableBase
-    virtual void drop(RexxActivation *);
-    virtual void expose(RexxActivation *, VariableDictionary *);
-    virtual void procedureExpose(RexxActivation *, RexxActivation *);
+    void drop(RexxActivation *) override;
+    void expose(RexxActivation *, VariableDictionary *) override;
+    void procedureExpose(RexxActivation *, RexxActivation *) override;
 
     ArrayClass *list(RexxActivation *);
 

@@ -56,11 +56,11 @@ class RexxExpressionFunction : public RexxInternalObject
     RexxExpressionFunction(RexxString *, size_t, QueueClass *, BuiltinCode);
     inline RexxExpressionFunction(RESTORETYPE restoreType) { ; };
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope *);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope *) override;
 
-    virtual RexxObject *evaluate(RexxActivation*, ExpressionStack *);
+    RexxObject *evaluate(RexxActivation*, ExpressionStack *) override;
 
     virtual void resolve(StringTable *);
 

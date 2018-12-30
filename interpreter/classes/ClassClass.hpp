@@ -67,16 +67,17 @@ class RexxClass : public RexxObject
     inline RexxClass(RESTORETYPE restoreType) { ; };
            RexxClass(const char *id , RexxBehaviour *classBehaviour, RexxBehaviour *instanceBehaviour);
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
 
-    virtual RexxObject * makeProxy(Envelope*);
+    RexxObject * makeProxy(Envelope*) override;
 
-    virtual HashCode     hash();
-    virtual HashCode     getHashValue();
-    virtual RexxObject * equal(RexxObject *);
-    virtual RexxObject * strictEqual(RexxObject *);
-    virtual RexxObject * notEqual(RexxObject *);
+    HashCode     hash() override;
+    HashCode     getHashValue() override;
+
+    RexxObject * equal(RexxObject *);
+    RexxObject * strictEqual(RexxObject *);
+    RexxObject * notEqual(RexxObject *);
 
     // start of methods used only during image build
     RexxObject * setRexxDefined();
@@ -119,7 +120,7 @@ class RexxClass : public RexxObject
     RexxObject  *copyRexx();
 
     void         setInstanceBehaviour(RexxBehaviour *);
-    virtual RexxString  *defaultName();
+    RexxString  *defaultName() override;
 
     MethodClass *method(RexxString *);
 

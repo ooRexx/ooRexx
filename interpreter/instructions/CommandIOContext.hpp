@@ -60,8 +60,8 @@ class CommandIOContext : public RexxInternalObject
     inline CommandIOContext() { ; }
     inline CommandIOContext(RESTORETYPE restoreType) { ; };
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
 
     RexxString *readInput(NativeActivation *);
     void        readInputBuffered(NativeActivation *, const char *&v, size_t &l);

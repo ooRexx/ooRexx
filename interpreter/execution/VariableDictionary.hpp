@@ -141,13 +141,13 @@ class VariableDictionary : public RexxInternalObject
     void ensureCapacity(size_t delta);
     void checkFull();
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope *envelope);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope *envelope) override;
 
-    virtual RexxInternalObject  *copy();
-    virtual void         copyValues();
-            VariableDictionary *deepCopy();
+    RexxInternalObject  *copy() override;
+    void copyValues();
+    VariableDictionary *deepCopy();
 
     RexxObject  *realValue(RexxString *name);
     inline StemClass *getStem(RexxString *stemName) { return (StemClass *)getStemVariable(stemName)->getVariableValue(); }

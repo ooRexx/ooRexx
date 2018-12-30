@@ -51,7 +51,7 @@ public:
     inline ~APIServerThread() { terminate(); }
 
     void start();
-    virtual void dispatch();
+    void dispatch() override;
 
 protected:
     APIServer *server;              // the attached API server

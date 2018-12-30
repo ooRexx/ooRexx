@@ -51,6 +51,9 @@
 
 class BufferClass;
 
+/**
+ * A builder for constructing a tail for a compound variable.
+ */
 class CompoundVariableTail
 {
   public:
@@ -142,7 +145,7 @@ class CompoundVariableTail
    }
 
    RexxString *createCompoundName(RexxString *);
-   virtual RexxString *makeString();
+   RexxString *makeString();
 
    inline void init()
    {

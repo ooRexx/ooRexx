@@ -69,9 +69,9 @@ class ParseTrigger : public RexxInternalObject
     ParseTrigger(ParseTriggerType, RexxInternalObject *, size_t, QueueClass *);
     inline ParseTrigger(RESTORETYPE restoreType) { ; };
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope *);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope *) override;
 
     size_t integerTrigger(RexxActivation *context, ExpressionStack *stack);
     RexxString *stringTrigger(RexxActivation *context, ExpressionStack *stack);

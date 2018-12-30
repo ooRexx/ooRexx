@@ -54,8 +54,8 @@ public:
     inline RexxStartDispatcher() : ActivityDispatcher() { ; }
     virtual ~RexxStartDispatcher() { ; }
 
-    virtual void run();
-    virtual void handleError(wholenumber_t, DirectoryClass *);
+    void run() override;
+    void handleError(wholenumber_t, DirectoryClass *) override;
 
     size_t     argcount;                 // Number of args in arglist
     PCONSTRXSTRING arglist;              // Array of args
@@ -77,7 +77,7 @@ public:
     inline CallRoutineDispatcher(RoutineClass *r, ArrayClass *a) : ActivityDispatcher(), routine(r), arguments(a) { ; }
     virtual ~CallRoutineDispatcher() { ; }
 
-    virtual void run();
+    void run() override;
 
     ProtectedObject result;
 
@@ -96,7 +96,7 @@ public:
     inline CallProgramDispatcher(const char *p, ArrayClass *a) : ActivityDispatcher(), program(p), arguments(a) { ; }
     virtual ~CallProgramDispatcher() { ; }
 
-    virtual void run();
+    void run() override;
 
     ProtectedObject result;
 

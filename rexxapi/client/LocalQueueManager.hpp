@@ -64,7 +64,7 @@ public:
 
     bool validateQueueName(const char *username, bool &isSession);
     void initializeLocal(LocalAPIManager *a);
-    virtual void terminateProcess();
+    void terminateProcess() override;
     QueueHandle initializeSessionQueue(SessionID s);
     QueueHandle createSessionQueue(SessionID session);
     RexxReturnCode createNamedQueue(const char *name, size_t size, char *createdName, size_t *dup);
@@ -80,7 +80,7 @@ public:
     RexxReturnCode addToSessionQueue(CONSTRXSTRING &data, size_t lifoFifo);
     RexxReturnCode pullFromQueue(const char *name, RXSTRING &data, size_t waitFlag, RexxQueueTime *timeStamp);
     QueueHandle nestSessionQueue(SessionID s, QueueHandle q);
-    virtual RexxReturnCode processServiceException(ServiceException *e);
+    RexxReturnCode processServiceException(ServiceException *e) override;
     RexxReturnCode mapReturnResult(ServiceMessage &m);
 
 protected:

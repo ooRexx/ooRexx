@@ -68,8 +68,8 @@ public:
     inline InterpreterInstance(RESTORETYPE restoreType) { ; }
     InterpreterInstance();
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason);
+    void live(size_t) override;
+    void liveGeneral(MarkReason) override;
 
     RexxString *getDefaultEnvironment() { return defaultEnvironment; }
     Activity *getRootActivity() { return rootActivity; }

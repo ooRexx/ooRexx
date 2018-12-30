@@ -56,14 +56,14 @@ public:
     RoutineClass(RexxString *n, BaseCode *_code);
     inline RoutineClass(RESTORETYPE restoreType) { ; };
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope*);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope*) override;
 
-    virtual void call(Activity *,  RexxString *,  RexxObject **, size_t, RexxString *, RexxString *, ActivationContext, ProtectedObject &);
-    virtual void call(Activity *,  RexxString *,  RexxObject **, size_t, ProtectedObject &);
-    virtual void runProgram(Activity *activity, RexxString * calltype, RexxString * environment, RexxObject **arguments, size_t argCount, ProtectedObject &result);
-    virtual void runProgram(Activity *activity, RexxObject **arguments, size_t argCount, ProtectedObject &result);
+    void call(Activity *,  RexxString *,  RexxObject **, size_t, RexxString *, RexxString *, ActivationContext, ProtectedObject &);
+    void call(Activity *,  RexxString *,  RexxObject **, size_t, ProtectedObject &);
+    void runProgram(Activity *activity, RexxString * calltype, RexxString * environment, RexxObject **arguments, size_t argCount, ProtectedObject &result);
+    void runProgram(Activity *activity, RexxObject **arguments, size_t argCount, ProtectedObject &result);
 
     RexxObject   *callRexx(RexxObject **, size_t);
     RexxObject   *callWithRexx(ArrayClass *);

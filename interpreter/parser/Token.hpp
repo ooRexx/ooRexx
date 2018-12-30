@@ -538,8 +538,9 @@ class RexxToken : public RexxInternalObject
         stringValue(v), numeric(SUBTYPE_NONE), tokenLocation(l) { };
 
     inline RexxToken(RESTORETYPE restoreType) { ; };
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
+
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
 
     inline void setStart(size_t l, size_t o) { tokenLocation.setStart(l, o); }
     inline void setEnd(size_t l, size_t o) { tokenLocation.setEnd(l, o); }

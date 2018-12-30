@@ -52,6 +52,6 @@ class RexxInstructionReply : public RexxInstructionExpression
     RexxInstructionReply(RexxInternalObject*);
     inline RexxInstructionReply(RESTORETYPE restoreType) { ; };
 
-    virtual void execute(RexxActivation *, ExpressionStack *);
+    void execute(RexxActivation *, ExpressionStack *) override;
 };
 #endif

@@ -60,12 +60,12 @@ class ClassResolver : public RexxVariableBase
     ClassResolver(RexxString *, RexxString *);
     inline ClassResolver(RESTORETYPE restoreType) { ; };
 
-    virtual void live(size_t);
-    virtual void liveGeneral(MarkReason reason);
-    virtual void flatten(Envelope *);
+    void live(size_t) override;
+    void liveGeneral(MarkReason reason) override;
+    void flatten(Envelope *) override;
 
     // part ov RexxVariableBase...rest of the methods default
-    virtual RexxObject *evaluate(RexxActivation *, ExpressionStack *);
+    RexxObject *evaluate(RexxActivation *, ExpressionStack *) override;
     RexxClass *lookup(PackageClass *package);
     inline RexxString *getName() { return className; }
     inline RexxString *getNamespace() { return namespaceName; }
