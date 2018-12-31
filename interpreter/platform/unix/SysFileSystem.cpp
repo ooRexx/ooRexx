@@ -921,6 +921,27 @@ int64_t SysFileSystem::getLastModifiedDate(const char *name)
 
 
 /**
+ * Get the file last access date as a file time value.
+ *
+ * @param name   The target name.
+ *
+ * @return the file time value for the modified date, or -1 for any
+ *         errors.  The time is returned in ticks units (and as such,
+ *         it doesn't include the st_mtim.tv_usec microseconds part)
+ */
+int64_t SysFileSystem::getLastAccessDate(const char *name)
+{
+    struct stat64 st;
+
+    if (stat64(name, &st))
+    {
+        return -1;
+    }
+    return (int64_t)st.st_atime + get_utc_offset(st.st_atime);
+}
+
+
+/**
  * Retrieve the size of a file.
  *
  * @param name   The name of the target file.
@@ -1012,6 +1033,29 @@ bool SysFileSystem::setLastModifiedDate(const char *name, int64_t time)
 
     timebuf.actime = statbuf.st_atime;
     timebuf.modtime = (time_t)time - get_utc_offset(time);
+    return utime(name, &timebuf) == 0;
+}
+
+
+/**
+ * Set the last access date for a file.
+ *
+ * @param name   The target name.
+ * @param time   The new file time (in ticks).
+ *
+ * @return true if the filedate was set correctly, false otherwise.
+ */
+bool SysFileSystem::setLastAccessDate(const char *name, int64_t time)
+{
+    struct stat64 statbuf;
+    struct utimbuf timebuf;
+    if (stat64(name, &statbuf) != 0)
+    {
+        return false;
+    }
+
+    timebuf.modtime = statbuf.st_mtime;
+    timebuf.actime = (time_t)time - get_utc_offset(time);
     return utime(name, &timebuf) == 0;
 }
 

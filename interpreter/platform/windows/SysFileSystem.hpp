@@ -89,12 +89,16 @@ public:
     static bool  isWriteOnly(const char *name);
     static bool  isFile(const char *name);
     static bool  exists(const char *name);
+
     static int64_t getLastModifiedDate(const char *name);
+    static int64_t getLastAccessDate(const char *name);
+    static bool  setLastModifiedDate(const char *name, int64_t time);
+    static bool  setLastAccessDate(const char *name, int64_t time);
+
     static int64_t getFileLength(const char *name);
     static bool  makeDirectory(const char *name);
     static bool  moveFile(const char *oldName, const char *newName);
     static bool  isHidden(const char *name);
-    static bool  setLastModifiedDate(const char *name, int64_t time);
     static bool  setFileReadOnly(const char *name);
     static bool  isCaseSensitive();
     static bool  isCaseSensitive(const char *name);

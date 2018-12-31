@@ -210,6 +210,24 @@ RexxMethod2(logical_t, file_set_last_modified, CSTRING, name, int64_t, time)
 
 
 /**
+ * Return the last access date as a Ticks time value.
+ */
+RexxMethod1(int64_t, file_get_last_access, CSTRING, name)
+{
+    return SysFileSystem::getLastAccessDate(name);
+}
+
+
+/**
+ * Return the last modified date as a Ticks time value.
+ */
+RexxMethod2(logical_t, file_set_last_access, CSTRING, name, int64_t, time)
+{
+    return SysFileSystem::setLastAccessDate(name, time);
+}
+
+
+/**
  * Set the read-only flag for the target file
  */
 RexxMethod1(logical_t, file_set_read_only, CSTRING, name)

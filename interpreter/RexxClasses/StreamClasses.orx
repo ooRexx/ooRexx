@@ -732,6 +732,9 @@ return position
 ::METHOD getLastModifiedImpl PRIVATE EXTERNAL 'LIBRARY REXX file_get_last_modified'
 ::METHOD setLastModifiedImpl PRIVATE EXTERNAL 'LIBRARY REXX file_set_last_modified'
 
+::METHOD getLastAccessImpl PRIVATE EXTERNAL 'LIBRARY REXX file_get_last_access'
+::METHOD setLastAccessImpl PRIVATE EXTERNAL 'LIBRARY REXX file_set_last_access'
+
 ::ATTRIBUTE lastModified GET
   use strict arg
 
@@ -749,6 +752,24 @@ return position
   .Validate~classType("date", date, .DateTime)
 
   self~setLastModifiedImpl(self~qualifiedPath, date~ticks)
+
+::ATTRIBUTE lastAccess GET
+  use strict arg
+
+  ticks = self~getLastAccessImpl(self~qualifiedPath)
+  -- if this doesn't exist, return a .nil return value
+  if ticks = -1 then
+      return .nil
+
+  -- return as a DateTime object
+  return .DateTime~fromTicks(ticks)
+
+::ATTRIBUTE lastAccess SET
+  use strict arg date
+
+  .Validate~classType("date", date, .DateTime)
+
+  self~setLastAccessImpl(self~qualifiedPath, date~ticks)
 
 ::METHOD lengthImpl PRIVATE EXTERNAL 'LIBRARY REXX file_length'
 

@@ -104,3 +104,5 @@
    INTERNAL_METHOD(file_can_write)
    INTERNAL_METHOD(file_rename)
    INTERNAL_METHOD(this_file_case_sensitive)
+   INTERNAL_METHOD(file_get_last_access)
+   INTERNAL_METHOD(file_set_last_access)

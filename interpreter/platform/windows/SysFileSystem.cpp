@@ -54,6 +54,38 @@ const char SysFileSystem::EOF_Marker = 0x1a;    // the end-of-file marker
 const char *SysFileSystem::EOL_Marker = "\r\n"; // the end-of-line marker
 const char SysFileSystem::PathDelimiter = '\\'; // directory path delimiter
 
+const int64_t EpochDate = 116444736000000000;   // the number of ticks to January 1, 1970.
+
+/**
+ * Convert a file time into ticks since 1970
+ *
+ * Search MSDN for 'Converting a time_t Value to a File Time' for following implementation.
+ *
+ * @param timeStamp The source time stamp
+ *
+ * @return The corresponding tick value.
+ */
+int64_t FileTimeToTicks(FILETIME &timeStamp)
+{
+    int64_t tempResult = ((int64_t) timeStamp.dwHighDateTime << (int64_t)32) | (int64_t)timeStamp.dwLowDateTime;
+    return (tempResult - EpochDate) / 10000000;
+}
+
+/**
+ * Convert a tick value back into a FILETIME structure.
+ *
+ * @param ticks     The source ticks value
+ * @param timeStamp The target time stame structure.
+ */
+void TicksToFileTime(uint64_t ticks, FILETIME &timeStamp)
+{
+    // convert back to a file time
+    int64_t temp = (ticks * (int64_t)10000000) + EpochDate;
+
+    timeStamp.dwHighDateTime = (DWORD)(temp >> 32);
+    timeStamp.dwLowDateTime = (DWORD)temp;
+}
+
 /**
  * Search for a given filename, returning the fully
  * resolved name if it is found.
@@ -667,14 +699,42 @@ int64_t SysFileSystem::getLastModifiedDate(const char *name)
         return -1;
     }
 
-    /*
-    * Search MSDN for 'Converting a time_t Value to a File Time' for following implementation.
-    */
-    int64_t tempResult = ((int64_t) lastWriteTime.dwHighDateTime << (int64_t)32) | (int64_t) lastWriteTime.dwLowDateTime;
-    int64_t result = (tempResult - 116444736000000000) / 10000000;
+    CloseHandle(newHandle);
+
+    // convert to ticks
+    return FileTimeToTicks(lastWriteTime);
+}
+
+
+/**
+ * Get the file last access data as a file time value.
+ *
+ * @param name   The target name.
+ *
+ * @return the file time value for the last access date, or -1
+ *         for any errors.
+ */
+int64_t SysFileSystem::getLastAccessDate(const char *name)
+{
+    HANDLE newHandle = CreateFile(name, FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE,
+        NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+    if (newHandle == INVALID_HANDLE_VALUE)
+    {
+        return -1;
+    }
+
+    FILETIME fileLastAccessTime, lastAccessTime;
+    if (!(GetFileTime(newHandle, NULL, &fileLastAccessTime, NULL) &&
+          FileTimeToLocalFileTime(&fileLastAccessTime, &lastAccessTime)))
+    {
+        CloseHandle(newHandle);
+        return -1;
+    }
 
     CloseHandle(newHandle);
-    return result;
+
+    // convert to ticks
+    return FileTimeToTicks(lastAccessTime);
 }
 
 
@@ -779,12 +839,61 @@ bool SysFileSystem::setLastModifiedDate(const char *name, int64_t time)
     }
 
     // convert back to a file time
-    int64_t temp = (time * (int64_t)10000000) + 116444736000000000;
+    TicksToFileTime(time, localFileTime);
 
-    localFileTime.dwHighDateTime = (DWORD)(temp >> 32);
-    localFileTime.dwLowDateTime = (DWORD)temp;
     if (LocalFileTimeToFileTime(&localFileTime, &fileTime) &&
         SetFileTime(hFile, NULL, NULL, &fileTime))
+    {
+        CloseHandle(hFile);
+        return true;
+    }
+    CloseHandle(hFile);
+    return false;
+}
+
+
+/**
+ * Set the last access date for a file.
+ *
+ * @param name   The target name.
+ * @param time   The new file time.
+ *
+ * @return true if the filedate was set correctly, false otherwise.
+ */
+bool SysFileSystem::setLastAccessDate(const char *name, int64_t time)
+{
+    FILETIME fileTime, localFileTime;
+
+    /**
+     * Open the path ensuring GENERIC_WRITE and FILE_FLAG_BACKUP_SEMANTICS if it's a directory.
+     * The directory modification is only supported on some platforms (NT, Windows2000).
+     */
+    DWORD flags = FILE_ATTRIBUTE_NORMAL;
+    int result = GetFileAttributes(name);
+    if (result == 0xFFFFFFFF)
+    {
+        return false;
+    }
+
+    if (result & FILE_ATTRIBUTE_DIRECTORY)
+    {
+        flags = FILE_FLAG_BACKUP_SEMANTICS;
+    }
+
+    // MSDN SetFileTime function: "The handle must have been created using
+    // the CreateFile function with the FILE_WRITE_ATTRIBUTES"
+    HANDLE hFile = CreateFile(name, FILE_WRITE_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE,
+       NULL, OPEN_EXISTING, flags, NULL);
+    if (hFile == INVALID_HANDLE_VALUE)
+    {
+        return false;
+    }
+
+    // convert back to a file time
+    TicksToFileTime(time, localFileTime);
+
+    if (LocalFileTimeToFileTime(&localFileTime, &fileTime) &&
+        SetFileTime(hFile, NULL, &fileTime, NULL))
     {
         CloseHandle(hFile);
         return true;
