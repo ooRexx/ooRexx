@@ -63,7 +63,8 @@ public:
     }
 
     bool validateQueueName(const char *username, bool &isSession);
-    void initializeLocal(LocalAPIManager *a);
+    void initializeLocal(LocalAPIManager *a) override;
+
     void terminateProcess() override;
     QueueHandle initializeSessionQueue(SessionID s);
     QueueHandle createSessionQueue(SessionID session);

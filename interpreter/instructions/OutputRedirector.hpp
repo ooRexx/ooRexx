@@ -184,7 +184,7 @@ class StreamOutputTarget : public StreamObjectOutputTarget
     void cleanup() override;
     RedirectionType::Enum type() override { return RedirectionType::STREAM_NAME; }
     RexxObject *target() override { return name; }
-    bool isSameTarget(OutputRedirector *e);
+    bool isSameTarget(OutputRedirector *e) override;
 
 protected:
     RexxString *name;     // the stream name

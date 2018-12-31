@@ -68,7 +68,7 @@ class RexxInstructionCaseWhen : public RexxInstructionSet
 
     bool isControl() override { return isType(KEYWORD_IF) ; }
 
-    void setEndInstruction(RexxInstructionEndIf *);
+    void setEndInstruction(RexxInstructionEndIf *) override;
     inline void fixWhen(RexxInstructionEndIf *partner) { else_location->setEndInstruction(partner); };
 
  protected:

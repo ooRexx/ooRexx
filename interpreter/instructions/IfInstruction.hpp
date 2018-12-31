@@ -63,7 +63,7 @@ class RexxInstructionIf : public RexxInstructionSet
     // WHENs are part of SELECT and thus not a top-level control type.
     bool isControl() override { return isType(KEYWORD_IF) ; }
 
-    void setEndInstruction(RexxInstructionEndIf *);
+    void setEndInstruction(RexxInstructionEndIf *) override;
     inline void fixWhen(RexxInstructionEndIf *partner) { else_location->setEndInstruction(partner); };
 
  protected:
