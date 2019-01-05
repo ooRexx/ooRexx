@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2015 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -46,6 +46,8 @@
 #include "SysProcess.hpp"
 
 
+const char *SysProcess::executableLocation = NULL;
+
 /**
  * Get the current user name information.
  *
@@ -56,3 +58,57 @@ void SysProcess::getUserID(char *buffer)
     DWORD account_size = MAX_USERID_LENGTH;
     GetUserName(buffer, &account_size);
 }
+
+
+/**
+ * Determine the location of the running program. This returns the path
+ * of the current executable.
+ *
+ * @return A character string of the location (does not need to be freed by the caller)
+ */
+const char *SysProcess::getExecutableLocation()
+{
+    if (executableLocation != NULL)
+    {
+        return executableLocation;
+    }
+
+    // we do everything relative to rexxapi.dll
+    HMODULE module = GetModuleHandle("rexxapi");
+
+    // this should work, since it should be us!
+    if (module == NULL)
+    {
+        return NULL;
+    }
+
+    char moduleName[MAX_PATH];
+
+    GetModuleFileName(module, moduleName, sizeof(moduleName));
+
+    size_t nameLength = strlen(moduleName);
+
+    // scan backwards to find the last directory delimiter
+
+    for (;nameLength > 0; nameLength--)
+    {
+        // is this the directory delimiter?
+        if (moduleName[nameLength - 1] == '\\')
+        {
+            // terminate the string after the first encountered backslash and quit
+            moduleName[nameLength] = '\0';
+            break;
+        }
+    }
+
+    // belt-and-braces, make sure we found a directory
+    if (nameLength == 0)
+    {
+        return NULL;
+    }
+
+    // save a copy of this
+    executableLocation = strdup(moduleName);
+    return executableLocation;
+}
+

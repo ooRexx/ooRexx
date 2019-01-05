@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -40,6 +40,7 @@
 #include "LocalAPIManager.hpp"
 #include <stdio.h>
 #include "SysCSNamedPipeStream.hpp"
+#include "SysProcess.hpp"
 
 
 /* - - - - Temporary stuff for debugging help, will be removed  - - - - - - - */
@@ -85,9 +86,9 @@ void SysLocalAPIManager::startServerProcess()
     LPCTSTR lpszImageName = NULL;       // address of module name
     LPTSTR lpszCommandLine = NULL;      // address of command line
     LPSECURITY_ATTRIBUTES
-    lpsaProcess = NULL;                 // address of process security attrs
+        lpsaProcess = NULL;                 // address of process security attrs
     LPSECURITY_ATTRIBUTES
-    lpsaThread = NULL;                  // address of thread security attrs */
+        lpsaThread = NULL;                  // address of thread security attrs */
     /* don't inherit handles, because otherwise files are inherited
        and inaccessible until RXAPI.EXE is stopped again */
     BOOL fInheritHandles = FALSE;       //  new process doesn't inherit handles
@@ -100,6 +101,27 @@ void SysLocalAPIManager::startServerProcess()
     LPPROCESS_INFORMATION lppiProcInfo; // address of PROCESS_INFORMATION
     PROCESS_INFORMATION MemMgrProcessInfo;
     lppiProcInfo = &MemMgrProcessInfo;
+
+    char *fullExeName = NULL;
+    // determine the location from location of rexxapi.dll.
+    const char *installLocation =  SysProcess::getExecutableLocation();
+
+    // we should get this, if not, we'll just work from the path
+    if (installLocation == NULL)
+    {
+        fullExeName = strdup(apiExeName);
+    }
+    else
+    {
+        size_t commandSize = strlen(installLocation) + strlen(apiExeName) + 3;
+
+        fullExeName = (char *)malloc(commandSize);
+        // NB: the executable location includes the trailing "\" character
+        // however, the path might contain blanks, so we'll need to enclose the
+        // command name in quotes
+        snprintf(fullExeName, commandSize, "\"%s%s\"", installLocation, apiExeName);
+    }
+
 
     siStartInfo.cb = sizeof(siStartInfo);
     siStartInfo.lpReserved = NULL;
@@ -120,7 +142,7 @@ void SysLocalAPIManager::startServerProcess()
     siStartInfo.hStdOutput = NULL;
     siStartInfo.hStdError = NULL;
     lpsiStartInfo = &siStartInfo;
-    lpszCommandLine = apiExeName;
+    lpszCommandLine = fullExeName;
 
     /* start RXAPI process out of system directory */
     if (!GetSystemDirectory(szSysDir, 255))
@@ -128,12 +150,30 @@ void SysLocalAPIManager::startServerProcess()
         lpszCurDir = NULL;
     }
 
-    if(!CreateProcess(lpszImageName, lpszCommandLine, lpsaProcess,
-                      lpsaThread, fInheritHandles, fdwCreate, lpvEnvironment,
-                      lpszCurDir, lpsiStartInfo, lppiProcInfo))
+    if (!CreateProcess(lpszImageName, lpszCommandLine, lpsaProcess,
+                       lpsaThread, fInheritHandles, fdwCreate, lpvEnvironment,
+                       lpszCurDir, lpsiStartInfo, lppiProcInfo))
     {
-        throw new ServiceException(API_FAILURE, "Unable to start API server");
+        free(fullExeName);
+        // if no install location, we did this already
+        if (installLocation == NULL)
+        {
+            // if we failed using the install location, we'll try again just using the path.
+            throw new ServiceException(API_FAILURE, "Unable to start API server");
+        }
+
+        // use the fall back command line that will search the path.
+        lpszCommandLine = strdup(apiExeName);
+        if (!CreateProcess(lpszImageName, lpszCommandLine, lpsaProcess,
+                           lpsaThread, fInheritHandles, fdwCreate, lpvEnvironment,
+                           lpszCurDir, lpsiStartInfo, lppiProcInfo))
+        {
+            free(fullExeName);
+            // if we failed using the install location, we'll try again just using the path.
+            throw new ServiceException(API_FAILURE, "Unable to start API server");
+        }
     }
+    free(fullExeName);
 }
 
 
