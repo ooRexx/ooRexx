@@ -1,9 +1,9 @@
                     Instructions For Using CMake To Build ooRexx
-                                  May 15, 2014
+                                  January 2, 2019
 
-The ooRexx project has begun the transition to using CMake to build ooRexx.
+The ooRexx project uses CMake to build ooRexx.
 There are a number of advantages to using CMake which include support for
-multiple platforms (Windows, Linux, AIX, etc.), a simple build
+multiple platforms (Windows, Linux, macOS, AIX, etc.), a simple build
 mechanism, and many others.
 
 One of the big advantages for developers is that CMake is designed to
@@ -18,7 +18,9 @@ ooRexx on multiple platforms (Windows, Linux, etc) using CMake.
 
 1. Download and install CMake. For Windows go to http://www.cmake.org/ and
    download the Windows install file. For *nix distribution please install CMake
-   from your distribution's repository.
+   from your distribution's repository. For macOS, there is an installer at
+   kitware.com/cmake - or use homebrew. Do note that for macOS, the minimally
+   required cmake version is 3.12.
 2. Check out the ooRexx source from the SourceForge SVN repository.
 3. Now create a subdirectory on your disk that is NOT in the ooRexx source tree
    you checked out in the previous step. All build files will be placed in this

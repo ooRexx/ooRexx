@@ -39,7 +39,13 @@
 #/*----------------------------------------------------------------------------*/
 #/* Global settings                                                            */
 #/*----------------------------------------------------------------------------*/
-cmake_minimum_required (VERSION 2.8)
+if (APPLE)
+# apple build with lower cmake version have an @rpath problem
+    cmake_minimum_required (VERSION 3.12)
+else()
+#for other platforms
+    cmake_minimum_required (VERSION 2.8)
+endif()
 cmake_policy(VERSION 2.8...3.3)
 include(CheckIncludeFile)
 include(CheckLibraryExists)
