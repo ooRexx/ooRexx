@@ -90,12 +90,12 @@ void SysLocalAPIManager::startServerProcess()
 	}
 
     // now start rxapi
-    if (execvp(apiExeName, apiExeArg) == -1)
-    {
-        throw new ServiceException(API_FAILURE, "Unable to start API server");
-    }
+    execvp(apiExeName, apiExeArg);
 
-	return;
+    // execvp should never return. If it does, there was some error locationg rxapi. Since
+    // we are the forked process, we cannot really continue, so just exit.
+
+    exit(1);
 }
 
 
