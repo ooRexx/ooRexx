@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -36,9 +36,8 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /*****************************************************************************/
-/* REXX Windows Support                                                      */
 /*                                                                           */
-/* Process support for Windows                                               */
+/* Process support for Unix based systems.                                   */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -54,11 +53,19 @@
 # include <unistd.h>
 #endif
 
+#ifdef HAVE_DLFCN_H
+#include <dlfcn.h>
+#endif
+
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
 #include "SysProcess.hpp"
+#include "rexx.h"
+#include <stdio.h>
 
+// location of our executables
+const char *SysProcess::executableLocation = NULL;
 
 /**
  * Get the current user name information.
@@ -80,4 +87,61 @@ void SysProcess::getUserID(char *buffer)
     strcpy( buffer, "unknown" );
 #endif
 }
+
+
+/**
+ * Determine the location of the running program. This returns the path
+ * of the current executable.
+ *
+ * @return A character string of the location (does not need to be freed by the caller)
+ */
+const char* SysProcess::getExecutableLocation()
+{
+    if (executableLocation != NULL)
+    {
+        return executableLocation;
+    }
+
+#ifdef HAVE_DLADDR
+    Dl_info dlInfo;
+    if (dladdr((void *)RexxCreateQueue, &dlInfo) == 0)
+    {
+        // a zero return means this could not be resolved. Should
+        // not be possible, but we'll just return NULL.
+        return NULL;
+    }
+
+    // this is the file location
+    char *moduleName = strdup(dlInfo.dli_fname);
+
+    size_t nameLength = strlen(moduleName);
+    // scan backwards to find the last directory delimiter
+
+    for (; nameLength > 0; nameLength--)
+    {
+        // is this the directory delimiter?
+        if (moduleName[nameLength - 1] == '/')
+        {
+            // terminate the string after the first encountered backslash and quit
+            moduleName[nameLength] = '\0';
+            break;
+        }
+    }
+
+    // belt-and-braces, make sure we found a directory
+    if (nameLength == 0)
+    {
+        free(moduleName);
+        return NULL;
+    }
+
+    // save this for future use
+    executableLocation = moduleName;
+    return executableLocation;
+#else
+    // no means to determine this, so we always return NULL
+    return NULL;
+#endif
+}
+
 

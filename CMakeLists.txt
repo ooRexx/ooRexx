@@ -348,7 +348,7 @@ if (NOT WIN32)
   check_include_file(netinet/in.h HAVE_NETINET_IN_H)
   check_include_file(nl_types.h HAVE_NL_TYPES_H)
   check_include_file(pthread.h HAVE_PTHREAD_H)
-  set(CMAKE_REQUIRED_LIBRARIES "pthread")
+  set(CMAKE_REQUIRED_LIBRARIES pthread)
   set(CMAKE_REQUIRED_DEFINITIONS "-D_GNU_SOURCE=1")
   check_function_exists(pthread_mutexattr_settype HAVE_PTHREAD_MUTEXATTR_SETTYPE)
 # Some platforms use an enum for these values rather than defines
@@ -365,6 +365,14 @@ if (NOT WIN32)
                            tryme = PTHREAD_MUTEX_RECURSIVE;
                            return 0;}"
                           HAVE_PTHREAD_MUTEX_RECURSIVE)
+  # this requires -ldl on the link
+  set(CMAKE_REQUIRED_LIBRARIES dl)
+  check_c_source_compiles("#include <dlfcn.h>
+                           int main(int arg, char **argv) {
+                           Dl_info DlInfo;
+                           dladdr((void*)0, &DlInfo);
+                           return 0;}"
+                          HAVE_DLADDR)
   check_symbol_exists(_PC_CASE_SENSITIVE unistd.h HAVE_PC_CASE_SENSITIVE)
   check_include_file(pwd.h HAVE_PWD_H)
   check_include_file(sched.h HAVE_SCHED_H)

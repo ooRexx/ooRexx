@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -124,7 +124,7 @@ int main(int argc, char *argv[])
     }
 
     // a buffer for generating the name
-    char lockFileName[PATH_MAX];
+    char lockFileName[PATH_MAX + 100];
 
     // the location of the lock file
     char pipePath[PATH_MAX];

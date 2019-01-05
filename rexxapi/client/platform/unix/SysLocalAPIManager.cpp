@@ -48,6 +48,7 @@
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include "SysProcess.hpp"
 
 
 /**
@@ -60,10 +61,34 @@ void SysLocalAPIManager::startServerProcess()
     apiExeArg[0] = apiExeName;
     apiExeArg[1] = NULL;
 
-	if (signal(SIGPIPE, SIG_IGN) == SIG_ERR)
+    if (signal(SIGPIPE, SIG_IGN) == SIG_ERR)
     {
-		return;
-	}
+        return;
+    }
+
+    // we will make multiple attempts at locating this. First choice
+    // is to pick up rxapi from the same location as librexxapi, if we can determine
+    // this.
+    char *fullExeName = NULL;
+    // determine the location from location of rexxapi.dll.
+    const char *installLocation =  SysProcess::getExecutableLocation();
+
+    // we should get this, if not, we'll just work from the path
+    if (installLocation == NULL)
+    {
+        fullExeName = strdup(apiExeName);
+    }
+    else
+    {
+        size_t commandSize = strlen(installLocation) + strlen(apiExeName) + 1;
+
+        fullExeName = (char *)malloc(commandSize);
+        // NB: the executable location includes the trailing "\" character
+        // however, the path might contain blanks, so we'll need to enclose the
+        // command name in quotes
+        snprintf(fullExeName, commandSize, "%s%s", installLocation, apiExeName);
+    }
+
 
 	pid_t pid = fork();
 	if (pid < 0)
@@ -90,11 +115,17 @@ void SysLocalAPIManager::startServerProcess()
 	}
 
     // now start rxapi
+    execvp(fullExeName, apiExeArg);
+
+    // if we make it here, then this failed. try using an unqualified name and try to locate it in the path
+    free(fullExeName);
     execvp(apiExeName, apiExeArg);
 
-    // execvp should never return. If it does, there was some error locationg rxapi. Since
-    // we are the forked process, we cannot really continue, so just exit.
+    // did this still fail? Last attempt, try to load this from the current directory
+execvp("./rxapi", apiExeArg);
 
+    // still no luck? This is a launch failure. Because we are the forked process,
+    // we need to exit immediately.
     exit(1);
 }
 
@@ -131,7 +162,7 @@ void SysLocalAPIManager::setActiveSessionQueue(QueueHandle sessionQueue)
 {
     char envbuffer[MAX_QUEUE_NAME_LENGTH+1];
     // set this as an environment variable for programs we call
-    sprintf(envbuffer, "%p", (void *)sessionQueue);
+    snprintf(envbuffer, sizeof(envbuffer), "%p", (void *)sessionQueue);
     setenv("RXQUEUESESSION", envbuffer, 1); // overwrite the old value
 }
 

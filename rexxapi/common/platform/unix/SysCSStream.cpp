@@ -447,7 +447,7 @@ const char *SysServerLocalSocketConnectionManager::generateServiceName()
     }
 
     // a buffer for generating the name
-    char pipeNameBuffer[PATH_MAX];
+    char pipeNameBuffer[PATH_MAX + 100];
     // the location of the bound file
     char pipePath[PATH_MAX];
     // determine the best place to put this
