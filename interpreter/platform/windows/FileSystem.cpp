@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -51,6 +51,7 @@
 #include "SystemInterpreter.hpp"
 #include "InterpreterInstance.hpp"
 #include "SysFileSystem.hpp"
+#include "SysProcess.hpp"
 
 
 /**
@@ -142,24 +143,59 @@ RexxString *SysInterpreterInstance::resolveProgramName(RexxString *_name, RexxSt
  *           If the image is not found in the application image's directory, the
  *           regular executable search, which searches the path, is performed.
  */
-void SystemInterpreter::loadImage(char *&imageBuffer, size_t &imageSize )
+void SystemInterpreter::loadImage(char *&imageBuffer, size_t &imageSize)
 {
     char fullname[MAX_PATH + 1];    // finally resolved name
 
+    // determine the location from location of rexxapi.dll.
+    // the .img file should be there. In theory, we could just rely on SearchPath
+    // but its search is dependent on a registry setting, so is not entirely reliable.
+    // we'll attempt first using the directory where the executables live and
+    // use a path search as a fallback.
+    const char *installLocation =  SysProcess::getExecutableLocation();
+    if (installLocation != NULL)
+    {
+        snprintf(fullname, sizeof(fullname), "%s%s", installLocation, BASEIMAGE);
+        // if this loads ok, then we're done
+        if (loadImage(imageBuffer, imageSize, fullname))
+        {
+            return;
+        }
+    }
     // if we can't find the image on the search path, this is a logic error
     if (!SysFileSystem::primitiveSearchName(BASEIMAGE, NULL, NULL, fullname))
     {
         Interpreter::logicError("no startup image");
     }
 
+    // try again with the path name
+    if (!loadImage(imageBuffer, imageSize, fullname))
+    {
+        Interpreter::logicError("no startup image");
+    }
+}
+
+
+/**
+ * Try to load a specific named image file
+ *
+ * @param imageBuffer
+ *                  The returned imagefile buffer
+ * @param imageSize The size of the returned image
+ * @param imageFile The name of the image file to use
+ *
+ * @return true if the image is successfully loaded, false otherwise.
+ */
+bool SystemInterpreter::loadImage(char *&imageBuffer, size_t &imageSize, const char *imageFile)
+{
     // try to open the file
-    HANDLE fileHandle = CreateFile(fullname, GENERIC_READ, FILE_SHARE_READ,
-                            NULL, OPEN_EXISTING, FILE_FLAG_WRITE_THROUGH, NULL);
+    HANDLE fileHandle = CreateFile(imageFile, GENERIC_READ, FILE_SHARE_READ,
+                                   NULL, OPEN_EXISTING, FILE_FLAG_WRITE_THROUGH, NULL);
 
     // we could resolve the file name, but can't open the file for some reason
     if (fileHandle == INVALID_HANDLE_VALUE)
     {
-        Interpreter::logicError("no startup image");
+        return false;
     }
 
     DWORD     bytesRead;
@@ -173,6 +209,7 @@ void SystemInterpreter::loadImage(char *&imageBuffer, size_t &imageSize )
     // set this to the actual size read.
     imageSize = bytesRead;
     CloseHandle(fileHandle);
+    return true;
 }
 
 

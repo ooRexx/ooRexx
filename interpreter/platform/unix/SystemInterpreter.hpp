@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -106,6 +106,7 @@ public:
     static bool invokeExternalFunction(RexxActivation *, Activity *, RexxString *, RexxObject **, size_t, RexxString *, ProtectedObject &);
     static void validateAddressName(RexxString *name );
     static void loadImage(char *&imageBuffer, size_t &imageSize);
+    static bool loadImage(char *&imageBuffer, size_t &imageSize, const char *imageFile);
     static BufferClass *readProgram(const char *file_name);
     static int setEnvironmentVariable(RexxString *name, RexxString *value);
 

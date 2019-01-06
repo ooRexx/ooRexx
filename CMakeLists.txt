@@ -552,11 +552,11 @@ set (common_rexxapi_sources
             ${build_rexxapi_common_dir}/ServiceMessage.cpp
             ${build_rexxapi_common_dir}/CSStream.cpp
             ${build_rexxapi_common_platform_dir}/SysAPIManager.cpp
-            ${build_rexxapi_common_platform_dir}/SysProcess.cpp
             ${build_common_dir}/Utilities.cpp
             ${build_common_platform_dir}/SysSemaphore.cpp
             ${build_common_platform_dir}/SysLibrary.cpp
             ${build_common_platform_dir}/SysFile.cpp
+            ${build_common_platform_dir}/SysProcess.cpp
             ${build_common_platform_dir}/SysThread.cpp)
 # additional source files required by specific platforms
 if (WIN32)
@@ -795,6 +795,7 @@ set (platform_sources ${build_interpreter_platform_dir}/ErrorMessages.cpp
 set (common_sources ${build_common_dir}/Utilities.cpp
             ${build_common_platform_dir}/SysFile.cpp
             ${build_common_platform_dir}/SysLibrary.cpp
+            ${build_common_platform_dir}/SysProcess.cpp
             ${build_common_platform_dir}/SysSemaphore.cpp
             ${build_common_platform_dir}/SysThread.cpp)
 set (runtime_sources ${build_runtime_dir}/InternalPackage.cpp
@@ -1005,8 +1006,8 @@ add_executable(rxapi ${rxapi_executable_type}
          ${build_rexxapi_common_dir}/RegistrationTable.cpp
          ${build_rexxapi_common_dir}/ServiceMessage.cpp
          ${build_rexxapi_common_platform_dir}/SysAPIManager.cpp
-         ${build_rexxapi_common_platform_dir}/SysProcess.cpp
          ${build_common_dir}/Utilities.cpp
+         ${build_common_platform_dir}/SysProcess.cpp
          ${build_common_platform_dir}/SysSemaphore.cpp
          ${build_common_platform_dir}/SysThread.cpp
          ${platform_rxapi_sources})
@@ -1168,7 +1169,8 @@ install(TARGETS rxsubcom RUNTIME COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE
 # additional source files required by specific platforms
 if (WIN32)
    set (platform_rexxutil_sources
-            ${build_platform_dir}/verinfo.rc)
+            ${build_platform_dir}/verinfo.rc
+            ${build_common_platform_dir}/SysProcess.cpp)
    set (platform_rexxutil_libs shlwapi version)
 else ()
    set (platform_rexxutil_libs ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})

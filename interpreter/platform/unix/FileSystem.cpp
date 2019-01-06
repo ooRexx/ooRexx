@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -54,6 +54,7 @@
 #include "InterpreterInstance.hpp"
 #include "SysFileSystem.hpp"
 #include "ActivityManager.hpp"
+#include "SysProcess.hpp"
 
 #include <string.h>
 #include <stdio.h>
@@ -68,6 +69,7 @@
 #include <sys/ioctl.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include "SysProcess.hpp"
 
 #ifdef HAVE_STROPTS_H
 # include <stropts.h>
@@ -88,7 +90,7 @@
  * @return A string version of the file name, if found.  Returns OREF_NULL if
  *         the program cannot be found.
  */
-RexxString *SysInterpreterInstance::resolveProgramName(RexxString *_name, RexxString *_parentDir, RexxString *_parentExtension)
+RexxString* SysInterpreterInstance::resolveProgramName(RexxString *_name, RexxString *_parentDir, RexxString *_parentExtension)
 {
     char resolvedName[PATH_MAX + 3];    // finally resolved name
 
@@ -141,38 +143,79 @@ RexxString *SysInterpreterInstance::resolveProgramName(RexxString *_name, RexxSt
 }
 
 
+/**
+ * Load the image file into storage
+ *
+ * @param imageBuffer
+ *                  The returned image buffer
+ * @param imageSize The returned image size.
+ */
 void SystemInterpreter::loadImage(char *&imageBuffer, size_t &imageSize)
-/*******************************************************************/
-/* Function : Load the image into storage                          */
-/*******************************************************************/
 {
     char fullname[PATH_MAX + 2];    // finally resolved name
+
+    // first try for a colocated image file
+    const char *installLocation =  SysProcess::getExecutableLocation();
+    if (installLocation != NULL)
+    {
+        snprintf(fullname, sizeof(fullname), "%s%s", installLocation, BASEIMAGE);
+        if (loadImage(imageBuffer, imageSize, fullname))
+        {
+            return;
+        }
+    }
+
+    // colocation failed, try the current directory next
+    if (loadImage(imageBuffer, imageSize, BASEIMAGE))
+    {
+        return;
+    }
+
+    // Now try to locate the file on the path if that fails
+    if (SysFileSystem::primitiveSearchName(BASEIMAGE, getenv("PATH"), NULL, fullname))
+    {
+        if (loadImage(imageBuffer, imageSize, fullname))
+        {
+            return;
+        }
+    }
+
+#ifdef ORX_CATDIR
+    // last attempt, we might have a statically defined location to use. This is
+    // bad form really, but we might as well make one more attempt
+    strcpy(fullname, ORX_CATDIR"/rexx.img");
+    if (loadImage(imageBuffer, imageSize, fullname))
+    {
+        return;
+    }
+#endif
+    Interpreter::logicError("no startup image");   /* open failure                      */
+}
+
+
+/**
+ * Load the image file into storage
+ *
+ * @param imageBuffer
+ *                  The returned image buffer
+ * @param imageSize The returned image size.
+ */
+bool SystemInterpreter::loadImage(char *&imageBuffer, size_t &imageSize, const char *imageFile)
+{
     // try first in the current directory
-    FILE *image = fopen(BASEIMAGE, "rb");
+    FILE *image = fopen(imageFile, "rb");
     // if not found, then try a path search
     if (image == NULL)
     {
-        // The file may purposefully have no extension.
-        if (!SysFileSystem::primitiveSearchName(BASEIMAGE, getenv("PATH"), NULL, fullname))
-        {
-    #ifdef ORX_CATDIR
-             strcpy(fullname, ORX_CATDIR"/rexx.img");
-    #else
-             Interpreter::logicError("no startup image");   /* open failure                      */
-    #endif
-        }
-        image = fopen(fullname, "rb");/* try to open the file              */
-        if ( image == NULL )
-        {
-            Interpreter::logicError("unable to open image file");
-        }
+        return false;
     }
 
     /* Read in the size of the image     */
     if (!fread(&imageSize, 1, sizeof(size_t), image))
     {
-        Interpreter::logicError("could not check the size of the image");
+        return false;
     }
+
     /* Create new segment for image      */
     imageBuffer = (char *)memoryObject.allocateImageBuffer(imageSize);
     /* Create an object the size of the  */
@@ -185,7 +228,9 @@ void SystemInterpreter::loadImage(char *&imageBuffer, size_t &imageSize)
         Interpreter::logicError("could not read in the image");
     }
     fclose(image);                       /* and close the file                */
+    return true;
 }
+
 
 
 BufferClass *SystemInterpreter::readProgram(const char *file_name)
@@ -216,7 +261,7 @@ BufferClass *SystemInterpreter::readProgram(const char *file_name)
         fclose(handle);                      /* close the file                    */
     }
     if (readSize < buffersize) // read error?
-    {   
+    {
         return OREF_NULL;                  /* return nothing                    */
     }
     return buffer;                       /* return the program buffer         */
