@@ -3637,11 +3637,10 @@ size_t RexxEntry SysWinVer(const char *name, size_t numargs, CONSTRXSTRING args[
                          // Doesn't matter if you are on 32 bit or 64 bit,
                          // DWORD is always 32 bits, so first two revision numbers
                          // come from dwFileVersionMS, last two come from dwFileVersionLS
-                         snprintf(retstr->strptr, retstr->strlength, "Windows %d.%02d.%d.%d",
+                         snprintf(retstr->strptr, retstr->strlength, "Windows %d.%d.%d",
                              ( verInfo->dwFileVersionMS >> 16 ) & 0xffff,
                              ( verInfo->dwFileVersionMS >>  0 ) & 0xffff,
-                             ( verInfo->dwFileVersionLS >> 16 ) & 0xffff,
-                             ( verInfo->dwFileVersionLS >>  0 ) & 0xffff);
+                             ( verInfo->dwFileVersionLS >> 16 ) & 0xffff);
 
                          delete[] verData;
 
