@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -36,7 +36,6 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* Oryx Kernel                                                  rexx.c        */
 /*                                                                            */
 /* translate a program and save to an output file                             */
 /*                                                                            */
@@ -58,9 +57,9 @@ void DisplayError(HINSTANCE hDll, int err_no)
 {
    char str[BUFFERLEN];
    if (LoadString(hDll, err_no, str, BUFFERLEN))
-       printf("\n%s", str);
+       printf("%s\n", str);
    else
-       printf("\nError in service program but no error message found!");
+       printf("Error in service program but no error message found\n");
 }
 
 

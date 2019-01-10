@@ -179,16 +179,6 @@ void SystemInterpreter::loadImage(char *&imageBuffer, size_t &imageSize)
             return;
         }
     }
-
-#ifdef ORX_CATDIR
-    // last attempt, we might have a statically defined location to use. This is
-    // bad form really, but we might as well make one more attempt
-    strcpy(fullname, ORX_CATDIR"/rexx.img");
-    if (loadImage(imageBuffer, imageSize, fullname))
-    {
-        return;
-    }
-#endif
     Interpreter::logicError("no startup image");   /* open failure                      */
 }
 

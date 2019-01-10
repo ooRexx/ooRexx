@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -45,10 +45,6 @@
 # include "config.h"
 #endif
 
-#if defined( HAVE_NL_TYPES_H )
-# include <nl_types.h>
-#endif
-
 #include <limits.h>
 #include <string.h>                    /* Include string functions   */
 #include <stdio.h>
@@ -57,23 +53,10 @@
                                        /* old msg constants replaced!*/
 #include "RexxInternalApis.h"          /* Get private REXXAPI API's         */
 #include "RexxErrorCodes.h"
-#include "RexxMessageNumbers.h"
-
-#define REXXMESSAGEFILE    "rexx.cat"
 
 #define BUFFERLEN         256          /* Length of message bufs used*/
                                        /* Macro for argv[1] compares */
 #define CASE(x) if(!strcasecmp(x,argv[1]))
-
-#ifdef LINUX                           /*  AIX already defined               */
-#define SECOND_PARAMETER 1             /* different sign. Lin-AIX    */
-#else
-#define SECOND_PARAMETER 0             /* 0 for no  NL_CAT_LOCALE    */
-#endif
-
-#ifndef CATD_ERR
-#define CATD_ERR ((nl_catd)-1)         /* Duplicate for AIX                 */
-#endif
 
 void parmerr(int );
 
@@ -86,7 +69,7 @@ int main( int argc, char *argv[ ], char *envp[ ] )
     /* Must be at lease 1 argument*/
     if (argc<2)
     {
-        parmerr(Error_RXSUBC_general_msg);
+        parmerr(Error_RXSUBC_general);
     }
 
     CASE("REGISTER")
@@ -94,7 +77,7 @@ int main( int argc, char *argv[ ], char *envp[ ] )
         /* requires 4 parameters */
         if (argc<5)
         {
-            parmerr(Error_RXSUBC_register_msg);
+            parmerr(Error_RXSUBC_register);
         }
         scbname=argv[2];                  /* Should be Environment Name */
         scbdll_name=argv[3];              /* Should be Dll Name         */
@@ -107,7 +90,7 @@ int main( int argc, char *argv[ ], char *envp[ ] )
         /* requires 3 parameters */
         if (argc<3)
         {
-            parmerr(Error_RXSUBC_query_msg);
+            parmerr(Error_RXSUBC_query);
         }
         /* if only 3 passed, dummy 4  */
         if (argc<4)
@@ -126,7 +109,7 @@ int main( int argc, char *argv[ ], char *envp[ ] )
         /* Must pass at least 3 args*/
         if (argc<3)
         {
-            parmerr(Error_RXSUBC_drop_msg);
+            parmerr(Error_RXSUBC_drop);
         }
         /* if only 3 passed, dummy 4  */
         if (argc<4)
@@ -143,7 +126,7 @@ int main( int argc, char *argv[ ], char *envp[ ] )
     {
         if (argc<3)
         {
-            parmerr(Error_RXSUBC_load_msg);
+            parmerr(Error_RXSUBC_load);
         }
         if (argc<4)
         {
@@ -155,70 +138,16 @@ int main( int argc, char *argv[ ], char *envp[ ] )
         }
         return RexxLoadSubcom(argv[2], argv[3]);
     }
-    parmerr(Error_RXSUBC_general_msg);      /* Otherwise, must be a error */
+    parmerr(Error_RXSUBC_general);      /* Otherwise, must be a error */
     return 0;                           /* dummy return               */
 }
 
 void parmerr( int   msgid )            /* removed useless code       */
 {
-#if defined( HAVE_NL_TYPES_H )
-    nl_catd        catd;                  /* catalog descriptor from catopen() */
-#endif
-    int            set_num = 1;           /* message set 1 from catalog */
-    char          *message;               /* message pointer            */
-    char           DataArea[BUFFERLEN];   /* buf to return message      */
+    // retrieve the message from the central catalog
+    const char *message = RexxGetErrorMessage(msgid);
 
-#if defined( HAVE_CATOPEN )
-    /* open message catalog in NLSPATH   */
-    if ((catd = catopen(REXXMESSAGEFILE, SECOND_PARAMETER)) == (nl_catd)CATD_ERR)
-    {
-        sprintf(DataArea, "%s/%s", ORX_CATDIR, REXXMESSAGEFILE);
-        if ((catd = catopen(DataArea, SECOND_PARAMETER)) == (nl_catd)CATD_ERR)
-        {
-            fprintf(stderr, "\nCannot open REXX message catalog %s.\nNot in NLSPATH or %s.\n",
-                    REXXMESSAGEFILE, ORX_CATDIR);
-        }
-    }                                    /* retrieve message from repository  */
-    if (catd != (nl_catd)CATD_ERR)
-    {
-        message = catgets(catd, set_num, msgid, NULL);
-
-        if (!message)                      /* got a message ?                   */
-#if defined(OPSYS_LINUX) && !defined(OPSYS_SUN)
-        {
-            sprintf(DataArea, "%s/%s", ORX_CATDIR, REXXMESSAGEFILE);
-            if ((catd = catopen(DataArea, SECOND_PARAMETER)) == (nl_catd)CATD_ERR)
-            {
-                printf("\nCannot open REXX message catalog %s.\nNot in NLSPATH or %s.\n",
-                       REXXMESSAGEFILE, ORX_CATDIR);
-            }
-            else
-            {
-                message = catgets(catd, set_num, msgid, NULL);
-                if (!message)                  /* got a message ?                   */
-                {
-                    printf("\n Error message not found!\n");
-                }
-                else
-                {
-                    printf("\n%s\n", message);  /* print the message                 */
-                }
-            }
-        }
-#else
-        {
-                printf("\n Error message not found!\n");
-        }
-        else
-        {
-            printf("\n%s\n", message);      /* print the message                 */
-        }
-#endif
-        catclose(catd);                   /* close the catalog                 */
-    }
-#else
-    printf("\n Cannot get description for error %d!\n",msgid);
-#endif
+    printf("\n%s\n", message);    /* print the message                 */
 
     exit(-1);
 }

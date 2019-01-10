@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -56,77 +56,18 @@
 # include <features.h>
 #endif
 
-#if defined( HAVE_NL_TYPES_H )
-# include <nl_types.h>
-#endif
-
 #include "rexx.h"
-#include "RexxMessageNumbers.h"
-#define REXXMESSAGEFILE    "rexx.cat"
+#include "RexxInternalApis.h"          /* Get private REXXAPI API's         */
+#include "RexxErrorCodes.h"
 
 #define BUFFERLEN         256           /* Length of message bufs used        */
-#ifdef LINUX
-#define SECOND_PARAMETER 1              /* different sign. Lin-AIX            */
-#else
-#define SECOND_PARAMETER 0              /* 0 for no  NL_CAT_LOCALE            */
-#endif
-
-#ifndef CATD_ERR
-#define CATD_ERR ((nl_catd)-1)         /* Duplicate for AIX                 */
-#endif
 
 void DisplayError(int msgid)           /* simplified catalog access@MAE004M */
 {
-#if defined( HAVE_NL_TYPES_H )
-    nl_catd        catd;                  /* catalog descriptor from catopen() */
-#endif
-    int            set_num = 1;           /* message set 1 from catalog        */
-    const char    *message;               /* message pointer                   */
-    char           DataArea[256];         /* buf to return message             */
+    // retrieve the message from the central catalog
+    const char *message = RexxGetErrorMessage(msgid);
 
-#if defined( HAVE_CATOPEN )
-    /* open message catalog in NLSPATH   */
-    if ((catd = catopen(REXXMESSAGEFILE, SECOND_PARAMETER)) == (nl_catd)CATD_ERR)
-    {
-        sprintf(DataArea, "%s/%s", ORX_CATDIR, REXXMESSAGEFILE);
-        if ((catd = catopen(DataArea, SECOND_PARAMETER)) == (nl_catd)CATD_ERR)
-        {
-            printf("\n*** Cannot open REXX message catalog %s.\nNot in NLSPATH or %s.\n",
-                   REXXMESSAGEFILE, ORX_CATDIR );
-            return;                      /* terminate program                   */
-        }
-    }                                 /* retrieve message from repository  */
-    message = catgets(catd, set_num, msgid, NULL);
-    if (!message)                    /* got a message ?                     */
-    {
-        sprintf(DataArea, "%s/%s", ORX_CATDIR, REXXMESSAGEFILE);
-        if ((catd = catopen(DataArea, SECOND_PARAMETER)) == (nl_catd)CATD_ERR)
-        {
-            printf("\nCannot open REXX message catalog %s.\nNot in NLSPATH or %s.\n",
-                   REXXMESSAGEFILE, ORX_CATDIR);
-        }
-        else
-        {
-            message = catgets(catd, set_num, msgid, NULL);
-            if (!message)                  /* got a message ?                   */
-            {
-                printf("\n Error message not found!\n");
-            }
-            else
-            {
-                printf("\n%s\n", message);  /* print the message                 */
-            }
-        }
-    }
-    else
-    {
-        printf("\n%s\n", message);    /* print the message                 */
-    }
-    catclose(catd);                   /* close the catalog                 */
-#else
-    printf("*** Cannot get description for error %d!", msgid);
-#endif
-    return;                           /* terminate program                 */
+    printf("%s\n", message);    /* print the message                 */
 }
 
 int main (int argc, char **argv)
@@ -158,10 +99,10 @@ int main (int argc, char **argv)
     {
         if (argc > 2)
         {
-            DisplayError((int)Error_REXXC_cmd_parm_incorrect_msg);
+            DisplayError((int)Error_REXXC_cmd_parm_incorrect);
         }
-        DisplayError((int) Error_REXXC_wrongNrArg_unix_msg);
-        DisplayError((int) Error_REXXC_SynCheckInfo_msg);
+        DisplayError((int) Error_REXXC_wrongNrArg_unix);
+        DisplayError((int) Error_REXXC_SynCheckInfo);
         exit(-1);                          /* terminate with an error           */
     }                                    /* end additions                     */
     /* modified control logic            */
@@ -169,7 +110,7 @@ int main (int argc, char **argv)
     {
         if (strcmp(argv[1], argv[2]) == 0)
         {
-            DisplayError((int)Error_REXXC_outDifferent_msg);
+            DisplayError((int)Error_REXXC_outDifferent);
             exit(-2);                        /* terminate with an error           */
         }
         /* translate and save the output     */

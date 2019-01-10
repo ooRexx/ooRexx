@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -56,16 +56,13 @@
 # include <features.h>
 #endif
 
-#if defined( HAVE_NL_TYPES_H )
-# include <nl_types.h>
-#endif
-
 #include <limits.h>
 #include <stdio.h>             /* needed for screen output           */
 #include <stdlib.h>            /* needed for miscellaneous functions */
 #include <string.h>            /* needed for string functions        */
 #include "rexx.h"              /* needed for queue functions & codes */
-#include "RexxMessageNumbers.h"
+#include "RexxInternalApis.h"          /* Get private REXXAPI API's         */
+#include "RexxErrorCodes.h"
 
 #define RXQUEUE_CLEAR    -2    /* used for queue mode CLEAR flag     */
 #define BAD_MESSAGE      -6    /* Exit RC for message not found.     */
@@ -73,18 +70,11 @@
 #define MSG_BUF_SIZE    256    /* Error message buffer size          */
 #define LINEBUFSIZE   65472    /* Arbitrary but matches current docs */
 
-#define REXXMESSAGEFILE    "rexx.cat"
-
-#ifndef CATD_ERR
-#define CATD_ERR ((nl_catd)-1)         /* Duplicate for AIX                 */
-#endif
-
 char  line[LINEBUFSIZE];       /* buffer for data to add to queue    */
 char  work[256];               /* buffer for queue name, if default  */
 int   queuemode=-1;            /* mode for access to queue           */
 
 void  options_error(int type, const char *queuename ) ;
-
                                /* function to read stdin             */
 size_t get_line(char *, size_t, size_t *);
 
@@ -244,10 +234,6 @@ void options_error( int   type,        /* Error type.                */
     char     DataArea[ MSG_BUF_SIZE ];   /* Message buffer.            */
     char     achIMessage[2*MSG_BUF_SIZE];/* Message with insertion.    */
     int      MsgNumber;                  /* Message number.            */
-#if defined( HAVE_NL_TYPES_H )
-    nl_catd  catd;                       /* catalog descriptor         */
-#endif
-    int      set_num = 1;                /* message set 1 from catalog */
     const char *pszMessage;              /* message pointer            */
     char    *pInsert = NULL;             /* Pointer for insertion char */
 
@@ -270,97 +256,56 @@ void options_error( int   type,        /* Error type.                */
     switch (type)
     {
         case 0: /* invocation error */
-            MsgNumber = Error_RXQUE_syntax_msg;
+            MsgNumber = Error_RXQUE_syntax;
             break;
 
         case RXQUEUE_NOTINIT:
-            MsgNumber = Error_RXQUE_notinit_msg;
+            MsgNumber = Error_RXQUE_notinit;
             break;
 
         case RXQUEUE_NOEMEM:
-            MsgNumber = Error_RXQUE_nomem_msg;
+            MsgNumber = Error_RXQUE_nomem;
             break;
 
         case RXQUEUE_SIZE:
-            MsgNumber = Error_RXQUE_size_msg;
+            MsgNumber = Error_RXQUE_size;
             break;
 
         case RXQUEUE_BADQNAME:
-            MsgNumber = Error_RXQUE_name_msg;
+            MsgNumber = Error_RXQUE_name;
             break;
 
         case RXQUEUE_PRIORITY:
-            MsgNumber = Error_RXQUE_access_msg;
+            MsgNumber = Error_RXQUE_access;
             break;
 
         case RXQUEUE_NOTREG:
-            MsgNumber = Error_RXQUE_exist_msg;
+            MsgNumber = Error_RXQUE_exist;
             break;
 
         default:
-            MsgNumber = Error_RXQUE_syntax_msg;
+            MsgNumber = Error_RXQUE_syntax;
     }
 
+    // retrieve the message from the central catalog
+    const char *message = RexxGetErrorMessage(MsgNumber);
+    strncpy(DataArea, message, sizeof(DataArea));
 
-#if defined( HAVE_CATOPEN )
-    /* Open the message catalog via environment variable NLSPATH ----------- */
-    if ((catd = catopen(REXXMESSAGEFILE, 0)) == (nl_catd)CATD_ERR)
-    {
-        sprintf(DataArea, "%s/%s", ORX_CATDIR, REXXMESSAGEFILE);
-        if ((catd = catopen(DataArea, 0)) == (nl_catd)CATD_ERR)
-        {
-            printf("\nCannot open REXX message catalog %s.  Not in NLSPATH or %s.\n",
-                   REXXMESSAGEFILE, ORX_CATDIR);
-        }
-    }
-    /* retrieve message from repository        */
-    pszMessage = catgets(catd, set_num, MsgNumber, NULL);
-
-    if (!pszMessage)
-    {
-        sprintf(DataArea, "%s/%s", ORX_CATDIR, REXXMESSAGEFILE);
-        if ((catd = catopen(DataArea, 0)) == (nl_catd)CATD_ERR)
-        {
-            sprintf(DataArea, "\nCannot open REXX message catalog %s.  Not in NLSPATH or %s.\n",
-                    REXXMESSAGEFILE, ORX_CATDIR);
-        }
-        else
-        {
-            pszMessage = catgets(catd, set_num, MsgNumber, NULL);
-            if (!pszMessage)                    /* got a message ?                */
-            {
-                strcpy(DataArea,"Error message not found!");
-            }
-            else
-            {
-                strcpy(DataArea, pszMessage);
-            }
-        }
-    }
-    else
-    {
-        /* search %1 and replace it with %s for message insertion       */
-        strncpy(DataArea, pszMessage, MSG_BUF_SIZE -1);
-    }
-    catclose(catd);                     /* close the catalog                 */
-#else
-    sprintf(DataArea,"*** Cannot get description for error!");
-#endif
     /* now do the parameter substitutions in the message template... */
     pInsert = strstr(DataArea, "%1");
     if (pInsert)
     {
         pInsert++; /* advance to 1 of %1 */
         *pInsert = 's';
-        sprintf(achIMessage,DataArea,quename);
+        snprintf(achIMessage, sizeof(achIMessage), DataArea, quename);
         pszMessage = achIMessage;
     }
     else
     {
-        pszMessage = &DataArea[0];
+        pszMessage = DataArea;
     }
 
-    printf("\nREX%d: %s\n", MsgNumber, pszMessage); /* print the msg         */
+    printf("%s\n", pszMessage); /* print the msg         */
 
     exit(type);
 }

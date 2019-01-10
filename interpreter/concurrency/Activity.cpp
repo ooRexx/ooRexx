@@ -1302,7 +1302,7 @@ void Activity::display(DirectoryClass *exobj)
         for (size_t i = 1; i <= tracebackSize; i++)
         {
             RexxString *text = (RexxString *)trace_back->get(i);
-            // if we have a real like, write it out
+            // if we have a real line, write it out
             if (text != OREF_NULL && text != TheNilObject)
             {
                 traceOutput(currentRexxFrame, text);
@@ -1313,18 +1313,7 @@ void Activity::display(DirectoryClass *exobj)
     // get the error code, and format a message header
     RexxString *rc = (RexxString *)exobj->get(RC);
     wholenumber_t errorCode = Interpreter::messageNumber(rc);
-
-    RexxString *text = SystemInterpreter::getMessageHeader(errorCode);
-
-    // compose the longer message
-    if (text == OREF_NULL)
-    {
-        text = SystemInterpreter::getMessageText(Message_Translations_error);
-    }
-    else
-    {
-        text = text->concat(SystemInterpreter::getMessageText(Message_Translations_error));
-    }
+    Protected<RexxString> text = SystemInterpreter::getMessageText(Message_Translations_error);
 
     // get the program name
     RexxString *programname = (RexxString *)exobj->get(PROGRAM);
@@ -1357,15 +1346,7 @@ void Activity::display(DirectoryClass *exobj)
     {
         rc = (RexxString *)exobj->get(CODE);
         errorCode = Interpreter::messageNumber(rc);
-        text = SystemInterpreter::getMessageHeader(errorCode);
-        if (text == OREF_NULL)
-        {
-            text = SystemInterpreter::getMessageText(Message_Translations_error);
-        }
-        else
-        {
-            text = text->concat(SystemInterpreter::getMessageText(Message_Translations_error));
-        }
+        text = SystemInterpreter::getMessageText(Message_Translations_error);
 
         text = text->concatWith((RexxString *)rc, ' ');
         text = text->concatWithCstring(":  ");

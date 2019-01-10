@@ -290,24 +290,24 @@ static void options_error(int type,      /* Error type.                */
                 char *pInsert = NULL;
 
                 /* search %1 and replace it with %s for message insertion */
-                strcpy(DataArea2, DataArea);
+                strncpy(DataArea2, DataArea, sizeof(DataArea2));
                 pInsert = strstr(DataArea2, "%1");
                 if (pInsert)
                 {
                     pInsert++; /* advance to 1 of %1 */
                     *pInsert = 's';
-                    sprintf(DataArea, DataArea2, quename);
+                    snprintf(DataArea, sizeof(DataArea), DataArea2, quename);
                 }
             }
         }
         else
         {
-            strcpy(DataArea,"Error, but no error message available.");
+            strncpy(DataArea, "Error, but no error message available.", sizeof(DataArea));
         }
     }
     else
     {
-        strcpy(DataArea,"Error, but no error message available because REXX.DLL not loaded.");
+        strncpy(DataArea, "Error, but no error message available because REXX.DLL not loaded.", sizeof(DataArea));
     }
 
 
@@ -317,7 +317,7 @@ static void options_error(int type,      /* Error type.                */
     /* and return an error code when we exit.                         */
     /******************************************************************/
 
-    printf("REX%d: %s\n", MsgNumber, DataArea);
+    printf("%s\n", DataArea);
     FreeLibrary(hDll);
 
     exit(type);

@@ -254,7 +254,6 @@ if (WIN32)
    message(STATUS "INSTALL_LIB_DIR is ${INSTALL_LIB_DIR}")
 
    set (INSTALL_EXECUTABLE_DIR ${CMAKE_INSTALL_PREFIX}/bin)
-   set (catdir ${INSTALL_EXECUTABLE_DIR})
    set (INSTALL_CLS_DIR ${INSTALL_EXECUTABLE_DIR})
    set (INSTALL_INCLUDE_DIR ${CMAKE_INSTALL_PREFIX}/include)
    set (INSTALL_SAMPLES_DIR ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME})
@@ -270,7 +269,6 @@ if (WIN32)
             /DORX_VER_STR=${ORX_VER_STR}
             /DOOREXX_COPY_YEAR="${ORX_COPY_YEAR}"
             /DORX_SYS_STR="${ORX_SYS_STR}"
-            /DORX_CATDIR="${catdir}"
             /DORX_SHARED_LIBRARY_EXT="${CMAKE_SHARED_LIBRARY_SUFFIX}"
             /DORX_REXXPATH="${CMAKE_REXXPATH}"
 # suppress CRT_SECURE warnings
@@ -299,7 +297,7 @@ else ()
 
             -DOOREXX_COPY_YEAR="${ORX_COPY_YEAR}"
             -DORX_SYS_STR="${ORX_SYS_STR}"
-            -DORX_CATDIR="${catdir}" -D_GNU_SOURCE
+             -D_GNU_SOURCE
             -DORX_SHARED_LIBRARY_EXT="${CMAKE_SHARED_LIBRARY_SUFFIX}"
             -DORX_REXXPATH="${CMAKE_REXXPATH}"
             -D${ORX_SYS_STR} -DOPSYS_${ORX_SYS_STR} -DHAVE_CONFIG_H)
@@ -1063,6 +1061,7 @@ if (XALAN_EXECUTABLE)
     generate_message_file(${build_messages_dir}/RexxErrorCodes.h ${build_messages_dir}/RexxErrorCodes.xsl)
     generate_message_file(${build_messages_dir}/RexxMessageNumbers.h ${build_messages_dir}/RexxMessageNumbers.xsl)
     generate_message_file(${build_messages_dir}/RexxMessageTable.h ${build_messages_dir}/RexxMessageTable.xsl)
+    generate_message_file(${build_messages_dir}/RexxErrorMessages.h ${build_messages_dir}/RexxErrorMessages.xsl)
     generate_message_file(${build_api_dir}/oorexxerrors.h ${build_messages_dir}/ApiErrorCodes.xsl)
     generate_message_file(${build_messages_dir}/errnums.xml ${build_messages_dir}/errnums.xsl)
     generate_message_file(${build_messages_dir}/errnumsrxqueue.xml ${build_messages_dir}/errnumsrxqueue.xsl)
@@ -1078,6 +1077,7 @@ if (XALAN_EXECUTABLE)
 
     set (REXXMSG_FILES ${build_messages_dir}/RexxErrorCodes.h
                        ${build_messages_dir}/RexxMessageNumbers.h
+                       ${build_messages_dir}/RexxErrorMessages.h
                        ${build_messages_dir}/RexxMessageTable.h
                        ${build_api_dir}/oorexxerrors.h
                        ${build_messages_dir}/errnums.xml
@@ -1731,13 +1731,6 @@ install(PROGRAMS ${SAMPLES_SOURCE}/treeDirectory.cls COMPONENT Samples DESTINATI
 install(FILES ${SAMPLES_SOURCE}/jabberwocky.txt COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 
 if (NOT WIN32)
-   add_custom_command(OUTPUT rexx.cat
-              COMMAND gencat rexx.cat ${CMAKE_CURRENT_SOURCE_DIR}/${build_interpreter_dir}/platform/unix/gencat.inp
-              DEPENDS ${image_class_files} ${platform_rexx_img_depends}
-              WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-   add_custom_target(rexx_cat ALL DEPENDS rexx.cat)
-   install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rexx.cat DESTINATION ${catdir} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ OWNER_EXECUTE GROUP_EXECUTE WORLD_EXECUTE)
-
    macro (add_manpage name cat)
       add_custom_command(OUTPUT ${name}.${cat}.gz
               COMMAND gzip -c

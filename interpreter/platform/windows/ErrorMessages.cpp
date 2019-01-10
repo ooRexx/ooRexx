@@ -42,18 +42,6 @@
 
 
 /**
- * Return a message header for a given error message.
- *
- * @param code   The error code
- *
- * @return On Windows, always returns NULL
- */
-RexxString * SystemInterpreter::getMessageHeader(wholenumber_t code )
-{
-    return OREF_NULL;                  // no header on windows
-}
-
-/**
  * Retrieve the message text for a give error code.
  *
  * @param code   The Rexx error code

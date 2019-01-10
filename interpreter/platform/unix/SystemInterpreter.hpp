@@ -99,7 +99,6 @@ public:
     static void *allocateResultMemory(size_t);
     static void releaseSegmentMemory(void *);
     static void *allocateSegmentMemory(size_t);
-    static RexxString *getMessageHeader(wholenumber_t code);
     static RexxString *getMessageText(wholenumber_t code);
     static bool valueFunction(RexxString *name, RexxObject *newValue, RexxString *selector, RexxObject *&result);
     static RexxString *getDefaultAddressName();
