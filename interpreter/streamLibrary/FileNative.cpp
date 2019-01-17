@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -212,7 +212,7 @@ RexxMethod2(logical_t, file_set_last_modified, CSTRING, name, int64_t, time)
 /**
  * Return the last access date as a Ticks time value.
  */
-RexxMethod1(int64_t, file_get_last_access, CSTRING, name)
+RexxMethod1(int64_t, file_get_last_accessed, CSTRING, name)
 {
     return SysFileSystem::getLastAccessDate(name);
 }
@@ -221,7 +221,7 @@ RexxMethod1(int64_t, file_get_last_access, CSTRING, name)
 /**
  * Return the last modified date as a Ticks time value.
  */
-RexxMethod2(logical_t, file_set_last_access, CSTRING, name, int64_t, time)
+RexxMethod2(logical_t, file_set_last_accessed, CSTRING, name, int64_t, time)
 {
     return SysFileSystem::setLastAccessDate(name, time);
 }

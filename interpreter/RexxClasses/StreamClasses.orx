@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -608,7 +608,7 @@ return position
 ::METHOD canWriteImpl PRIVATE EXTERNAL 'LIBRARY REXX file_can_write'
 ::METHOD existsImpl PRIVATE EXTERNAL 'LIBRARY REXX file_exists'
 ::METHOD qualifyImpl PRIVATE EXTERNAL 'LIBRARY REXX file_qualify'
-::METHOD isCaseSensitiveImpl EXTERNAL 'LIBRARY REXX this_file_case_sensitive'
+::METHOD isCaseSensitiveImpl PRIVATE EXTERNAL 'LIBRARY REXX this_file_case_sensitive'
 
 -- test if this individual file name is case sensitive
 ::METHOD isCaseSensitive
@@ -732,8 +732,8 @@ return position
 ::METHOD getLastModifiedImpl PRIVATE EXTERNAL 'LIBRARY REXX file_get_last_modified'
 ::METHOD setLastModifiedImpl PRIVATE EXTERNAL 'LIBRARY REXX file_set_last_modified'
 
-::METHOD getLastAccessImpl PRIVATE EXTERNAL 'LIBRARY REXX file_get_last_access'
-::METHOD setLastAccessImpl PRIVATE EXTERNAL 'LIBRARY REXX file_set_last_access'
+::METHOD getLastAccessedImpl PRIVATE EXTERNAL 'LIBRARY REXX file_get_last_accessed'
+::METHOD setLastAccessedImpl PRIVATE EXTERNAL 'LIBRARY REXX file_set_last_accessed'
 
 ::ATTRIBUTE lastModified GET
   use strict arg
@@ -753,10 +753,10 @@ return position
 
   self~setLastModifiedImpl(self~qualifiedPath, date~ticks)
 
-::ATTRIBUTE lastAccess GET
+::ATTRIBUTE lastAccessed GET
   use strict arg
 
-  ticks = self~getLastAccessImpl(self~qualifiedPath)
+  ticks = self~getLastAccessedImpl(self~qualifiedPath)
   -- if this doesn't exist, return a .nil return value
   if ticks = -1 then
       return .nil
@@ -764,12 +764,12 @@ return position
   -- return as a DateTime object
   return .DateTime~fromTicks(ticks)
 
-::ATTRIBUTE lastAccess SET
+::ATTRIBUTE lastAccessed SET
   use strict arg date
 
   .Validate~classType("date", date, .DateTime)
 
-  self~setLastAccessImpl(self~qualifiedPath, date~ticks)
+  self~setLastAccessedImpl(self~qualifiedPath, date~ticks)
 
 ::METHOD lengthImpl PRIVATE EXTERNAL 'LIBRARY REXX file_length'
 
