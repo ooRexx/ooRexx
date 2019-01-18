@@ -1,6 +1,5 @@
 !verbose 3
 !include "WinMessages.NSH"
-!verbose 4
 
 ;====================================================
 ; AddToPath - Adds the given dir to the search path.

@@ -6,6 +6,7 @@
 ;   services.dll       -> http://nsis.sourceforge.net/File:Services.zip
 ;   ooRexxProcess.dll  -> http://sourceforge.net/projects/oorexx/files/  under oorexx-buildutils
 ;
+!verbose 3
 
 !define LONGNAME       "@CPACK_PACKAGE_LONG_NAME@"  ;Long Name (for descriptions)
 !define SHORTNAME      "@CPACK_PACKAGE_NAME@"       ;Short name (no slash) of package
@@ -465,9 +466,9 @@ Function .onInit
     ${else}
       ; If we install 64 bit binaries on a 32 bit OS, things won't work.
       MessageBox MB_OK \
-        "The installer detected that this operaring system is 32 bit.  This$\n\
+        "The installer detected that this operating system is 32-bit.  This$\n\
         installer contains 64-bit binaries.  These binaries will not$\n\
-        work on a 32-bit operating.$\n$\n\
+        work on a 32-bit operating system.$\n$\n\
         The installer will quit.  Please use the 32-bit ooRexx installer$\n\
         to install on this operating system." \
         /SD IDOK
@@ -1455,7 +1456,7 @@ Function Associate_rexx_leave
       MessageBox MB_OK|MB_ICONEXCLAMATION \
         "Creating a file association requires that$\n\
         both the file extension and the file type field$\n\
-        be filed in."
+        be filled in."
 
       ${If} $0 == ""
         SendMessage $Dialog ${WM_NEXTDLGCTL} $Rexx_ext_EDIT 1
@@ -1691,7 +1692,7 @@ Function Associate_otherExes_leave
       MessageBox MB_OK|MB_ICONEXCLAMATION \
         "Creating a file association requires that$\n\
         both the file extension and the file type field$\n\
-        be filed in."
+        be filled in."
 
       ${If} $0 == ""
         SendMessage $Dialog ${WM_NEXTDLGCTL} $RexxHide_ext_EDIT 1
@@ -1749,7 +1750,7 @@ Function Associate_otherExes_leave
       MessageBox MB_OK|MB_ICONEXCLAMATION \
         "Creating a file association requires that$\n\
         both the file extension and the file type field$\n\
-        be filed in."
+        be filled in."
 
       ${If} $0 == ""
         SendMessage $Dialog ${WM_NEXTDLGCTL} $RexxPaws_ext_EDIT 1

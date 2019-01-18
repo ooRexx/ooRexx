@@ -1,4 +1,4 @@
-
+!verbose 3
 
 ; Author: Lilla (lilla@earthlink.net) 2003-06-13
 ; function IsUserAdmin uses plugin \NSIS\PlusgIns\UserInfo.dll
