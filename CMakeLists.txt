@@ -85,7 +85,7 @@ endif ()
 
 
 # Unix: used in macro create_install_symlink()
-set(SYM_LINK_CREATE_FROM     2)                # define lower bound
+set(SYM_LINK_CREATE_FROM     3)                # define lower bound
 math(EXPR SYM_LINK_CREATE_TO "${ORX_MAJOR}-1") # define upper bound is dependent on ${ORX_MAJOR}
 
 
@@ -574,7 +574,11 @@ macro(create_install_symlink target)
       set(targetName "${baseName}${CMAKE_SHARED_LIBRARY_SUFFIX}")
 
       foreach(loop_var RANGE ${SYM_LINK_CREATE_FROM} ${SYM_LINK_CREATE_TO})
-         set(linkName "${baseName}.${loop_var}${CMAKE_SHARED_LIBRARY_SUFFIX}")
+         if (APPLE)   # Darwin has version numbers before ".dylib"
+            set(linkName "${baseName}.${loop_var}${CMAKE_SHARED_LIBRARY_SUFFIX}")
+         else ()
+            set(linkName "${baseName}${CMAKE_SHARED_LIBRARY_SUFFIX}.${loop_var}")
+         endif ()
 
          # message(STATUS "---> macro create_install_symlink() ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}: ln -sf targetName=[${targetName}] linkName=[${linkName}]")
 
@@ -583,7 +587,7 @@ macro(create_install_symlink target)
              POST_BUILD
              COMMAND ${CMAKE_COMMAND} -E chdir ${CMAKE_LIBRARY_OUTPUT_DIRECTORY} ln -sf ${targetName} ${linkName}
              DEPENDS ${target}
-             COMMENT "--> ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}: [ln -sf ${targetName} ${linkName} DEPENDS ${target}]"
+             # COMMENT "--> ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}: [ln -sf ${targetName} ${linkName} DEPENDS ${target}]"
          )
 
          install(FILES ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${linkName}
