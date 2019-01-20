@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -843,8 +843,10 @@ RexxObjectPtr RexxEntry ioCommandHandler(RexxExitContext *context, RexxStringObj
         {   // append slash if we don't have one yet
             strcat(shell, "/");
         }
-        if (strlen(environment) == 0 || Utilities::strCaselessCompare("command", environment) == 0)
-        {   // for environments "" and "command" we use "sh" as shell
+        if (strlen(environment) == 0 ||
+         Utilities::strCaselessCompare("command", environment) == 0 ||
+         Utilities::strCaselessCompare("system", environment) == 0)
+        {   // for environments "", "command" and "system" we use "sh" as shell
             strcat(shell, "sh");
         }
         else
@@ -1064,10 +1066,16 @@ RexxObjectPtr RexxEntry ioCommandHandler(RexxExitContext *context, RexxStringObj
  */
 void SysInterpreterInstance::registerCommandHandlers(InterpreterInstance *_instance)
 {
-    // Unix has a whole collection of similar environments, services by a single handler
+    // The default command handler on Unix is "SH"
+    // It comes with three aliases named "", "COMMAND", and "SYSTEM"
+    // "SYSTEM" is compatible with Regina
+    _instance->addCommandHandler("SH",      (REXXPFN)ioCommandHandler, HandlerType::REDIRECTING);
+    _instance->addCommandHandler("",        (REXXPFN)ioCommandHandler, HandlerType::REDIRECTING);
     _instance->addCommandHandler("COMMAND", (REXXPFN)ioCommandHandler, HandlerType::REDIRECTING);
-    _instance->addCommandHandler("", (REXXPFN)ioCommandHandler, HandlerType::REDIRECTING);
-    _instance->addCommandHandler("SH", (REXXPFN)ioCommandHandler, HandlerType::REDIRECTING);
+    _instance->addCommandHandler("SYSTEM",  (REXXPFN)ioCommandHandler, HandlerType::REDIRECTING);
+
+    // The command handlers for shells other than "sh" will only work
+    // if a shell with this named is installed on the system
     _instance->addCommandHandler("KSH", (REXXPFN)ioCommandHandler, HandlerType::REDIRECTING);
     _instance->addCommandHandler("CSH", (REXXPFN)ioCommandHandler, HandlerType::REDIRECTING);
     _instance->addCommandHandler("BSH", (REXXPFN)ioCommandHandler, HandlerType::REDIRECTING);
