@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -381,13 +381,28 @@ RexxObject *StemClass::hasItem(RexxInternalObject *target)
 }
 
 
+/**
+ * Remove the target object from the stem.
+ *
+ * @param target The target object.
+ *
+ * @return The removed object (same as target).
+ */
+RexxInternalObject *StemClass::removeItemRexx(RexxObject *target)
+{
+    // we require the index to be there.
+    requiredArgument(target, ARG_ONE);
+    // do the removal
+    return removeItem(target);
+}
+
 
 /**
- * Remove an item from the collection.
+ * Remove the target object from the stem.
  *
- * @param target The object of interest.
+ * @param target The target object.
  *
- * @return .true if the object is in the collection, .false otherwise.
+ * @return The removed object (same as target).
  */
 RexxInternalObject *StemClass::removeItem(RexxInternalObject *target)
 {

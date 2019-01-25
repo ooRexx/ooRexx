@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -712,7 +712,7 @@ StartClassDefinition(Array);
         AddMethod("IsEmpty", ArrayClass::isEmptyRexx, 0);
         AddMethod("Index", ArrayClass::indexRexx, 1);
         AddMethod("HasItem", ArrayClass::hasItemRexx, 1);
-        AddMethod("RemoveItem", ArrayClass::removeItem, 1);
+        AddMethod("RemoveItem", ArrayClass::removeItemRexx, 1);
         AddMethod("Insert", ArrayClass::insertRexx, 2);
         AddMethod("Delete", ArrayClass::deleteRexx, 1);
         AddMethod("Fill", ArrayClass::fillRexx, 1);
@@ -1308,7 +1308,7 @@ StartClassDefinition(Stem)
         AddMethod("Remove", StemClass::remove, A_COUNT);
         AddMethod("Index", StemClass::index, 1);
         AddMethod("HasItem", StemClass::hasItem, 1);
-        AddMethod("RemoveItem", StemClass::removeItem, 1);
+        AddMethod("RemoveItem", StemClass::removeItemRexx, 1);
         AddMethod("ToDirectory", StemClass::toDirectory, 0);
 
     // We want various operator methods that we inherit from the object
