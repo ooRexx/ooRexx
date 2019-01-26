@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2008-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2008-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -2176,6 +2176,52 @@ RexxMethod1(positive_wholenumber_t,     // Return type
     return arg1;
 }
 
+// [feature-requests:#634] Add a per-object storage management API
+
+// POINTER (RexxEntry *AllocateObjectMemory)(RexxMethodContext *, size_t);
+RexxMethod1(POINTER,                   // Return type
+            TestAllocateObjectMemory,  // Function name
+            size_t, bytes)             // Argument
+{
+    return context->AllocateObjectMemory(bytes);
+}
+
+// void    (RexxEntry *FreeObjectMemory)(RexxMethodContext *, POINTER);
+RexxMethod1(RexxObjectPtr,             // Return type
+            TestFreeObjectMemory,      // Function name
+            POINTER, ptr)              // Argument
+{
+    context->FreeObjectMemory(ptr);
+    return NULLOBJECT;
+}
+
+// POINTER (RexxEntry *ReallocateObjectMemory)(RexxMethodContext *, POINTER, size_t);
+RexxMethod2(POINTER,                   // Return type
+            TestReallocateObjectMemory,// Function name
+            POINTER, ptr,              // Argument
+            size_t, bytes)             // Argument
+{
+    return context->ReallocateObjectMemory(ptr, bytes);
+}
+
+// helper: set object memory content; must be null-terminated
+RexxMethod2(RexxObjectPtr,             // Return type
+            TestSetObjectMemory,       // Function name
+            POINTER, ptr,              // Argument
+            CSTRING, data)             // Argument
+{
+    memcpy(ptr, data, strlen(data));
+    return NULLOBJECT;
+}
+
+// helper: get object memory content; must be null-terminated
+RexxMethod1(CSTRING,                   // Return type
+            TestGetObjectMemory,       // Function name
+            POINTER, ptr)              // Argument
+{
+    return (char *)ptr;
+}
+
 RexxMethodEntry orxtest_methods[] = {
     REXX_METHOD(TestIsBuffer,          TestIsBuffer),
     REXX_METHOD(TestBufferInit,        TestBufferInit),
@@ -2403,6 +2449,11 @@ RexxMethodEntry orxtest_methods[] = {
     REXX_METHOD(TestSetMutableBufferCapacity,TestSetMutableBufferCapacity),
     REXX_METHOD(TestSetMutableBufferValue,   TestSetMutableBufferValue),
     REXX_METHOD(TestGetMutableBufferValue,   TestGetMutableBufferValue),
+    REXX_METHOD(TestAllocateObjectMemory,    TestAllocateObjectMemory),
+    REXX_METHOD(TestFreeObjectMemory,        TestFreeObjectMemory),
+    REXX_METHOD(TestReallocateObjectMemory,  TestReallocateObjectMemory),
+    REXX_METHOD(TestSetObjectMemory,         TestSetObjectMemory),
+    REXX_METHOD(TestGetObjectMemory,         TestGetObjectMemory),
     REXX_LAST_METHOD()
 };
 
