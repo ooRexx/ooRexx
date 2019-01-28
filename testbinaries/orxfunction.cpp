@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2008-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2008-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -528,18 +528,211 @@ RexxObjectPtr RexxEntry rcHandler(RexxExitContext *context,
 }
 
 
+// test command handler for the I/O redirection APIs
+RexxObjectPtr RexxEntry ioHandler(RexxExitContext *context, RexxStringObject address, RexxStringObject command, RexxIORedirectorContext *ioContext)
+{
+    CSTRING commandString = context->CString(command);
+
+    if (strcmp(commandString, "INPUTOUTPUT") == 0)
+    {
+        CSTRING data;
+        size_t length;
+        size_t count = 0;
+
+        ioContext->ReadInput(&data, &length);
+        while (data != NULL)
+        {
+            count++;
+            ioContext->WriteOutput(data, length);
+            ioContext->ReadInput(&data, &length);
+        }
+
+        return context->StringSizeToObject(count);
+    }
+
+    if (strcmp(commandString, "INPUTERROR") == 0)
+    {
+        CSTRING data;
+        size_t length;
+        size_t count = 0;
+
+        ioContext->ReadInput(&data, &length);
+        while (data != NULL)
+        {
+            count++;
+            ioContext->WriteError(data, length);
+            ioContext->ReadInput(&data, &length);
+        }
+
+        return context->StringSizeToObject(count);
+    }
+
+    if (strcmp(commandString, "INPUTBOTH") == 0)
+    {
+        CSTRING data;
+        size_t length;
+        bool useError = false;
+        size_t count = 0;
+
+        ioContext->ReadInput(&data, &length);
+        while (data != NULL)
+        {
+            count++;
+            if (useError)
+            {
+                ioContext->WriteError(data, length);
+            }
+            else
+            {
+                ioContext->WriteOutput(data, length);
+            }
+            useError = !useError;
+            ioContext->ReadInput(&data, &length);
+        }
+
+        return context->StringSizeToObject(count);
+    }
+
+
+    if (strcmp(commandString, "NOBLANKOUTPUT") == 0)
+    {
+        CSTRING data;
+        size_t length;
+        size_t count = 0;
+
+        ioContext->ReadInput(&data, &length);
+        while (data != NULL)
+        {
+            count++;
+            // only write non blank lines
+            if (length > 0)
+            {
+                ioContext->WriteOutput(data, length);
+            }
+            ioContext->ReadInput(&data, &length);
+        }
+
+        return context->StringSizeToObject(count);
+    }
+
+
+    if (strcmp(commandString, "NOBLANKERROR") == 0)
+    {
+        CSTRING data;
+        size_t length;
+        size_t count = 0;
+
+        ioContext->ReadInput(&data, &length);
+        while (data != NULL)
+        {
+            count++;
+            // only write non blank lines
+            if (length > 0)
+            {
+                ioContext->WriteError(data, length);
+            }
+            ioContext->ReadInput(&data, &length);
+        }
+
+        return context->StringSizeToObject(count);
+    }
+
+    if (strcmp(commandString, "BUFFEROUTPUT") == 0)
+    {
+        CSTRING data;
+        size_t length;
+        size_t count = 0;
+
+        ioContext->ReadInput(&data, &length);
+        while (data != NULL)
+        {
+            count++;
+            ioContext->WriteOutputBuffer(data, length);
+            ioContext->ReadInput(&data, &length);
+        }
+
+        return context->StringSizeToObject(count);
+    }
+
+    if (strcmp(commandString, "BUFFERERROR") == 0)
+    {
+        CSTRING data;
+        size_t length;
+        size_t count = 0;
+
+        ioContext->ReadInput(&data, &length);
+        while (data != NULL)
+        {
+            count++;
+            ioContext->WriteErrorBuffer(data, length);
+            ioContext->ReadInput(&data, &length);
+        }
+
+        return context->StringSizeToObject(count);
+    }
+
+    if (strcmp(commandString, "BUFFERINPUT") == 0)
+    {
+        CSTRING data;
+        size_t length;
+
+        ioContext->ReadInputBuffer(&data, &length);
+        if (data != NULL)
+        {
+            ioContext->WriteOutputBuffer(data, length);
+        }
+
+        return context->StringSizeToObject(length);
+    }
+
+    if (strcmp(commandString, "INPUTREDIRECTED") == 0)
+    {
+        return ioContext->IsInputRedirected() ? context->True() : context->False();
+    }
+
+    if (strcmp(commandString, "OUTPUTREDIRECTED") == 0)
+    {
+        return ioContext->IsOutputRedirected() ? context->True() : context->False();
+    }
+
+    if (strcmp(commandString, "ERRORREDIRECTED") == 0)
+    {
+        return ioContext->IsErrorRedirected() ? context->True() : context->False();
+    }
+
+    if (strcmp(commandString, "AREOUTPUTERRORTHESAME") == 0)
+    {
+        return ioContext->AreOutputAndErrorSameTarget() ? context->True() : context->False();
+    }
+
+    if (strcmp(commandString, "ISREDIRECTIONREQUESTED") == 0)
+    {
+        return ioContext->IsRedirectionRequested() ? context->True() : context->False();
+    }
+
+    return context->True();
+}
+
+
+// will install either 'rcHandler' or 'ioHandler' (see above)
 RexxRoutine2(RexxObjectPtr,
             TestAddCommandEnvironment,
             CSTRING, name,
             CSTRING, type)
 {
+    REXXPFN handler = (REXXPFN)rcHandler;
+    if (strcmp(name, "io") == 0)
+    {
+        handler = (REXXPFN)ioHandler;
+    }
+
     if (type[0] == 'd' || type[0] == 'D')
     {
-        context->AddCommandEnvironment(name, (REXXPFN)rcHandler, DIRECT_COMMAND_ENVIRONMENT);
+        context->AddCommandEnvironment(name, handler, DIRECT_COMMAND_ENVIRONMENT);
     }
     if (type[0] == 'r' || type[0] == 'R')
     {
-        context->AddCommandEnvironment(name, (REXXPFN)rcHandler, REDIRECTING_COMMAND_ENVIRONMENT);
+        context->AddCommandEnvironment(name, handler, REDIRECTING_COMMAND_ENVIRONMENT);
     }
     return NULLOBJECT;
 }
