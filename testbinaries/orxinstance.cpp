@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2008-2017 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2008-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -612,7 +612,8 @@ int RexxEntry TestContextValueExit(RexxExitContext *context, int code, int subco
     return RXEXIT_NOT_HANDLED;
 }
 
-RexxObjectPtr RexxEntry TestCommandHandler(RexxExitContext *context, RexxStringObject address, RexxStringObject command)
+// direct command handler
+RexxObjectPtr RexxEntry TestDirectCommandHandler(RexxExitContext *context, RexxStringObject address, RexxStringObject command)
 {
     const char *c = context->CString(command);
 
@@ -639,6 +640,59 @@ RexxObjectPtr RexxEntry TestCommandHandler(RexxExitContext *context, RexxStringO
     {
         context->SetContextVariable("TEST1", context->String("Hello World"));
         return context->False();
+    }
+    else
+    {
+        context->RaiseCondition("FAILURE", command, NULLOBJECT, context->WholeNumber(-1));
+        return NULLOBJECT;
+    }
+}
+
+// redirecting command handler with additional ioContext argument
+RexxObjectPtr RexxEntry TestRedirectingCommandHandler(RexxExitContext *context, RexxStringObject address, RexxStringObject command, RexxIORedirectorContext *ioContext)
+{
+    const char *c = context->CString(command);
+
+    // ok, a good address...now do the different commands
+    if (strcmp(c, "GOOD") == 0)
+    {
+        return context->False();
+    }
+    else if (strcmp(c, "ERROR") == 0)
+    {
+        context->RaiseCondition("ERROR", command, NULLOBJECT, context->True());
+        return NULLOBJECT;
+    }
+    else if (strcmp(c, "RAISE") == 0)
+    {
+        context->RaiseException1(Rexx_Error_System_service_user_defined, context->String("Command Handler"));
+        return NULLOBJECT;
+    }
+    else if (strcmp(c, "GETVAR") == 0)
+    {
+        return context->GetContextVariable("TEST1");
+    }
+    else if (strcmp(c, "SETVAR") == 0)
+    {
+        context->SetContextVariable("TEST1", context->String("Hello World"));
+        return context->False();
+    }
+    else if (strcmp(c, "REDIRECTION") == 0)
+    {
+        size_t rc = 0;
+        // we return a five-digit number with each digit in sequence
+        // representing the status of:
+        // - IsRedirectionRequested()
+        // - IsInputRedirected()
+        // - IsOutputRedirected()
+        // - IsErrorRedirected()
+        // - AreOutputAndErrorSameTarget()
+        rc = rc * 10 + ioContext->IsRedirectionRequested();
+        rc = rc * 10 + ioContext->IsInputRedirected();
+        rc = rc * 10 + ioContext->IsOutputRedirected();
+        rc = rc * 10 + ioContext->IsErrorRedirected();
+        rc = rc * 10 + ioContext->AreOutputAndErrorSameTarget();
+        return context->WholeNumberToObject(rc);
     }
     else
     {
@@ -752,7 +806,8 @@ RexxReturnCode REXXENTRY createInstance(InstanceInfo *instanceInfo, RexxInstance
                                  // space for building exit lists
     RexxContextExit contextExits[RXNOOFEXITS];
     RXSYSEXIT       registeredExits[RXNOOFEXITS];
-    RexxContextEnvironment commandHandlers[2];
+    RexxContextEnvironment directCommandHandlers[2];
+    RexxRedirectingEnvironment redirectingCommandHandlers[2];
     RexxRegisteredEnvironment subcomHandlers[2];
     int optionCount = 0;
 
@@ -784,7 +839,7 @@ RexxReturnCode REXXENTRY createInstance(InstanceInfo *instanceInfo, RexxInstance
             optionCount++;
             break;
         }
-        default: 
+        default:
             // no options added
             break;
 
@@ -818,12 +873,20 @@ RexxReturnCode REXXENTRY createInstance(InstanceInfo *instanceInfo, RexxInstance
         optionCount++;
     }
 
-    commandHandlers[0].name = "TEST";
-    commandHandlers[0].handler = TestCommandHandler;
-    commandHandlers[1].name = NULL;
-    commandHandlers[1].handler = NULL;
+    directCommandHandlers[0].name = "TESTDIRECT";
+    directCommandHandlers[0].handler = TestDirectCommandHandler;
+    directCommandHandlers[1].name = NULL;
+    directCommandHandlers[1].handler = NULL;
     options[optionCount].optionName = DIRECT_ENVIRONMENTS;
-    options[optionCount].option = commandHandlers;
+    options[optionCount].option = directCommandHandlers;
+    optionCount++;
+
+    redirectingCommandHandlers[0].name = "TESTREDIRECTING";
+    redirectingCommandHandlers[0].handler = TestRedirectingCommandHandler;
+    redirectingCommandHandlers[1].name = NULL;
+    redirectingCommandHandlers[1].handler = NULL;
+    options[optionCount].optionName = REDIRECTING_ENVIRONMENTS;
+    options[optionCount].option = redirectingCommandHandlers;
     optionCount++;
 
     subcomHandlers[0].name = "TESTSUBCOM";
