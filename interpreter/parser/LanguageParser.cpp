@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -3456,7 +3456,7 @@ RexxInternalObject *LanguageParser::parseMessageTerm()
  * @return An object to represent this message term.  Returns
  *         OREF_NULL if no suitable term is found.
  */
-RexxInternalObject *LanguageParser::parseMessageSubterm(int terminators)
+RexxInternalObject* LanguageParser::parseMessageSubterm(int terminators)
 {
     // with very complex instructions, it is possible to recurse quite deeply here.
     // so give a look at the stack space on each call so we can terminate "nicely"
@@ -3500,33 +3500,16 @@ RexxInternalObject *LanguageParser::parseMessageSubterm(int terminators)
                 return new RexxUnaryOperator(token->subtype(), term);
                 break;
             }
-            // not a aperator in the normal sense, but > or as a prefix creates
-            // a variable reference.
+                // not a aperator in the normal sense, but > or as a prefix creates
+                // a variable reference.
             case OPERATOR_LESSTHAN:
             case OPERATOR_GREATERTHAN:
             {
-                // this must be either a simple variable or a stem.
-                token = nextReal();
-                if (!token->isSymbol() || !token->isNonCompoundVariable())
-                {
-                    syntaxError(Error_Symbol_expected_after_prefix_reference, token);
-                }
-                RexxVariableBase *retriever = OREF_NULL;
-
-                if (token->isSimpleVariable())
-                {
-                    retriever = addSimpleVariable(token->value());
-                }
-                else
-                {
-                    retriever = addStem(token->value());
-                }
-
-                // create a new expression term to retrieve the variable
-                return new VariableReferenceOp(retriever);
+                // parse off the term
+                return parseVariableReferenceTerm();
             }
 
-            // other operators are invalid
+                // other operators are invalid
             default:
                 syntaxError(Error_Invalid_expression_general, token);
         }
@@ -3575,6 +3558,35 @@ RexxInternalObject *LanguageParser::parseMessageSubterm(int terminators)
 
 
 /**
+ * Parse off a variable reference term.
+ *
+ * @return A variable reference term object
+ */
+RexxInternalObject* LanguageParser::parseVariableReferenceTerm()
+{
+    // this must be either a simple variable or a stem.
+    RexxToken *token = nextReal();
+    if (!token->isSymbol() || !token->isNonCompoundVariable())
+    {
+        syntaxError(Error_Symbol_expected_after_prefix_reference, token);
+    }
+    RexxVariableBase *retriever = OREF_NULL;
+
+    if (token->isSimpleVariable())
+    {
+        retriever = addSimpleVariable(token->value());
+    }
+    else
+    {
+        retriever = addStem(token->value());
+    }
+
+    // create a new expression term to retrieve the variable
+    return new VariableReferenceOp(retriever);
+}
+
+
+/**
  * Parse off a subterm of an expression, from simple ones like
  * variable names and literals, to more complex such as message
  * sends.
@@ -3584,7 +3596,7 @@ RexxInternalObject *LanguageParser::parseMessageSubterm(int terminators)
  *
  * @return An executable object for the message term.
  */
-RexxInternalObject *LanguageParser::parseSubTerm(int terminators)
+RexxInternalObject* LanguageParser::parseSubTerm(int terminators)
 {
     // with very complex instructions, it is possible to recurse quite deeply here.
     // so give a look at the stack space on each call so we can terminate "nicely"
@@ -3626,8 +3638,8 @@ RexxInternalObject *LanguageParser::parseSubTerm(int terminators)
             return term;
         }
 
-        // a symbol.  These are generally pretty simple, but
-        // we also have to account for function calls or qualified lookups
+            // a symbol.  These are generally pretty simple, but
+            // we also have to account for function calls or qualified lookups
         case  TOKEN_SYMBOL:
         {
             // need to check if the next token is an open paren.  That turns
@@ -3653,8 +3665,8 @@ RexxInternalObject *LanguageParser::parseSubTerm(int terminators)
             break;
         }
 
-        // a literal.  These are generally pretty simple, but
-        // we also have to account for function calls.
+            // a literal.  These are generally pretty simple, but
+            // we also have to account for function calls.
         case  TOKEN_LITERAL:
         {
             // need to check if the next token is an open paren.  That turns
@@ -3674,25 +3686,33 @@ RexxInternalObject *LanguageParser::parseSubTerm(int terminators)
             break;
         }
 
-        // an operator token.  We do allow prefix operators here, others are
-        // an error
+            // an operator token.  We do allow prefix operators here, others are
+            // an error
         case  TOKEN_OPERATOR:
         {
-             switch (token->subtype())
-             {
-                 // +, -, and logical NOT variants are permitted here...except
-                 // we don't actually process them here, so back up and say we got nothing.
-                 case OPERATOR_PLUS:
-                 case OPERATOR_SUBTRACT:
-                 case OPERATOR_BACKSLASH:
-                     previousToken();
-                     return OREF_NULL;
+            switch (token->subtype())
+            {
+                // +, -, and logical NOT variants are permitted here...except
+                // we don't actually process them here, so back up and say we got nothing.
+                case OPERATOR_PLUS:
+                case OPERATOR_SUBTRACT:
+                case OPERATOR_BACKSLASH:
+                    previousToken();
+                    return OREF_NULL;
 
-                 // other operators we can flag as an error now.
-                 default:
-                     syntaxError(Error_Invalid_expression_general, token);
-             }
-             break;
+                // a prefix '>' or '<' is a variable reference
+                case OPERATOR_LESSTHAN:
+                case OPERATOR_GREATERTHAN:
+                {
+                    // parse off the term
+                    return parseVariableReferenceTerm();
+                }
+
+                // other operators we can flag as an error now.
+                default:
+                    syntaxError(Error_Invalid_expression_general, token);
+            }
+            break;
         }
 
         // a few error situations with specific error messages.
