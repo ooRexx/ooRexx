@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -2808,7 +2808,7 @@ StemClass *NativeActivation::resolveStemVariable(RexxObject *s)
  *
  * @return The stem object associated with that name.
  */
-RexxObject *NativeActivation::getContextStem(RexxString *name)
+RexxObject* NativeActivation::getContextStem(RexxString *name)
 {
     // if this is not a stem name, add it now
     if (!name->endsWith('.'))
@@ -2836,7 +2836,7 @@ RexxObject *NativeActivation::getContextStem(RexxString *name)
  *
  * @return The variable value, if any.
  */
-RexxObject *NativeActivation::getContextVariable(const char *name)
+RexxObject* NativeActivation::getContextVariable(const char *name)
 {
     RexxVariableBase *retriever = VariableDictionary::getVariableRetriever(new_string(name));
     // if this didn't parse, it's an illegal name
@@ -2859,6 +2859,33 @@ RexxObject *NativeActivation::getContextVariable(const char *name)
         return retriever->getRealValue(activation);
     }
 }
+
+
+/**
+ * Retrieve a context variable as a VariableReference instance
+ * via the API calls. This will create the variable if the
+ * variable does not exist.
+ *
+ * @param name   The variable name.
+ *
+ * @return The variable value, if any.
+ */
+VariableReference *NativeActivation::getContextVariableReference(const char *name)
+{
+    RexxVariableBase *retriever = VariableDictionary::getVariableRetriever(new_string(name));
+    // if this didn't parse, it's an illegal name
+    if (retriever == OREF_NULL)
+    {
+        return OREF_NULL;
+    }
+    // all next operations must be reset
+    resetNext();
+
+    // get the reference. This will return NULL for all non-referencable
+    // retriever types
+    return retriever->getVariableReference(activation);
+}
+
 
 
 /**

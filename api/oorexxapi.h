@@ -671,66 +671,70 @@ typedef struct
 
 typedef struct
 {
-    wholenumber_t interfaceVersion;    // The interface version identifier
+     wholenumber_t interfaceVersion;    // The interface version identifier
 
-    RexxArrayObject  (RexxEntry *GetArguments)(RexxMethodContext *);
-    RexxObjectPtr    (RexxEntry *GetArgument)(RexxMethodContext *, size_t);
-    CSTRING          (RexxEntry *GetMessageName)(RexxMethodContext *);
-    RexxMethodObject (RexxEntry *GetMethod)(RexxMethodContext *);
-    RexxObjectPtr    (RexxEntry *GetSelf)(RexxMethodContext *);
-    RexxClassObject  (RexxEntry *GetSuper)(RexxMethodContext *);
-    RexxObjectPtr    (RexxEntry *GetScope)(RexxMethodContext *);
-    void             (RexxEntry *SetObjectVariable)(RexxMethodContext *, CSTRING, RexxObjectPtr);
-    RexxObjectPtr    (RexxEntry *GetObjectVariable)(RexxMethodContext *, CSTRING);
-    void             (RexxEntry *DropObjectVariable)(RexxMethodContext *, CSTRING);
-    RexxObjectPtr    (RexxEntry *ForwardMessage)(RexxMethodContext *, RexxObjectPtr, CSTRING, RexxClassObject, RexxArrayObject);
-    void             (RexxEntry *SetGuardOn)(RexxMethodContext *);
-    void             (RexxEntry *SetGuardOff)(RexxMethodContext *);
-    RexxClassObject  (RexxEntry *FindContextClass)(RexxMethodContext *, CSTRING);
-    POINTER          (RexxEntry *GetCSelf)(RexxMethodContext *);
-    POINTER          (RexxEntry *AllocateObjectMemory)(RexxMethodContext *, size_t);
-    void             (RexxEntry *FreeObjectMemory)(RexxMethodContext *, POINTER);
-    POINTER          (RexxEntry *ReallocateObjectMemory)(RexxMethodContext *, POINTER, size_t);
-    RexxVariableReferenceObject (RexxEntry *GetObjectVariableReference)(RexxMethodContext *, CSTRING);
-    RexxObjectPtr    (RexxEntry *SetGuardOnWhenUpdated)(RexxMethodContext *, CSTRING);
-    RexxObjectPtr    (RexxEntry *SetGuardOffWhenUpdated)(RexxMethodContext *, CSTRING);
+     RexxArrayObject(RexxEntry *GetArguments)(RexxMethodContext *);
+     RexxObjectPtr(RexxEntry *GetArgument)(RexxMethodContext *, size_t);
+     CSTRING(RexxEntry *GetMessageName)(RexxMethodContext *);
+     RexxMethodObject(RexxEntry *GetMethod)(RexxMethodContext *);
+     RexxObjectPtr(RexxEntry *GetSelf)(RexxMethodContext *);
+     RexxClassObject(RexxEntry *GetSuper)(RexxMethodContext *);
+     RexxObjectPtr(RexxEntry *GetScope)(RexxMethodContext *);
+     void             (RexxEntry *SetObjectVariable)(RexxMethodContext *, CSTRING, RexxObjectPtr);
+     RexxObjectPtr(RexxEntry *GetObjectVariable)(RexxMethodContext *, CSTRING);
+     void             (RexxEntry *DropObjectVariable)(RexxMethodContext *, CSTRING);
+     RexxObjectPtr(RexxEntry *ForwardMessage)(RexxMethodContext *, RexxObjectPtr, CSTRING, RexxClassObject, RexxArrayObject);
+     void             (RexxEntry *SetGuardOn)(RexxMethodContext *);
+     void             (RexxEntry *SetGuardOff)(RexxMethodContext *);
+     RexxClassObject(RexxEntry *FindContextClass)(RexxMethodContext *, CSTRING);
+     POINTER(RexxEntry *GetCSelf)(RexxMethodContext *);
+     POINTER(RexxEntry *AllocateObjectMemory)(RexxMethodContext *, size_t);
+     void             (RexxEntry *FreeObjectMemory)(RexxMethodContext *, POINTER);
+     POINTER(RexxEntry *ReallocateObjectMemory)(RexxMethodContext *, POINTER, size_t);
+     RexxVariableReferenceObject(RexxEntry *GetObjectVariableReference)(RexxMethodContext *, CSTRING);
+     RexxObjectPtr(RexxEntry *SetGuardOnWhenUpdated)(RexxMethodContext *, CSTRING);
+     RexxObjectPtr(RexxEntry *SetGuardOffWhenUpdated)(RexxMethodContext *, CSTRING);
 } MethodContextInterface;
 
 #define CALL_INTERFACE_VERSION_4_0_0 100
-#define CALL_INTERFACE_VERSION 100
+#define CALL_INTERFACE_VERSION_5_0_0 101
+#define CALL_INTERFACE_VERSION 101
 
 typedef struct
 {
-    wholenumber_t interfaceVersion;    // The interface version identifier
+     wholenumber_t interfaceVersion;    // The interface version identifier
 
-    RexxArrayObject  (RexxEntry *GetArguments)(RexxCallContext *);
-    RexxObjectPtr    (RexxEntry *GetArgument)(RexxCallContext *, size_t);
-    CSTRING          (RexxEntry *GetRoutineName)(RexxCallContext *);
-    RexxRoutineObject (RexxEntry *GetRoutine)(RexxCallContext *);
-    void             (RexxEntry *SetContextVariable)(RexxCallContext *, CSTRING, RexxObjectPtr);
-    RexxObjectPtr    (RexxEntry *GetContextVariable)(RexxCallContext *, CSTRING);
-    void             (RexxEntry *DropContextVariable)(RexxCallContext *, CSTRING);
-    RexxDirectoryObject (RexxEntry *GetAllContextVariables)(RexxCallContext *);
-    RexxStemObject   (RexxEntry *ResolveStemVariable)(RexxCallContext *, RexxObjectPtr);
-    void             (RexxEntry *InvalidRoutine)(RexxCallContext *);
-    stringsize_t     (RexxEntry *GetContextDigits)(RexxCallContext *);
-    stringsize_t     (RexxEntry *GetContextFuzz)(RexxCallContext *);
-    logical_t        (RexxEntry *GetContextForm)(RexxCallContext *);
-    RexxObjectPtr    (RexxEntry *GetCallerContext)(RexxCallContext *);
-    RexxClassObject  (RexxEntry *FindContextClass)(RexxCallContext *, CSTRING);
+     RexxArrayObject(RexxEntry *GetArguments)(RexxCallContext *);
+     RexxObjectPtr(RexxEntry *GetArgument)(RexxCallContext *, size_t);
+     CSTRING(RexxEntry *GetRoutineName)(RexxCallContext *);
+     RexxRoutineObject(RexxEntry *GetRoutine)(RexxCallContext *);
+     void             (RexxEntry *SetContextVariable)(RexxCallContext *, CSTRING, RexxObjectPtr);
+     RexxObjectPtr(RexxEntry *GetContextVariable)(RexxCallContext *, CSTRING);
+     void             (RexxEntry *DropContextVariable)(RexxCallContext *, CSTRING);
+     RexxDirectoryObject(RexxEntry *GetAllContextVariables)(RexxCallContext *);
+     RexxStemObject(RexxEntry *ResolveStemVariable)(RexxCallContext *, RexxObjectPtr);
+     void             (RexxEntry *InvalidRoutine)(RexxCallContext *);
+     stringsize_t(RexxEntry *GetContextDigits)(RexxCallContext *);
+     stringsize_t(RexxEntry *GetContextFuzz)(RexxCallContext *);
+     logical_t(RexxEntry *GetContextForm)(RexxCallContext *);
+     RexxObjectPtr(RexxEntry *GetCallerContext)(RexxCallContext *);
+     RexxClassObject(RexxEntry *FindContextClass)(RexxCallContext *, CSTRING);
+     RexxVariableReferenceObject(RexxEntry *GetContextVariableReference)(RexxCallContext *, CSTRING);
 } CallContextInterface;
 
 #define EXIT_INTERFACE_VERSION_4_0_0 100
-#define EXIT_INTERFACE_VERSION 100
+#define EXIT_INTERFACE_VERSION_5_0_0 101
+#define EXIT_INTERFACE_VERSION 101
 
 typedef struct
 {
-    wholenumber_t interfaceVersion;    // The interface version identifier
-    void             (RexxEntry *SetContextVariable)(RexxExitContext *, CSTRING, RexxObjectPtr);
-    RexxObjectPtr    (RexxEntry *GetContextVariable)(RexxExitContext *, CSTRING);
-    void             (RexxEntry *DropContextVariable)(RexxExitContext *, CSTRING);
-    RexxDirectoryObject (RexxEntry *GetAllContextVariables)(RexxExitContext *);
-    RexxObjectPtr    (RexxEntry *GetCallerContext)(RexxExitContext *);
+     wholenumber_t interfaceVersion;    // The interface version identifier
+     void             (RexxEntry *SetContextVariable)(RexxExitContext *, CSTRING, RexxObjectPtr);
+     RexxObjectPtr(RexxEntry *GetContextVariable)(RexxExitContext *, CSTRING);
+     void             (RexxEntry *DropContextVariable)(RexxExitContext *, CSTRING);
+     RexxDirectoryObject(RexxEntry *GetAllContextVariables)(RexxExitContext *);
+     RexxObjectPtr    (RexxEntry *GetCallerContext)(RexxExitContext *);
+     RexxVariableReferenceObject(RexxEntry *GetContextVariableReference)(RexxExitContext *, CSTRING);
 } ExitContextInterface;
 
 
@@ -3114,6 +3118,10 @@ struct RexxCallContext_
      {
          functions->DropContextVariable(this, s);
      }
+     RexxVariableReferenceObject GetContextVariableReference(CSTRING s)
+     {
+         return functions->GetContextVariableReference(this, s);
+     }
      RexxStemObject ResolveStemVariable(RexxObjectPtr v)
      {
          return functions->ResolveStemVariable(this, v);
@@ -3763,138 +3771,142 @@ struct RexxExitContext_
          threadContext->SetVariableReferenceValue(vr, v);
      }
 
-    RexxObjectPtr SupplierItem(RexxSupplierObject so)
-    {
-        return threadContext->SupplierItem(so);
-    }
-    RexxObjectPtr SupplierIndex(RexxSupplierObject so)
-    {
-        return threadContext->SupplierIndex(so);
-    }
-    logical_t SupplierAvailable(RexxSupplierObject so)
-    {
-        return threadContext->SupplierAvailable(so);
-    }
-    void SupplierNext(RexxSupplierObject so)
-    {
-        threadContext->SupplierNext(so);
-    }
-    RexxSupplierObject NewSupplier(RexxArrayObject values, RexxArrayObject names)
-    {
-        return threadContext->NewSupplier(values, names);
-    }
+     RexxObjectPtr SupplierItem(RexxSupplierObject so)
+     {
+         return threadContext->SupplierItem(so);
+     }
+     RexxObjectPtr SupplierIndex(RexxSupplierObject so)
+     {
+         return threadContext->SupplierIndex(so);
+     }
+     logical_t SupplierAvailable(RexxSupplierObject so)
+     {
+         return threadContext->SupplierAvailable(so);
+     }
+     void SupplierNext(RexxSupplierObject so)
+     {
+         threadContext->SupplierNext(so);
+     }
+     RexxSupplierObject NewSupplier(RexxArrayObject values, RexxArrayObject names)
+     {
+         return threadContext->NewSupplier(values, names);
+     }
 
-    RexxStemObject NewStem(CSTRING n)
-    {
-        return threadContext->NewStem(n);
-    }
-    void SetStemElement(RexxStemObject so, CSTRING s, RexxObjectPtr o)
-    {
-        threadContext->SetStemElement(so, s, o);
-    }
-    RexxObjectPtr GetStemElement(RexxStemObject so, CSTRING s)
-    {
-        return threadContext->GetStemElement(so, s);
-    }
-    void DropStemElement(RexxStemObject so, CSTRING s)
-    {
-        threadContext->DropStemElement(so, s);
-    }
-    void SetStemArrayElement(RexxStemObject so, size_t n, RexxObjectPtr o)
-    {
-        threadContext->SetStemArrayElement(so, n, o);
-    }
-    RexxObjectPtr GetStemArrayElement(RexxStemObject so, size_t n)
-    {
-        return threadContext->GetStemArrayElement(so, n);
-    }
-    void DropStemArrayElement(RexxStemObject so, size_t n)
-    {
-        threadContext->DropStemArrayElement(so, n);
-    }
-    RexxDirectoryObject GetAllStemElements(RexxStemObject so)
-    {
-        return threadContext->GetAllStemElements(so);
-    }
-    RexxObjectPtr GetStemValue(RexxStemObject so)
-    {
-        return threadContext->GetStemValue(so);
-    }
-    logical_t IsStem(RexxObjectPtr o)
-    {
-        return threadContext->IsStem(o);
-    }
+     RexxStemObject NewStem(CSTRING n)
+     {
+         return threadContext->NewStem(n);
+     }
+     void SetStemElement(RexxStemObject so, CSTRING s, RexxObjectPtr o)
+     {
+         threadContext->SetStemElement(so, s, o);
+     }
+     RexxObjectPtr GetStemElement(RexxStemObject so, CSTRING s)
+     {
+         return threadContext->GetStemElement(so, s);
+     }
+     void DropStemElement(RexxStemObject so, CSTRING s)
+     {
+         threadContext->DropStemElement(so, s);
+     }
+     void SetStemArrayElement(RexxStemObject so, size_t n, RexxObjectPtr o)
+     {
+         threadContext->SetStemArrayElement(so, n, o);
+     }
+     RexxObjectPtr GetStemArrayElement(RexxStemObject so, size_t n)
+     {
+         return threadContext->GetStemArrayElement(so, n);
+     }
+     void DropStemArrayElement(RexxStemObject so, size_t n)
+     {
+         threadContext->DropStemArrayElement(so, n);
+     }
+     RexxDirectoryObject GetAllStemElements(RexxStemObject so)
+     {
+         return threadContext->GetAllStemElements(so);
+     }
+     RexxObjectPtr GetStemValue(RexxStemObject so)
+     {
+         return threadContext->GetStemValue(so);
+     }
+     logical_t IsStem(RexxObjectPtr o)
+     {
+         return threadContext->IsStem(o);
+     }
 
-    void RaiseException0(size_t n)
-    {
-        threadContext->RaiseException0(n);
-    }
-    void RaiseException1(size_t n, RexxObjectPtr o)
-    {
-        threadContext->RaiseException1(n, o);
-    }
-    void RaiseException2(size_t n, RexxObjectPtr o1, RexxObjectPtr o2)
-    {
-        threadContext->RaiseException2(n, o1, o2);
-    }
-    void RaiseException(size_t n, RexxArrayObject ao)
-    {
-        threadContext->RaiseException(n, ao);
-    }
-    void RaiseCondition(CSTRING s1, RexxStringObject s2, RexxObjectPtr ao, RexxObjectPtr o)
-    {
-        threadContext->RaiseCondition(s1, s2, ao, o);
-    }
-    logical_t CheckCondition()
-    {
-        return threadContext->CheckCondition();
-    }
-    logical_t DisplayCondition()
-    {
-        return threadContext->DisplayCondition();
-    }
-    RexxDirectoryObject GetConditionInfo()
-    {
-        return threadContext->GetConditionInfo();
-    }
-    void DecodeConditionInfo(RexxDirectoryObject diro, RexxCondition *c)
-    {
-        threadContext->DecodeConditionInfo(diro, c);
-    }
-    void ClearCondition()
-    {
-        threadContext->ClearCondition();
-    }
+     void RaiseException0(size_t n)
+     {
+         threadContext->RaiseException0(n);
+     }
+     void RaiseException1(size_t n, RexxObjectPtr o)
+     {
+         threadContext->RaiseException1(n, o);
+     }
+     void RaiseException2(size_t n, RexxObjectPtr o1, RexxObjectPtr o2)
+     {
+         threadContext->RaiseException2(n, o1, o2);
+     }
+     void RaiseException(size_t n, RexxArrayObject ao)
+     {
+         threadContext->RaiseException(n, ao);
+     }
+     void RaiseCondition(CSTRING s1, RexxStringObject s2, RexxObjectPtr ao, RexxObjectPtr o)
+     {
+         threadContext->RaiseCondition(s1, s2, ao, o);
+     }
+     logical_t CheckCondition()
+     {
+         return threadContext->CheckCondition();
+     }
+     logical_t DisplayCondition()
+     {
+         return threadContext->DisplayCondition();
+     }
+     RexxDirectoryObject GetConditionInfo()
+     {
+         return threadContext->GetConditionInfo();
+     }
+     void DecodeConditionInfo(RexxDirectoryObject diro, RexxCondition *c)
+     {
+         threadContext->DecodeConditionInfo(diro, c);
+     }
+     void ClearCondition()
+     {
+         threadContext->ClearCondition();
+     }
 
-    RexxObjectPtr Nil()
-    {
-        return threadContext->Nil();
-    }
-    RexxObjectPtr True()
-    {
-        return threadContext->True();
-    }
-    RexxObjectPtr False()
-    {
-        return threadContext->False();
-    }
-    RexxStringObject NullString()
-    {
-        return threadContext->NullString();
-    }
-    void SetContextVariable(CSTRING s, RexxObjectPtr o)
-    {
-        functions->SetContextVariable(this, s, o);
-    }
-    RexxObjectPtr GetContextVariable(CSTRING s)
-    {
-        return functions->GetContextVariable(this, s);
-    }
-    void DropContextVariable(CSTRING s)
-    {
-        functions->DropContextVariable(this, s);
-    }
-    RexxDirectoryObject GetAllContextVariables()
+     RexxObjectPtr Nil()
+     {
+         return threadContext->Nil();
+     }
+     RexxObjectPtr True()
+     {
+         return threadContext->True();
+     }
+     RexxObjectPtr False()
+     {
+         return threadContext->False();
+     }
+     RexxStringObject NullString()
+     {
+         return threadContext->NullString();
+     }
+     void SetContextVariable(CSTRING s, RexxObjectPtr o)
+     {
+         functions->SetContextVariable(this, s, o);
+     }
+     RexxObjectPtr GetContextVariable(CSTRING s)
+     {
+         return functions->GetContextVariable(this, s);
+     }
+     void DropContextVariable(CSTRING s)
+     {
+         functions->DropContextVariable(this, s);
+     }
+     RexxVariableReferenceObject GetContextVariableReference(CSTRING s)
+     {
+         return functions->GetContextVariableReference(this, s);
+     }
+     RexxDirectoryObject GetAllContextVariables()
     {
         return functions->GetAllContextVariables(this);
     }
