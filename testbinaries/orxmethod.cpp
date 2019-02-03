@@ -2222,6 +2222,49 @@ RexxMethod1(CSTRING,                   // Return type
     return (char *)ptr;
 }
 
+// RexxVariableReferenceObject (RexxEntry *GetObjectVariableReference)(RexxMethodContext *, CSTRING);
+RexxMethod1(RexxVariableReferenceObject,    // Return type
+            TestGetObjectVariableReference, // Function name
+            CSTRING, name)                  // Argument
+{
+    return context->GetObjectVariableReference(name);
+}
+
+// logical_t (RexxEntry *IsVariableReference)(RexxThreadContext *, RexxObjectPtr);
+RexxMethod1(logical_t,                      // Return type
+            TestIsVariableReference,        // Function name
+            RexxObjectPtr, o)               // Argument
+{
+    return context->IsVariableReference(o);
+}
+
+// void (RexxEntry *SetVariableReferenceValue)(RexxThreadContext *, RexxVariableReferenceObject, RexxObjectPtr);
+RexxMethod2(RexxObjectPtr,                  // Return type
+            TestSetVariableReferenceValue,  // Function name
+            RexxObjectPtr, o,               // Argument
+            RexxObjectPtr, val)             // Argument
+{
+    context->SetVariableReferenceValue((RexxVariableReferenceObject)o, val);
+    return NULLOBJECT;
+}
+
+// RexxStringObject (RexxEntry *VariableReferenceName)(RexxThreadContext *, RexxVariableReferenceObject);
+RexxMethod1(RexxStringObject,               // Return type
+            TestVariableReferenceName,      // Function name
+            RexxObjectPtr, o)               // Argument
+{
+    return context->VariableReferenceName((RexxVariableReferenceObject)o);
+}
+
+// RexxObjectPtr (RexxEntry *VariableReferenceValue)(RexxThreadContext *, RexxVariableReferenceObject);
+RexxMethod1(RexxObjectPtr,                  // Return type
+            TestVariableReferenceValue,     // Function name
+            RexxObjectPtr, o)               // Argument
+//@@crashes RexxVariableReferenceObject, o) // Argument
+{
+    return context->VariableReferenceValue((RexxVariableReferenceObject)o);
+}
+
 RexxMethodEntry orxtest_methods[] = {
     REXX_METHOD(TestIsBuffer,          TestIsBuffer),
     REXX_METHOD(TestBufferInit,        TestBufferInit),
@@ -2454,6 +2497,11 @@ RexxMethodEntry orxtest_methods[] = {
     REXX_METHOD(TestReallocateObjectMemory,  TestReallocateObjectMemory),
     REXX_METHOD(TestSetObjectMemory,         TestSetObjectMemory),
     REXX_METHOD(TestGetObjectMemory,         TestGetObjectMemory),
+    REXX_METHOD(TestGetObjectVariableReference, TestGetObjectVariableReference),
+    REXX_METHOD(TestIsVariableReference,     TestIsVariableReference),
+    REXX_METHOD(TestSetVariableReferenceValue, TestSetVariableReferenceValue),
+    REXX_METHOD(TestVariableReferenceName,   TestVariableReferenceName),
+    REXX_METHOD(TestVariableReferenceValue,  TestVariableReferenceValue),
     REXX_LAST_METHOD()
 };
 
