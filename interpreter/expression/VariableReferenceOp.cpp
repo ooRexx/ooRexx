@@ -35,9 +35,8 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Translator                                  ExpressionVariable.cpp    */
 /*                                                                            */
-/* Primitive Translator Expression Parsing Variable Reference Class           */
+/* Primitive Translator Expression VariableReference operator class           */
 /*                                                                            */
 /******************************************************************************/
 #include "RexxCore.h"
@@ -114,7 +113,7 @@ RexxObject *VariableReferenceOp::evaluate(RexxActivation *context, ExpressionSta
     VariableReference *value = variable->getVariableReference(context);
     stack->push(value);
     // trace as an operator
-    context->traceOperator("&", value->getName());
+    context->traceOperator(">", value->getName());
     return value;
 }
 
