@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -73,6 +73,8 @@
 #include "SetClass.hpp"
 #include "BagClass.hpp"
 #include "NumberStringClass.hpp"
+#include "RexxInfoClass.hpp"
+#include "VariableReference.hpp"
 
 #include <stdio.h>
 #include <stdarg.h>
@@ -1733,6 +1735,8 @@ void MemoryObject::restore()
     RESTORE_CLASS(Buffer, RexxClass);
     RESTORE_CLASS(WeakReference, RexxClass);
     RESTORE_CLASS(StackFrame, RexxClass);
+    RESTORE_CLASS(RexxInfo, RexxClass);
+    RESTORE_CLASS(VariableReference, RexxClass);
 
     // mark the memory object as old space.
     memoryObject.setOldSpace();

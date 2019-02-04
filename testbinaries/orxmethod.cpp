@@ -2259,8 +2259,7 @@ RexxMethod1(RexxStringObject,               // Return type
 // RexxObjectPtr (RexxEntry *VariableReferenceValue)(RexxThreadContext *, RexxVariableReferenceObject);
 RexxMethod1(RexxObjectPtr,                  // Return type
             TestVariableReferenceValue,     // Function name
-            RexxObjectPtr, o)               // Argument
-//@@crashes RexxVariableReferenceObject, o) // Argument
+            RexxVariableReferenceObject, o) // Argument
 {
     return context->VariableReferenceValue((RexxVariableReferenceObject)o);
 }

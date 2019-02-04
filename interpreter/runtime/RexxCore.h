@@ -174,6 +174,10 @@ extern MemoryObject memoryObject;
 //       instances:
 //
 //       RexxObject *newRexx(RexxObject **args, size_t argc);
+//
+//    f) add a RESTORE_CLASS() macro call for the class in RexxMemory::restore()
+//       so that the TheXxxxxxXxxxxxxClass variable gets restored when the image
+//       is loaded.
 
 // Steps for writing a new class:
 // All objects allocated from the object heap must implement

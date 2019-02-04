@@ -79,10 +79,12 @@
 #define REXX_VALUE_uint16_t               25
 #define REXX_VALUE_uint32_t               26
 #define REXX_VALUE_uint64_t               27
-#define REXX_VALUE___uint64_t             27  -- aliased
+// aliased
+#define REXX_VALUE___uint64_t             27
 #define REXX_VALUE_intptr_t               28
 #define REXX_VALUE_uintptr_t              29
-#define REXX_VALUE___uintptr_t            29  -- aliased
+// aliased
+#define REXX_VALUE___uintptr_t            29
 #define REXX_VALUE_logical_t              30
 #define REXX_VALUE_RexxArrayObject        31
 #define REXX_VALUE_RexxStemObject         32
@@ -93,7 +95,8 @@
 #define REXX_VALUE_RexxMutableBufferObject 37
 #define REXX_VALUE_positive_wholenumber_t 38
 #define REXX_VALUE_nonnegative_wholenumber_t 39
-#define REXX_VALUE_RexxVariableReferenceObject 40     // NB: These are never optional!
+// NB: These are never optional!
+#define REXX_VALUE_RexxVariableReferenceObject 40
 
 #define REXX_OPTIONAL_ARGUMENT                 0x8000
 
