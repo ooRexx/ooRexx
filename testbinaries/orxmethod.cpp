@@ -2241,7 +2241,7 @@ RexxMethod1(logical_t,                      // Return type
 // void (RexxEntry *SetVariableReferenceValue)(RexxThreadContext *, RexxVariableReferenceObject, RexxObjectPtr);
 RexxMethod2(RexxObjectPtr,                  // Return type
             TestSetVariableReferenceValue,  // Function name
-            RexxObjectPtr, o,               // Argument
+            RexxVariableReferenceObject, o, // Argument
             RexxObjectPtr, val)             // Argument
 {
     context->SetVariableReferenceValue((RexxVariableReferenceObject)o, val);
@@ -2251,7 +2251,7 @@ RexxMethod2(RexxObjectPtr,                  // Return type
 // RexxStringObject (RexxEntry *VariableReferenceName)(RexxThreadContext *, RexxVariableReferenceObject);
 RexxMethod1(RexxStringObject,               // Return type
             TestVariableReferenceName,      // Function name
-            RexxObjectPtr, o)               // Argument
+            RexxVariableReferenceObject, o) // Argument
 {
     return context->VariableReferenceName((RexxVariableReferenceObject)o);
 }
