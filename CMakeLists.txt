@@ -1376,7 +1376,7 @@ install(TARGETS rxunixsys RUNTIME DESTINATION ${INSTALL_LIB_DIR}
 endif ()
 
 #################### liborxncurses.so ################
-if (NOT WIN32)
+if (HAVE_NCURSES_H)
    # need to copy this to the binary dir
    copy_build_file(ncurses.cls ${build_extensions_orxncurses_dir})
    # Sources for liborxncurses.so
