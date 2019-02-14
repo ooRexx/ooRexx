@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -46,6 +46,7 @@
 #include <time.h>
 #include <shlobj.h>
 #include <shlwapi.h>
+#include <algorithm>
 
 #define STR_BUFFER    256
 #define MAX_TIME_DATE 128
@@ -2096,7 +2097,7 @@ char * getEventUserName(PEVENTLOGRECORD pEvLogRecord)
         // Get the size required for the return buffers
         LookupAccountSid(NULL, psid, pUserID, &sizeID, pDomain, &sizeDomain, &strDummy);
 
-        pUserID = (char *)LocalAlloc(LPTR, max(sizeID, (DWORD)strlen(defUserID) + 1));
+        pUserID = (char *)LocalAlloc(LPTR, std::max(sizeID, (DWORD)strlen(defUserID) + 1));
         pDomain = (char *)LocalAlloc(LPTR, sizeDomain);
 
         if ( LookupAccountSid(NULL, psid, pUserID, &sizeID, pDomain, &sizeDomain, &strDummy) == 0 )

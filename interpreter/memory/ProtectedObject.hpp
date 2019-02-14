@@ -70,92 +70,92 @@ protected:
 class ProtectedObject : public ProtectedBase
 {
  public:
-    inline ProtectedObject() : protectedObject(OREF_NULL), ProtectedBase() { }
-    inline ProtectedObject(Activity *a) : protectedObject(OREF_NULL), ProtectedBase(a) { }
-    inline ProtectedObject(RexxInternalObject *o) : protectedObject(o), ProtectedBase() { }
-    inline ProtectedObject(RexxInternalObject *o, Activity *a) : protectedObject(o), ProtectedBase(a) { }
-    inline ~ProtectedObject() { }
+     inline ProtectedObject() : protectedObject(OREF_NULL), ProtectedBase() { }
+     inline ProtectedObject(Activity *a) : protectedObject(OREF_NULL), ProtectedBase(a) { }
+     inline ProtectedObject(RexxInternalObject *o) : protectedObject(o), ProtectedBase() { }
+     inline ProtectedObject(RexxInternalObject *o, Activity *a) : protectedObject(o), ProtectedBase(a) { }
+     inline ~ProtectedObject() { }
 
-    void mark(size_t liveMark) override { memory_mark(protectedObject); }
-    void markGeneral(int reason) override { memory_mark_general(protectedObject); }
+     void mark(size_t liveMark)override { memory_mark(protectedObject); }
+     void markGeneral(int reason)override { memory_mark_general(protectedObject); }
 
-    inline ProtectedBase & operator=(RexxInternalObject *o)
-    {
-        protectedObject = o;
-        return *this;
-    }
+     inline ProtectedBase & operator=(RexxInternalObject *o)
+     {
+         protectedObject = o;
+         return *this;
+     }
 
-    inline bool operator == (RexxInternalObject *o)
-    {
-        return protectedObject == o;
-    }
+     inline bool operator==(RexxInternalObject *o)
+     {
+         return protectedObject == o;
+     }
 
-    inline bool operator != (RexxInternalObject *o)
-    {
-        return protectedObject != o;
-    }
+     inline bool operator!=(RexxInternalObject *o)
+     {
+         return protectedObject != o;
+     }
 
-    // cast conversion operators for some very common uses of protected object.
-    inline operator RexxObject *()
-    {
-        return (RexxObject *)protectedObject;
-    }
+     // cast conversion operators for some very common uses of protected object.
+     inline operator RexxObject *()
+     {
+         return (RexxObject *)protectedObject;
+     }
 
-    // cast conversion operators for some very common uses of protected object.
-    inline operator RexxInternalObject *()
-    {
-        return protectedObject;
-    }
+     // cast conversion operators for some very common uses of protected object.
+     inline operator RexxInternalObject *()
+     {
+         return protectedObject;
+     }
 
-    inline operator RexxObjectPtr ()
-    {
-        return (RexxObjectPtr)protectedObject;
-    }
+     inline operator RexxObjectPtr()
+     {
+         return (RexxObjectPtr)protectedObject;
+     }
 
-    inline operator RexxString *()
-    {
-        return (RexxString *)protectedObject;
-    }
+     inline operator RexxString *()
+     {
+         return (RexxString *)protectedObject;
+     }
 
-    inline operator MethodClass *()
-    {
-        return (MethodClass *)protectedObject;
-    }
+     inline operator MethodClass *()
+     {
+         return (MethodClass *)protectedObject;
+     }
 
-    inline operator ArrayClass *()
-    {
-        return (ArrayClass *)protectedObject;
-    }
+     inline operator ArrayClass *()
+     {
+         return (ArrayClass *)protectedObject;
+     }
 
-    inline operator RexxClass *()
-    {
-        return (RexxClass *)protectedObject;
-    }
+     inline operator RexxClass *()
+     {
+         return (RexxClass *)protectedObject;
+     }
 
-    // this conversion helps the parsing process protect objects
-    inline operator RexxInstruction *()
-    {
-        return (RexxInstruction *)protectedObject;
-    }
+     // this conversion helps the parsing process protect objects
+     inline operator RexxInstruction *()
+     {
+         return (RexxInstruction *)protectedObject;
+     }
 
-    inline operator void *()
-    {
-        return (void *)protectedObject;
-    }
+     inline operator void *()
+     {
+         return (void *)protectedObject;
+     }
 
-    inline bool isNull()
-    {
-        return protectedObject == OREF_NULL;
-    }
+     inline bool isNull()
+     {
+         return protectedObject == OREF_NULL;
+     }
 
-    // pointer access
-    inline RexxObject * operator->()
-    {
-        return (RexxObject *)protectedObject;
-    }
+     // pointer access
+     inline RexxObject * operator->()
+     {
+         return (RexxObject *)protectedObject;
+     }
 
-protected:
-    RexxInternalObject *protectedObject;   // The object we're protecting
+ protected:
+     RexxInternalObject *protectedObject;   // The object we're protecting
 };
 
 
@@ -167,12 +167,12 @@ protected:
  */
 class ProtectedSet : public ProtectedObject
 {
-public:
-    inline ProtectedSet() : ProtectedObject() { }
-    inline ProtectedSet(Activity *a) : ProtectedObject(a) { }
-    inline ~ProtectedSet() { }
+ public:
+     inline ProtectedSet() : ProtectedObject() { }
+     inline ProtectedSet(Activity *a) : ProtectedObject(a) { }
+     inline ~ProtectedSet() { }
 
-    void add(RexxInternalObject *);
+     void add(RexxInternalObject *);
 };
 
 
@@ -183,57 +183,57 @@ public:
  * operations need to be performed on a protected object
  * since it avoids lots of cast operations.
  */
-template <class objType> class Protected : public ProtectedBase
+template<class objType> class Protected : public ProtectedBase
 {
-public:
-    inline Protected() : protectedObject(OREF_NULL), ProtectedBase() { }
-    inline Protected(Activity *a) : protectedObject(OREF_NULL), ProtectedBase(a) { }
-    inline Protected(objType *o) : protectedObject(o), ProtectedBase() { }
-    inline Protected(objType *o, Activity *a) : protectedObject(o), ProtectedBase(a) { }
+ public:
+     inline Protected() : protectedObject(OREF_NULL), ProtectedBase() { }
+     inline Protected(Activity *a) : protectedObject(OREF_NULL), ProtectedBase(a) { }
+     inline Protected(objType *o) : protectedObject(o), ProtectedBase() { }
+     inline Protected(objType *o, Activity *a) : protectedObject(o), ProtectedBase(a) { }
 
-    inline ~Protected() { }
+     inline ~Protected() { }
 
-    void mark(size_t liveMark) override { memory_mark(protectedObject); }
-    void markGeneral(int reason) override { memory_mark_general(protectedObject); }
+     void mark(size_t liveMark)override { memory_mark(protectedObject); }
+     void markGeneral(int reason)override { memory_mark_general(protectedObject); }
 
-    inline ProtectedBase & operator=(objType *o)
-    {
-        protectedObject = o;
-        return *this;
-    }
+     inline ProtectedBase & operator=(objType *o)
+     {
+         protectedObject = o;
+         return *this;
+     }
 
-    inline bool operator == (objType *o)
-    {
-        return protectedObject == o;
-    }
+     inline bool operator==(objType *o)
+     {
+         return protectedObject == o;
+     }
 
-    inline operator RexxObjectPtr ()
-    {
-        return (RexxObjectPtr)protectedObject;
-    }
+     inline operator RexxObjectPtr()
+     {
+         return (RexxObjectPtr)protectedObject;
+     }
 
-    inline operator objType *()
-    {
-        return protectedObject;
-    }
+     inline operator objType *()
+     {
+         return protectedObject;
+     }
 
-    inline operator void *()
-    {
-        return (void *)protectedObject;
-    }
+     inline operator void *()
+     {
+         return (void *)protectedObject;
+     }
 
-    inline bool isNull()
-    {
-        return protectedObject == OREF_NULL;
-    }
+     inline bool isNull()
+     {
+         return protectedObject == OREF_NULL;
+     }
 
-    // pointer access
-    inline objType * operator->()
-    {
-        return protectedObject;
-    }
+     // pointer access
+     inline objType *operator->()
+     {
+         return protectedObject;
+     }
 
-protected:
+ protected:
 
     objType *protectedObject;          // the protected object.
 };

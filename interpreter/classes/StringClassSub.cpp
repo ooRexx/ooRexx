@@ -213,7 +213,7 @@ RexxString *RexxString::insert(RexxString  *newStrObj, RexxInteger *position, Re
 
     // we might need to truncate the inserted string if the specified length is
     // shorter than the inserted string
-    newStringLength = Numerics::minVal(newStringLength, insertLength);
+    newStringLength = std::min(newStringLength, insertLength);
     size_t padLength = insertLength - newStringLength;
 
     size_t resultLength = targetLength + insertLength + leadPad;
@@ -265,7 +265,7 @@ RexxString *RexxString::left(RexxInteger *_length, RexxString *pad)
     StringBuilder builder(retval);
 
     // cap the length copied from the existing string to its length
-    size_t copyLength = Numerics::minVal(length, size);
+    size_t copyLength = std::min(length, size);
 
     // if we have data to copy, add to the result
     builder.append(getStringData(), copyLength);
@@ -499,7 +499,7 @@ RexxString *RexxString::right(RexxInteger *_length, RexxString  *pad)
 
     // the requested length might be longer than the target string, so
     // cap at that size
-    size_t copyLength = Numerics::minVal(sourceLength, size);
+    size_t copyLength = std::min(sourceLength, size);
     size_t padLength = size - copyLength;
 
     // padding, if required, occurs before the extracted string piece

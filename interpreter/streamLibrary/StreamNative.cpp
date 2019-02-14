@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -52,6 +52,7 @@
 #include <errno.h>
 #include <new>
 #include <stdio.h>
+#include "FileNameBuffer.hpp"
 
 /********************************************************************************/
 /*                                                                              */
@@ -566,7 +567,7 @@ const char *StreamInfo::openStd(const char *options)
    }
 
    // the resolved name is the same as the input name.
-   strcpy(qualified_name, stream_name);
+   qualified_name = stream_name;
    // we're open, and ready
    isopen = true;
 
@@ -607,7 +608,7 @@ const char *StreamInfo::handleOpen(const char *options)
     resetFields();
 
     /* copy into the full name from the name */
-    strcpy(qualified_name,stream_name);
+    qualified_name = stream_name;
 
     // do we have options?
     if (options != NULL)
@@ -724,7 +725,7 @@ void StreamInfo::resetFields()
     // initialize the stream info
     //  in case this is not the first
     // open for this stream
-    strcpy(qualified_name, "\0");
+    qualified_name = "";
     fileInfo.reset();
     stream_line_size = 0;
     binaryRecordLength = 0;
@@ -991,9 +992,9 @@ RexxStringObject StreamInfo::readLine(char *buffer, size_t length, bool update_p
  */
 void StreamInfo::resolveStreamName()
 {
-    if (strlen(qualified_name) == 0)
+    if (qualified_name.length() == 0)
     {
-        SysFileSystem::qualifyStreamName(stream_name, qualified_name, sizeof(qualified_name));
+        SysFileSystem::qualifyStreamName(stream_name, qualified_name);
     }
 }
 
@@ -2123,8 +2124,9 @@ RexxMethod1(CSTRING, stream_uninit, CSELF, streamPtr)
     {
         stream_info->streamClose();
         // The stream information is held in a Buffer object that will be
-        // automatically garbage collected with the stream object.  We don't
-        // need to explicitly delete this
+        // automatically garbage collected with the stream object.
+        // however, we do need to drive the destructors for this object
+        stream_info->~StreamInfo();
         stream_info = NULL;
         // clear the backing buffer for the stream info
         context->DropObjectVariable("CSELF");
@@ -2398,7 +2400,7 @@ const char *StreamInfo::streamOpen(const char *options)
             char work[32];
 
             /* format the error return           */
-            sprintf(work, "ERROR:%d", ENOENT);
+            snprintf(work, sizeof(work), "ERROR:%d", ENOENT);
             /* go raise a notready condition     */
             notreadyError(ENOENT, context->NewStringFromAsciiz(work));
         }
@@ -3667,7 +3669,7 @@ StreamInfo::StreamInfo(RexxObjectPtr s, const char *inputName)
 
     // initialize the default values
     resetFields();
-    strncpy(stream_name, inputName, SysFileSystem::MaximumPathLength);
+    stream_name = inputName;
     // this stream is in an unknown state now.
     state = StreamUnknown;
 }

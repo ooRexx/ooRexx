@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -1536,7 +1536,7 @@ RexxToken *LanguageParser::scanSymbol()
         subclass = SYMBOL_CONSTANT;
         // if all digits and not longer than REXXINTEGER_DIGITS, we can
         // use integer objects instead.
-        if (state == EXP_DIGIT && length <= Numerics::REXXINTEGER_DIGITS)
+        if (state == EXP_DIGIT && length <= (size_t)Numerics::REXXINTEGER_DIGITS)
         {
             // no leading zero or only zero?
             if (inch != '0' || length == 1)

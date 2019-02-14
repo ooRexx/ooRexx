@@ -70,6 +70,11 @@ class InterpreterInstance;
 class RexxActivation;
 class RexxDateTime;
 class BufferClass;
+class FileNameBuffer;
+
+/**
+ * A platform-specific class that implements a number of platform abstraction APIs as static methods.
+ */
 
 class SystemInterpreter
 {
@@ -85,13 +90,11 @@ public:
 
     static void initializeInstance(InterpreterInstance *instance);
     static void terminateInstance(InterpreterInstance *instance);
-    static void getCurrentWorkingDirectory(char *);
 
     static RexxObject *popEnvironment(RexxActivation *context);
     static RexxObject *pushEnvironment(RexxActivation *context);
     static void restoreEnvironment(void *CurrentEnv);
     static RexxObject *buildEnvlist();
-    static RexxString *qualifyFileSystemName(RexxString *name);
     static void getCurrentTime(RexxDateTime *Date );
     static const char *getPlatformName();
     static RexxString *getUserid();
@@ -100,14 +103,12 @@ public:
     static void releaseSegmentMemory(void *);
     static void *allocateSegmentMemory(size_t);
     static RexxString *getMessageText(wholenumber_t code);
-    static bool valueFunction(RexxString *name, RexxObject *newValue, RexxString *selector, RexxObject *&result);
+    static bool valueFunction(RexxString *name, RexxObject *newValue, RexxString *selector, ProtectedObject &result);
     static RexxString *getDefaultAddressName();
     static bool invokeExternalFunction(RexxActivation *, Activity *, RexxString *, RexxObject **, size_t, RexxString *, ProtectedObject &);
     static void validateAddressName(RexxString *name );
-    static void loadImage(char *&imageBuffer, size_t &imageSize);
-    static bool loadImage(char *&imageBuffer, size_t &imageSize, const char *imageFile);
-    static BufferClass *readProgram(const char *file_name);
-    static int setEnvironmentVariable(RexxString *name, RexxString *value);
+    static void setEnvironmentVariable(const char *name, const char *value);
+    static bool getEnvironmentVariable(const char *variable, FileNameBuffer &buffer);
 
     static sigset_t oldmask;       // masks used for setting signal handlers
     static sigset_t newmask;

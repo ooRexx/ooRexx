@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -44,6 +44,159 @@
 
 #include "RexxCore.h"
 #include "PackageManager.hpp"
+#include "SysFileSystem.hpp"
+#include "ExternalFileBuffer.hpp"
+#include "SysProcess.hpp"
+
+// FILESPEC function options
+#define FILESPEC_PATH         'P'
+#define FILESPEC_NAME         'N'
+#define FILESPEC_LOCATION     'L'
+#define FILESPEC_EXTENSION    'E'
+#define FILESPEC_DRIVE        'D'
+
+
+/****************************************************************************/
+/* sysDirectory                                                             */
+/****************************************************************************/
+RexxRoutine1(RexxStringObject, sysDirectory, OPTIONAL_CSTRING, dir)
+{
+    if (dir != NO_CSTRING)
+    {
+        RoutineQualifiedName qualifiedName(context, dir);
+
+        if (!SysFileSystem::setCurrentDirectory(qualifiedName))
+        {
+            // return a NULL string if we can't change the directory
+            // to indicate an error
+            return context->NullString();
+        }
+    }
+
+    RoutineFileNameBuffer newDir(context);
+
+    // obtain the current directory
+    SysFileSystem::getCurrentDirectory(newDir);
+    return context->NewStringFromAsciiz(newDir);
+}
+
+
+/********************************************************************************************/
+/* sysFilespec                                                                              */
+/********************************************************************************************/
+RexxRoutine2(RexxStringObject, sysFilespec, CSTRING, option, CSTRING, name)
+{
+    const char *endPtr = name + strlen(name);        // point to last character
+
+    const char *pathStart = SysFileSystem::getPathStart(name);
+    const char *pathEnd = SysFileSystem::getPathEnd(name);
+
+    // get the end of the path portion (if any)
+    // note that pathend is one character past the end of the path.
+    // this means the length is easily calculated as pathEnd - pathStart,
+    // even in the cases where there is no patch portion
+    pathEnd = pathEnd == NULL ? pathStart : pathEnd + 1;
+    // this one needs a little adjustment for the case where this is all name
+    const char *nameStart = pathEnd == name ? name : pathEnd;
+
+    switch (toupper(*option))              /* process each option               */
+    {
+        case FILESPEC_PATH:                /* extract the path                  */
+        {
+            return context->String(pathStart, pathEnd - pathStart);
+        }
+
+        case FILESPEC_NAME:                  /* extract the file name               */
+        {                                /* everything to right of slash        */
+            return context->String(nameStart, endPtr - nameStart);
+        }
+
+        case FILESPEC_LOCATION:          /* extract the file name               */
+        {                                /* everything to left of slash        */
+            return context->String(name, pathEnd - name);
+        }
+
+        case FILESPEC_DRIVE:               /* extract the drive                 */
+        {
+            // this will return a null string if nothing is before the pathStart
+            return context->String(name, pathStart - name);
+        }
+
+        case FILESPEC_EXTENSION:           // extract the file extension
+        {
+            // find the position of the last dot
+            const char *lastDot = strrchr(name, '.');
+
+            if (lastDot >= nameStart)
+            {
+                // we don't extract the period
+                lastDot++;
+                return context->String(lastDot, endPtr - lastDot);
+            }
+            else
+            {
+                return context->NullString();        // nothing found, return the empty string
+            }
+
+        }
+        default:                           /* unknown option                    */
+        {
+            char optionChar[2];
+            optionChar[0] = *option;
+            optionChar[1] = '\0';
+
+            RexxArrayObject subs = context->Array(context->String("FILESPEC"), context->WholeNumberToObject(1),
+                                                  context->String("DELNP"), context->String(optionChar));
+            /* raise an error                    */
+            context->RaiseException(Rexx_Error_Incorrect_call_list, subs);
+            return NULLOBJECT;
+        }
+    }
+}
+
+
+#define  MAX_FREQUENCY 32767
+#define  MIN_FREQUENCY    37
+#define  MAX_DURATION  60000
+#define  MIN_DURATION      0
+
+/*********************************************************************/
+/*                                                                   */
+/*   Subroutine Name:   sysBeep                                      */
+/*                                                                   */
+/*   Descriptive Name:  BEEP function                                */
+/*                                                                   */
+/*   Function:          sounds the speaker at frequency Hertz for    */
+/*                      specified duration (in milliseconds)         */
+/*********************************************************************/
+RexxRoutine2(CSTRING, sysBeep, wholenumber_t, Frequency, wholenumber_t, Duration)
+{
+    /* out of range?              */
+    if (Frequency > MAX_FREQUENCY || Frequency < MIN_FREQUENCY)
+    {
+        RexxArrayObject subs = context->NewArray(4);
+        context->ArrayAppend(subs, context->NewStringFromAsciiz("frequency"));
+        context->ArrayAppend(subs, context->WholeNumberToObject(MIN_FREQUENCY));
+        context->ArrayAppend(subs, context->WholeNumberToObject(MAX_FREQUENCY));
+        context->ArrayAppend(subs, context->WholeNumberToObject(Frequency));
+        context->RaiseException(Rexx_Error_Invalid_argument_range, subs);
+        return NULL;
+    }
+    /* out of range?              */
+    if (Duration > MAX_DURATION || Duration < MIN_DURATION)
+    {
+        RexxArrayObject subs = context->NewArray(4);
+        context->ArrayAppend(subs, context->NewStringFromAsciiz("duration"));
+        context->ArrayAppend(subs, context->WholeNumberToObject(MIN_DURATION));
+        context->ArrayAppend(subs, context->WholeNumberToObject(MAX_DURATION));
+        context->ArrayAppend(subs, context->WholeNumberToObject(Duration));
+        context->RaiseException(Rexx_Error_Invalid_argument_range, subs);
+        return NULL;
+    }
+
+    SysProcess::beep((int)Frequency, (int)Duration);
+    return "";                           /* always returns a null      */
+}
 
 
 #define INTERNAL_METHOD(name) REXX_METHOD_PROTOTYPE(name)

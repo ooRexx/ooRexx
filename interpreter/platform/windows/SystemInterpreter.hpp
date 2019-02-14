@@ -54,7 +54,11 @@
 class InterpreterInstance;
 class RexxDateTime;
 class BufferClass;
+class FileNameBuffer;
 
+/**
+ * A platform-specific class that implements a number of platform abstraction APIs as static methods.
+ */
 class SystemInterpreter
 {
 public:
@@ -75,7 +79,6 @@ public:
     static RexxObject *popEnvironment(RexxActivation *context);
     static RexxObject *pushEnvironment(RexxActivation *context);
     static void restoreEnvironment(void *CurrentEnv);
-    static RexxString *qualifyFileSystemName(RexxString *name);
     static void getCurrentTime(RexxDateTime *Date );
     static const char *getPlatformName();
     static void releaseResultMemory(void *);
@@ -84,14 +87,13 @@ public:
     static void *allocateSegmentMemory(size_t);
     static RexxString *getMessageText(wholenumber_t code);
     static RexxString *getUserid();
-    static bool valueFunction(RexxString *name, RexxObject *newValue, RexxString *selector, RexxObject *&result);
+    static bool valueFunction(RexxString *name, RexxObject *newValue, RexxString *selector, ProtectedObject &result);
     static RexxString *getDefaultAddressName();
     static bool invokeExternalFunction(RexxActivation *, Activity *, RexxString *, RexxObject **, size_t, RexxString *, ProtectedObject &);
     static void validateAddressName(RexxString *name );
-    static void loadImage(char *&imageBuffer, size_t &imageSize);
-    static bool loadImage(char *&imageBuffer, size_t &imageSize, const char *imageFile);
-    static BufferClass *readProgram(const char *file_name);
     static bool processSignal(DWORD dwCtrlType);
+    static int setEnvironmentVariable(const char *name, const char *value);
+    static bool getEnvironmentVariable(const char *variable, FileNameBuffer &buffer);
 
     static ULONG exceptionHostProcessId;
     static HANDLE exceptionHostProcess;

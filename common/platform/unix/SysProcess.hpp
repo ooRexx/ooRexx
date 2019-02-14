@@ -62,8 +62,11 @@ class SysProcess
          return (int)getpid();
      }
      static const char* getExecutableLocation();
+     static void beep(int frequency, int duration);
 
  protected:
+     static bool playSpeaker(int frequency, int duration);
+
 
      static const char *executableLocation;
 };

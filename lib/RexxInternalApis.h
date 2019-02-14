@@ -41,6 +41,15 @@
 
 // These are private APIs for communication between ooRexx components.
 
+/*********************************************************************/
+/* Defines used by SysStemSort --                                    */
+/*********************************************************************/
+#define SORT_CASESENSITIVE 0
+#define SORT_CASEIGNORE    1
+
+#define SORT_ASCENDING 0
+#define SORT_DECENDING 1
+
 
 #ifdef __cplusplus
 extern "C"
@@ -57,6 +66,8 @@ RexxReturnCode REXXENTRY RexxLoadSubcom(const char *, const char *);
 RexxReturnCode REXXENTRY RexxResolveSubcom(const char *name, REXXPFN *);
 RexxReturnCode RexxEntry RexxCreateSessionQueue();
 RexxReturnCode RexxEntry RexxDeleteSessionQueue();
+RexxReturnCode REXXENTRY RexxStemSort(RexxStemObject stem, const char *tailExtension, int order, int type,
+    wholenumber_t start, wholenumber_t end, wholenumber_t firstcol, wholenumber_t lastcol);
 const char *REXXENTRY RexxGetErrorMessage(int number);
 
 #ifdef __cplusplus

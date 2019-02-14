@@ -404,12 +404,12 @@ RexxReturnCode RexxEntry RexxVariablePool(PSHVBLOCK pshvblock)
  *
  * @return The sort return code result.
  */
-RexxReturnCode RexxEntry RexxStemSort(const char *stemname, int order, int type,
-    size_t start, size_t end, size_t firstcol, size_t lastcol)
+RexxReturnCode RexxEntry RexxStemSort(RexxStemObject stem, const char *tailExtension, int order, int type,
+    wholenumber_t start, wholenumber_t end, wholenumber_t firstcol, wholenumber_t lastcol)
 {
     NativeContextBlock context;
     // the variable pool interface handles its own try/catches.
-    return context.self->stemSort(stemname, order, type, start, end, firstcol, lastcol);
+    return context.self->stemSort((StemClass *)stem, tailExtension, order, type, start, end, firstcol, lastcol);
 }
 
 /**

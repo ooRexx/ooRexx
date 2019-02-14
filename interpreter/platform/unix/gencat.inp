@@ -1644,7 +1644,7 @@ $ Error_Invalid_argument_user_defined
 671 &1.
 
 $ Error_Invalid_argument_noarg
-672 Missing argument; the &1 argument is required.
+672 Missing argument; argument &1 is required.
 
 $ Error_Invalid_argument_number
 673 The &1 argument must be a number; found "&2".
@@ -1656,16 +1656,16 @@ $ Error_Invalid_argument_nonnegative
 675 The &1 argument must be zero or a positive whole number; found "&2".
 
 $ Error_Invalid_argument_positive
-676 The &1 argument must be a positive whole number; found "&2".
+676 Argument &1 must be a positive whole number; found "&2".
 
 $ Error_Invalid_argument_toobig
-677 The &1 argument must not exceed &2; found "&3".
+677 Argument &1 must not exceed &2; found "&3".
 
 $ Error_Invalid_argument_range
-678 The &1 argument must be in the range &2 to &3; found "&4".
+678 Argument &1 must be in the range &2 to &3; found "&4".
 
 $ Error_Invalid_argument_null
-679 The &1 argument must not be a null string.
+679 Argument &1 must not be a null string.
 
 $ Error_Invalid_argument_string
 680 Argument &1 must have a string value.
@@ -1722,7 +1722,7 @@ $ Error_Execution_library_method
 697 Unable to load method "&1" from library "&1".
 
 $ Error_Execution_library_routine
-698 Unable to load routine "&1" from library "&1".
+698 Unable to load routine "&1" from library "&2".
 
 $ Error_Execution_native_routine
 699 Unable to load native routine "&1".
@@ -2098,6 +2098,21 @@ $ Error_Invalid_expression_missing_constant
 
 $ Error_Translation_constant_no_class
 823 A ::CONSTANT directive with an expression requires a matching ::CLASS directive.
+
+$ Error_Incorrect_call_bad_option
+824 &1 argument &2 must be one of "&3"; found "&4".
+
+$ Error_Incorrect_call_relative
+825 Argument &1 ("&2") must be greater than argument &3 ("&4").
+
+$ Error_Incorrect_call_stem_size
+826 Stem argument does not have a valid count for element 0.
+
+$ Error_Incorrect_call_stem_range
+827 The operation is outside the size of the stem array ("&1").
+
+$ Error_Incorrect_call_stem_sparse_array
+828 Stem element at position "&1" is not set.
 
 
 $ * -------------------------------------------------------------------------- */

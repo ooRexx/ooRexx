@@ -710,7 +710,7 @@ RexxString *RexxString::translate(RexxString *tableo, RexxString *tablei, RexxSt
     }
 
     // cap the real range
-    range = Numerics::minVal(range, getLength() - startPos + 1);
+    range = std::min(range, getLength() - startPos + 1);
 
     // get a new string using the original string data.  We'll make
     // changes in place in the new string
@@ -1076,7 +1076,7 @@ RexxInteger *RexxString::compareToRexx(RexxString *other, RexxInteger *start_, R
     other = stringArgument(other, ARG_ONE);
 
     size_t _start = optionalPositionArgument(start_, 1, ARG_TWO);
-    size_t len = optionalLengthArgument(len_, Numerics::maxVal(getLength(), other->getLength()) - _start + 1, ARG_THREE);
+    size_t len = optionalLengthArgument(len_, std::max(getLength(), other->getLength()) - _start + 1, ARG_THREE);
 
     return new_integer(primitiveCompareTo(other, _start, len));
 }
@@ -1112,10 +1112,10 @@ wholenumber_t RexxString::primitiveCompareTo(RexxString *other, size_t _start, s
 
     _start--;      // make the starting point origin zero
 
-    myLength = Numerics::minVal(len, myLength - _start);
-    otherLength = Numerics::minVal(len, otherLength - _start);
+    myLength = std::min(len, myLength - _start);
+    otherLength = std::min(len, otherLength - _start);
 
-    len = Numerics::minVal(myLength, otherLength);
+    len = std::min(myLength, otherLength);
 
     wholenumber_t result = memcmp(getStringData() + _start, other->getStringData() + _start, len);
 
@@ -1160,7 +1160,7 @@ wholenumber_t RexxString::primitiveCompareTo(RexxString *other)
     size_t myLength = getLength();
     size_t otherLength = other->getLength();
 
-    size_t len = Numerics::minVal(getLength(), other->getLength());
+    size_t len = std::min(getLength(), other->getLength());
 
     wholenumber_t result = memcmp(getStringData(), other->getStringData(), len);
 
@@ -1205,7 +1205,7 @@ RexxInteger *RexxString::caselessCompareToRexx(RexxString *other, RexxInteger *s
     other = stringArgument(other, ARG_ONE);
 
     size_t _start = optionalPositionArgument(start_, 1, ARG_TWO);
-    size_t len = optionalLengthArgument(len_, Numerics::maxVal(getLength(), other->getLength()) - _start + 1, ARG_THREE);
+    size_t len = optionalLengthArgument(len_, std::max(getLength(), other->getLength()) - _start + 1, ARG_THREE);
 
     return new_integer(primitiveCaselessCompareTo(other, _start, len));
 }
@@ -1243,10 +1243,10 @@ wholenumber_t RexxString::primitiveCaselessCompareTo(RexxString *other, size_t _
 
     _start--;      // make the starting point origin zero
 
-    myLength = Numerics::minVal(len, myLength - _start);
-    otherLength = Numerics::minVal(len, otherLength - _start);
+    myLength = std::min(len, myLength - _start);
+    otherLength = std::min(len, otherLength - _start);
 
-    len = Numerics::minVal(myLength, otherLength);
+    len = std::min(myLength, otherLength);
 
     wholenumber_t result = StringUtil::caselessCompare(getStringData() + _start, other->getStringData() + _start, len);
 

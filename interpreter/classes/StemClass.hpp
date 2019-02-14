@@ -45,12 +45,7 @@
 #define Included_StemClass
 
 #include "CompoundVariableTable.hpp"
-
-#define SORT_CASESENSITIVE 0
-#define SORT_CASEIGNORE    1
-
-#define SORT_ASCENDING 0
-#define SORT_DECENDING 1
+#include "RexxInternalApis.h"
 
 class SupplierClass;
 class CompoundVariableTail;

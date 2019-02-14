@@ -43,68 +43,19 @@
 #include "SystemInterpreter.hpp"
 #include "MethodArguments.hpp"
 
-const char *SELECTOR = "ENVIRONMENT";    /* environment selector               */
 
-/*********************************************************************/
-/*                                                                   */
-/*   Subroutine Name:   SysValue                                     */
-/*                                                                   */
-/*   Descriptive Name:  set value of environment variable            */
-/*                                                                   */
-/*********************************************************************/
-
-bool SystemInterpreter::valueFunction(
-    RexxString * Name,                 /* variable name                     */
-    RexxObject * NewValue,             /* new assigned value                */
-    RexxString * Selector,             /* variable selector                 */
-    RexxObject *&result)
+/**
+ * Process additional platform-defined selectors for the Value() BIF.
+ *
+ * @param name     The variable name
+ * @param newValue The new value for the variable
+ * @param elector  The environment name selector
+ * @param result   The returned value object.
+ *
+ * @return true if this was handled, false otherwise.
+ */
+bool SystemInterpreter::valueFunction(RexxString *name, RexxObject *newValue, RexxString *elector, ProtectedObject &result)
 {
-    /* GetEnvironmentVariable will not alloc memory for OldValue ! */
-    char        *OldValue = NULL;        /* old environment value             */
-    DWORD        dwSize;                 /* size of env. variable             */
-
-    Selector = Selector->upper();        /* upper case the selector           */
-    Name = Name->upper();                /* and the name too                  */
-
-    if (Selector->strCompare(SELECTOR))/* selector ENVIRONMENT?             */
-    {
-
-        /* get the size of the environment variable and allocate buffer         */
-        dwSize = GetEnvironmentVariable(Name->getStringData(), NULL, 0);
-        if (dwSize)
-        {
-            OldValue = (char *) SystemInterpreter::allocateResultMemory(dwSize);
-            /* scan for the variable           */
-            if (OldValue && GetEnvironmentVariable(Name->getStringData(),OldValue,dwSize) )
-            {
-                /* have a value already?           */
-                result = (RexxObject*) new_string(OldValue);
-                SystemInterpreter::releaseResultMemory(OldValue);
-            }
-            else
-            {
-                result = GlobalNames::NULLSTRING;        /* otherwise, return null            */
-            }
-        }
-        else
-        {
-            result = GlobalNames::NULLSTRING;
-        }
-
-        if (NewValue != OREF_NULL)           /* have a new value?                 */
-        {
-            if (NewValue == (RexxString *) TheNilObject)
-            {
-                SetEnvironmentVariable((LPCTSTR)Name->getStringData(), NULL);
-            }
-            else
-            {
-                SetEnvironmentVariable((LPCTSTR)Name->getStringData(),
-                                       (LPCTSTR)stringArgument(NewValue,ARG_TWO)->getStringData());
-            }
-        }
-        return true;
-    }
-    return false;                        // we could not handle this
+    return false;
 }
 

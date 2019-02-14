@@ -244,6 +244,13 @@ RexxMethod1(wholenumber_t,             // Return type
     return arg1;
 }
 
+RexxMethod1(wholenumber_t,                // Return type
+            TestNonnegativeWholeNumberArg,   // Function routine name
+            nonnegative_wholenumber_t, arg1) // Argument
+{
+    return arg1;
+}
+
 RexxMethod1(stringsize_t,              // Return type
             TestStringSizeArg,          // Function routine name
             stringsize_t, arg1)        // Argument
@@ -1498,7 +1505,7 @@ RexxMethod1(uintptr_t,                 // Return type
 }
 
 RexxMethod1(wholenumber_t,             // Return type
-            TestOptionalWholeNumberArg,// Function routine name
+            TestOptionalWholeNumberArg, // Function routine name
             OPTIONAL_wholenumber_t, arg1)       // Argument
 {
     if (argumentOmitted(1))
@@ -1512,7 +1519,7 @@ RexxMethod1(wholenumber_t,             // Return type
 }
 
 RexxMethod1(positive_wholenumber_t,             // Return type
-            TestOptionalPositiveWholeNumberArg,// Function routine name
+            TestOptionalPositiveWholeNumberArg, // Function routine name
             OPTIONAL_positive_wholenumber_t, arg1)       // Argument
 {
     if (argumentOmitted(1))
@@ -1524,6 +1531,21 @@ RexxMethod1(positive_wholenumber_t,             // Return type
     }
     return arg1;
 }
+
+RexxMethod1(wholenumber_t,             // Return type
+            TestOptionalNonnegativeWholeNumberArg, // Function routine name
+            OPTIONAL_nonnegative_wholenumber_t, arg1)       // Argument
+{
+    if (argumentOmitted(1))
+    {
+        if (arg1 != 0)
+        {
+            context->RaiseException1(Rexx_Error_Invalid_argument_user_defined, context->NewStringFromAsciiz("Conversion error"));
+        }
+    }
+    return arg1;
+}
+
 
 RexxMethod1(stringsize_t,              // Return type
             TestOptionalStringSizeArg,          // Function routine name
@@ -2295,6 +2317,7 @@ RexxMethodEntry orxtest_methods[] = {
     REXX_METHOD(TestWholeNumberArg,    TestWholeNumberArg),
     REXX_METHOD(TestStringSizeArg,     TestStringSizeArg),
     REXX_METHOD(TestPositiveWholeNumberArg,     TestPositiveWholeNumberArg),
+    REXX_METHOD(TestNonnegativeWholeNumberArg,     TestNonnegativeWholeNumberArg),
     REXX_METHOD(TestSizeArg,           TestSizeArg),
     REXX_METHOD(TestSSizeArg,          TestSSizeArg),
     REXX_METHOD(TestLogicalArg,        TestLogicalArg),
@@ -2319,11 +2342,11 @@ RexxMethodEntry orxtest_methods[] = {
     REXX_METHOD(TestObjectToInt64,           TestObjectToInt64),
     REXX_METHOD(TestObjectToInt64Alt,        TestObjectToInt64Alt),
     REXX_METHOD(TestObjectToUnsignedInt64,   TestObjectToUnsignedInt64),
-    REXX_METHOD(TestObjectToUnsignedInt64Alt,TestObjectToUnsignedInt64Alt),
+    REXX_METHOD(TestObjectToUnsignedInt64Alt, TestObjectToUnsignedInt64Alt),
     REXX_METHOD(TestObjectToInt32,           TestObjectToInt32),
     REXX_METHOD(TestObjectToInt32Alt,        TestObjectToInt32Alt),
     REXX_METHOD(TestObjectToUnsignedInt32,   TestObjectToUnsignedInt32),
-    REXX_METHOD(TestObjectToUnsignedInt32Alt,TestObjectToUnsignedInt32Alt),
+    REXX_METHOD(TestObjectToUnsignedInt32Alt, TestObjectToUnsignedInt32Alt),
     REXX_METHOD(TestObjectToIntptr,          TestObjectToIntptr),
     REXX_METHOD(TestObjectToIntptrAlt,       TestObjectToIntptrAlt),
     REXX_METHOD(TestObjectToUintptr,         TestObjectToUintptr),
@@ -2339,11 +2362,11 @@ RexxMethodEntry orxtest_methods[] = {
     REXX_METHOD(TestInt64ToObject,           TestInt64ToObject),
     REXX_METHOD(TestInt64ToObjectAlt,        TestInt64ToObjectAlt),
     REXX_METHOD(TestUnsignedInt64ToObject,   TestUnsignedInt64ToObject),
-    REXX_METHOD(TestUnsignedInt64ToObjectAlt,TestUnsignedInt64ToObjectAlt),
+    REXX_METHOD(TestUnsignedInt64ToObjectAlt, TestUnsignedInt64ToObjectAlt),
     REXX_METHOD(TestInt32ToObject,           TestInt32ToObject),
     REXX_METHOD(TestInt32ToObjectAlt,        TestInt32ToObjectAlt),
     REXX_METHOD(TestUnsignedInt32ToObject,   TestUnsignedInt32ToObject),
-    REXX_METHOD(TestUnsignedInt32ToObjectAlt,TestUnsignedInt32ToObjectAlt),
+    REXX_METHOD(TestUnsignedInt32ToObjectAlt, TestUnsignedInt32ToObjectAlt),
     REXX_METHOD(TestIntptrToObject,          TestIntptrToObject),
     REXX_METHOD(TestIntptrToObjectAlt,       TestIntptrToObjectAlt),
     REXX_METHOD(TestUintptrToObject,         TestUintptrToObject),
@@ -2366,6 +2389,7 @@ RexxMethodEntry orxtest_methods[] = {
     REXX_METHOD(TestOptionalUintPtrArg,        TestOptionalUintPtrArg),
     REXX_METHOD(TestOptionalWholeNumberArg,    TestOptionalWholeNumberArg),
     REXX_METHOD(TestOptionalPositiveWholeNumberArg,    TestOptionalPositiveWholeNumberArg),
+    REXX_METHOD(TestOptionalNonnegativeWholeNumberArg,    TestOptionalNonnegativeWholeNumberArg),
     REXX_METHOD(TestOptionalStringSizeArg,     TestOptionalStringSizeArg),
     REXX_METHOD(TestOptionalSizeArg,           TestOptionalSizeArg),
     REXX_METHOD(TestOptionalSSizeArg,          TestOptionalSSizeArg),

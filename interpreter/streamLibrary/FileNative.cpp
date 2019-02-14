@@ -48,6 +48,7 @@
 #include <string.h>
 #include <errno.h>
 #include "SysFileSystem.hpp"
+#include "ExternalFileBuffer.hpp"
 
 /**
  * Return the file name separator used by the file system.
@@ -108,7 +109,8 @@ RexxMethod1(logical_t, file_can_write, CSTRING, name)
  */
 RexxMethod0(RexxArrayObject, file_list_roots)
 {
-    char rootBuffer[SysFileSystem::MaximumPathLength];
+    MethodFileNameBuffer rootBuffer(context);
+
     int count = SysFileSystem::getRoots(rootBuffer);
 
     const char *roots = rootBuffer;
@@ -129,11 +131,9 @@ RexxMethod0(RexxArrayObject, file_list_roots)
  */
 RexxMethod1(RexxStringObject, file_qualify, CSTRING, name)
 {
-    char qualified_name[SysFileSystem::MaximumFileNameLength];
-    // qualifyStreamName will not expand if not a null string on entry.
-    qualified_name[0] = '\0';
-    SysFileSystem::qualifyStreamName(name, qualified_name, sizeof(qualified_name));
-    return context->String(qualified_name);
+    QualifiedName qualifiedName(name);
+
+    return context->String(qualifiedName);
 }
 
 
@@ -151,7 +151,7 @@ RexxMethod1(logical_t, file_exists, CSTRING, name)
  */
 RexxMethod1(logical_t, file_delete_file, CSTRING, name)
 {
-    return SysFileSystem::deleteFile(name);
+    return SysFileSystem::deleteFile(name) == 0;
 }
 
 
@@ -160,7 +160,7 @@ RexxMethod1(logical_t, file_delete_file, CSTRING, name)
  */
 RexxMethod1(logical_t, file_delete_directory, CSTRING, name)
 {
-    return SysFileSystem::deleteDirectory(name);
+    return SysFileSystem::deleteDirectory(name) == 0;
 }
 
 
@@ -237,6 +237,16 @@ RexxMethod1(logical_t, file_set_read_only, CSTRING, name)
 
 
 /**
+ * Set the read-only flag for the target file
+ */
+RexxMethod1(logical_t, file_set_writable, CSTRING, name)
+{
+    return SysFileSystem::setFileWritable(name);
+}
+
+
+
+/**
  * Return the last modified date as a Ticks time value.
  */
 RexxMethod1(uint64_t, file_length, CSTRING, name)
@@ -258,15 +268,17 @@ RexxMethod1(RexxObjectPtr, file_list, CSTRING, name)
     // create an empty array to start
     RexxArrayObject result = context->NewArray(0);
 
-    SysFileIterator iterator(name);
+    MethodFileNameBuffer buffer(context);
+    MethodFileNameBuffer nextFile(context);
+
+    SysFileIterator iterator(name, NULL, buffer);
     while (iterator.hasNext())
     {
-        char buffer[SysFileSystem::MaximumPathLength];
-        iterator.next(buffer);
+        iterator.next(nextFile);
         // don't include the "." and ".." directories in this list
-        if (strcmp(buffer, ".") != 0 && strcmp(buffer, "..") != 0)
+        if (nextFile != "." && nextFile != "..")
         {
-            context->ArrayAppendString(result, buffer, strlen(buffer));
+            context->ArrayAppendString(result, nextFile, nextFile.length());
         }
     }
 
@@ -288,7 +300,7 @@ RexxMethod1(logical_t, file_make_dir, CSTRING, name)
  */
 RexxMethod2(logical_t, file_rename, CSTRING, fromName, CSTRING, toName)
 {
-    return SysFileSystem::moveFile(fromName, toName);
+    return SysFileSystem::moveFile(fromName, toName) == 0;
 }
 
 

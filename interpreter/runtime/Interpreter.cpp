@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -36,13 +36,11 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /*****************************************************************************/
-/* REXX Windows Support                                                      */
 /*                                                                           */
 /* Main interpreter control.  This is the preferred location for all         */
 /* platform independent global variables.                                    */
 /* The interpreter does not instantiate an instance of this                  */
 /* class, so most variables and methods should be static.                    */
-/*                                                                           */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -648,4 +646,19 @@ wholenumber_t Interpreter::messageNumber(RexxString *errorcode)
         }
     }
     return primary + secondary;          // add two portions together, return
+}
+
+
+/**
+ * Qualify a stream name for this system.
+ *
+ * @param name   The string stream name
+ *
+ * @return A string object containing the fully qualified stream name.
+ */
+RexxString* Interpreter::qualifyFileSystemName(RexxString *name)
+{
+    QualifiedName qualifiedName(name->getStringData());
+
+    return new_string(qualifiedName);
 }

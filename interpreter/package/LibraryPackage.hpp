@@ -89,6 +89,7 @@ public:
     inline bool isInternal() { return internal; }
     inline void makeInternal() { internal = true; }
     inline StringTable *getRoutines() { return publicRoutines; }
+    inline bool isPackage(RexxString *n) { return n->strCaselessCompare(libraryName); }
 
 protected:
 

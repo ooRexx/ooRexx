@@ -66,187 +66,12 @@
 
 #define DIRLEN        256                   /* length of a directory          */
 
-#define  MAX_FREQUENCY 32767
-#define  MIN_FREQUENCY    37
-#define  MAX_DURATION  60000
-#define  MIN_DURATION      0
-
-                                            /* FILESPEC function options      */
-#define FILESPEC_DRIVE        'D'
-#define FILESPEC_PATH         'P'
-#define FILESPEC_NAME         'N'
-#define FILESPEC_LOCATION     'L'
-#define FILESPEC_EXTENSION    'E'
-
 typedef struct _ENVENTRY {                  /* setlocal/endlocal structure    */
   size_t   DriveNumber;                     /* saved drive                    */
-  char     Directory[DIRLEN];               /* saved current directory        */
+  char     Directory[MAX_PATH];             /* saved current directory        */
   char    *Environment;                     /* saved environment segment      */
   char     Variables[1];                    /* start of variable values       */
 } ENVENTRY;
-
-/*********************************************************************/
-/*                                                                   */
-/*   Subroutine Name:   sysBeep                                      */
-/*                                                                   */
-/*   Descriptive Name:  BEEP function                                */
-/*                                                                   */
-/*   Function:          sounds the speaker at frequency Hertz for    */
-/*                      specified duration (in milliseconds)         */
-/*********************************************************************/
-
-RexxRoutine2(CSTRING, sysBeep, wholenumber_t, Frequency, wholenumber_t, Duration)
-{
-                                         /* out of range?              */
-    if (Frequency > MAX_FREQUENCY || Frequency < MIN_FREQUENCY)
-    {
-        RexxArrayObject subs = context->NewArray(4);
-        context->ArrayAppend(subs, context->NewStringFromAsciiz("frequency"));
-        context->ArrayAppend(subs, context->WholeNumberToObject(MIN_FREQUENCY));
-        context->ArrayAppend(subs, context->WholeNumberToObject(MAX_FREQUENCY));
-        context->ArrayAppend(subs, context->WholeNumberToObject(Frequency));
-        context->RaiseException(Rexx_Error_Invalid_argument_range, subs);
-        return NULL;
-    }
-                                         /* out of range?              */
-    if (Duration > MAX_DURATION || Duration < MIN_DURATION)
-    {
-        RexxArrayObject subs = context->NewArray(4);
-        context->ArrayAppend(subs, context->NewStringFromAsciiz("duration"));
-        context->ArrayAppend(subs, context->WholeNumberToObject(MIN_DURATION));
-        context->ArrayAppend(subs, context->WholeNumberToObject(MAX_DURATION));
-        context->ArrayAppend(subs, context->WholeNumberToObject(Duration));
-        context->RaiseException(Rexx_Error_Invalid_argument_range, subs);
-        return NULL;
-    }
-
-    Beep((DWORD)Frequency, (DWORD)Duration);  /* sound beep                 */
-    return "";                           /* always returns a null      */
-}
-
-
-/********************************************************************************************/
-/* sysDirectory                                                                             */
-/********************************************************************************************/
-RexxRoutine1(RexxStringObject, sysDirectory, OPTIONAL_CSTRING, dir)
-{
-    char buffer[MAX_PATH+1];
-    int rc = 0;
-
-    if (dir != NO_CSTRING)
-    {
-        if ((strlen(dir) == 2) && (dir[1] == ':'))
-        {
-            int drive = toupper( dir[0] ) - 'A' + 1;
-            // avoid MSVC _chdir() debug assertion failure "Invalid Drive Index"
-            if (drive < 1 || drive > 26)
-            {
-              rc = -1;
-            }
-            else
-            {
-              rc = _chdrive(drive);
-            }
-        }
-        else
-        {
-            rc = _chdir(dir);
-        }
-    }
-    /* Return the current directory    */
-    if (rc != 0 || _getcwd(buffer, MAX_PATH) == NULL)
-    {
-        return context->NullString();
-    }
-    else
-    {
-        return context->NewStringFromAsciiz(buffer);
-    }
-}
-
-
-/********************************************************************************************/
-/* sysFilespec                                                                              */
-/********************************************************************************************/
-RexxRoutine2(RexxStringObject, sysFilespec, CSTRING, option, CSTRING, name)
-{
-    const char *endPtr = name + strlen(name);        // point to last character
-    const char *pathEnd = strrchr(name, '\\');       // find the last backslash in name
-    const char *altPathEnd = strrchr(name, '/');     // 3.2.0 also looked for a forward slash, so handle that also
-    if (altPathEnd > pathEnd)
-    {
-        pathEnd = altPathEnd;
-    }
-    const char *driveEnd = strchr(name, ':');        // and first colon
-    // get the end of the path portion (if any)
-    const char *pathStart = driveEnd == NULL ? name : driveEnd + 1;
-    // note that pathend is one character past the end of the path.
-    // this means the length is easily calculated as pathEnd - pathStart,
-    // even in the cases where there is no patch portion
-    pathEnd = pathEnd == NULL ? pathStart : pathEnd + 1;
-    // this one needs a little adjustment for the case where this is all name
-    const char *nameStart = pathEnd == name ? name : pathEnd;
-
-    switch (toupper(*option))              /* process each option               */
-    {
-        case FILESPEC_PATH:                /* extract the path                  */
-            {
-                return context->String(pathStart, pathEnd - pathStart);
-            }
-
-        case FILESPEC_NAME:                  /* extract the file name               */
-            {                                /* everything to right of slash        */
-                return context->String(nameStart, endPtr - nameStart);
-            }
-
-        case FILESPEC_LOCATION:          /* extract the file name               */
-            {                                /* everything to left of slash        */
-                return context->String(name, pathEnd - name);
-            }
-
-        case FILESPEC_DRIVE:               /* extract the drive                 */
-            {
-                if (driveEnd != NULL)          /* have a real string?               */
-                {
-                    return context->String(name, driveEnd + 1 - name);
-                }
-                else
-                {
-                    return context->NullString();        // nothing found, return the empty string
-                }
-            }
-
-        case FILESPEC_EXTENSION:           // extract the file extension
-            {
-                // find the position of the last dot
-                const char *lastDot = strrchr(name, '.');
-
-                if (lastDot >= nameStart)
-                {
-                    // we don't extract the period
-                    lastDot++;
-                    return context->String(lastDot, endPtr - lastDot);
-                }
-                else
-                {
-                    return context->NullString();        // nothing found, return the empty string
-                }
-
-            }
-        default:                           /* unknown option                    */
-        {
-            char optionChar[2];
-            optionChar[0] = *option;
-            optionChar[1] = '\0';
-
-            RexxArrayObject subs = context->Array(context->String("FILESPEC"), context->WholeNumberToObject(1),
-                context->String("DELNP"), context->String(optionChar));
-            /* raise an error                    */
-            context->RaiseException(Rexx_Error_Incorrect_call_list, subs);
-            return NULLOBJECT;
-        }
-    }
-}
 
 
 /******************************************************************************/
@@ -328,8 +153,8 @@ void SystemInterpreter::restoreEnvironment(void *CurrentEnv)
 static bool addMBStyle(CSTRING other, ULONG *style)
 {
     char *token;
-    char *str = strdup(other);
-    if ( ! str )
+    AutoFree str = strdup(other);
+    if (str == NULL)
     {
         return false;
     }
@@ -389,7 +214,6 @@ static bool addMBStyle(CSTRING other, ULONG *style)
         if ( i == count )
         {
             // User sent a bad keyword.
-            free(str);
             return false;
         }
 
@@ -397,7 +221,6 @@ static bool addMBStyle(CSTRING other, ULONG *style)
     }
 
     *style = *style | extraStyle;
-    free(str);
     return true;
 }
 

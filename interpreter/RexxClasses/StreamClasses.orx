@@ -605,6 +605,7 @@ return position
 
 ::METHOD canReadImpl PRIVATE EXTERNAL 'LIBRARY REXX file_can_read'
 ::METHOD setReadOnlyImpl PRIVATE EXTERNAL 'LIBRARY REXX file_set_read_only'
+::METHOD setWritableImpl PRIVATE EXTERNAL 'LIBRARY REXX file_set_writable'
 ::METHOD canWriteImpl PRIVATE EXTERNAL 'LIBRARY REXX file_can_write'
 ::METHOD existsImpl PRIVATE EXTERNAL 'LIBRARY REXX file_exists'
 ::METHOD qualifyImpl PRIVATE EXTERNAL 'LIBRARY REXX file_qualify'
@@ -623,6 +624,10 @@ return position
 ::METHOD setReadOnly
   use strict arg
   self~setReadOnlyImpl(self~qualifiedPath)
+
+::METHOD setWritable
+  use strict arg
+  self~setWritableImpl(self~qualifiedPath)
 
 ::METHOD canWrite
   use strict arg

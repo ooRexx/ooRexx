@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -69,6 +69,7 @@ class GlobalProtectedObject;
 class MapTable;
 class BufferClass;
 class StringTable;
+class FileNameBuffer;
 
 #ifdef _DEBUG
 class MemoryObject;
@@ -264,6 +265,8 @@ private:
 
 
     void restoreImage();
+    void loadImage(char *&imageBuffer, size_t &imageSize);
+    bool loadImage(char *&imageBuffer, size_t &imageSize, FileNameBuffer &imageFile);
 
     void setMarkHandler(MarkHandler *h) { currentMarkHandler = h; }
     void resetMarkHandler() { currentMarkHandler = &defaultMarkHandler; }

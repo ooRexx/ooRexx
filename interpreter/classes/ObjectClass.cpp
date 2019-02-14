@@ -3003,7 +3003,7 @@ void *RexxObject::reallocateObjectMemory(void *pointer, size_t newSize)
 
     // allocate a new object and copy the data over
     void * newPointer = allocateObjectMemory(newSize);
-    memcpy(newPointer, pointer, Numerics::minVal(oldSize, newSize));
+    memcpy(newPointer, pointer, std::min(oldSize, newSize));
 
     // remove the old pointer from the table
     memoryTable->remove(pointer);

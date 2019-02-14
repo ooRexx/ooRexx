@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -380,7 +380,7 @@ RexxString *NumberString::stringValue()
     // have we hit the trigger value either
     // A) the number of digits to the left of the decimal exceeds the digits setting or
     // B) the number of digits to the right of the decimal point exceed twice the digits setting.
-    if ((adjustedSize >= createdDigits) || (Numerics::abs(numberExponent) > (createdDigits * 2)))
+    if ((adjustedSize >= createdDigits) || (std::abs(numberExponent) > (createdDigits * 2)))
     {
         // we need to go exponential.  Need to make a number of adjustments based
         // on the formatting.
@@ -397,7 +397,7 @@ RexxString *NumberString::stringValue()
         }
 
         // our adjustment may end up with an overflow or underflow, so raise the error
-        if (Numerics::abs(adjustedSize) > Numerics::MAX_EXPONENT)
+        if (std::abs(adjustedSize) > Numerics::MAX_EXPONENT)
         {
             reportException(adjustedSize > 0 ? Error_Overflow_expoverflow : Error_Overflow_expunderflow, adjustedSize, Numerics::DEFAULT_DIGITS);
         }
@@ -411,7 +411,7 @@ RexxString *NumberString::stringValue()
         // format the string form of the exponent
         formatExponent(adjustedSize, expstring);
         // get the exponent value as a positive number from here.
-        adjustedSize = Numerics::abs(adjustedSize);
+        adjustedSize = std::abs(adjustedSize);
     }
 
     wholenumber_t maxNumberSize;
@@ -428,10 +428,10 @@ RexxString *NumberString::stringValue()
     // if the absolute value of the exponent is larger than the
     // length of the number, then we'll need to add additional zeros between
     // the decimal point and the first digit.
-    else if (Numerics::abs(adjustedExponent) >= digitsCount)
+    else if (std::abs(adjustedExponent) >= digitsCount)
     {
         // we add to characters for a leading zero and decimal point
-        maxNumberSize = Numerics::abs(adjustedExponent) + 2;
+        maxNumberSize = std::abs(adjustedExponent) + 2;
     }
     // not adding any digits, the decimal is in the middle, so our
     // result value is the length plus one for a decimal point
@@ -1434,7 +1434,7 @@ RexxObject *NumberString::truncInternal(wholenumber_t needed_digits)
         if (integerDigits > 0)
         {
             // figure out how many decimal digits we need from the number
-            decimalDigits = Numerics::minVal(digitsCount - integerDigits, needed_digits);
+            decimalDigits = std::min(digitsCount - integerDigits, needed_digits);
             // if we need more than are available, calculate how much trailing pad we need.
             if (decimalDigits < needed_digits)
             {
@@ -1487,7 +1487,7 @@ RexxObject *NumberString::truncInternal(wholenumber_t needed_digits)
                 // we're using all of the padding and at least one of the digits
                 else
                 {
-                    decimalDigits = Numerics::minVal(decimalDigits, needed_digits - leadDecimalPadding);
+                    decimalDigits = std::min(decimalDigits, needed_digits - leadDecimalPadding);
                 }
             }
         }
@@ -1576,7 +1576,7 @@ RexxObject *NumberString::floorInternal()
             // any non-zero decimals
 
             // get the number of decimals we need to scan
-            size_t decimals = Numerics::minVal(digitsCount, -numberExponent);
+            size_t decimals = std::min(digitsCount, -numberExponent);
             // get the position to start the scan
             size_t lastDecimal = digitsCount - 1;
             bool foundNonZero = false;
@@ -1708,7 +1708,7 @@ RexxObject *NumberString::ceilingInternal()
             // any non-zero decimals
 
             // get the number of decimals we need to scan
-            size_t decimals = Numerics::minVal(digitsCount, -numberExponent);
+            size_t decimals = std::min(digitsCount, -numberExponent);
             // get the position to start the scan
             wholenumber_t lastDecimal = digitsCount - 1;
             bool foundNonZero = false;
@@ -1981,7 +1981,7 @@ RexxString *NumberString::formatInternal(wholenumber_t integers, wholenumber_t d
         // than that on the call.  If the number of decimals is greater than the
         // trigger value, or the space required to format a pure decimal number or more than
         // twice the trigger value, we're in exponential form
-        if (adjustedLength >= exptrigger || (adjustedLength < 0 && Numerics::abs(numberExponent) > exptrigger * 2))
+        if (adjustedLength >= exptrigger || (adjustedLength < 0 && std::abs(numberExponent) > exptrigger * 2))
         {
             // we only handle this is the trigger is not explicitly zero
             // we need to show the exponent if this is specified (so far)
@@ -2001,7 +2001,7 @@ RexxString *NumberString::formatInternal(wholenumber_t integers, wholenumber_t d
             // the exponent factor will be added in to the exponent when formatted
             displayedExponent = adjustedLength;
             // format the exponent to a string value now.
-            Numerics::formatWholeNumber(Numerics::abs(displayedExponent), stringExponent);
+            Numerics::formatWholeNumber(std::abs(displayedExponent), stringExponent);
             exponentSize = strlen(stringExponent);
             // if the exponent size is not defaulted, then test that we have space
             // to fit this.
@@ -2109,7 +2109,7 @@ RexxString *NumberString::formatInternal(wholenumber_t integers, wholenumber_t d
                     wholenumber_t adjustedExponent = numberExponent + digitsCount - 1;
 
                     // redo the whole trigger thing
-                    if (showExponentWasTrue | (mathexp != 0 && (adjustedExponent >= exptrigger || (adjustedExponent < 0 && Numerics::abs(numberExponent) > exptrigger * 2))))
+                    if (showExponentWasTrue | (mathexp != 0 && (adjustedExponent >= exptrigger || (adjustedExponent < 0 && std::abs(numberExponent) > exptrigger * 2))))
                     {
                         // this might not have been set on originally, but only occurring because of
                         // the rounding.
@@ -2127,7 +2127,7 @@ RexxString *NumberString::formatInternal(wholenumber_t integers, wholenumber_t d
                         numberExponent -= adjustedExponent;
                         displayedExponent = adjustedExponent;
                         // format exponent to a string
-                        Numerics::formatWholeNumber(Numerics::abs(displayedExponent), stringExponent);
+                        Numerics::formatWholeNumber(std::abs(displayedExponent), stringExponent);
                         // and get the new exponent size
                         exponentSize = strlen(stringExponent);
                         // if we have an explicit size, get the fill zeros as well.
@@ -2491,7 +2491,7 @@ public:
         // a couple of final exponent checks
         // since the number of decimals enters into the exponent, we need to
         // verify that the calculated exponent did not cause an underflow
-        if (Numerics::abs(number->numberExponent) > Numerics::MAX_EXPONENT)
+        if (std::abs(number->numberExponent) > Numerics::MAX_EXPONENT)
         {
             return false;
         }
@@ -3173,7 +3173,7 @@ wholenumber_t NumberString::comp(RexxObject *right, size_t fuzz)
     }
 
     // get the minimum exponent
-    wholenumber_t minExponent = Numerics::minVal(numberExponent, rightNumber->numberExponent);
+    wholenumber_t minExponent = std::min(numberExponent, rightNumber->numberExponent);
 
     // get values adjusted for the relative magnatudes of the numbers.  This can
     // allow us to avoid performing the actual subtraction.
@@ -4032,7 +4032,7 @@ NumberString *NumberString::newInstanceFromDouble(double number, wholenumber_t p
 {
     // There are some special double values involved here.  We just return some
     // special strings for those.
-    if (isnan(number))
+    if (std::isnan(number))
     {
         return (NumberString *)new_string("nan");
     }

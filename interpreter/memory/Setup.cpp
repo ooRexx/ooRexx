@@ -1687,35 +1687,35 @@ EndClassDefinition(StackFrame);
     // set up the kernel methods that will be defined on OBJECT classes in
     // CoreClasses.orx
     {
-        // create a method used to retrieve the .Local environment.  We set this on the
-        // .Environment directory.
-        Protected<MethodClass> localMethod = new MethodClass(getGlobalName("LOCAL"), CPPCode::resolveExportedMethod("Local", CPPM(ActivityManager::getLocalRexx), 0, "ActivityManager::getLocalRexx"));
+            // create a method used to retrieve the .Local environment.  We set this on the
+            // .Environment directory.
+            Protected<MethodClass> localMethod = new MethodClass(getGlobalName("LOCAL"), CPPCode::resolveExportedMethod("Local", CPPM(ActivityManager::getLocalRexx), 0, "ActivityManager::getLocalRexx"));
 
-        // add this to the environment directory.
-        TheEnvironment->setMethodRexx(getGlobalName("LOCAL"), localMethod);
+            // add this to the environment directory.
+            TheEnvironment->setMethodRexx(getGlobalName("LOCAL"), localMethod);
 
-        // CoreClasses contains additional classes written in Rexx and enhances some of the
-        // base classes with methods written in Rexx.
-        RexxString *symb = getGlobalName(BASEIMAGELOAD);
-        RexxString *programName = ActivityManager::currentActivity->resolveProgramName(symb, OREF_NULL, OREF_NULL);
-        // create a new stack frame to run under
-        ActivityManager::currentActivity->createNewActivationStack();
-        try
-        {
-            // create an executable object for this.
-            Protected<RoutineClass> loader = LanguageParser::createProgram(programName);
+            // CoreClasses contains additional classes written in Rexx and enhances some of the
+            // base classes with methods written in Rexx.
+            RexxString *symb = getGlobalName(BASEIMAGELOAD);
+            RexxString *programName = ActivityManager::currentActivity->resolveProgramName(symb, OREF_NULL, OREF_NULL);
+            // create a new stack frame to run under
+            ActivityManager::currentActivity->createNewActivationStack();
+            try
+            {
+                    // create an executable object for this.
+                    Protected<RoutineClass> loader = LanguageParser::createProgram(programName);
 
-            // we pass the internal Rexx package as an argument to the setup program.
-            RexxObject *args = TheRexxPackage;
-            ProtectedObject result;
-            // now create the core program objects.
-            loader->runProgram(ActivityManager::currentActivity, GlobalNames::PROGRAM, OREF_NULL, (RexxObject **)&args, 1, result);
-        }
-        catch (ActivityException )
-        {
-            ActivityManager::currentActivity->error();          /* do error cleanup                  */
-            Interpreter::logicError("Error building kernel image.  Image not saved.");
-        }
+                    // we pass the internal Rexx package as an argument to the setup program.
+                    RexxObject *args = TheRexxPackage;
+                    ProtectedObject result;
+                    // now create the core program objects.
+                    loader->runProgram(ActivityManager::currentActivity, GlobalNames::PROGRAM, OREF_NULL, (RexxObject **)&args, 1, result);
+            }
+            catch (ActivityException)
+            {
+                    ActivityManager::currentActivity->error();          /* do error cleanup                  */
+                    Interpreter::logicError("Error building kernel image.  Image not saved.");
+            }
 
     }
 

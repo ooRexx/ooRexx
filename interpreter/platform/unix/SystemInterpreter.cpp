@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -42,6 +42,7 @@
 #include "SystemInterpreter.hpp"
 #include "Interpreter.hpp"
 #include "GlobalNames.hpp"
+#include "FileNameBuffer.hpp"
 
 sigset_t SystemInterpreter::oldmask;
 sigset_t SystemInterpreter::newmask;
@@ -167,19 +168,44 @@ void SystemInterpreter::liveGeneral(MarkReason reason)
 
 
 /**
- * Get the current working directory for the process.
+ * Retrieve the value of an envinment variable into a smart buffer.
  *
- * @return The current working directory as a Rexx string.
+ * @param variable The name of the environment variable.
+ * @param buffer   The buffer used for the return.
+ *
+ * @return true if the variable exists, false otherwise.
  */
-void SystemInterpreter::getCurrentWorkingDirectory(char *buf)
+bool SystemInterpreter::getEnvironmentVariable(const char *variable, FileNameBuffer &buffer)
 {
-    if (!getcwd(buf, PATH_MAX)) /* Get current working direct */
+    const char *value = getenv(variable);
+    if (value != NULL)
     {
-       strncpy(buf, getenv("PWD"), PATH_MAX);
-       // if we don't result in a real directory here, make it a null string.
-       if (buf[0] != '/' )
-       {
-           buf[0] = '\0';
-       }
+        buffer = value;
+        return true;
+    }
+    // make sure this is a null string
+    buffer = "";
+    return false;
+}
+
+
+/**
+ * Set an environment variable to a new value.
+ *
+ * @param variableName
+ *               The name of the environment variable.
+ * @param value  The variable value.
+ */
+void SystemInterpreter::setEnvironmentVariable(const char *variableName, const char *value)
+{
+    // A NULL value is an unset operation
+    if (value == NULL)
+    {
+        unsetenv(variableName);
+    }
+    // we need a string value for the set.
+    else
+    {
+        setenv(variableName, value, true);
     }
 }

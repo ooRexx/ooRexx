@@ -57,12 +57,19 @@
 #include <dlfcn.h>
 #endif
 
+#include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
 #include "SysProcess.hpp"
 #include "rexx.h"
 #include <stdio.h>
+#include <sys/ioctl.h>
+#include <sys/types.h>
+#include <errno.h>
+#ifdef HAVE_KDMKTONE
+#include <linux/kd.h>
+#endif
 
 // location of our executables
 const char *SysProcess::executableLocation = NULL;
@@ -145,3 +152,64 @@ const char* SysProcess::getExecutableLocation()
 }
 
 
+/**
+ * do a beep tone
+ *
+ * @param frequency The frequency to beep at
+ * @param duration  The duration to beep (in milliseconds)
+ * @param frequency The frequency to beep at
+ * @param duration  The duration to beep (in milliseconds)
+ *
+ * @return true if we were able to play this, false otherwise
+ */
+bool SysProcess::playSpeaker(int frequency, int duration)
+{
+#ifdef HAVE_KDMKTONE
+    int fd = 1;   // The ioctl file descriptor
+
+    // do a test with this using zero to see if this will work
+    if (ioctl(fd, KDMKTONE, 0) != 0)
+    {
+        // if this failed, try to open the console
+        fd	= open("/dev/tty", O_WRONLY);
+        // if this fails, then we can't play this
+        if (fd < 0)
+        {
+            // try the virtual console as a fallback
+            fd = open("/dev/vc/0", O_WRONLY);
+            if (fd < 0)
+            {
+                return false;
+            }
+        }
+    }
+
+    // 1193180 is the magic number of clock cycles that the docs
+    // tell you to use to get a frequency in clock cycles
+    int pitch = 1193180 / frequency;
+    int rc = ioctl(fd, KDMKTONE, (duration << 16) | pitch);
+    return rc >=0;
+#else
+    // not available, need to use the low tech version
+    return false;
+#endif
+}
+
+
+
+/**
+ * do a beep tone
+ *
+ * @param frequency The frequency to beep at
+ * @param duration  The duration to beep (in milliseconds)
+ */
+void SysProcess::beep(int frequency, int duration)
+{
+    // try to directly activate the speaker. If this fails, just send a bell
+    // character to the console.
+    if (!playSpeaker(frequency, duration))
+    {
+        printf("Playing the speaker failed, using a bell character\n");
+        printf("\a");
+    }
+}

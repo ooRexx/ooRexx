@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -84,7 +84,8 @@ void PackageManager::initialize()
     loadedRequires = new_string_table();
     // load the internal library first
     loadInternalPackage(GlobalNames::REXX, rexxPackage);
-    loadLibrary(GlobalNames::REXXUTIL); // load the rexxutil package automatically
+    // REXXUTIL is also an internally contained package
+    loadInternalPackage(GlobalNames::REXXUTIL, rexxutilPackage);
 }
 
 
@@ -146,8 +147,17 @@ void PackageManager::restore()
         }
         else
         {
-            // the only internal package is the Rexx one
-            package->reload(rexxPackage);
+            // we just have two internal packages to worry about
+            if (package->isPackage(GlobalNames::REXX))
+            {
+                // the main REXX package
+                package->reload(rexxPackage);
+            }
+            else
+            {
+                // the only other choice is the REXXUTIL package
+                package->reload(rexxutilPackage);
+            }
         }
     }
 }

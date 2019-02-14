@@ -300,7 +300,7 @@ InputRedirector *CommandIOConfiguration::createInputSource(RexxActivation *conte
 
             // because we need to detect conflicts between input and outputs,
             // we need to use the fully qualified file name here.
-            streamName = SystemInterpreter::qualifyFileSystemName(streamName);
+            streamName = Interpreter::qualifyFileSystemName(streamName);
 
             return new StreamInputSource(streamName);
         }
@@ -450,7 +450,7 @@ OutputRedirector *CommandIOConfiguration::createOutputTarget(RexxString *keyword
             Protected<RexxString> streamName = outputObject->requestString();
             // because we need to detect conflicts between input and outputs,
             // we need to use the fully qualified file name here.
-            streamName = SystemInterpreter::qualifyFileSystemName(streamName);
+            streamName = Interpreter::qualifyFileSystemName(streamName);
 
             return new StreamOutputTarget(streamName, option);
         }

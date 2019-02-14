@@ -52,53 +52,20 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#define  SELECTOR  "ENVIRONMENT"       /* environment selector              */
-
 
 /**
- * Process a value function call for external repositories.
+ * Process additional platform-defined selectors for the Value() BIF.
  *
- * @param Name     The variable name.
- * @param NewValue The new value to assign to that variable.
- * @param Selector The variable pool selector.
- * @param result   The returned existing value.
+ * @param name     The variable name
+ * @param newValue The new value for the variable
+ * @param elector  The environment name selector
+ * @param result   The returned value object.
  *
- * @return true if this worked, false otherwise.
+ * @return true if this was handled, false otherwise.
  */
-bool SystemInterpreter::valueFunction(RexxString *name, RexxObject *newValue, RexxString *selector, RexxObject *&result)
+bool SystemInterpreter::valueFunction(RexxString *name, RexxObject *newValue, RexxString *elector, ProtectedObject &result)
 {
-    // we only recognize the environemnt selector
-    if (!selector->strCaselessCompare(SELECTOR))
-    {
-        return false;                    // we can't handle this one
-    }
-
-    // if not there, we return a null string
-    result = GlobalNames::NULLSTRING;
-
-    // see if we have an existing variable first
-    const char *oldValue = getenv(name->getStringData());
-    // either return the existing variable value or a null string.
-    if (oldValue != NULL)
-    {
-        result = new_string(oldValue);
-    }
-
-    // set the variable if we have a new value
-    if (newValue != OREF_NULL)
-    {
-        // .nil is special, it removes the variable
-        if (newValue == (RexxString *)TheNilObject)
-        {
-            unsetenv(name->getStringData());
-        }
-        // we need a string value for the set.
-        else
-        {
-            setenv(name->getStringData(), stringArgument(newValue, ARG_TWO)->getStringData(), true) ;
-        }
-    }
-    return true;
+    return false;
 }
 
 

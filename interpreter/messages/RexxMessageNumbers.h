@@ -736,6 +736,11 @@
 #define Error_No_method_constant_msg                                 821
 #define Error_Invalid_expression_missing_constant_msg                822
 #define Error_Translation_constant_no_class_msg                      823
+#define Error_Incorrect_call_bad_option_msg                          824
+#define Error_Incorrect_call_relative_msg                            825
+#define Error_Incorrect_call_stem_size_msg                           826
+#define Error_Incorrect_call_stem_range_msg                          827
+#define Error_Incorrect_call_stem_sparse_array_msg                   828
 
 
 #endif

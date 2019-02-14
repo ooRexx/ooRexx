@@ -1439,6 +1439,7 @@ RexxMethod3(RexxStringObject, winex_loadBitmap, CSTRING, bitmapFile, OPTIONAL_CS
     return pointer2string(context, hBmp);
 }
 
+
 /** WindowsExtensions::removeBitmap()
  *
  *

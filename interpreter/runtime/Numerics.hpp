@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -45,6 +45,7 @@
 #ifndef Included_Numerics
 #define Included_Numerics
 
+#include <algorithm>
 #include "RexxCore.h"
 
 
@@ -100,7 +101,7 @@ public:
 #endif
 
     // RexxInteger size limits
-    static const wholenumber_t REXXINTEGER_DIGITS = ARGUMENT_DIGITS;
+    static const wholenumber_t REXXINTEGER_DIGITS;
     static const wholenumber_t MIN_REXXINTEGER = MIN_WHOLENUMBER;
     static const wholenumber_t MAX_REXXINTEGER = MAX_WHOLENUMBER;
 #ifdef __REXX64__
@@ -156,11 +157,6 @@ public:
     static void   setCurrentSettings(const NumericSettings *s) { settings = s; }
     static const NumericSettings *setDefaultSettings() { settings = &defaultSettings; return settings; }
     static const NumericSettings *getDefaultSettings() { return &defaultSettings; }
-    static inline wholenumber_t abs(wholenumber_t n) { return n < 0 ? -n : n; }
-    static inline wholenumber_t minVal(wholenumber_t n1, wholenumber_t n2) { return n2 > n1 ? n1 : n2; }
-    static inline size_t minVal(size_t n1, size_t n2) { return n2 > n1 ? n1 : n2; }
-    static inline wholenumber_t maxVal(wholenumber_t n1, wholenumber_t n2) { return n2 > n1 ? n2 : n1; }
-    static inline size_t maxVal(size_t n1, size_t n2) { return n2 > n1 ? n2 : n1; }
     static inline wholenumber_t maxValueForDigits(wholenumber_t d)
     {
         if (d > REXXINTEGER_DIGITS) // 9 for 32-bit, 18 for 64-bit
@@ -192,8 +188,8 @@ public:
     // the compiler complains.  The first is for validating a whole number value, the second is for validating an
     // explicit 64-bit value.
     static inline bool isValid32Bit(int64_t v) { return v <= INT32_MAX && v >= INT32_MIN; }
-    static inline bool isValid(wholenumber_t v, wholenumber_t digits)  { return abs(v) <= validMaxWhole[minVal(digits, REXXINTEGER_DIGITS)]; }
-    static inline bool isValid64Bit(int64_t v, wholenumber_t digits)  { digits = minVal(digits, REXXINTEGER_DIGITS); return v <= (int64_t)validMaxWhole[digits] && v >= -(int64_t)validMaxWhole[digits]; }
+    static inline bool isValid(wholenumber_t v, wholenumber_t digits)  { return std::abs(v) <= validMaxWhole[std::min(digits, REXXINTEGER_DIGITS)]; }
+    static inline bool isValid64Bit(int64_t v, wholenumber_t digits)  { digits = std::min(digits, REXXINTEGER_DIGITS); return v <= (int64_t)validMaxWhole[digits] && v >= -(int64_t)validMaxWhole[digits]; }
 
 
 protected:

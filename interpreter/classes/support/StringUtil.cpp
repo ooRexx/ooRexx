@@ -98,7 +98,7 @@ RexxString *StringUtil::substr(const char *string, size_t stringLength, RexxInte
     else
     {
         // we have a combination of source string and pad characters
-        substrLength = Numerics::minVal(length, stringLength - position);
+        substrLength = std::min(length, stringLength - position);
         padCount = length - substrLength;
     }
     RexxString *retval = raw_string(length);
@@ -141,7 +141,7 @@ RexxString *StringUtil::substr(const char *string, size_t stringLength, RexxInte
     }
 
     // need to cap the length to the remainder of the string
-    length = Numerics::minVal(length, stringLength - position);
+    length = std::min(length, stringLength - position);
 
     // just extract a new string from the data
     return new_string(string + position, length);
@@ -208,7 +208,7 @@ size_t StringUtil::pos(const char *stringData, size_t haystack_length, RexxStrin
     // get the two working lengths
     size_t needle_length = needle->getLength();
     // make sure the range is capped
-    _range = Numerics::minVal(_range, haystack_length - _start);
+    _range = std::min(_range, haystack_length - _start);
 
     // ok, there are a few quick checks we can perform.  If the needle is
     // bigger than the haystack, or the needle is a null string or
@@ -270,7 +270,7 @@ size_t StringUtil::caselessPos(const char *stringData, size_t haystack_length, R
     // get the two working lengths
     size_t needle_length = needle->getLength();
     // make sure the range is capped
-    _range = Numerics::minVal(_range, haystack_length - _start);
+    _range = std::min(_range, haystack_length - _start);
 
     // ok, there are a few quick checks we can perform.  If the needle is
     // bigger than the haystack, or the needle is a null string or
@@ -350,8 +350,8 @@ size_t StringUtil::lastPos(const char *stringData, size_t haystackLen, RexxStrin
     else
     {
         // get the start position for the search.
-        haystackLen = Numerics::minVal(_start, haystackLen);
-        range = Numerics::minVal(range, haystackLen);
+        haystackLen = std::min(_start, haystackLen);
+        range = std::min(range, haystackLen);
         // adjust the starting point by pretending this is smaller than the original string
         const char *startPoint = stringData + haystackLen - range;
 
@@ -427,8 +427,8 @@ size_t StringUtil::caselessLastPos(const char *stringData, size_t haystackLen, R
     else
     {
         // get the start position for the search.
-        haystackLen = Numerics::minVal(_start, haystackLen);
-        range = Numerics::minVal(range, haystackLen);
+        haystackLen = std::min(_start, haystackLen);
+        range = std::min(range, haystackLen);
         // adjust the starting point
         const char *startPoint = stringData + haystackLen - range;
                                          /* do the search                     */
@@ -1347,7 +1347,7 @@ RexxInteger *StringUtil::verify(const char *data, size_t stringLen, RexxString  
     }
 
     // adjust the range for seaching
-    stringRange = Numerics::minVal(stringRange, stringLen - startPos + 1);
+    stringRange = std::min(stringRange, stringLen - startPos + 1);
 
     const char *current = data + startPos - 1;
 

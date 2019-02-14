@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -128,6 +128,7 @@ public:
 
     static RexxObject *localServer;         // local environment initialization server
     static const char *languageLevel;       // the language level of this interpreter
+    static RexxString* qualifyFileSystemName(RexxString *name);
 
 protected:
     static SysMutex  resourceLock;   // use to lock resources accessed outside of kernel global lock

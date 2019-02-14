@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -112,3 +112,14 @@ const char *SysProcess::getExecutableLocation()
     return executableLocation;
 }
 
+
+/**
+ * do a beep tone
+ *
+ * @param frequency The frequency to beep at
+ * @param duration  The duration to beep (in milliseconds)
+ */
+void SysProcess::beep(int frequency, int duration)
+{
+    Beep((DWORD)frequency, (DWORD)duration);
+}

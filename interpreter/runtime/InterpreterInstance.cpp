@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -1015,3 +1015,71 @@ PackageClass *InterpreterInstance::loadRequires(Activity *activity, RexxString *
 }
 
 
+
+
+/**
+ * Resolve a program for intial loading or a subroutine call.
+ *
+ * @param _name      The target name.  This can be fully qualified, or a simple name
+ *                   without an extension.
+ * @param _parentDir The directory of the file of our calling program.  The first place
+ *                   we'll look is in the same directory as the program.
+ * @param _parentExtension
+ *                   The extension our calling program has.  If there is an extension,
+ *                   we'll use that version first before trying any of the default
+ *                   extensions.
+ *
+ * @return A string version of the file name, if found.  Returns OREF_NULL if
+ *         the program cannot be found.
+ */
+RexxString* InterpreterInstance::resolveProgramName(RexxString *_name, RexxString *_parentDir, RexxString *_parentExtension)
+{
+    FileNameBuffer resolvedName;
+
+    const char *name = _name->getStringData();
+    const char *parentDir = _parentDir == OREF_NULL ? NULL : _parentDir->getStringData();
+    const char *parentExtension = _parentExtension == OREF_NULL ? NULL : _parentExtension->getStringData();
+    const char *pathExtension = searchPath == OREF_NULL ? NULL : searchPath->getStringData();
+
+    SysSearchPath searchPath(parentDir, pathExtension);
+
+    // if the file already has an extension, this dramatically reduces the number
+    // of searches we need to make.
+    if (SysFileSystem::hasExtension(name))
+    {
+        if (SysFileSystem::searchName(name, searchPath.path, NULL, resolvedName))
+        {
+            return new_string(resolvedName);
+        }
+        return OREF_NULL;
+    }
+
+    // if we have a parent extension provided, use that in preference to any default searches
+    if (parentExtension != NULL)
+    {
+        if (SysFileSystem::searchName(name, searchPath.path, parentExtension, resolvedName))
+        {
+            return new_string(resolvedName);
+        }
+
+    }
+
+    // ok, now time to try each of the individual extensions along the way.
+    for (size_t i = 1; i <= searchExtensions->items(); i++)
+    {
+        RexxString *ext = (RexxString *)searchExtensions->get(i);
+
+        if (SysFileSystem::searchName(name, searchPath.path, ext->getStringData(), resolvedName))
+        {
+            return new_string(resolvedName);
+        }
+    }
+
+    // The file may purposefully have no extension.
+    if (SysFileSystem::searchName(name, searchPath.path, NULL, resolvedName))
+    {
+        return new_string(resolvedName);
+    }
+
+    return OREF_NULL;
+}

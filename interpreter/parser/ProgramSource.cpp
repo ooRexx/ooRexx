@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -48,6 +48,7 @@
 #include "SystemInterpreter.hpp"
 #include "GlobalNames.hpp"
 #include "ActivityManager.hpp"
+#include "SysFile.hpp"
 
 
 /**
@@ -119,7 +120,7 @@ RexxString *ProgramSource::getStringLine(size_t position, size_t startOffset, si
     }
 
     // protect from an overrun
-    startOffset = Numerics::minVal(startOffset, lineLength);
+    startOffset = std::min(startOffset, lineLength);
     // we frequently ask for the entire line by giving an offset of zero.
     if (endOffset == 0)
     {
@@ -127,7 +128,7 @@ RexxString *ProgramSource::getStringLine(size_t position, size_t startOffset, si
     }
     else
     {
-        endOffset = Numerics::minVal(endOffset, lineLength);
+        endOffset = std::min(endOffset, lineLength);
     }
 
     // we can use this to extract from a position to the end by
@@ -715,11 +716,53 @@ void FileProgramSource::setup()
 {
     // read the file into a buffer object, reporting an error if this failed
     // for any reason
-    buffer = SystemInterpreter::readProgram(fileName->getStringData());
+    buffer = readProgram(fileName->getStringData());
     if (buffer == OREF_NULL)
     {
         reportException(Error_Program_unreadable_name, fileName);
     }
     // go set up all of the line information so the parser can read this.
     BufferProgramSource::setup();
+}
+
+
+/**
+ * Read a program, returning a buffer object.
+ *
+ * @param file_name The target file name.
+ *
+ * @return A buffer object holding the program data.
+ */
+BufferClass* FileProgramSource::readProgram(const char *file_name)
+{
+    SysFile programFile;          // the file we're reading
+
+    // if unable to open this, return false
+    if (!programFile.open(file_name, RX_O_RDONLY, RX_S_IREAD, RX_SH_DENYWR))
+    {
+        return OREF_NULL;
+    }
+
+    int64_t bufferSize = 0;
+
+    // get the size of the file
+    programFile.getSize(bufferSize);
+    size_t readSize;
+
+    // get a buffer object to return the image
+    Protected<BufferClass> buffer = new_buffer(bufferSize);
+    {
+        UnsafeBlock releaser;
+
+        // read the data
+        programFile.read(buffer->getData(), bufferSize, readSize);
+        programFile.close();
+    }
+    // if there was a read error, return nothing
+    if ((int64_t)readSize < bufferSize)
+    {
+        return OREF_NULL;
+    }
+    // ready to run
+    return buffer;
 }

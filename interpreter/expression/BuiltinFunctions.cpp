@@ -1831,6 +1831,9 @@ BUILTIN(VALUE)
     RexxObject *newvalue = optional_argument(VALUE, newValue);
     RexxString *selector = optional_string(VALUE, selector);
 
+    // if not there, we return a null string
+    ProtectedObject result;
+
 
     // get the variable type
     StringSymbolType variableType = variable->isSymbol();
@@ -1839,7 +1842,7 @@ BUILTIN(VALUE)
     // no selector means we're looking up a local variable
     if (selector == OREF_NULL)
     {
-        RexxVariableBase *retriever = VariableDictionary::getVariableRetriever(variable);
+        Protected<RexxVariableBase> retriever = VariableDictionary::getVariableRetriever(variable);
         // this could an invalid name, or we might be trying to assign a value to a non-variable
         // symbol.
         if (retriever == OREF_NULL || (newvalue != OREF_NULL && !assignable))
@@ -1847,7 +1850,7 @@ BUILTIN(VALUE)
             reportException(Error_Incorrect_call_symbol, "VALUE", IntegerOne, variable);
         }
         // get the variable value
-        RexxObject *result = retriever->getValue(context);
+        result = retriever->getValue(context);
         // given a new value?  Assign that
         if (newvalue != OREF_NULL)
         {
@@ -1859,7 +1862,7 @@ BUILTIN(VALUE)
     else if (selector->getLength() == 0)
     {
 
-        RexxObject *result = (RexxObject *)TheEnvironment->entry(variable);
+        result = (RexxObject *)TheEnvironment->entry(variable);
         // the value is .VARIABLE if not found
         if (result == OREF_NULL)
         {
@@ -1875,7 +1878,36 @@ BUILTIN(VALUE)
     // an external selector value
     else
     {
-        RexxObject *result;
+    // The selector ENVIRONMENT means the same on every system, so we handle this here
+        if (selector->strCaselessCompare("ENVIRONMENT"))
+        {
+            Protected<RexxString> name = variable;
+
+            FileNameBuffer buffer;
+
+            // get the variable as set as a result
+            SystemInterpreter::getEnvironmentVariable(name->getStringData(), buffer);
+            result = new_string(buffer);
+
+            // set the variable if we have a new value
+            if (newvalue != OREF_NULL)
+            {
+                // .nil is special, it removes the variable
+                if (newvalue == TheNilObject)
+                {
+                    SystemInterpreter::setEnvironmentVariable(name->getStringData(), NULL);
+                }
+                // we need a string value for the set.
+                else
+                {
+                    Protected<RexxString> stringValue = stringArgument(newvalue, ARG_TWO);
+
+                    SystemInterpreter::setEnvironmentVariable(name->getStringData(), stringValue->getStringData());
+                }
+            }
+            return result;
+        }
+
         // try the platform defined selectors.
         if (SystemInterpreter::valueFunction(variable, newvalue, selector, result))
         {
@@ -2938,10 +2970,7 @@ BUILTIN(QUALIFY)
 
     RexxString *name = optional_string(QUALIFY, name);
 
-    char qualified_name[SysFileSystem::MaximumFileNameLength];
-    // qualifyStreamName will not expand if not a null string on entry.
-    qualified_name[0] = '\0';
-    SysFileSystem::qualifyStreamName(name->getStringData(), qualified_name, sizeof(qualified_name));
+    QualifiedName qualified_name(name->getStringData());
     return new_string(qualified_name);
 }
 

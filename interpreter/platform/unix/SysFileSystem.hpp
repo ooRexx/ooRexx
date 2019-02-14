@@ -49,97 +49,169 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <dirent.h>
+#include <errno.h>
 
 #if defined(PATH_MAX)
-# define MAXIMUM_PATH_LENGTH PATH_MAX + 1
+#define MAXIMUM_PATH_LENGTH PATH_MAX + 1
 #elif defined(_POSIX_PATH_MAX)
-# define MAXIMUM_PATH_LENGTH _POSIX_PATH_MAX + 1
+#define MAXIMUM_PATH_LENGTH _POSIX_PATH_MAX + 1
 #else
-# define MAXIMUM_PATH_LENGTH
+#define MAXIMUM_PATH_LENGTH
 #endif
 
 #if defined(FILENAME_MAX)
-# define MAXIMUM_FILENAME_LENGTH FILENAME_MAX + 1
+#define MAXIMUM_FILENAME_LENGTH FILENAME_MAX + 1
 #elif defined(_MAX_FNAME)
-# define MAXIMUM_FILENAME_LENGTH _MAX_FNAME + 1
+#define MAXIMUM_FILENAME_LENGTH _MAX_FNAME + 1
 #elif defined(_POSIX_NAME_MAX)
-# define MAXIMUM_FILENAME_LENGTH _POSIX_NAME_MAX + 1
+#define MAXIMUM_FILENAME_LENGTH _POSIX_NAME_MAX + 1
 #else
-# define MAXIMUM_FILENAME_LENGTH 256
+#define MAXIMUM_FILENAME_LENGTH 256
 #endif
 
 #define NAME_BUFFER_LENGTH (MAXIMUM_PATH_LENGTH + MAXIMUM_FILENAME_LENGTH)
 
 class RexxString;
+class FileNameBuffer;
 
 class SysFileSystem
 {
-public:
-    enum
-    {
-        MaximumPathLength = MAXIMUM_PATH_LENGTH,
-        MaximumFileNameLength = MAXIMUM_FILENAME_LENGTH,
-        MaximumFileNameBuffer = MAXIMUM_PATH_LENGTH + MAXIMUM_FILENAME_LENGTH
-    };
+ public:
+     enum
+     {
+         MaximumPathLength = MAXIMUM_PATH_LENGTH,
+         MaximumFileNameLength = MAXIMUM_FILENAME_LENGTH,
+         MaximumFileNameBuffer = MAXIMUM_PATH_LENGTH + MAXIMUM_FILENAME_LENGTH
+     };
 
-    static const char EOF_Marker;
-    static const char *EOL_Marker;    // the end-of-line marker
-    static const char PathDelimiter;  // directory path delimiter
+     static const char EOF_Marker;
+     static const char *EOL_Marker;    // the end-of-line marker
+     static const char PathDelimiter;  // directory path delimiter
+     static const char NewLine;
+     static const char CarriageReturn;
 
-    static bool  searchFileName(const char * name, char *fullName);
-    static void  qualifyStreamName(const char *unqualifiedName, char *qualifiedName, size_t bufferSize);
-    static bool  fileExists(const char *name);
-    static bool  searchName(const char *name, const char *path, const char *extension, char *resolvedName);
-    static bool  primitiveSearchName(const char *name, const char *path, const char *extension, char *resolvedName);
-    static bool  checkCurrentFile(const char *name, char *resolvedName);
-    static bool  searchPath(const char *name, const char *path, char *resolvedName);
-    static bool  hasExtension(const char *name);
-    static bool  hasDirectory(const char *name);
-    static bool  canonicalizeName(char *name);
-    static bool  normalizePathName(const char *name, char *resolved);
-    static RexxString *extractDirectory(RexxString *file);
-    static RexxString *extractExtension(RexxString *file);
-    static RexxString *extractFile(RexxString *file);
+     static bool  searchFileName(const char *name, FileNameBuffer &fileName);
+     static void  qualifyStreamName(const char *unqualifiedName, FileNameBuffer &qualifiedName);
+     static bool  fileExists(const char *name);
+     static bool  searchName(const char *name, const char *path, const char *extension, FileNameBuffer &resolvedName);
+     static bool  searchPath(const char *name, const char *path, FileNameBuffer &resolvedName);
+     static bool  primitiveSearchName(const char *name, const char *path, const char *extension, FileNameBuffer &resolvedName);
+     static bool  checkCurrentFile(const char *name, FileNameBuffer &resolvedName);
+     static bool  hasExtension(const char *name);
+     static bool  hasDirectory(const char *name);
+     static bool  canonicalizeName(FileNameBuffer &resolvedName);
+     static bool  normalizePathName(const char *name, FileNameBuffer &resolvedName);
+     static RexxString* extractDirectory(RexxString *file);
+     static RexxString* extractExtension(RexxString *file);
+     static RexxString* extractFile(RexxString *file);
 
-    static bool  deleteFile(const char *name);
-    static bool  deleteDirectory(const char *name);
-    static bool  isDirectory(const char *name);
-    static bool  isReadOnly(const char *name);
-    static bool  isWriteOnly(const char *name);
-    static bool  isFile(const char *name);
-    static bool  exists(const char *name);
+     static int   deleteFile(const char *name);
+     static int   deleteDirectory(const char *name);
+     static bool  isDirectory(const char *name);
+     static bool  isReadOnly(const char *name);
+     static bool  isWriteOnly(const char *name);
+     static bool  isFile(const char *name);
+     static bool  isLink(const char *name);
+     static bool  exists(const char *name);
 
-    static int64_t getLastModifiedDate(const char *name);
-    static int64_t getLastAccessDate(const char *name);
-    static bool  setLastModifiedDate(const char *name, int64_t time);
-    static bool  setLastAccessDate(const char *name, int64_t time);
+     static int64_t getLastModifiedDate(const char *name);
+     static int64_t getLastAccessDate(const char *name);
+     static bool  setLastModifiedDate(const char *name, int64_t time);
+     static bool  setLastAccessDate(const char *name, int64_t time);
 
-    static uint64_t getFileLength(const char *name);
+     static uint64_t getFileLength(const char *name);
 
-    static bool  makeDirectory(const char *name);
-    static bool  moveFile(const char *oldName, const char *newName);
-    static bool  isHidden(const char *name);
-    static bool  setFileReadOnly(const char *name);
-    static bool  isCaseSensitive();
-    static bool  isCaseSensitive(const char *name);
-    static int   getRoots(char *roots);
-    static const char *getSeparator();
-    static const char *getPathSeparator();
-    static const char *getLineEnd();
+     static bool  makeDirectory(const char *name);
+     static bool  isHidden(const char *name);
+     static bool  setFileReadOnly(const char *name);
+     static bool  setFileWritable(const char *name);
+     static bool  isCaseSensitive();
+     static bool  isCaseSensitive(const char *name);
+     static int   getRoots(FileNameBuffer &roots);
+     static const char* getSeparator();
+     static const char* getPathSeparator();
+     static const char* getLineEnd();
+     static bool  getCurrentDirectory(FileNameBuffer &directory);
+     static bool  setCurrentDirectory(const char *directory);
+     static int   copyFile(const char *fromFile, const char *toFile);
+     static int   moveFile(const char *fromFile, const char *toFile);
+     static bool  resolveTilde(FileNameBuffer &name);
+     static const char* getPathStart(const char *name);
+     static const char* getPathEnd(const char *name);
 };
 
 class SysFileIterator
 {
 public:
-    SysFileIterator(const char *pattern);
+    SysFileIterator(const char *path, const char *pattern, FileNameBuffer &buffer, bool c = false);
     ~SysFileIterator();
     void close();
     bool hasNext();
-    void next(char *buffer);
+    void next(FileNameBuffer &name);
+
 protected:
+    void findNextEntry();
+
     bool completed;       // the iteration completed flag
     struct dirent *entry;
     DIR    *handle;
+    bool    caseLess;     // indicates we do caseless searches
+    const char *patternSpec;   // the spec we test against
+};
+
+
+/**
+ * A simple class to ensure an open file is closed in error situations.
+ */
+class AutoClose
+{
+ public:
+     AutoClose() : value(-1)
+     { };
+     AutoClose(int fd) : value(fd)
+     { }
+     ~AutoClose()
+     {
+         close(false);
+     }
+     AutoClose & operator=(int fd)
+     {
+         close(false);
+         value = fd;
+         return *this;
+     }
+     operator int() const
+     {
+         return value;
+     }
+     int operator==(int fd)
+     {
+         return value == fd;
+     }
+     int close(bool returnError = true)
+     {
+         int closeStatus = 0;
+         if (returnError)
+         {
+             if (value >= 0)
+             {
+                 closeStatus = ::close(value);
+             }
+         }
+         else
+         {
+             if (value >= 0)
+             {
+                 int backup = errno;
+                 ::close(value);
+                 errno = backup;
+             }
+         }
+         value = -1;
+         return closeStatus;
+     }
+ private:
+     int value; // >= 0 if opened
 };
 
 #endif

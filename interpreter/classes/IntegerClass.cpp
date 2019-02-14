@@ -280,7 +280,7 @@ bool RexxInteger::doubleValue(double &result)
 bool RexxInteger::numberValue(wholenumber_t &result)
 {
     // is the long value expressable as a whole number in REXX term.
-    if (Numerics::abs(value) > Numerics::MAX_WHOLENUMBER)
+    if (std::abs(value) > Numerics::MAX_WHOLENUMBER)
     {
         return false;                    // nope, not a valid long.
     }
@@ -1038,7 +1038,7 @@ RexxObject *RexxInteger::power(RexxObject *other)
             // - any power larger than 18 (32-bit) or 37 (64-bit), and
             // - any base larger than +/-999 (32-bit) or +/-999999 (64-bit)
             if (power < 0 || power > RexxIntegerMaxPower ||
-                Numerics::abs(value) > RexxIntegerMaxBase)
+                std::abs(value) > RexxIntegerMaxBase)
             {
                 return integer_forward(power, other);
             }

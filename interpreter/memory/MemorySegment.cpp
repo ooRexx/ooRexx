@@ -1455,8 +1455,8 @@ void MemorySegmentSet::gatherStats(MemoryStats *memStats, SegmentStats *stats)
     for (seg = first(); seg != NULL; seg = next(seg))
     {
         seg->gatherObjectStats(memStats, stats);
-        stats->largestSegment = Numerics::maxVal(stats->largestSegment, seg->size());
-        stats->smallestSegment = Numerics::maxVal(stats->smallestSegment, seg->size());
+        stats->largestSegment = std::max(stats->largestSegment, seg->size());
+        stats->smallestSegment = std::max(stats->smallestSegment, seg->size());
     }
 }
 

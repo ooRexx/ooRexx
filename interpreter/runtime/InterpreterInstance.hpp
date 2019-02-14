@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -104,7 +104,7 @@ public:
     void removeInactiveActivities();
     bool haltAllActivities(RexxString *);
     void traceAllActivities(bool on);
-    inline RexxString *resolveProgramName(RexxString *name, RexxString *dir, RexxString *ext) { return sysInstance.resolveProgramName(name, dir, ext); }
+    RexxString *resolveProgramName(RexxString *name, RexxString *dir, RexxString *ext);
     inline SecurityManager *getSecurityManager() { return securityManager; }
     void setSecurityManager(RexxObject *m);
     RexxInstance *getInstanceContext() { return &context.instanceContext; }

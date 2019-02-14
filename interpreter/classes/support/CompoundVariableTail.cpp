@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -255,9 +255,8 @@ void CompoundVariableTail::buildTail(const char *t)
 
 /**
  * Build a tail from a single string and a number index
- * value.  This is used by the stem sort, and the dot
- * separating the two pieces is already part of the leading
- * string.
+ * value.  This is used by the stem sort, and the if the tail
+ * piece does not end with a dot, one is provided.
  *
  * @param _tail  the tail prefix.
  * @param index  the index value.
@@ -268,11 +267,18 @@ void CompoundVariableTail::buildTail(RexxString *_tail, size_t index)
     if (_tail != OREF_NULL)
     {
         _tail->copyIntoTail(this);
+        length = length + _tail->getLength();
+        // if we don't have a dot on the end of this tail piece, add one
+        if (!_tail->endsWith('.'))
+        {
+            addDot();
+        }
+        length = current - tail;
     }
 
-    length = length + _tail->getLength();
-    length = length + Numerics::formatWholeNumber(index, current);
-    current += length;
+    size_t numberLength = Numerics::formatWholeNumber(index, current);
+    current += numberLength;
+    length += numberLength;
     remainder -= length;
 }
 

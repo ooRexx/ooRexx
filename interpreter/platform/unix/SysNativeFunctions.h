@@ -43,7 +43,5 @@
 /******************************************************************************/
 
 
-INTERNAL_ROUTINE(Beep, sysBeep)
-INTERNAL_ROUTINE(Directory, sysDirectory)
-INTERNAL_ROUTINE(Filespec, sysFilespec)
+
 

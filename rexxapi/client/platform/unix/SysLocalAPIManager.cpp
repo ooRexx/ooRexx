@@ -69,7 +69,7 @@ void SysLocalAPIManager::startServerProcess()
     // we will make multiple attempts at locating this. First choice
     // is to pick up rxapi from the same location as librexxapi, if we can determine
     // this.
-    char *fullExeName = NULL;
+    AutoFree fullExeName;
     // determine the location from location of rexxapi.dll.
     const char *installLocation =  SysProcess::getExecutableLocation();
 
@@ -118,11 +118,10 @@ void SysLocalAPIManager::startServerProcess()
     execvp(fullExeName, apiExeArg);
 
     // if we make it here, then this failed. try using an unqualified name and try to locate it in the path
-    free(fullExeName);
     execvp(apiExeName, apiExeArg);
 
     // did this still fail? Last attempt, try to load this from the current directory
-execvp("./rxapi", apiExeArg);
+    execvp("./rxapi", apiExeArg);
 
     // still no luck? This is a launch failure. Because we are the forked process,
     // we need to exit immediately.

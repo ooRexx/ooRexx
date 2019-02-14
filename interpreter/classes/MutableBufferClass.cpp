@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -36,11 +36,11 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                                */
 /*                                                                            */
 /* Primitive MutableBuffer Class                                              */
 /*                                                                            */
 /******************************************************************************/
+#include <algorithm>
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "MutableBufferClass.hpp"
@@ -238,7 +238,7 @@ void MutableBuffer::ensureCapacity(size_t addedLength)
     if (resultLength > bufferLength)
     {
         // use the larger of the required length and twice the buffer size as our new size.
-        bufferLength = Numerics::maxVal(resultLength, bufferLength * 2);
+        bufferLength = std::max(resultLength, bufferLength * 2);
 
         // get an expanded buffer
         setField(data, data->expand(bufferLength));
@@ -410,7 +410,7 @@ MutableBuffer *MutableBuffer::insert(RexxObject *str, RexxObject *pos, RexxObjec
 
     char padChar = optionalPadArgument(pad, ' ', ARG_FOUR);
 
-    size_t copyLength = Numerics::minVal(insertLength, string->getLength());
+    size_t copyLength = std::min(insertLength, string->getLength());
     size_t padLength = insertLength - copyLength;
 
 
@@ -491,7 +491,7 @@ MutableBuffer *MutableBuffer::overlay(RexxObject *str, RexxObject *pos, RexxObje
     }
 
     // now overlay the string data
-    copyData(begin, string->getStringData(), Numerics::minVal(replaceLength, string->getLength()));
+    copyData(begin, string->getStringData(), std::min(replaceLength, string->getLength()));
     // do we need additional padding?
     if (replaceLength > string->getLength())
     {
@@ -680,7 +680,7 @@ RexxObject *MutableBuffer::setBufferSize(RexxInteger *size)
         // reallocate the buffer
         BufferClass *newBuffer = new_buffer(newsize);
         // if we're shrinking this, it truncates.
-        dataLength = Numerics::minVal(dataLength, newsize);
+        dataLength = std::min(dataLength, newsize);
         newBuffer->copyData(0, data->getData(), dataLength);
         // replace the old buffer
         setField(data, newBuffer);
@@ -1279,7 +1279,7 @@ MutableBuffer *MutableBuffer::lower(RexxInteger *_start, RexxInteger *_length)
         return this;
     }
 
-    rangeLength = Numerics::minVal(rangeLength, getLength() - startPos);
+    rangeLength = std::min(rangeLength, getLength() - startPos);
 
     // a zero length value is also a non-change.
     if (rangeLength == 0)
@@ -1319,7 +1319,7 @@ MutableBuffer *MutableBuffer::upper(RexxInteger *_start, RexxInteger *_length)
         return this;
     }
 
-    rangeLength = Numerics::minVal(rangeLength, getLength() - startPos);
+    rangeLength = std::min(rangeLength, getLength() - startPos);
 
     // a zero length value is also a non-change.
     if (rangeLength == 0)
@@ -1376,7 +1376,7 @@ MutableBuffer *MutableBuffer::translate(RexxString *tableo, RexxString *tablei, 
     }
 
     // capy the real range
-    range = Numerics::minVal(range, getLength() - startPos + 1);
+    range = std::min(range, getLength() - startPos + 1);
     char *scanPtr = getData() + startPos - 1;
     size_t scanLength = range;
 

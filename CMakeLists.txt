@@ -285,6 +285,15 @@ if (WIN32)
    set (INSTALL_SAMPLES_DIR ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME})
    set (INSTALL_MAN_DIR ${CMAKE_INSTALL_PREFIX}/share/man)
 endif ()
+# current trunk uses the C++ "override" keyword, which requires C++11
+if (CMAKE_VERSION VERSION_LESS "3.1")
+  if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11")
+  endif ()
+else ()
+  set (CMAKE_CXX_STANDARD 11)
+endif ()
+
 # Set compiler and linker flags common to all build environments
 # current trunk uses the C++ "override" keyword, which requires C++11
 if (CMAKE_VERSION VERSION_LESS "3.1")
@@ -313,6 +322,7 @@ if (WIN32)
             /D_CRT_SECURE_NO_DEPRECATE
             /D_CRT_SECURE_NO_WARNINGS
             /D_CRT_NONSTDC_NO_DEPRECATE
+            /DNOMINMAX
 # suppress warning C4291: no matching operator delete found; memory will not be freed if initialization throws an exception
             /wd4291
 # give errors for missing override specifications or method hiding with warning level 3
@@ -407,6 +417,8 @@ if (NOT WIN32)
                            return 0;}"
                           HAVE_DLADDR)
   check_symbol_exists(_PC_CASE_SENSITIVE unistd.h HAVE_PC_CASE_SENSITIVE)
+  check_symbol_exists(FNM_CASEFOLD fnmatch.h HAVE_FNM_CASEFOLD)
+  check_symbol_exists(KDMKTONE linux/kd.h HAVE_KDMKTONE)
   check_include_file(pwd.h HAVE_PWD_H)
   check_include_file(sched.h HAVE_SCHED_H)
   check_function_exists(sighold HAVE_SIGHOLD)
@@ -511,8 +523,6 @@ set (build_runtime_dir ${build_interpreter_dir}/runtime)
 set (build_streamlibrary_dir ${build_interpreter_dir}/streamLibrary)
 set (build_extensions_dir extensions)
 set (build_extensions_platform_dir ${build_extensions_dir}/${ORX_PLATFORM_DIR})
-set (build_extensions_rexxutil_dir ${build_extensions_dir}/rexxutil)
-set (build_extensions_rexxutil_platform_dir ${build_extensions_rexxutil_dir}/${ORX_PLATFORM_DIR})
 set (build_extensions_rxftp_dir ${build_extensions_dir}/rxftp)
 set (build_extensions_csvstream_dir ${build_extensions_dir}/csvStream)
 set (build_extensions_json_dir ${build_extensions_dir}/json)
@@ -714,6 +724,7 @@ set (classes_sources ${build_classes_dir}/ArrayClass.cpp
 set (package_sources ${build_package_dir}/LibraryPackage.cpp
             ${build_package_dir}/PackageManager.cpp)
 set (memory_sources ${build_memory_dir}/DeadObject.cpp
+            ${build_memory_dir}/FileNameBuffer.cpp
             ${build_memory_dir}/GlobalNames.cpp
             ${build_memory_dir}/MapBucket.cpp
             ${build_memory_dir}/MapTable.cpp
@@ -846,12 +857,12 @@ set (parser_sources ${build_parser_dir}/Clause.cpp
             ${build_parser_dir}/Token.cpp)
 set (platform_sources ${build_interpreter_platform_dir}/ErrorMessages.cpp
             ${build_interpreter_platform_dir}/ExternalFunctions.cpp
-            ${build_interpreter_platform_dir}/FileSystem.cpp
             ${build_interpreter_platform_dir}/MemorySupport.cpp
             ${build_interpreter_platform_dir}/MiscSystem.cpp
             ${build_interpreter_platform_dir}/SysActivity.cpp
             ${build_interpreter_platform_dir}/SysFileSystem.cpp
             ${build_interpreter_platform_dir}/SysInterpreterInstance.cpp
+            ${build_interpreter_platform_dir}/SysRexxUtil.cpp
             ${build_interpreter_platform_dir}/SystemCommands.cpp
             ${build_interpreter_platform_dir}/SystemInitialization.cpp
             ${build_interpreter_platform_dir}/SystemInterpreter.cpp
@@ -868,6 +879,7 @@ set (runtime_sources ${build_runtime_dir}/InternalPackage.cpp
             ${build_runtime_dir}/Interpreter.cpp
             ${build_runtime_dir}/InterpreterInstance.cpp
             ${build_runtime_dir}/Numerics.cpp
+            ${build_runtime_dir}/RexxUtilCommon.cpp
             ${build_runtime_dir}/Version.cpp)
 set (streamlibrary_sources ${build_streamlibrary_dir}/StreamCommandParser.cpp
             ${build_streamlibrary_dir}/StreamNative.cpp
@@ -894,7 +906,7 @@ set (common_interpreter_sources ${classes_sources}
 if (WIN32)
    set (platform_interpreter_sources ${build_interpreter_platform_dir}/rexx.def
             ${build_interpreter_platform_dir}/winmsgtb.rc)
-   set (platform_interpreter_libs comctl32)
+   set (platform_interpreter_libs comctl32 shlwapi version)
 else ()
    set (platform_interpreter_sources ${build_interpreter_platform_dir}/RexxMain.cpp)
    set (platform_rexx_libs ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
@@ -1040,7 +1052,7 @@ endif ()
 # Build the rexx.img file
 add_custom_command(OUTPUT ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rexx.img
            COMMAND $<TARGET_FILE:rexximage>
-           DEPENDS rexximage rxapi rexxutil ${image_class_files} ${platform_rexx_img_depends}
+           DEPENDS rexximage rxapi ${image_class_files} ${platform_rexx_img_depends}
            WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 add_custom_target(rexx_img ALL DEPENDS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rexx.img)
 install(PROGRAMS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rexx.img COMPONENT Core DESTINATION ${INSTALL_LIB_DIR} PERMISSIONS OWNER_EXECUTE GROUP_EXECUTE WORLD_EXECUTE OWNER_READ GROUP_READ WORLD_READ)
@@ -1233,32 +1245,6 @@ target_include_directories(rxsubcom PUBLIC
 # Extra link library definitions
 target_link_libraries(rxsubcom rexx rexxapi ${platform_subcom_libs} ${CMAKE_REQUIRED_LIBRARIES})
 install(TARGETS rxsubcom RUNTIME COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
-
-#################### librexxutil.so ################
-# additional source files required by specific platforms
-if (WIN32)
-   set (platform_rexxutil_sources
-            ${build_platform_dir}/verinfo.rc
-            ${build_common_platform_dir}/SysProcess.cpp)
-   set (platform_rexxutil_libs shlwapi version)
-else ()
-   set (platform_rexxutil_libs ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
-endif ()
-# Sources for librexxutil.so
-add_library(rexxutil SHARED ${build_extensions_rexxutil_platform_dir}/rexxutil.cpp
-                            ${platform_rexxutil_sources})
-# Include file definition
-target_include_directories(rexxutil PUBLIC
-             ${build_lib_dir}
-             ${build_api_dir}
-             ${build_api_platform_dir}
-             ${build_messages_dir})
-# Extra link library definitions
-target_link_libraries(rexxutil rexx rexxapi ${platform_rexxutil_libs} ${CMAKE_REQUIRED_LIBRARIES})
-install(TARGETS rexxutil RUNTIME COMPONENT Core DESTINATION ${INSTALL_LIB_DIR}
-                         LIBRARY DESTINATION ${INSTALL_LIB_DIR} COMPONENT Core)
-set_target_properties(rexxutil PROPERTIES VERSION ${ORX_VERSION})
-create_install_symlink(rexxutil)
 
 #################### librxmath.so ################
 # additional source files required by specific platforms
@@ -1902,8 +1888,6 @@ if (WIN32 AND DOC_SOURCE_DIR)
    install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rexxhide.pdb COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR}
        CONFIGURATIONS Debug RelWithDebInfo)
    install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rexxpaws.pdb COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR}
-       CONFIGURATIONS Debug RelWithDebInfo)
-   install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rexxutil.pdb COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR}
        CONFIGURATIONS Debug RelWithDebInfo)
    install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rxapi.pdb COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR}
        CONFIGURATIONS Debug RelWithDebInfo)

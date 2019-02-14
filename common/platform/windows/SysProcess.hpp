@@ -61,6 +61,7 @@ class SysProcess
          return _getpid();
      }
      static const char* getExecutableLocation();
+     static void beep(int frequency, int duration);
 
  protected:
 

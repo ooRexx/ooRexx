@@ -658,7 +658,7 @@ NumberString *NumberString::Division(NumberString *other, ArithmeticOperator div
     // no integer portion
     if ((divOP != OT_DIVIDE) && ((calcExp >= 0 &&
            ( resultDigits + calcExp) > digits) ||
-         (calcExp < 0  && Numerics::abs(calcExp) > resultDigits)))
+         (calcExp < 0  && std::abs(calcExp) > resultDigits)))
     {
         reportException(divOP == OT_REMAINDER ? Error_Invalid_whole_number_rem : Error_Invalid_whole_number_intdiv);
     }
@@ -859,14 +859,14 @@ NumberString *NumberString::power(RexxObject *powerObj)
     // process because it will required too many bits to calculate.  This is
     // more likely to fail with 32-bit compiles than 64-bit because we have
     // fewer bits to work with.
-    if ((highBits(Numerics::abs(left->numberExponent + left->digitsCount - 1)) +
-         highBits(Numerics::abs(powerValue)) + 1) > SIZEBITS )
+    if ((highBits(std::abs(left->numberExponent + left->digitsCount - 1)) +
+         highBits(std::abs(powerValue)) + 1) > SIZEBITS )
     {
         reportException(Error_Overflow_overflow, this, GlobalNames::POWER, powerObj);
     }
 
     // we can also calculate the exponent magnitude ahead of time and fail this early.
-    if (Numerics::abs(left->numberExponent + left->digitsCount - 1) * powerValue > Numerics::MAX_EXPONENT)
+    if (std::abs(left->numberExponent + left->digitsCount - 1) * powerValue > Numerics::MAX_EXPONENT)
     {
         reportException(Error_Overflow_overflow, this, GlobalNames::POWER, powerObj);
     }

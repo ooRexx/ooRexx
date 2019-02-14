@@ -2402,7 +2402,7 @@ bool Activity::callFunctionExit(RexxActivation *activation, RexxString *rname, b
         // At least one item needs to be allocated in order to avoid an error
         // in the sysexithandler!
         PCONSTRXSTRING argrxarray = (PCONSTRXSTRING) SystemInterpreter::allocateResultMemory(
-             sizeof(CONSTRXSTRING) * Numerics::maxVal((size_t)exit_parm.rxfnc_argc, (size_t)1));
+             sizeof(CONSTRXSTRING) * std::max((size_t)exit_parm.rxfnc_argc, (size_t)1));
         if (argrxarray == OREF_NULL)
         {
             reportException(Error_System_resources);
@@ -2935,7 +2935,7 @@ bool Activity::callNovalueExit(RexxActivation *activation, RexxString *variableN
  * @return The handled flag.
  */
 bool Activity::callValueExit(RexxActivation *activation, RexxString *selector, RexxString *variableName,
-    RexxObject *newValue, RexxObject *&value)
+    RexxObject *newValue, ProtectedObject &value)
 {
     if (isExitEnabled(RXVALUE))         // is the exit enabled?
     {

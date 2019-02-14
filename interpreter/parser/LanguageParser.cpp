@@ -42,6 +42,7 @@
 /*                                                                            */
 /******************************************************************************/
 
+#include <algorithm>
 #include "RexxCore.h"
 #include "LanguageParser.hpp"
 #include "ProgramSource.hpp"
@@ -275,7 +276,7 @@ RoutineClass *LanguageParser::createProgram(RexxString *name)
 RoutineClass *LanguageParser::createProgramFromFile(RexxString *filename)
 {
     // load the file into a buffer
-    Protected<BufferClass> program_buffer = SystemInterpreter::readProgram(filename->getStringData());
+    Protected<BufferClass> program_buffer = FileProgramSource::readProgram(filename->getStringData());
     // if this failed, report an error now.
     if (program_buffer == OREF_NULL)
     {
@@ -3750,7 +3751,7 @@ void LanguageParser::pushTerm(RexxInternalObject *term )
     // we keep track of how large the term stack gets during parsing.  This
     // tells us how much stack space we need to allocate at run time.
     currentStack++;
-    maxStack = Numerics::maxVal(currentStack, maxStack);
+    maxStack = std::max(currentStack, maxStack);
 }
 
 
@@ -3788,7 +3789,7 @@ void LanguageParser::pushSubTerm(RexxInternalObject *term )
     // we keep track of how large the term stack gets during parsing.  This
     // tells us how much stack space we need to allocate at run time.
     currentStack++;
-    maxStack = Numerics::maxVal(currentStack, maxStack);
+    maxStack = std::max(currentStack, maxStack);
 }
 
 

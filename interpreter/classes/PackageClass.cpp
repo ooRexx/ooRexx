@@ -887,7 +887,7 @@ RoutineClass *PackageClass::findRoutine(RexxString *routineName)
  */
 RexxString *PackageClass::resolveProgramName(Activity *activity, RexxString *name)
 {
-    RexxString *fullName = activity->getInstance()->resolveProgramName(name, programDirectory, programExtension);
+    RexxString *fullName = activity->resolveProgramName(name, programDirectory, programExtension);
     // if we can't resolve this directly and we have a parent context, then
     // try the parent context.
     if (fullName == OREF_NULL && parentPackage != OREF_NULL)

@@ -188,3 +188,63 @@ void SysThread::sleep(int msecs)
 {
     Sleep(msecs);
 }
+
+
+#define OM_WAKEUP (WM_USER+10)
+
+/**
+ * callback routine for SetTimer set in longSleep
+ *
+ * @param hwnd    The window handle
+ * @param uMsg    the message parameter
+ * @param idEvent the event id
+ * @param dwTime  the time
+ */
+VOID CALLBACK SleepTimerProc(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
+{
+    DWORD ThreadId;
+    KillTimer(NULL, idEvent);       /* kill the timer that just ended */
+    ThreadId = GetCurrentThreadId();
+    PostThreadMessage(ThreadId, OM_WAKEUP, 0, 0L); /* send ourself the wakeup message*/
+}
+
+
+/**
+ * Platform wrapper around a sleep function that can sleep for long periods of time. .
+ *
+ * @param microseconds
+ *               The number of microseconds to delay.
+ */
+void SysThread::longSleep(uint64_t microseconds)
+{
+
+    // convert to milliseconds, no overflow possible
+    long milliseconds = (long)(microseconds / 1000);
+
+    /** Using Sleep with a long timeout risks sleeping on a thread with a message
+     *  queue, which can make the system sluggish, or possibly deadlocked.  If the
+     *  sleep is longer than 333 milliseconds use a window timer to avoid this
+     *  risk.
+     */
+    if (milliseconds > 333)
+    {
+        if (!(SetTimer(NULL, 0, milliseconds, (TIMERPROC)SleepTimerProc)))
+        {
+            return;
+        }
+
+        MSG msg;
+        while (GetMessage(&msg, NULL, 0, 0))
+        {
+            if (msg.message == OM_WAKEUP)  /* If our message, exit loop       */
+                break;
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
+    }
+    else
+    {
+        Sleep(milliseconds);
+    }
+}
+

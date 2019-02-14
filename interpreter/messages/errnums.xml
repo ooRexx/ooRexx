@@ -2404,6 +2404,37 @@ special character (such as a parenthesis).
 <para>Argument <emphasis role="italic">argument</emphasis> must have a stem object or stem name value; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>920</term>
+<listitem>
+<para>
+<emphasis role="italic">function_name</emphasis> argument <emphasis role="italic">name</emphasis> must be one of "<emphasis role="italic">option</emphasis>"; found "<emphasis role="italic">value</emphasis>".</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>921</term>
+<listitem>
+<para>Argument <emphasis role="italic">first option</emphasis> ("<emphasis role="italic">first value</emphasis>") must be greater than argument <emphasis role="italic">second option</emphasis> ("<emphasis role="italic">second value</emphasis>").</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>922</term>
+<listitem>
+<para>Stem argument does not have a valid count for element 0.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>923</term>
+<listitem>
+<para>The operation is outside the size of the stem array ("<emphasis role="italic">value</emphasis>").</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>924</term>
+<listitem>
+<para>Stem element at position "<emphasis role="italic">position</emphasis>" is not set.</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 <section id="ERR41">
@@ -2733,7 +2764,7 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>901</term>
 <listitem>
-<para>Missing argument; the <emphasis role="italic">argument</emphasis> argument is required.</para>
+<para>Missing argument; argument <emphasis role="italic">argument</emphasis> is required.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
@@ -2757,25 +2788,25 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>905</term>
 <listitem>
-<para>The <emphasis role="italic">argument</emphasis> argument must be a positive whole number; found "<emphasis role="italic">value</emphasis>".</para>
+<para>Argument <emphasis role="italic">argument</emphasis> must be a positive whole number; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>906</term>
 <listitem>
-<para>The <emphasis role="italic">argument</emphasis> argument must not exceed <emphasis role="italic">limit</emphasis>; found "<emphasis role="italic">value</emphasis>".</para>
+<para>Argument <emphasis role="italic">argument</emphasis> must not exceed <emphasis role="italic">limit</emphasis>; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>907</term>
 <listitem>
-<para>The <emphasis role="italic">argument</emphasis> argument must be in the range <emphasis role="italic">min</emphasis> to <emphasis role="italic">max</emphasis>; found "<emphasis role="italic">value</emphasis>".</para>
+<para>Argument <emphasis role="italic">argument</emphasis> must be in the range <emphasis role="italic">min</emphasis> to <emphasis role="italic">max</emphasis>; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>908</term>
 <listitem>
-<para>The <emphasis role="italic">argument</emphasis> argument must not be a null string.</para>
+<para>Argument <emphasis role="italic">argument</emphasis> must not be a null string.</para>
 </listitem>
 </varlistentry>
 <varlistentry>

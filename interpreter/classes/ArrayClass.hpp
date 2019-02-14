@@ -341,7 +341,7 @@ class ArrayClass : public RexxObject
 
     // maximum size we can handle
     static const size_t MaxFixedArraySize = (Numerics::MAX_WHOLENUMBER / 10) + 1;
-    static const size_t MinimumArraySize = 8;      // the minimum size we allocate.
+    static const size_t MinimumArraySize;      // the minimum size we allocate.
     // for small Arrays, we expand by doubling the current size, however
     // for Arrays larger than this limit, we just extend by half the current size
     static const size_t ExpansionDoubleLimit = 2000;

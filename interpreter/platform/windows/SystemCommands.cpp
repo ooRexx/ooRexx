@@ -302,14 +302,13 @@ bool sys_process_cd(RexxExitContext *context, const char *command, const char * 
     }
     else
     {
-        char *unquoted = unquote(st);
+        AutoFree unquoted = unquote(st);
         if (unquoted == NULL)
         {
             return false;
         }
         rc = _chdir(unquoted);
         error = GetLastError();
-        free(unquoted);
     }
     if (rc != 0)
     {

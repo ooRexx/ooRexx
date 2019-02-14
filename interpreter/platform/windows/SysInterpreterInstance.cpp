@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -186,52 +186,34 @@ SysSearchPath::SysSearchPath(const char *parentDir, const char *extensionPath)
 {
     char temp[4];             // this is just a temp buffer to check component sizes
 
+    // this is a little bit of a pain because this gets returned in a buffer. We need to
+    // find the size so we can ensure our buffer is large enough before we start to
+    // assemble it
     size_t pathSize = GetEnvironmentVariable("PATH", temp, sizeof(temp));
     size_t rexxPathSize = GetEnvironmentVariable("REXX_PATH", temp, sizeof(temp));
     size_t parentSize = parentDir == NULL ? 0 : strlen(parentDir);
     size_t extensionSize = extensionPath == NULL ? 0 : strlen(extensionPath);
 
-
     // enough room for separators and a terminating null
-    path = (char *)SystemInterpreter::allocateResultMemory(pathSize + rexxPathSize + parentSize + extensionSize + 16);
-    *path = '\0';     // add a null character so strcat can work
-    if (parentDir != NULL)
-    {
-        strcpy(path, parentDir);
-        strcat(path, ";");
-    }
+    path.ensureCapacity(pathSize + rexxPathSize + parentSize + extensionSize + 16);
 
+    // parent directory
+    addPath(parentDir);
     // add on the current directory
-    strcat(path, ".;");
+    addPath(".;");
 
-    if (extensionPath != NULL)
-    {
-        strcat(path, extensionPath);
-        if (path[strlen(path) - 1] != ';')
-        {
-            strcat(path, ";");
-        }
-    }
+    addPath(extensionPath);
 
     // add on the Rexx path, then the normal path
-    GetEnvironmentVariable("REXX_PATH", path + strlen(path), (DWORD)pathSize + 1);
-    if (path[strlen(path) - 1] != ';')
+    GetEnvironmentVariable("REXX_PATH", (char *)path + path.length(), (DWORD)rexxPathSize + 1);
+    if (!path.endsWith(';'))
     {
-        strcat(path, ";");
+        path += ";";
     }
 
-    GetEnvironmentVariable("PATH", path + strlen(path), (DWORD)pathSize + 1);
-    if (path[strlen(path) - 1] != ';')
+    GetEnvironmentVariable("PATH", (char *)path + path.length(), (DWORD)pathSize + 1);
+    if (path[path.length() - 1] != ';')
     {
-        strcat(path, ";");
+        path += ";";
     }
-}
-
-
-/**
- * Deconstructor for releasing storage used by the constructed path.
- */
-SysSearchPath::~SysSearchPath()
-{
-    SystemInterpreter::releaseResultMemory((void *)path);
 }

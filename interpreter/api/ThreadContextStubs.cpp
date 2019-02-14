@@ -308,7 +308,7 @@ RexxPackageObject RexxEntry LoadPackage(RexxThreadContext *c, CSTRING n)
     {
         RexxString *name = new_string(n);
         ProtectedObject p(name);
-        RexxString *resolvedName = context.activity->getInstance()->resolveProgramName(name, OREF_NULL, OREF_NULL);
+        RexxString *resolvedName = context.activity->resolveProgramName(name, OREF_NULL, OREF_NULL);
 
         // convert the name to a string instance, and check the environments.
         return (RexxPackageObject)context.ret(context.activity->getInstance()->loadRequires(context.activity, name, resolvedName));

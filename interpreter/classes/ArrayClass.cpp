@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -59,6 +59,7 @@
 // singleton class instance
 RexxClass *ArrayClass::classInstance = OREF_NULL;
 ArrayClass *ArrayClass::nullArray = OREF_NULL;
+const size_t ArrayClass::MinimumArraySize = 8;      // the minimum size we allocate.
 
 /**
  * Create initial class object at bootstrap time.
@@ -275,9 +276,9 @@ ArrayClass *ArrayClass::allocateNewObject(size_t size, size_t items, size_t maxS
 {
     size_t bytes = size;
     // we never create below a minimum size
-    maxSize = Numerics::maxVal(maxSize, MinimumArraySize);
+    maxSize = std::max(maxSize, MinimumArraySize);
     // and use at least the size as the max
-    maxSize = Numerics::maxVal(maxSize, items);
+    maxSize = std::max(maxSize, items);
     // add in the max size value.  Note that we subtract one since
     // the first item is contained in the base object allocation.
     bytes += sizeof(RexxInternalObject *) * (maxSize - 1);
@@ -900,7 +901,7 @@ void ArrayClass::closeGap(size_t index, size_t elements)
     }
 
     // cap the number of elements we're shifting.
-    elements = Numerics::minVal(elements, lastItem - index + 1);
+    elements = std::min(elements, lastItem - index + 1);
 
     // explicitly null out the slots of the gap we're closing to
     // ensure that any oldspace tracking issues are resolved.
@@ -1514,7 +1515,7 @@ ArrayClass *ArrayClass::sectionRexx(RexxObject *start, RexxObject *end)
     else
     {
         // now cap the length at the remaining size of the array
-        nend = Numerics::minVal(nend, size() - nstart + 1);
+        nend = std::min(nend, size() - nstart + 1);
     }
 
     // get an array of the appropriate subclass
@@ -2387,10 +2388,10 @@ void ArrayClass::extendMulti(RexxObject **index, size_t indexCount, size_t argPo
             // keep track of where we find the first difference
             if (newDimensionSize > oldDimensionSize)
             {
-                firstChangedDimension = Numerics::minVal(firstChangedDimension, i + 1);
+                firstChangedDimension = std::min(firstChangedDimension, i + 1);
             }
 
-            size_t newSize = Numerics::maxVal(newDimensionSize, oldDimensionSize);
+            size_t newSize = std::max(newDimensionSize, oldDimensionSize);
             totalSize = totalSize * newSize;
 
             newDimArray->put(newSize, i + 1);

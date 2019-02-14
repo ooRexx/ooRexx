@@ -424,7 +424,7 @@ int RexxToken::resolveKeyword(RexxString *token, KeywordEntry *table, size_t tab
         // only compare on the name if the first character matches
         if (*table[middle].name == firstChar)
         {
-            int rc = memcmp(name, table[middle].name, Numerics::minVal(length, table[middle].length));
+            int rc = memcmp(name, table[middle].name, std::min(length, table[middle].length));
             // if this compared equal, then compare the lengths...if not equal, the longer is
             // the greater of the two.
             if (rc == 0)

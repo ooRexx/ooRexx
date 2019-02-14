@@ -1248,7 +1248,7 @@ void NativeActivation::removeLocalReference(RexxInternalObject *objr)
  * @param resultObj The returned result object.
  */
 void NativeActivation::run(MethodClass *_method, NativeMethod *_code, RexxObject  *_receiver,
-    RexxString  *_msgname, RexxObject **_arglist, size_t _argcount, ProtectedObject &resultObj)
+                           RexxString  *_msgname, RexxObject **_arglist, size_t _argcount, ProtectedObject &resultObj)
 {
     // add the frame to the execution stack
     NativeActivationFrame frame(activity, this);
@@ -1288,7 +1288,7 @@ void NativeActivation::run(MethodClass *_method, NativeMethod *_code, RexxObject
     try
     {
         activity->releaseAccess();           /* force this to "safe" mode         */
-                                             /* process the method call           */
+        /* process the method call           */
         (*methp)((RexxMethodContext *)&context, arguments);
         activity->requestAccess();           /* now in unsafe mode again          */
 
@@ -1363,7 +1363,7 @@ void NativeActivation::run(MethodClass *_method, NativeMethod *_code, RexxObject
  * @param resultObj The return value.
  */
 void NativeActivation::callNativeRoutine(RoutineClass *_routine, NativeRoutine *_code, RexxString *functionName,
-    RexxObject **list, size_t count, ProtectedObject &resultObj)
+                                         RexxObject **list, size_t count, ProtectedObject &resultObj)
 {
     NativeActivationFrame frame(activity, this);
 
@@ -1450,7 +1450,7 @@ void NativeActivation::callNativeRoutine(RoutineClass *_routine, NativeRoutine *
  * @param result     A protected object to receive the function result.
  */
 void NativeActivation::callRegisteredRoutine(RoutineClass *_routine, RegisteredRoutine *_code, RexxString *functionName,
-    RexxObject **list, size_t count, ProtectedObject &resultObj)
+                                             RexxObject **list, size_t count, ProtectedObject &resultObj)
 {
     NativeActivationFrame frame(activity, this);
 
@@ -1484,7 +1484,7 @@ void NativeActivation::callRegisteredRoutine(RoutineClass *_routine, RegisteredR
     }
 
     // all of the arguments now need to be converted to string arguments
-    for (size_t argindex=0; argindex < count; argindex++)
+    for (size_t argindex = 0; argindex < count; argindex++)
     {
         /* get the next argument             */
         RexxObject *argument = list[argindex];
@@ -1587,7 +1587,7 @@ void NativeActivation::callRegisteredRoutine(RoutineClass *_routine, RegisteredR
         {
             resultObj = new_string(funcresult);
             // free the buffer if the user allocated a new one.
-            if (funcresult.strptr != default_return_buffer )
+            if (funcresult.strptr != default_return_buffer)
             {
                 SystemInterpreter::releaseResultMemory(funcresult.strptr);
             }
@@ -2788,6 +2788,13 @@ RexxClass *NativeActivation::getScope()
  */
 StemClass *NativeActivation::resolveStemVariable(RexxObject *s)
 {
+    // a NULL argument is not resolvable
+    if (s == OREF_NULL)
+    {
+        return OREF_NULL;
+    }
+
+
     // is this a stem already?
     if (isStem(s))
     {
@@ -3532,51 +3539,19 @@ RexxReturnCode NativeActivation::copyValue(RexxObject * value, RXSTRING *rxstrin
  *
  * @return The completion code.
  */
-int NativeActivation::stemSort(const char *stemname, int order, int type, size_t start, size_t end, size_t firstcol, size_t lastcol)
+int NativeActivation::stemSort(StemClass *stem, const char *tailExtension, int order, int type, wholenumber_t start, wholenumber_t end, wholenumber_t firstcol, wholenumber_t lastcol)
 {
-    // NB:  The braces here are to ensure the ProtectedObjects get released before the
-    // currentActivity gets zeroed out.
+    Protected<RexxString> tail;
+
+    // Damn, someone is trying to sort a subsection.  We need to pass that
+    // tail pieces.
+    if (tailExtension != NULL)
     {
-        // get the stem name as a string
-        RexxString *variable = new_string(stemname);
-        ProtectedObject p1(variable);
-        // and get a retriever for this variable
-        RexxStemVariable *retriever = (RexxStemVariable *)VariableDictionary::getVariableRetriever(variable);
-
-        // this must be a stem variable in order for the sorting to work. We accept a compound variable,
-        // but we need to chop off the tail piece and use as a prefix.
-        if ( (!isOfClass(StemVariableTerm, retriever)) && (!isOfClass(CompoundVariableTerm, retriever)) )
-        {
-            return false;
-        }
-
-        RexxString *tail = GlobalNames::NULLSTRING ;
-        ProtectedObject p2(tail);
-
-        // Damn, someone is trying to sort a subsection.  We need to split the stem and
-        // tail pieces.
-        if (isOfClass(CompoundVariableTerm, retriever))
-        {
-            // scan to the first period
-            size_t length = variable->getLength();
-            size_t position = 0;
-            while (variable->getChar(position) != '.')
-            {
-                position++;
-                length--;
-            }
-            // the first period is part of the stem name
-            position++;
-            length--;
-            // extract the tail piece and uppercase.  We use this as
-            // a direct reference.
-            tail = variable->extract(position, length);
-            tail = tail->upper();
-        }
-
-        // go perform the sort operation.
-        return retriever->sort(activation, tail, order, type, start, end, firstcol, lastcol);
+        tail = new_upper_string(tailExtension);
     }
+
+    // go perform the sort operation.
+    return stem->sort(tail, order, type, (size_t)start, (size_t)end, (size_t)firstcol, (size_t)lastcol);
 }
 
 

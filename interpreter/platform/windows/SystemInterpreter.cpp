@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -49,6 +49,7 @@
 #include "RexxCore.h"
 #include "SystemInterpreter.hpp"
 #include "Interpreter.hpp"
+#include "FileNameBuffer.hpp"
 
 ULONG SystemInterpreter::exceptionHostProcessId = 0;
 HANDLE SystemInterpreter::exceptionHostProcess = NULL;
@@ -171,3 +172,41 @@ bool SystemInterpreter::processSignal(DWORD dwCtrlType)
     return true;      /* ignore signal */
 }
 
+
+/**
+ * Retrieve the value of an envinment variable into a smart buffer.
+ *
+ * @param variable The name of the environment variable.
+ * @param buffer   The buffer used for the return.
+ *
+ * @return true if the variable exists, false otherwise.
+ */
+bool SystemInterpreter::getEnvironmentVariable(const char *variable, FileNameBuffer &buffer)
+{
+    // do the request first with no buffer...this will return the size of the variable, which
+    // will allow us to ensure the buffer is large enough
+    DWORD dwSize = GetEnvironmentVariable(variable, NULL, 0);
+    if (dwSize > 0)
+    {
+        // now request the variable again
+        buffer.ensureCapacity(dwSize);
+        GetEnvironmentVariable(variable, (char *)buffer, dwSize);
+        return true;
+    }
+    // make sure this is a null string
+    buffer = "";
+    return false;
+}
+
+
+/**
+ * Set an environment variable to a new value.
+ *
+ * @param variableName
+ *               The name of the environment variable.
+ * @param value  The variable value.
+ */
+int SystemInterpreter::setEnvironmentVariable(const char *variableName, const char *value)
+{
+    return SetEnvironmentVariable(variableName, value) == 0 ? 0 : GetLastError();
+}

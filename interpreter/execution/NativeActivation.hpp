@@ -190,7 +190,7 @@ class NativeActivation : public ActivationBase
     void variablePoolRequest(PSHVBLOCK pshvblock);
     RexxReturnCode copyValue(RexxObject * value, RXSTRING *rxstring, size_t *length);
     RexxReturnCode copyValue(RexxObject * value, CONSTRXSTRING *rxstring, size_t *length);
-    int stemSort(const char *stemname, int order, int type, size_t start, size_t end, size_t firstcol, size_t lastcol);
+    int stemSort(StemClass *stem, const char *tailExtension, int order, int type, wholenumber_t start, wholenumber_t end, wholenumber_t firstcol, wholenumber_t lastcol);
     inline void enableConditionTrap() { trapConditions = true; captureConditions = false; }
     inline void enableConditionCapture() { trapConditions = true; captureConditions = true; }
 

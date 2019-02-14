@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -176,3 +176,33 @@ void SysThread::sleep(int msecs)
     // usleep uses micro seconds, so we need to multiply.
     usleep(msecs*1000);
 }
+
+
+/**
+ * Platform wrapper around a sleep function that can sleep for long periods of time. .
+ *
+ * @param microseconds
+ *               The number of microseconds to delay.
+ */
+void SysThread::longSleep(uint64_t microseconds)
+{
+    // split into two part: secs and nanoseconds
+    long secs = (long)microseconds / 1000000;
+    long nanoseconds = (long)(microseconds % 100000) * 1000;
+
+#if defined( HAVE_NANOSLEEP )
+    struct timespec    Rqtp, Rmtp;
+    Rqtp.tv_sec = secs;
+    Rqtp.tv_nsec = nanoseconds;
+    nanosleep(&Rqtp, &Rmtp);
+#elif defined( HAVE_NSLEEP )
+    struct timestruc_t Rqtp, Rmtp;
+    Rqtp.tv_sec = secs;
+    Rqtp.tv_nsec = nanoseconds;
+    nsleep(&Rqtp, &Rmtp);
+#else
+    usleep(microseconds);
+#endif
+}
+
+

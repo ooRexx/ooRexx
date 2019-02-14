@@ -402,6 +402,11 @@
 #define Rexx_Error_Incorrect_call_write_to_readonly                       40917
 #define Rexx_Error_Incorrect_call_signature                               40918
 #define Rexx_Error_Incorrect_call_nostem                                  40919
+#define Rexx_Error_Incorrect_call_bad_option                              40920
+#define Rexx_Error_Incorrect_call_relative                                40921
+#define Rexx_Error_Incorrect_call_stem_size                               40922
+#define Rexx_Error_Incorrect_call_stem_range                              40923
+#define Rexx_Error_Incorrect_call_stem_sparse_array                       40924
 #define Rexx_Error_Conversion                                             41000
 #define Rexx_Error_Conversion_operator                                    41001
 #define Rexx_Error_Conversion_prefix                                      41003
