@@ -1389,18 +1389,43 @@ This new filename must be freed when no longer needed.
 */
 char *temporaryFilename(const char *filename, int &errInfo)
 {
-    errInfo = 0;
-    AutoFree filenameCopy = strdup(filename); // dirname wants a writable string
-    if (filenameCopy != NULL)
+    // allocate a buffer large enough to hold the file name plus the extra characters
+    // we add to the end.
+    size_t fullLength = strlen(filename) + 8;
+    char *tempFileName = (char *)malloc(fullLength);
+    if (tempFileName == NULL)
     {
-        char *newFilename = tempnam(filenameCopy, NULL);
-        if (newFilename != NULL)
+        return NULL;
+    }
+
+    // generate a random starting point
+    srand((int)time(NULL));
+    size_t num = rand();
+    // we only handle the lower six digits
+    num = num % 6;
+    size_t start = num;
+
+    while (true)
+    {
+        char numstr[8];
+        // append 6 random digits to the base file name
+        snprintf(tempFileName, sizeof(numstr), "%s%06zu", filename, num);
+
+        // if there's no matching file, we're finished.
+        if (!SysFileSystem::fileExists(tempFileName))
         {
-            return newFilename;
+            return tempFileName;
+        }
+
+        // generate a new number for filling in the name
+        num = (num + 1) % 6;
+
+        // if we've wrapped around to where we started, time to give up
+        if (num == start)
+        {
+            return NULL;
         }
     }
-    errInfo = errno;
-    return NULL;
 }
 
 
