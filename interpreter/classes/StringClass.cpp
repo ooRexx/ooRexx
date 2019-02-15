@@ -54,6 +54,8 @@
 #include <stdio.h>
 #include <math.h>
 #include <limits>
+#include <cmath>
+#include <cfloat>
 
 // singleton class instance
 RexxClass *RexxString::classInstance = OREF_NULL;

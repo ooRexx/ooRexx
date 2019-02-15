@@ -44,6 +44,8 @@
 #include <time.h>
 #include <algorithm>
 #include <math.h>
+#include <cmath>
+#include <cfloat>
 #include "oorexxapi.h"
 #include "PackageManager.hpp"
 #include "RexxUtilCommon.hpp"
