@@ -480,7 +480,6 @@ void TreeFinder::checkFile()
 {
     // the filename we are passed is just the filename to check. The fully
     // qualified name of the file is in foundFile already.
-
     struct stat64 finfo;                   // return buf for the finfo
     int rc = stat64(foundFile, &finfo);     // read the info about it
 

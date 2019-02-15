@@ -1797,6 +1797,7 @@ void SysFileIterator::findNextEntry()
             close();
             return;
         }
+        testName = entry->d_name;
 #ifndef HAVE_FNM_CASEFOLD
         char *upperName = strdup(testName);
         strupr(upperName);
