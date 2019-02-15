@@ -142,7 +142,7 @@ void Interpreter::processShutdown()
  * @param mode   The startup mode.  This indicates whether we're saving the
  *               image or in shutdown mode.
  */
-void Interpreter::startInterpreter(InterpreterStartupMode mode)
+void Interpreter::startInterpreter(InterpreterStartupMode mode, const char *imageTarget)
 {
     ResourceSection lock;
 
@@ -152,7 +152,7 @@ void Interpreter::startInterpreter(InterpreterStartupMode mode)
         SystemInterpreter::startInterpreter();   // perform system specific initialization
         // initialize the memory manager , and restore the
         // memory image
-        memoryObject.initialize(mode == RUN_MODE);
+        memoryObject.initialize(mode == RUN_MODE, imageTarget);
         RexxCreateSessionQueue();
         // create our instances list
         interpreterInstances = new_queue();
@@ -322,7 +322,7 @@ InterpreterInstance *Interpreter::createInterpreterInstance(RexxOption *options)
         // been created yet.  Keep the lock during the entire process.
         if (interpreterInstances == OREF_NULL)
         {
-            startInterpreter(RUN_MODE);
+            startInterpreter(RUN_MODE, NULL);
         }
     }
 

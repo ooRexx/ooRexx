@@ -118,8 +118,9 @@ const char* SysProcess::getExecutableLocation()
         return NULL;
     }
 
-    // this is the file location
-    char *moduleName = strdup(dlInfo.dli_fname);
+    // this is the file location with any symbolic links
+    // resolved.
+    char *moduleName = realpath(dlInfo.dli_fname, NULL);
 
     size_t nameLength = strlen(moduleName);
     // scan backwards to find the last directory delimiter
@@ -129,7 +130,7 @@ const char* SysProcess::getExecutableLocation()
         // is this the directory delimiter?
         if (moduleName[nameLength - 1] == '/')
         {
-            // terminate the string after the first encountered backslash and quit
+            // terminate the string after the first encountered slash and quit
             moduleName[nameLength] = '\0';
             break;
         }

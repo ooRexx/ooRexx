@@ -60,7 +60,7 @@ int REXXENTRY RexxResolveExit(const char *, REXXPFN *);
 int REXXENTRY RexxResolveRoutine(const char *, REXXPFN *);
 
 RexxReturnCode REXXENTRY RexxResolveMacroFunction (const char *, PRXSTRING );
-void REXXENTRY RexxCreateInterpreterImage();
+void REXXENTRY RexxCreateInterpreterImage(const char *t);
 
 RexxReturnCode REXXENTRY RexxLoadSubcom(const char *, const char *);
 RexxReturnCode REXXENTRY RexxResolveSubcom(const char *name, REXXPFN *);

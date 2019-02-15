@@ -200,8 +200,11 @@ void MemoryObject::createRexxPackage()
 
 /**
  * Initialize the Rexx memory environment during an image built.
+ *
+ * @param imageTarget
+ *               The location to save the created image file.
  */
-void MemoryObject::createImage()
+void MemoryObject::createImage(const char *imageTarget)
 {
     // perform the initial memory environment setup.  We can create
     // new objects once this is done.
@@ -1723,7 +1726,7 @@ EndClassDefinition(StackFrame);
     TheClassClass->removeSetupMethods();
 
     // now save the image
-    memoryObject.saveImage();
+    memoryObject.saveImage(imageTarget);
     ActivityManager::returnActivity(ActivityManager::currentActivity);
     exit(0);                         // successful build
 }

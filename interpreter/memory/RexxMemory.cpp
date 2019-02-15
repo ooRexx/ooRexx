@@ -141,8 +141,10 @@ MemoryObject::MemoryObject()
  *               True if we are initializing during an image restore, false
  *               if we need to build the initial image environemnt (i.e., called
  *               via rexximage during a build).
+ * @param imageTarget
+ *               The location to store the image if this is a save operation.
  */
-void MemoryObject::initialize(bool restoringImage)
+void MemoryObject::initialize(bool restoringImage, const char *imageTarget)
 {
     // The constructor makes sure some crucial aspects of the Memory object are set up.
     new (this) MemoryObject;
@@ -198,7 +200,7 @@ void MemoryObject::initialize(bool restoringImage)
     // terminate
     if (!restoringImage)
     {
-        createImage();
+        createImage(imageTarget);
     }
 
     restore();                           // go restore the state of the memory object
@@ -1324,7 +1326,7 @@ RexxInternalObject *MemoryObject::holdObject(RexxInternalObject *obj)
  * Save the memory image as part of the interpreter
  * build.
  */
-void MemoryObject::saveImage()
+void MemoryObject::saveImage(const char *imageTarget)
 {
     MemoryStats _imageStats;
 
@@ -1420,7 +1422,7 @@ void MemoryObject::saveImage()
 
     resetMarkHandler();
 
-    FILE *image = fopen(BASEIMAGE,"wb");
+    FILE *image = fopen(imageTarget == NULL ? BASEIMAGE : imageTarget, "wb");
     // place the real size at the beginning of the buffer
     memcpy(imageBuffer, &saveHandler.imageOffset, sizeof(size_t));
     // and finally write this entire image out.

@@ -1581,6 +1581,7 @@ int SysFileSystem::moveFile(const char *fromFile, const char *toFile)
     {
         return errInfo;
     }
+
     if (rename(fromFile, fromFileNewname) == -1)
     {
         return errno;

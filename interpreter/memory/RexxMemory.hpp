@@ -104,7 +104,7 @@ class MemoryObject : public RexxInternalObject
     void live(size_t) override;
     void liveGeneral(MarkReason reason) override;
 
-    void        initialize(bool restoringImage);
+    void        initialize(bool restoringImage, const char *imageTarget);
     MemorySegment *newSegment(size_t requestLength);
     MemorySegment *newSegment(size_t requestLength, size_t minLength);
     MemorySegment *newLargeSegment(size_t requestLength, size_t minLength);
@@ -132,7 +132,7 @@ class MemoryObject : public RexxInternalObject
     void        collect();
     inline void removeHold(RexxInternalObject *obj) { saveStack->remove(obj); }
     RexxInternalObject *holdObject(RexxInternalObject *obj);
-    void        saveImage();
+    void        saveImage(const char *imageTarget);
     void        setOref(RexxInternalObject *variable, RexxInternalObject *value);
     void        shutdown();
     void        liveStackFull();
@@ -204,7 +204,7 @@ class MemoryObject : public RexxInternalObject
     void restore();
     void buildVirtualFunctionTable();
     void create();
-    void createImage();
+    void createImage(const char *imageTarget);
     RexxString *getGlobalName(const char *value);
     RexxString *getUpperGlobalName(const char *value);
     void createStrings();

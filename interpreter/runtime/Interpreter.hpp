@@ -92,7 +92,7 @@ public:
 
     static int createInstance(RexxInstance *&instance, RexxThreadContext *&threadContext, RexxOption *options);
     static bool terminateInterpreter();
-    static void startInterpreter(InterpreterStartupMode mode);
+    static void startInterpreter(InterpreterStartupMode mode, const char *imageTarget);
     static inline bool isTerminated() { return !active; }
     static inline bool isActive() { return active; }
     static bool lastInstance();
