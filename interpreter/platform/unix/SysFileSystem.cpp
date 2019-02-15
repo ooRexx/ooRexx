@@ -1672,7 +1672,8 @@ SysFileIterator::SysFileIterator(const char *path, const char *pattern, FileName
     {
         return;
     }
-
+    // ok, we potentially have something to return
+    completed = false;
     // go locate the first matching entry (if it can)
     findNextEntry();
 }
@@ -1761,7 +1762,7 @@ void SysFileIterator::findNextEntry()
         return;
     }
 
-    int flags = FNM_NOESCAPE | FNM_PATHNAME | FNM_PERIOD;
+    int flags = FNM_NOESCAPE | FNM_PATHNAME;
     const char *testName = entry->d_name;
 
     // if this is a caseless search, there are two ways to

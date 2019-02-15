@@ -531,7 +531,7 @@ void TreeFinder::checkFile()
 int TreeFinder::findDirectoryEnd()
 {
     // Get the maximum position of the last '\'
-    int lastSlashPos = (int)fileSpec.length();
+    int lastSlashPos = (int)fileSpec.length() - 1;
 
     // Step back through fileSpec until at its beginning or at a '/' character
     while (fileSpec[lastSlashPos] != '/' && lastSlashPos >= 0)
@@ -549,7 +549,13 @@ int TreeFinder::findDirectoryEnd()
  */
 void TreeFinder::fixupFilePath()
 {
-    // currently nothing needed here for Linux,.
+    // now go resolve current directories, userid, etc. to get a fully
+    // qualified name
+    RoutineQualifiedName qualifiedName(context, filePath);
+
+    filePath = (const char *)qualifiedName;
+    // make sure this is terminated with a path delimiter
+    filePath.addFinalPathDelimiter();
 }
 
 

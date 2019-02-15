@@ -835,7 +835,7 @@ void TreeFinder::expandPath2fullPath(size_t lastSlashPos)
  */
 void TreeFinder::recursiveFindFile(FileNameBuffer &path)
 {
-    RoutineFileNameBuffer tempFileName(context, path.length() + nameSpec.length() + 1);
+    RoutineFileNameBuffer tempFileName(context, path.length()+ nameSpec.length()+ 1);
 
     // get a file iterator to search through the names
     SysFileIterator finder(path, nameSpec, tempFileName, options[CASELESS]);
