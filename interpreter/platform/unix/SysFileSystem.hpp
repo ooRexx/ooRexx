@@ -110,6 +110,8 @@ class SysFileSystem
      static bool  isDirectory(const char *name);
      static bool  isReadOnly(const char *name);
      static bool  isWriteOnly(const char *name);
+     static bool  canWrite(const char *name);
+     static bool  canRead(const char *name);
      static bool  isFile(const char *name);
      static bool  isLink(const char *name);
      static bool  exists(const char *name);

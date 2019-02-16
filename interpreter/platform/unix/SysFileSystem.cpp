@@ -763,6 +763,11 @@ bool SysFileSystem::normalizePathName(const char *name, FileNameBuffer &resolved
  */
 int SysFileSystem::deleteFile(const char *name)
 {
+    // only delete files if we have write permision
+    if (!canWrite(name))
+    {
+        return EACCES;
+    }
     return unlink(name) == 0 ? 0 : errno;
 }
 
@@ -805,8 +810,22 @@ bool SysFileSystem::isDirectory(const char *name)
  */
 bool SysFileSystem::isReadOnly(const char *name)
 {
-    return access(name, W_OK) != 0;
+    return access(name, W_OK) != 0 && access(name, R_OK) == 0;
 }
+
+
+/**
+ * Test is a file is readable .
+ *
+ * @param name   The target file name.
+ *
+ * @return true if the file can be read.
+ */
+bool SysFileSystem::canRead(const char *name)
+{
+    return access(name, R_OK) == 0;
+}
+
 
 
 /**
@@ -819,8 +838,24 @@ bool SysFileSystem::isReadOnly(const char *name)
  */
 bool SysFileSystem::isWriteOnly(const char *name)
 {
-    return access(name, R_OK) != 0;
+    return access(name, R_OK) != 0 && access(name, W_OK) == 0;
 }
+
+
+/**
+ * Test if the process can write to the file. This is not the
+ * same as being read only
+ *
+ * @param name   The target file name.
+ *
+ * @return true if the file is only writeable.  false if read
+ *         operations are permitted.
+ */
+bool SysFileSystem::canWrite(const char *name)
+{
+    return access(name, W_OK) == 0;
+}
+
 
 
 /**
@@ -1083,8 +1118,9 @@ bool SysFileSystem::setFileReadOnly(const char *name)
         return false;
     }
     mode_t mode = buffer.st_mode;
+
     // this really turns off the write permissions
-    mode = mode & 07555;
+    mode = mode & ~(S_IWUSR | S_IWGRP | S_IWOTH);
     return chmod(name, mode) == 0;
 }
 
@@ -1105,7 +1141,7 @@ bool SysFileSystem::setFileWritable(const char *name)
     }
     mode_t mode = buffer.st_mode;
     // this really turns on the write permissions
-    mode = mode | 00222;
+    mode = mode | (S_IWUSR | S_IWGRP | S_IWOTH);
 
     return chmod(name, mode) == 0;
 }
@@ -1588,6 +1624,13 @@ int SysFileSystem::moveFile(const char *fromFile, const char *toFile)
     {
         return EEXIST; // did not find a better error code to return
     }
+    // for consistency with other platforms, we don't do the move if the target is
+    // and existing file.
+    if (fileExists(toFile))
+    {
+        return EEXIST;
+    }
+
     if (rename(fromFile, toFile) == 0)
     {
         return 0; // move done

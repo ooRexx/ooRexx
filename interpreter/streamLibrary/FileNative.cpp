@@ -91,7 +91,7 @@ RexxMethod1(logical_t, this_file_case_sensitive, CSTRING, fileName)
  */
 RexxMethod1(logical_t, file_can_read, CSTRING, name)
 {
-    return SysFileSystem::exists(name) && !SysFileSystem::isWriteOnly(name);
+    return SysFileSystem::exists(name) && SysFileSystem::canRead(name);
 }
 
 
@@ -100,7 +100,7 @@ RexxMethod1(logical_t, file_can_read, CSTRING, name)
  */
 RexxMethod1(logical_t, file_can_write, CSTRING, name)
 {
-    return SysFileSystem::exists(name) && !SysFileSystem::isReadOnly(name);
+    return SysFileSystem::exists(name) && SysFileSystem::canWrite(name);
 }
 
 

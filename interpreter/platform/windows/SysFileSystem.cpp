@@ -631,13 +631,35 @@ bool SysFileSystem::isDirectory(const char *name)
  *
  * @param name   The target file name.
  *
- * @return true if the file is marked as read-only.
+ * @return true if the file can be opened for reading
  */
 bool SysFileSystem::isReadOnly(const char *name)
 {
     DWORD dwAttrs = GetFileAttributes(name);
     return (dwAttrs != 0xffffffff) && (dwAttrs & FILE_ATTRIBUTE_READONLY);
 }
+
+
+/**
+ * Test is a file is read only.
+ *
+ * @param name   The target file name.
+ *
+ * @return true if the file is marked as read-only.
+ */
+bool SysFileSystem::canRead(const char *name)
+{
+    // attempt to open for read...if this fails, this is write only
+    HANDLE handle = CreateFile(name, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+    if (handle == INVALID_HANDLE_VALUE)
+    {
+        return false;
+    }
+
+    CloseHandle(handle);
+    return true;
+}
+
 
 
 /**
@@ -652,7 +674,7 @@ bool SysFileSystem::isWriteOnly(const char *name)
 {
     // attempt to open for read...if this fails, this is write only
     HANDLE handle = CreateFile(name, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
-    if ( handle == INVALID_HANDLE_VALUE )
+    if (handle == INVALID_HANDLE_VALUE)
     {
         return true;
     }
@@ -660,6 +682,29 @@ bool SysFileSystem::isWriteOnly(const char *name)
     CloseHandle(handle);
     return false;
 }
+
+
+/**
+ * Test if a file is writable
+ *
+ * @param name   The target file name.
+ *
+ * @return true if the file exists and can be opened for write
+ *         operations.
+ */
+bool SysFileSystem::canWrite(const char *name)
+{
+    // attempt to open for read...if this fails, this is write only
+    HANDLE handle = CreateFile(name, GENERIC_WRITE, FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+    if (handle == INVALID_HANDLE_VALUE)
+    {
+        return false;
+    }
+
+    CloseHandle(handle);
+    return true;
+}
+
 
 
 /**
