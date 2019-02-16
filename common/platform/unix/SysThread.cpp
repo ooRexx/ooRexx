@@ -188,7 +188,7 @@ void SysThread::longSleep(uint64_t microseconds)
 {
     // split into two part: secs and nanoseconds
     long secs = (long)microseconds / 1000000;
-    long nanoseconds = (long)(microseconds % 100000) * 1000;
+    long nanoseconds = (long)(microseconds % 1000000) * 1000;
 
 #if defined( HAVE_NANOSLEEP )
     struct timespec    Rqtp, Rmtp;
