@@ -408,7 +408,7 @@ typedef struct
 // object-oriented calling convetion.
 #define DIRECT_ENVIRONMENTS         "DirectEnvironments"
 // Command environments that support Address With i/o redirection
-#define REDIRECTING_ENVIRONMENTS         "DirectEnvironments"
+#define REDIRECTING_ENVIRONMENTS    "RedirectingEnvironments"
 // register a library for an in-process package
 #define REGISTER_LIBRARY            "RegisterLibrary"
 
