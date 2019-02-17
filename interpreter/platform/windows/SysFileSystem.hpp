@@ -133,6 +133,10 @@ public:
 
 protected:
 
+    void findNextEntry();
+    void filterShortNames();
+
+    const char *fileSpec; // the spec we're searching against
     bool completed;       // the iteration completed flag
     HANDLE handle;        // The handle for the FindFirst operation
     WIN32_FIND_DATA findFileData;

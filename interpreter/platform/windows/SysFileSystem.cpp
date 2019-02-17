@@ -46,6 +46,7 @@
 #include "SysFileSystem.hpp"
 #include "ActivityManager.hpp"
 #include "FileNameBuffer.hpp"
+#include <shlwapi.h>
 
 int SysFileSystem::stdinHandle = 0;
 int SysFileSystem::stdoutHandle = 1;
@@ -1191,22 +1192,28 @@ SysFileIterator::SysFileIterator(const char *path, const char *pattern, FileName
     // if no pattern was given, then just use a wild card
     if (pattern == NULL)
     {
-        buffer += "*.*";
+        // no extra filtering required
+        fileSpec = NULL;
+        buffer += "*";
     }
     // add the pattern section to the fully-resolved buffer
     else
     {
         buffer += pattern;
+        // we need to save this for short name filtering
+        fileSpec = pattern;
     }
 
     // this assumes we'll fail...if we find something,
     // we'll flip this
     completed = true;
-    handle = FindFirstFileEx(buffer, FindExInfoBasic, &findFileData, FindExSearchNameMatch, NULL, 0);
+    handle = FindFirstFile(buffer, &findFileData);
     if (handle != INVALID_HANDLE_VALUE)
     {
         // we can still return data
         completed = false;
+        // find the next real entry, filtered for short name problems.
+        filterShortNames();
     }
 }
 
@@ -1262,6 +1269,18 @@ void SysFileIterator::next(FileNameBuffer &buffer)
         buffer = findFileData.cFileName;
     }
 
+    // find the next entry (with filtering)
+    findNextEntry();
+}
+
+
+/**
+ * Scan forward through the directory to find the next matching entry.
+ *
+ * @return true if a matching entry was found, false for any error or nothign found.
+ */
+void SysFileIterator::findNextEntry()
+{
     // now locate the next one
     if (!FindNextFile(handle, &findFileData))
     {
@@ -1269,8 +1288,37 @@ void SysFileIterator::next(FileNameBuffer &buffer)
         completed = true;
         close();
     }
+
+    // we might need to scan forward for a suitable name if we got a hit on
+    // a short name
+    filterShortNames();
 }
 
+
+/**
+ * Perform filtering on false hits due to short file name matching problems.
+ */
+void SysFileIterator::filterShortNames()
+{
+    // no filtering for short names if we don't have a pattern specified.
+    if (fileSpec == NULL)
+    {
+        return;
+    }
+
+    // use fnmatch() to handle all of the globbing
+    while (!PathMatchSpec(findFileData.cFileName, fileSpec))
+    {
+        // now locate the next one
+        if (!FindNextFile(handle, &findFileData))
+        {
+            // we're done once we hit a failure
+            completed = true;
+            close();
+            return;
+        }
+    }
+}
 
 
 
