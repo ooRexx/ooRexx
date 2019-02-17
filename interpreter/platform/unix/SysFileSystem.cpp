@@ -1718,7 +1718,7 @@ SysFileIterator::SysFileIterator(const char *path, const char *pattern, FileName
     // caseLess can be explicit or implicit, based on the characteristics of the path.
     // Mac file systems are generally case insensitive, but other unix variants are
     // usually case sensitive.
-    caseLess = c || SysFileSystem::isCaseSensitive(path);
+    caseLess = c || !SysFileSystem::isCaseSensitive(path);
 
 #ifndef HAVE_FNM_CASEFOLD
     // if we're tasked with doing a caseless search but the option is
