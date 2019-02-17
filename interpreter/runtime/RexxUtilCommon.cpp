@@ -439,10 +439,10 @@ void getUniqueFileName(const char *fileTemplate, char filler, FileNameBuffer &fi
  *                  'S' - Recursively scan subdirectories.
  *                  'T' - Combine time & date fields into one.
  *                  'L' - Long time format
- *                  'H' - Long time format
+ *                  'H' - Large file size format
  *                  'I' - Case Insensitive search.
  *
- *                The defualt is 'B' using normal time (neither 'T' nor 'L'.)
+ *                The default is 'B' using normal time (neither 'T' nor 'L'.)
  *                The 'I'option is meaningless on Windows.
  *
  * @param targetAttr  [optional] Target attribute mask.  Only files with these
@@ -601,7 +601,7 @@ void TreeFinder::badSFTOptsException(const char *actual)
 {
     char buf[256] = { 0 };
     snprintf(buf, sizeof(buf),
-             "SysFileTree options argument must be a combination of F, D, B, S, T, L, I, O, or Z; found \"%s\"",
+             "SysFileTree options argument must be a combination of F, D, B, S, T, L, I, O, or H; found \"%s\"",
              actual);
 
     context->ThrowException1(Rexx_Error_Incorrect_call_user_defined, context->String(buf));
