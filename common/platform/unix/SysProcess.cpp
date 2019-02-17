@@ -210,7 +210,6 @@ void SysProcess::beep(int frequency, int duration)
     // character to the console.
     if (!playSpeaker(frequency, duration))
     {
-        printf("Playing the speaker failed, using a bell character\n");
         printf("\a");
     }
 }
