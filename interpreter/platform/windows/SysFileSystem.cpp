@@ -673,6 +673,7 @@ bool SysFileSystem::canRead(const char *name)
  */
 bool SysFileSystem::isWriteOnly(const char *name)
 {
+
     // attempt to open for read...if this fails, this is write only
     HANDLE handle = CreateFile(name, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
     if (handle == INVALID_HANDLE_VALUE)
@@ -695,6 +696,12 @@ bool SysFileSystem::isWriteOnly(const char *name)
  */
 bool SysFileSystem::canWrite(const char *name)
 {
+    // if this is a directory, we just check the read only status
+    if (isDirectory(name))
+    {
+        return !isReadOnly(name);
+    }
+
     // attempt to open for read...if this fails, this is write only
     HANDLE handle = CreateFile(name, GENERIC_WRITE, FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
     if (handle == INVALID_HANDLE_VALUE)
