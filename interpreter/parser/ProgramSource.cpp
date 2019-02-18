@@ -750,12 +750,12 @@ BufferClass* FileProgramSource::readProgram(const char *file_name)
     size_t readSize;
 
     // get a buffer object to return the image
-    Protected<BufferClass> buffer = new_buffer(bufferSize);
+    Protected<BufferClass> buffer = new_buffer((size_t)bufferSize);
     {
         UnsafeBlock releaser;
 
         // read the data
-        programFile.read(buffer->getData(), bufferSize, readSize);
+        programFile.read(buffer->getData(), (size_t)bufferSize, readSize);
         programFile.close();
     }
     // if there was a read error, return nothing

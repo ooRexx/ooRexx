@@ -185,7 +185,7 @@ bool SysFileSystem::searchOnPath(const char *name, const char *path, const char 
 void SysFileSystem::qualifyStreamName(const char *unqualifiedName, FileNameBuffer &qualifiedName)
 {
     // If already expanded, there is nothing more to do.
-    if (qualifiedName[0] != '\0')
+    if (qualifiedName.length() > 0)
     {
         return;
     }

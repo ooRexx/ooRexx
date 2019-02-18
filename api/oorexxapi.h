@@ -4137,11 +4137,11 @@ END_EXTERN_C()
 #define argumentOmitted(i) (!argumentExists(i))
 
 
-#define __rytpe(t)   ARGUMENT_TYPE_##t
-#define __arg(p, t) arguments[p].value.value_##t
-#define __ret(t, v) arguments[0].value.value_##t = (v); return NULL;
-#define __adcl(t, n) __rytpe(t) n
-#define __tdcl(t)    REXX_VALUE_##t
+#define oor__rytpe(t)   ARGUMENT_TYPE_##t
+#define oor__arg(p, t) arguments[p].value.value_##t
+#define oor__ret(t, v) arguments[0].value.value_##t = (v); return NULL;
+#define oor__adcl(t, n) oor__rytpe(t) n
+#define oor__tdcl(t)    REXX_VALUE_##t
 
 #define __methodstub(name) uint16_t * RexxEntry name (RexxMethodContext *context, ValueDescriptor *arguments)
 
@@ -4169,10 +4169,10 @@ END_EXTERN_C()
 
 #define RexxMethod0(returnType, name) \
 /* forward reference definition for method */ \
-__rytpe(returnType) name##_impl (RexxMethodContext * context);  \
+oor__rytpe(returnType) name##_impl (RexxMethodContext * context);  \
                                \
 /* method signature definition */ \
-static uint16_t name##_types[] = {__tdcl(returnType), REXX_ARGUMENT_TERMINATOR};    \
+static uint16_t name##_types[] = {oor__tdcl(returnType), REXX_ARGUMENT_TERMINATOR};    \
 \
 __cpp_method_proto(name) \
 /* generated calling stub function */ \
@@ -4181,21 +4181,21 @@ __methodstub(name) \
     if (arguments != NULL) /* if no arguments passed, this a signature request */ \
     {                                                                             \
         /* forward to the method implementation */                                \
-        __ret(returnType, (name##_impl(context)));                                \
+        oor__ret(returnType, (name##_impl(context)));                                \
     }                                                                             \
     return name##_types;     /* return the type signature */                      \
 } \
 /* the real target method code */  \
-__rytpe(returnType) name##_impl(RexxMethodContext *context)
+oor__rytpe(returnType) name##_impl(RexxMethodContext *context)
 
 
 // method with one argument
 #define RexxMethod1(returnType ,name, t1, n1) \
 /* forward reference definition for method */ \
-__rytpe(returnType) name##_impl (RexxMethodContext * context, __adcl(t1, n1));  \
+oor__rytpe(returnType) name##_impl (RexxMethodContext * context, oor__adcl(t1, n1));  \
                                \
 /* method signature definition */ \
-static uint16_t name##_types[] = {__tdcl(returnType), __tdcl(t1), REXX_ARGUMENT_TERMINATOR};    \
+static uint16_t name##_types[] = {oor__tdcl(returnType), oor__tdcl(t1), REXX_ARGUMENT_TERMINATOR};    \
 \
 __cpp_method_proto(name) \
 /* generated calling stub function */ \
@@ -4204,21 +4204,21 @@ __methodstub(name) \
     if (arguments != NULL) /* if no arguments passed, this a signature request */ \
     {                                                                             \
         /* forward to the method implementation */                                \
-        __ret(returnType, name##_impl(context, __arg(1, t1)));                    \
+        oor__ret(returnType, name##_impl(context, oor__arg(1, t1)));                    \
     }                                                                             \
     return name##_types;     /* return the type signature */                      \
 } \
 /* the real target method code */  \
-__rytpe(returnType) name##_impl(RexxMethodContext *context, __adcl(t1, n1))
+oor__rytpe(returnType) name##_impl(RexxMethodContext *context, oor__adcl(t1, n1))
 
 
 // method with two arguments
 #define RexxMethod2(returnType ,name, t1, n1, t2, n2) \
 /* forward reference definition for method */ \
-__rytpe(returnType) name##_impl (RexxMethodContext * context, __adcl(t1, n1), __adcl(t2, n2));  \
+oor__rytpe(returnType) name##_impl (RexxMethodContext * context, oor__adcl(t1, n1), oor__adcl(t2, n2));  \
                                \
 /* method signature definition */ \
-static uint16_t name##_types[] = {__tdcl(returnType), __tdcl(t1), __tdcl(t2), REXX_ARGUMENT_TERMINATOR};    \
+static uint16_t name##_types[] = {oor__tdcl(returnType), oor__tdcl(t1), oor__tdcl(t2), REXX_ARGUMENT_TERMINATOR};    \
 \
 __cpp_method_proto(name) \
 /* generated calling stub function */ \
@@ -4227,21 +4227,21 @@ __methodstub(name) \
     if (arguments != NULL) /* if no arguments passed, this a signature request */ \
     {                                                                             \
         /* forward to the method implementation */                                \
-        __ret(returnType, name##_impl(context, __arg(1, t1), __arg(2, t2)));                    \
+        oor__ret(returnType, name##_impl(context, oor__arg(1, t1), oor__arg(2, t2)));                    \
     }                                                                             \
     return name##_types;     /* return the type signature */                      \
 } \
 /* the real target method code */  \
-__rytpe(returnType) name##_impl(RexxMethodContext *context, __adcl(t1, n1), __adcl(t2, n2))
+oor__rytpe(returnType) name##_impl(RexxMethodContext *context, oor__adcl(t1, n1), oor__adcl(t2, n2))
 
 
 // method with three arguments
 #define RexxMethod3(returnType ,name, t1, n1, t2, n2, t3, n3) \
 /* forward reference definition for method */ \
-__rytpe(returnType) name##_impl (RexxMethodContext * context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3));  \
+oor__rytpe(returnType) name##_impl (RexxMethodContext * context, oor__adcl(t1, n1), oor__adcl(t2, n2), oor__adcl(t3, n3));  \
                                \
 /* method signature definition */ \
-static uint16_t name##_types[] = {__tdcl(returnType), __tdcl(t1), __tdcl(t2), __tdcl(t3), REXX_ARGUMENT_TERMINATOR};    \
+static uint16_t name##_types[] = {oor__tdcl(returnType), oor__tdcl(t1), oor__tdcl(t2), oor__tdcl(t3), REXX_ARGUMENT_TERMINATOR};    \
 \
 __cpp_method_proto(name) \
 /* generated calling stub function */ \
@@ -4250,21 +4250,21 @@ __methodstub(name) \
     if (arguments != NULL) /* if no arguments passed, this a signature request */ \
     {                                                                             \
         /* forward to the method implementation */                                \
-        __ret(returnType, name##_impl(context, __arg(1, t1), __arg(2, t2), __arg(3, t3)));      \
+        oor__ret(returnType, name##_impl(context, oor__arg(1, t1), oor__arg(2, t2), oor__arg(3, t3)));      \
     }                                                                             \
     return name##_types;     /* return the type signature */                      \
 } \
 /* the real target method code */  \
-__rytpe(returnType) name##_impl(RexxMethodContext *context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3))
+oor__rytpe(returnType) name##_impl(RexxMethodContext *context, oor__adcl(t1, n1), oor__adcl(t2, n2), oor__adcl(t3, n3))
 
 
 // method with four arguments
 #define RexxMethod4(returnType ,name, t1, n1, t2, n2, t3, n3, t4, n4) \
 /* forward reference definition for method */ \
-__rytpe(returnType) name##_impl (RexxMethodContext * context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4));  \
+oor__rytpe(returnType) name##_impl (RexxMethodContext * context, oor__adcl(t1, n1), oor__adcl(t2, n2), oor__adcl(t3, n3), oor__adcl(t4, n4));  \
                                \
 /* method signature definition */ \
-static uint16_t name##_types[] = {__tdcl(returnType), __tdcl(t1), __tdcl(t2), __tdcl(t3), __tdcl(t4), REXX_ARGUMENT_TERMINATOR};    \
+static uint16_t name##_types[] = {oor__tdcl(returnType), oor__tdcl(t1), oor__tdcl(t2), oor__tdcl(t3), oor__tdcl(t4), REXX_ARGUMENT_TERMINATOR};    \
 \
 __cpp_method_proto(name) \
 /* generated calling stub function */ \
@@ -4273,21 +4273,21 @@ __methodstub(name) \
     if (arguments != NULL) /* if no arguments passed, this a signature request */ \
     {                                                                             \
         /* forward to the method implementation */                                \
-        __ret(returnType, name##_impl(context, __arg(1, t1), __arg(2, t2), __arg(3, t3), __arg(4, t4)));      \
+        oor__ret(returnType, name##_impl(context, oor__arg(1, t1), oor__arg(2, t2), oor__arg(3, t3), oor__arg(4, t4)));      \
     }                                                                             \
     return name##_types;     /* return the type signature */                      \
 } \
 /* the real target method code */  \
-__rytpe(returnType) name##_impl(RexxMethodContext *context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4))
+oor__rytpe(returnType) name##_impl(RexxMethodContext *context, oor__adcl(t1, n1), oor__adcl(t2, n2), oor__adcl(t3, n3), oor__adcl(t4, n4))
 
 
 // method with five arguments
 #define RexxMethod5(returnType ,name, t1, n1, t2, n2, t3, n3, t4, n4, t5, n5) \
 /* forward reference definition for method */ \
-__rytpe(returnType) name##_impl (RexxMethodContext * context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5));  \
+oor__rytpe(returnType) name##_impl (RexxMethodContext * context, oor__adcl(t1, n1), oor__adcl(t2, n2), oor__adcl(t3, n3), oor__adcl(t4, n4), oor__adcl(t5, n5));  \
                                \
 /* method signature definition */ \
-static uint16_t name##_types[] = {__tdcl(returnType), __tdcl(t1), __tdcl(t2), __tdcl(t3), __tdcl(t4), __tdcl(t5), REXX_ARGUMENT_TERMINATOR};    \
+static uint16_t name##_types[] = {oor__tdcl(returnType), oor__tdcl(t1), oor__tdcl(t2), oor__tdcl(t3), oor__tdcl(t4), oor__tdcl(t5), REXX_ARGUMENT_TERMINATOR};    \
 \
 __cpp_method_proto(name) \
 /* generated calling stub function */ \
@@ -4296,21 +4296,21 @@ __methodstub(name) \
     if (arguments != NULL) /* if no arguments passed, this a signature request */ \
     {                                                                             \
         /* forward to the method implementation */                                \
-        __ret(returnType, name##_impl(context, __arg(1, t1), __arg(2, t2), __arg(3, t3), __arg(4, t4), __arg(5, t5)));      \
+        oor__ret(returnType, name##_impl(context, oor__arg(1, t1), oor__arg(2, t2), oor__arg(3, t3), oor__arg(4, t4), oor__arg(5, t5)));      \
     }                                                                             \
     return name##_types;     /* return the type signature */                      \
 } \
 /* the real target method code */  \
-__rytpe(returnType) name##_impl(RexxMethodContext *context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5))
+oor__rytpe(returnType) name##_impl(RexxMethodContext *context, oor__adcl(t1, n1), oor__adcl(t2, n2), oor__adcl(t3, n3), oor__adcl(t4, n4), oor__adcl(t5, n5))
 
 
 // method with six arguments
 #define RexxMethod6(returnType, name, t1, n1, t2, n2, t3, n3, t4, n4, t5, n5, t6, n6) \
 /* forward reference definition for method */ \
-__rytpe(returnType) name##_impl (RexxMethodContext * context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6));  \
+oor__rytpe(returnType) name##_impl (RexxMethodContext * context, oor__adcl(t1, n1), oor__adcl(t2, n2), oor__adcl(t3, n3), oor__adcl(t4, n4), oor__adcl(t5, n5), oor__adcl(t6, n6));  \
                                \
 /* method signature definition */ \
-static uint16_t name##_types[] = {__tdcl(returnType), __tdcl(t1), __tdcl(t2), __tdcl(t3), __tdcl(t4), __tdcl(t5), __tdcl(t6), REXX_ARGUMENT_TERMINATOR};    \
+static uint16_t name##_types[] = {oor__tdcl(returnType), oor__tdcl(t1), oor__tdcl(t2), oor__tdcl(t3), oor__tdcl(t4), oor__tdcl(t5), oor__tdcl(t6), REXX_ARGUMENT_TERMINATOR};    \
 \
 __cpp_method_proto(name) \
 /* generated calling stub function */ \
@@ -4319,21 +4319,21 @@ __methodstub(name) \
     if (arguments != NULL) /* if no arguments passed, this a signature request */ \
     {                                                                             \
         /* forward to the method implementation */                                \
-        __ret(returnType, name##_impl(context, __arg(1, t1), __arg(2, t2), __arg(3, t3), __arg(4, t4), __arg(5, t5), __arg(6, t6)));      \
+        oor__ret(returnType, name##_impl(context, oor__arg(1, t1), oor__arg(2, t2), oor__arg(3, t3), oor__arg(4, t4), oor__arg(5, t5), oor__arg(6, t6)));      \
     }                                                                             \
     return name##_types;     /* return the type signature */                      \
 } \
 /* the real target method code */  \
-__rytpe(returnType) name##_impl(RexxMethodContext *context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6))
+oor__rytpe(returnType) name##_impl(RexxMethodContext *context, oor__adcl(t1, n1), oor__adcl(t2, n2), oor__adcl(t3, n3), oor__adcl(t4, n4), oor__adcl(t5, n5), oor__adcl(t6, n6))
 
 
 // method with seven arguments
 #define RexxMethod7(returnType, name, t1, n1, t2, n2, t3, n3, t4, n4, t5, n5, t6, n6, t7, n7) \
 /* forward reference definition for method */ \
-__rytpe(returnType) name##_impl (RexxMethodContext * context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6), __adcl(t7, n7));  \
+oor__rytpe(returnType) name##_impl (RexxMethodContext * context, oor__adcl(t1, n1), oor__adcl(t2, n2), oor__adcl(t3, n3), oor__adcl(t4, n4), oor__adcl(t5, n5), oor__adcl(t6, n6), oor__adcl(t7, n7));  \
                                \
 /* method signature definition */ \
-static uint16_t name##_types[] = {__tdcl(returnType), __tdcl(t1), __tdcl(t2), __tdcl(t3), __tdcl(t4), __tdcl(t5), __tdcl(t6), __tdcl(t7), REXX_ARGUMENT_TERMINATOR};    \
+static uint16_t name##_types[] = {oor__tdcl(returnType), oor__tdcl(t1), oor__tdcl(t2), oor__tdcl(t3), oor__tdcl(t4), oor__tdcl(t5), oor__tdcl(t6), oor__tdcl(t7), REXX_ARGUMENT_TERMINATOR};    \
 \
 __cpp_method_proto(name) \
 /* generated calling stub function */ \
@@ -4342,21 +4342,21 @@ __methodstub(name) \
     if (arguments != NULL) /* if no arguments passed, this a signature request */ \
     {                                                                             \
         /* forward to the method implementation */                                \
-        __ret(returnType, name##_impl(context, __arg(1, t1), __arg(2, t2), __arg(3, t3), __arg(4, t4), __arg(5, t5), __arg(6, t6), __arg(7, t7)));      \
+        oor__ret(returnType, name##_impl(context, oor__arg(1, t1), oor__arg(2, t2), oor__arg(3, t3), oor__arg(4, t4), oor__arg(5, t5), oor__arg(6, t6), oor__arg(7, t7)));      \
     }                                                                             \
     return name##_types;     /* return the type signature */                      \
 } \
 /* the real target method code */  \
-__rytpe(returnType) name##_impl(RexxMethodContext *context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6), __adcl(t7, n7))
+oor__rytpe(returnType) name##_impl(RexxMethodContext *context, oor__adcl(t1, n1), oor__adcl(t2, n2), oor__adcl(t3, n3), oor__adcl(t4, n4), oor__adcl(t5, n5), oor__adcl(t6, n6), oor__adcl(t7, n7))
 
 
 // method with eight arguments
 #define RexxMethod8(returnType, name, t1, n1, t2, n2, t3, n3, t4, n4, t5, n5, t6, n6, t7, n7, t8, n8) \
 /* forward reference definition for method */ \
-__rytpe(returnType) name##_impl (RexxMethodContext * context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6), __adcl(t7, n7), __adcl(t8, n8));  \
+oor__rytpe(returnType) name##_impl (RexxMethodContext * context, oor__adcl(t1, n1), oor__adcl(t2, n2), oor__adcl(t3, n3), oor__adcl(t4, n4), oor__adcl(t5, n5), oor__adcl(t6, n6), oor__adcl(t7, n7), oor__adcl(t8, n8));  \
                                \
 /* method signature definition */ \
-static uint16_t name##_types[] = {__tdcl(returnType), __tdcl(t1), __tdcl(t2), __tdcl(t3), __tdcl(t4), __tdcl(t5), __tdcl(t6), __tdcl(t7), __tdcl(t8), REXX_ARGUMENT_TERMINATOR};    \
+static uint16_t name##_types[] = {oor__tdcl(returnType), oor__tdcl(t1), oor__tdcl(t2), oor__tdcl(t3), oor__tdcl(t4), oor__tdcl(t5), oor__tdcl(t6), oor__tdcl(t7), oor__tdcl(t8), REXX_ARGUMENT_TERMINATOR};    \
 \
 __cpp_method_proto(name) \
 /* generated calling stub function */ \
@@ -4365,21 +4365,21 @@ __methodstub(name) \
     if (arguments != NULL) /* if no arguments passed, this a signature request */ \
     {                                                                             \
         /* forward to the method implementation */                                \
-        __ret(returnType, name##_impl(context, __arg(1, t1), __arg(2, t2), __arg(3, t3), __arg(4, t4), __arg(5, t5), __arg(6, t6), __arg(7, t7), __arg(8, t8)));      \
+        oor__ret(returnType, name##_impl(context, oor__arg(1, t1), oor__arg(2, t2), oor__arg(3, t3), oor__arg(4, t4), oor__arg(5, t5), oor__arg(6, t6), oor__arg(7, t7), oor__arg(8, t8)));      \
     }                                                                             \
     return name##_types;     /* return the type signature */                      \
 } \
 /* the real target method code */  \
-__rytpe(returnType) name##_impl(RexxMethodContext *context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6), __adcl(t7, n7), __adcl(t8, n8))
+oor__rytpe(returnType) name##_impl(RexxMethodContext *context, oor__adcl(t1, n1), oor__adcl(t2, n2), oor__adcl(t3, n3), oor__adcl(t4, n4), oor__adcl(t5, n5), oor__adcl(t6, n6), oor__adcl(t7, n7), oor__adcl(t8, n8))
 
 
 // method with nine arguments
 #define RexxMethod9(returnType, name, t1, n1, t2, n2, t3, n3, t4, n4, t5, n5, t6, n6, t7, n7, t8, n8, t9, n9) \
 /* forward reference definition for method */ \
-__rytpe(returnType) name##_impl (RexxMethodContext * context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6), __adcl(t7, n7), __adcl(t8, n8), __adcl(t9, n9));  \
+oor__rytpe(returnType) name##_impl (RexxMethodContext * context, oor__adcl(t1, n1), oor__adcl(t2, n2), oor__adcl(t3, n3), oor__adcl(t4, n4), oor__adcl(t5, n5), oor__adcl(t6, n6), oor__adcl(t7, n7), oor__adcl(t8, n8), oor__adcl(t9, n9));  \
                                \
 /* method signature definition */ \
-static uint16_t name##_types[] = {__tdcl(returnType), __tdcl(t1), __tdcl(t2), __tdcl(t3), __tdcl(t4), __tdcl(t5), __tdcl(t6), __tdcl(t7), __tdcl(t8), __tdcl(t9), REXX_ARGUMENT_TERMINATOR};    \
+static uint16_t name##_types[] = {oor__tdcl(returnType), oor__tdcl(t1), oor__tdcl(t2), oor__tdcl(t3), oor__tdcl(t4), oor__tdcl(t5), oor__tdcl(t6), oor__tdcl(t7), oor__tdcl(t8), oor__tdcl(t9), REXX_ARGUMENT_TERMINATOR};    \
 \
 __cpp_method_proto(name) \
 /* generated calling stub function */ \
@@ -4388,21 +4388,21 @@ __methodstub(name) \
     if (arguments != NULL) /* if no arguments passed, this a signature request */ \
     {                                                                             \
         /* forward to the method implementation */                                \
-        __ret(returnType, name##_impl(context, __arg(1, t1), __arg(2, t2), __arg(3, t3), __arg(4, t4), __arg(5, t5), __arg(6, t6), __arg(7, t7), __arg(8, t8), __arg(9, t9)));      \
+        oor__ret(returnType, name##_impl(context, oor__arg(1, t1), oor__arg(2, t2), oor__arg(3, t3), oor__arg(4, t4), oor__arg(5, t5), oor__arg(6, t6), oor__arg(7, t7), oor__arg(8, t8), oor__arg(9, t9)));      \
     }                                                                             \
     return name##_types;     /* return the type signature */                      \
 } \
 /* the real target method code */  \
-__rytpe(returnType) name##_impl(RexxMethodContext *context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6), __adcl(t7, n7), __adcl(t8, n8), __adcl(t9, n9))
+oor__rytpe(returnType) name##_impl(RexxMethodContext *context, oor__adcl(t1, n1), oor__adcl(t2, n2), oor__adcl(t3, n3), oor__adcl(t4, n4), oor__adcl(t5, n5), oor__adcl(t6, n6), oor__adcl(t7, n7), oor__adcl(t8, n8), oor__adcl(t9, n9))
 
 
 // method with 10 arguments
 #define RexxMethod10(returnType, name, t1, n1, t2, n2, t3, n3, t4, n4, t5, n5, t6, n6, t7, n7, t8, n8, t9, n9, t10, n10) \
 /* forward reference definition for method */ \
-__rytpe(returnType) name##_impl (RexxMethodContext * context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6), __adcl(t7, n7), __adcl(t8, n8), __adcl(t9, n9), __adcl(t10, n10));  \
+oor__rytpe(returnType) name##_impl (RexxMethodContext * context, oor__adcl(t1, n1), oor__adcl(t2, n2), oor__adcl(t3, n3), oor__adcl(t4, n4), oor__adcl(t5, n5), oor__adcl(t6, n6), oor__adcl(t7, n7), oor__adcl(t8, n8), oor__adcl(t9, n9), oor__adcl(t10, n10));  \
                                \
 /* method signature definition */ \
-static uint16_t name##_types[] = {__tdcl(returnType), __tdcl(t1), __tdcl(t2), __tdcl(t3), __tdcl(t4), __tdcl(t5), __tdcl(t6), __tdcl(t7), __tdcl(t8), __tdcl(t9), __tdcl(t10), REXX_ARGUMENT_TERMINATOR};    \
+static uint16_t name##_types[] = {oor__tdcl(returnType), oor__tdcl(t1), oor__tdcl(t2), oor__tdcl(t3), oor__tdcl(t4), oor__tdcl(t5), oor__tdcl(t6), oor__tdcl(t7), oor__tdcl(t8), oor__tdcl(t9), oor__tdcl(t10), REXX_ARGUMENT_TERMINATOR};    \
 \
 __cpp_method_proto(name) \
 /* generated calling stub function */ \
@@ -4411,12 +4411,12 @@ __methodstub(name) \
     if (arguments != NULL) /* if no arguments passed, this a signature request */ \
     {                                                                             \
         /* forward to the method implementation */                                \
-        __ret(returnType, name##_impl(context, __arg(1, t1), __arg(2, t2), __arg(3, t3), __arg(4, t4), __arg(5, t5), __arg(6, t6), __arg(7, t7), __arg(8, t8), __arg(9, t9), __arg(10, t10)));      \
+        oor__ret(returnType, name##_impl(context, oor__arg(1, t1), oor__arg(2, t2), oor__arg(3, t3), oor__arg(4, t4), oor__arg(5, t5), oor__arg(6, t6), oor__arg(7, t7), oor__arg(8, t8), oor__arg(9, t9), oor__arg(10, t10)));      \
     }                                                                             \
     return name##_types;     /* return the type signature */                      \
 } \
 /* the real target method code */  \
-__rytpe(returnType) name##_impl(RexxMethodContext *context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6), __adcl(t7, n7), __adcl(t8, n8), __adcl(t9, n9), __adcl(t10, n10))
+oor__rytpe(returnType) name##_impl(RexxMethodContext *context, oor__adcl(t1, n1), oor__adcl(t2, n2), oor__adcl(t3, n3), oor__adcl(t4, n4), oor__adcl(t5, n5), oor__adcl(t6, n6), oor__adcl(t7, n7), oor__adcl(t8, n8), oor__adcl(t9, n9), oor__adcl(t10, n10))
 
 
 #define __functionstub(name) uint16_t * RexxEntry name(RexxCallContext *context, ValueDescriptor *arguments)
@@ -4433,10 +4433,10 @@ __rytpe(returnType) name##_impl(RexxMethodContext *context, __adcl(t1, n1), __ad
 
 #define RexxRoutine0(returnType, name) \
 /* forward reference definition for method */ \
-__rytpe(returnType) name##_impl (RexxCallContext * context);  \
+oor__rytpe(returnType) name##_impl (RexxCallContext * context);  \
                                \
 /* method signature definition */ \
-static uint16_t name##_types[] = {__tdcl(returnType), REXX_ARGUMENT_TERMINATOR};    \
+static uint16_t name##_types[] = {oor__tdcl(returnType), REXX_ARGUMENT_TERMINATOR};    \
 \
 __cpp_function_proto(name) \
 /* generated calling stub function */ \
@@ -4445,21 +4445,21 @@ __functionstub(name) \
     if (arguments != NULL) /* if no arguments passed, this a signature request */ \
     {                                                                             \
         /* forward to the method implementation */                                \
-        __ret(returnType, name##_impl(context));                                 \
+        oor__ret(returnType, name##_impl(context));                                 \
     }                                                                             \
     return name##_types;     /* return the type signature */                      \
 } \
 /* the real target method code */  \
-__rytpe(returnType) name##_impl(RexxCallContext *context)
+oor__rytpe(returnType) name##_impl(RexxCallContext *context)
 
 
 // method with one argument
 #define RexxRoutine1(returnType ,name, t1, n1) \
 /* forward reference definition for method */ \
-__rytpe(returnType) name##_impl (RexxCallContext * context, __adcl(t1, n1));  \
+oor__rytpe(returnType) name##_impl (RexxCallContext * context, oor__adcl(t1, n1));  \
                                \
 /* method signature definition */ \
-static uint16_t name##_types[] = {__tdcl(returnType), __tdcl(t1), REXX_ARGUMENT_TERMINATOR};    \
+static uint16_t name##_types[] = {oor__tdcl(returnType), oor__tdcl(t1), REXX_ARGUMENT_TERMINATOR};    \
 \
 __cpp_function_proto(name) \
 /* generated calling stub function */ \
@@ -4468,21 +4468,21 @@ __functionstub(name) \
     if (arguments != NULL) /* if no arguments passed, this a signature request */ \
     {                                                                             \
         /* forward to the method implementation */                                \
-        __ret(returnType, name##_impl(context, __arg(1, t1)));                    \
+        oor__ret(returnType, name##_impl(context, oor__arg(1, t1)));                    \
     }                                                                             \
     return name##_types;     /* return the type signature */                      \
 } \
 /* the real target method code */  \
-__rytpe(returnType) name##_impl(RexxCallContext *context, __adcl(t1, n1))
+oor__rytpe(returnType) name##_impl(RexxCallContext *context, oor__adcl(t1, n1))
 
 
 // method with two arguments
 #define RexxRoutine2(returnType ,name, t1, n1, t2, n2) \
 /* forward reference definition for method */ \
-__rytpe(returnType) name##_impl (RexxCallContext * context, __adcl(t1, n1), __adcl(t2, n2));  \
+oor__rytpe(returnType) name##_impl (RexxCallContext * context, oor__adcl(t1, n1), oor__adcl(t2, n2));  \
                                \
 /* method signature definition */ \
-static uint16_t name##_types[] = {__tdcl(returnType), __tdcl(t1), __tdcl(t2), REXX_ARGUMENT_TERMINATOR };    \
+static uint16_t name##_types[] = {oor__tdcl(returnType), oor__tdcl(t1), oor__tdcl(t2), REXX_ARGUMENT_TERMINATOR };    \
 \
 __cpp_function_proto(name) \
 /* generated calling stub function */ \
@@ -4491,21 +4491,21 @@ __functionstub(name) \
     if (arguments != NULL) /* if no arguments passed, this a signature request */ \
     {                                                                             \
         /* forward to the method implementation */                                \
-        __ret(returnType, name##_impl(context, __arg(1, t1), __arg(2, t2)));      \
+        oor__ret(returnType, name##_impl(context, oor__arg(1, t1), oor__arg(2, t2)));      \
     }                                                                             \
     return name##_types;     /* return the type signature */                      \
 } \
 /* the real target method code */  \
-__rytpe(returnType) name##_impl(RexxCallContext *context, __adcl(t1, n1), __adcl(t2, n2))
+oor__rytpe(returnType) name##_impl(RexxCallContext *context, oor__adcl(t1, n1), oor__adcl(t2, n2))
 
 
 // method with three arguments
 #define RexxRoutine3(returnType ,name, t1, n1, t2, n2, t3, n3) \
 /* forward reference definition for method */ \
-__rytpe(returnType) name##_impl (RexxCallContext * context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3));  \
+oor__rytpe(returnType) name##_impl (RexxCallContext * context, oor__adcl(t1, n1), oor__adcl(t2, n2), oor__adcl(t3, n3));  \
                                \
 /* method signature definition */ \
-static uint16_t name##_types[] = {__tdcl(returnType), __tdcl(t1), __tdcl(t2), __tdcl(t3), REXX_ARGUMENT_TERMINATOR};    \
+static uint16_t name##_types[] = {oor__tdcl(returnType), oor__tdcl(t1), oor__tdcl(t2), oor__tdcl(t3), REXX_ARGUMENT_TERMINATOR};    \
 \
 __cpp_function_proto(name) \
 /* generated calling stub function */ \
@@ -4514,21 +4514,21 @@ __functionstub(name) \
     if (arguments != NULL) /* if no arguments passed, this a signature request */ \
     {                                                                             \
         /* forward to the method implementation */                                \
-        __ret(returnType, name##_impl(context, __arg(1, t1), __arg(2, t2), __arg(3, t3)));      \
+        oor__ret(returnType, name##_impl(context, oor__arg(1, t1), oor__arg(2, t2), oor__arg(3, t3)));      \
     }                                                                             \
     return name##_types;     /* return the type signature */                      \
 } \
 /* the real target method code */  \
-__rytpe(returnType) name##_impl(RexxCallContext *context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3))
+oor__rytpe(returnType) name##_impl(RexxCallContext *context, oor__adcl(t1, n1), oor__adcl(t2, n2), oor__adcl(t3, n3))
 
 
 // method with four arguments
 #define RexxRoutine4(returnType ,name, t1, n1, t2, n2, t3, n3, t4, n4) \
 /* forward reference definition for method */ \
-__rytpe(returnType) name##_impl (RexxCallContext * context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4));  \
+oor__rytpe(returnType) name##_impl (RexxCallContext * context, oor__adcl(t1, n1), oor__adcl(t2, n2), oor__adcl(t3, n3), oor__adcl(t4, n4));  \
                                \
 /* method signature definition */ \
-static uint16_t name##_types[] = {__tdcl(returnType), __tdcl(t1), __tdcl(t2), __tdcl(t3), __tdcl(t4), REXX_ARGUMENT_TERMINATOR};    \
+static uint16_t name##_types[] = {oor__tdcl(returnType), oor__tdcl(t1), oor__tdcl(t2), oor__tdcl(t3), oor__tdcl(t4), REXX_ARGUMENT_TERMINATOR};    \
 \
 __cpp_function_proto(name) \
 /* generated calling stub function */ \
@@ -4537,21 +4537,21 @@ __functionstub(name) \
     if (arguments != NULL) /* if no arguments passed, this a signature request */ \
     {                                                                             \
         /* forward to the method implementation */                                \
-        __ret(returnType, name##_impl(context, __arg(1, t1), __arg(2, t2), __arg(3, t3), __arg(4, t4)));      \
+        oor__ret(returnType, name##_impl(context, oor__arg(1, t1), oor__arg(2, t2), oor__arg(3, t3), oor__arg(4, t4)));      \
     }                                                                             \
     return name##_types;     /* return the type signature */                      \
 } \
 /* the real target method code */  \
-__rytpe(returnType) name##_impl(RexxCallContext *context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4))
+oor__rytpe(returnType) name##_impl(RexxCallContext *context, oor__adcl(t1, n1), oor__adcl(t2, n2), oor__adcl(t3, n3), oor__adcl(t4, n4))
 
 
 // method with five arguments
 #define RexxRoutine5(returnType ,name, t1, n1, t2, n2, t3, n3, t4, n4, t5, n5) \
 /* forward reference definition for method */ \
-__rytpe(returnType) name##_impl (RexxCallContext * context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5));  \
+oor__rytpe(returnType) name##_impl (RexxCallContext * context, oor__adcl(t1, n1), oor__adcl(t2, n2), oor__adcl(t3, n3), oor__adcl(t4, n4), oor__adcl(t5, n5));  \
                                \
 /* method signature definition */ \
-static uint16_t name##_types[] = {__tdcl(returnType), __tdcl(t1), __tdcl(t2), __tdcl(t3), __tdcl(t4), __tdcl(t5), REXX_ARGUMENT_TERMINATOR};    \
+static uint16_t name##_types[] = {oor__tdcl(returnType), oor__tdcl(t1), oor__tdcl(t2), oor__tdcl(t3), oor__tdcl(t4), oor__tdcl(t5), REXX_ARGUMENT_TERMINATOR};    \
 \
 __cpp_function_proto(name) \
 /* generated calling stub function */ \
@@ -4560,21 +4560,21 @@ __functionstub(name) \
     if (arguments != NULL) /* if no arguments passed, this a signature request */ \
     {                                                                             \
         /* forward to the method implementation */                                \
-        __ret(returnType, name##_impl(context, __arg(1, t1), __arg(2, t2), __arg(3, t3), __arg(4, t4), __arg(5, t5)));      \
+        oor__ret(returnType, name##_impl(context, oor__arg(1, t1), oor__arg(2, t2), oor__arg(3, t3), oor__arg(4, t4), oor__arg(5, t5)));      \
     }                                                                             \
     return name##_types;     /* return the type signature */                      \
 } \
 /* the real target method code */  \
-__rytpe(returnType) name##_impl(RexxCallContext *context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5))
+oor__rytpe(returnType) name##_impl(RexxCallContext *context, oor__adcl(t1, n1), oor__adcl(t2, n2), oor__adcl(t3, n3), oor__adcl(t4, n4), oor__adcl(t5, n5))
 
 
 // method with six arguments
 #define RexxRoutine6(returnType, name, t1, n1, t2, n2, t3, n3, t4, n4, t5, n5, t6, n6) \
 /* forward reference definition for method */ \
-__rytpe(returnType) name##_impl (RexxCallContext * context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6));  \
+oor__rytpe(returnType) name##_impl (RexxCallContext * context, oor__adcl(t1, n1), oor__adcl(t2, n2), oor__adcl(t3, n3), oor__adcl(t4, n4), oor__adcl(t5, n5), oor__adcl(t6, n6));  \
                                \
 /* method signature definition */ \
-static uint16_t name##_types[] = {__tdcl(returnType), __tdcl(t1), __tdcl(t2), __tdcl(t3), __tdcl(t4), __tdcl(t5), __tdcl(t6), REXX_ARGUMENT_TERMINATOR};    \
+static uint16_t name##_types[] = {oor__tdcl(returnType), oor__tdcl(t1), oor__tdcl(t2), oor__tdcl(t3), oor__tdcl(t4), oor__tdcl(t5), oor__tdcl(t6), REXX_ARGUMENT_TERMINATOR};    \
 \
 __cpp_function_proto(name) \
 /* generated calling stub function */ \
@@ -4583,20 +4583,20 @@ __functionstub(name) \
     if (arguments != NULL) /* if no arguments passed, this a signature request */ \
     {                                                                             \
         /* forward to the method implementation */                                \
-        __ret(returnType, name##_impl(context, __arg(1, t1), __arg(2, t2), __arg(3, t3), __arg(4, t4), __arg(5, t5), __arg(6, t6)));      \
+        oor__ret(returnType, name##_impl(context, oor__arg(1, t1), oor__arg(2, t2), oor__arg(3, t3), oor__arg(4, t4), oor__arg(5, t5), oor__arg(6, t6)));      \
     }                                                                             \
     return name##_types;     /* return the type signature */                      \
 } \
 /* the real target method code */  \
-__rytpe(returnType) name##_impl(RexxCallContext *context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6))
+oor__rytpe(returnType) name##_impl(RexxCallContext *context, oor__adcl(t1, n1), oor__adcl(t2, n2), oor__adcl(t3, n3), oor__adcl(t4, n4), oor__adcl(t5, n5), oor__adcl(t6, n6))
 
 // method with seven arguments
 #define RexxRoutine7(returnType, name, t1, n1, t2, n2, t3, n3, t4, n4, t5, n5, t6, n6, t7, n7) \
 /* forward reference definition for method */ \
-__rytpe(returnType) name##_impl (RexxCallContext * context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6), __adcl(t7, n7)); \
+oor__rytpe(returnType) name##_impl (RexxCallContext * context, oor__adcl(t1, n1), oor__adcl(t2, n2), oor__adcl(t3, n3), oor__adcl(t4, n4), oor__adcl(t5, n5), oor__adcl(t6, n6), oor__adcl(t7, n7)); \
                                \
 /* method signature definition */ \
-static uint16_t name##_types[] = {__tdcl(returnType), __tdcl(t1), __tdcl(t2), __tdcl(t3), __tdcl(t4), __tdcl(t5), __tdcl(t6), __tdcl(t7), REXX_ARGUMENT_TERMINATOR};    \
+static uint16_t name##_types[] = {oor__tdcl(returnType), oor__tdcl(t1), oor__tdcl(t2), oor__tdcl(t3), oor__tdcl(t4), oor__tdcl(t5), oor__tdcl(t6), oor__tdcl(t7), REXX_ARGUMENT_TERMINATOR};    \
 \
 __cpp_function_proto(name) \
 /* generated calling stub function */ \
@@ -4605,21 +4605,21 @@ __functionstub(name) \
     if (arguments != NULL) /* if no arguments passed, this a signature request */ \
     {                                                                             \
         /* forward to the method implementation */                                \
-        __ret(returnType, name##_impl(context, __arg(1, t1), __arg(2, t2), __arg(3, t3), __arg(4, t4), __arg(5, t5), __arg(6, t6), __arg(7, t7)));      \
+        oor__ret(returnType, name##_impl(context, oor__arg(1, t1), oor__arg(2, t2), oor__arg(3, t3), oor__arg(4, t4), oor__arg(5, t5), oor__arg(6, t6), oor__arg(7, t7)));      \
     }                                                                             \
     return name##_types;     /* return the type signature */                      \
 } \
 /* the real target method code */  \
-__rytpe(returnType) name##_impl(RexxCallContext *context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6), __adcl(t7, n7))
+oor__rytpe(returnType) name##_impl(RexxCallContext *context, oor__adcl(t1, n1), oor__adcl(t2, n2), oor__adcl(t3, n3), oor__adcl(t4, n4), oor__adcl(t5, n5), oor__adcl(t6, n6), oor__adcl(t7, n7))
 
 
 // function with eight arguments
 #define RexxRoutine8(returnType, name, t1, n1, t2, n2, t3, n3, t4, n4, t5, n5, t6, n6, t7, n7, t8, n8) \
 /* forward reference definition for method */ \
-__rytpe(returnType) name##_impl (RexxCallContext * context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6), __adcl(t7, n7), __adcl(t8, n8));  \
+oor__rytpe(returnType) name##_impl (RexxCallContext * context, oor__adcl(t1, n1), oor__adcl(t2, n2), oor__adcl(t3, n3), oor__adcl(t4, n4), oor__adcl(t5, n5), oor__adcl(t6, n6), oor__adcl(t7, n7), oor__adcl(t8, n8));  \
                                \
 /* method signature definition */ \
-static uint16_t name##_types[] = {__tdcl(returnType), __tdcl(t1), __tdcl(t2), __tdcl(t3), __tdcl(t4), __tdcl(t5), __tdcl(t6), __tdcl(t7), __tdcl(t8), REXX_ARGUMENT_TERMINATOR};    \
+static uint16_t name##_types[] = {oor__tdcl(returnType), oor__tdcl(t1), oor__tdcl(t2), oor__tdcl(t3), oor__tdcl(t4), oor__tdcl(t5), oor__tdcl(t6), oor__tdcl(t7), oor__tdcl(t8), REXX_ARGUMENT_TERMINATOR};    \
 \
 __cpp_function_proto(name) \
 /* generated calling stub function */ \
@@ -4628,21 +4628,21 @@ __functionstub(name) \
     if (arguments != NULL) /* if no arguments passed, this a signature request */ \
     {                                                                             \
         /* forward to the method implementation */                                \
-        __ret(returnType, name##_impl(context, __arg(1, t1), __arg(2, t2), __arg(3, t3), __arg(4, t4), __arg(5, t5), __arg(6, t6), __arg(7, t7), __arg(8, t8)));      \
+        oor__ret(returnType, name##_impl(context, oor__arg(1, t1), oor__arg(2, t2), oor__arg(3, t3), oor__arg(4, t4), oor__arg(5, t5), oor__arg(6, t6), oor__arg(7, t7), oor__arg(8, t8)));      \
     }                                                                             \
     return name##_types;     /* return the type signature */                      \
 } \
 /* the real target method code */  \
-__rytpe(returnType) name##_impl(RexxCallContext *context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6), __adcl(t7, n7), __adcl(t8, n8))
+oor__rytpe(returnType) name##_impl(RexxCallContext *context, oor__adcl(t1, n1), oor__adcl(t2, n2), oor__adcl(t3, n3), oor__adcl(t4, n4), oor__adcl(t5, n5), oor__adcl(t6, n6), oor__adcl(t7, n7), oor__adcl(t8, n8))
 
 
 // function with nine arguments
 #define RexxRoutine9(returnType, name, t1, n1, t2, n2, t3, n3, t4, n4, t5, n5, t6, n6, t7, n7, t8, n8, t9, n9) \
 /* forward reference definition for method */ \
-__rytpe(returnType) name##_impl (RexxCallContext * context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6), __adcl(t7, n7), __adcl(t8, n8), __adcl(t9, n9));  \
+oor__rytpe(returnType) name##_impl (RexxCallContext * context, oor__adcl(t1, n1), oor__adcl(t2, n2), oor__adcl(t3, n3), oor__adcl(t4, n4), oor__adcl(t5, n5), oor__adcl(t6, n6), oor__adcl(t7, n7), oor__adcl(t8, n8), oor__adcl(t9, n9));  \
                                \
 /* method signature definition */ \
-static uint16_t name##_types[] = {__tdcl(returnType), __tdcl(t1), __tdcl(t2), __tdcl(t3), __tdcl(t4), __tdcl(t5), __tdcl(t6), __tdcl(t7), __tdcl(t8), __tdcl(t9), REXX_ARGUMENT_TERMINATOR};    \
+static uint16_t name##_types[] = {oor__tdcl(returnType), oor__tdcl(t1), oor__tdcl(t2), oor__tdcl(t3), oor__tdcl(t4), oor__tdcl(t5), oor__tdcl(t6), oor__tdcl(t7), oor__tdcl(t8), oor__tdcl(t9), REXX_ARGUMENT_TERMINATOR};    \
 \
 __cpp_function_proto(name) \
 /* generated calling stub function */ \
@@ -4651,21 +4651,21 @@ __functionstub(name) \
     if (arguments != NULL) /* if no arguments passed, this a signature request */ \
     {                                                                             \
         /* forward to the method implementation */                                \
-        __ret(returnType, name##_impl(context, __arg(1, t1), __arg(2, t2), __arg(3, t3), __arg(4, t4), __arg(5, t5), __arg(6, t6), __arg(7, t7), __arg(8, t8), __arg(9, t9)));      \
+        oor__ret(returnType, name##_impl(context, oor__arg(1, t1), oor__arg(2, t2), oor__arg(3, t3), oor__arg(4, t4), oor__arg(5, t5), oor__arg(6, t6), oor__arg(7, t7), oor__arg(8, t8), oor__arg(9, t9)));      \
     }                                                                             \
     return name##_types;     /* return the type signature */                      \
 } \
 /* the real target method code */  \
-__rytpe(returnType) name##_impl(RexxCallContext *context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6), __adcl(t7, n7), __adcl(t8, n8), __adcl(t9, n9))
+oor__rytpe(returnType) name##_impl(RexxCallContext *context, oor__adcl(t1, n1), oor__adcl(t2, n2), oor__adcl(t3, n3), oor__adcl(t4, n4), oor__adcl(t5, n5), oor__adcl(t6, n6), oor__adcl(t7, n7), oor__adcl(t8, n8), oor__adcl(t9, n9))
 
 
 // function with ten arguments
 #define RexxRoutine10(returnType, name, t1, n1, t2, n2, t3, n3, t4, n4, t5, n5, t6, n6, t7, n7, t8, n8, t9, n9, t10, n10) \
 /* forward reference definition for method */ \
-__rytpe(returnType) name##_impl (RexxCallContext * context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6), __adcl(t7, n7), __adcl(t8, n8), __adcl(t9, n9), __adcl(t10, n10));  \
+oor__rytpe(returnType) name##_impl (RexxCallContext * context, oor__adcl(t1, n1), oor__adcl(t2, n2), oor__adcl(t3, n3), oor__adcl(t4, n4), oor__adcl(t5, n5), oor__adcl(t6, n6), oor__adcl(t7, n7), oor__adcl(t8, n8), oor__adcl(t9, n9), oor__adcl(t10, n10));  \
                                \
 /* method signature definition */ \
-static uint16_t name##_types[] = {__tdcl(returnType), __tdcl(t1), __tdcl(t2), __tdcl(t3), __tdcl(t4), __tdcl(t5), __tdcl(t6), __tdcl(t7), __tdcl(t8), __tdcl(t9), __tdcl(t10), REXX_ARGUMENT_TERMINATOR};    \
+static uint16_t name##_types[] = {oor__tdcl(returnType), oor__tdcl(t1), oor__tdcl(t2), oor__tdcl(t3), oor__tdcl(t4), oor__tdcl(t5), oor__tdcl(t6), oor__tdcl(t7), oor__tdcl(t8), oor__tdcl(t9), oor__tdcl(t10), REXX_ARGUMENT_TERMINATOR};    \
 \
 __cpp_function_proto(name) \
 /* generated calling stub function */ \
@@ -4674,12 +4674,12 @@ __functionstub(name) \
     if (arguments != NULL) /* if no arguments passed, this a signature request */ \
     {                                                                             \
         /* forward to the method implementation */                                \
-        __ret(returnType, name##_impl(context, __arg(1, t1), __arg(2, t2), __arg(3, t3), __arg(4, t4), __arg(5, t5), __arg(6, t6), __arg(7, t7), __arg(8, t8), __arg(9, t9), __arg(10, t10)));      \
+        oor__ret(returnType, name##_impl(context, oor__arg(1, t1), oor__arg(2, t2), oor__arg(3, t3), oor__arg(4, t4), oor__arg(5, t5), oor__arg(6, t6), oor__arg(7, t7), oor__arg(8, t8), oor__arg(9, t9), oor__arg(10, t10)));      \
     }                                                                             \
     return name##_types;     /* return the type signature */                      \
 } \
 /* the real target method code */  \
-__rytpe(returnType) name##_impl(RexxCallContext *context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6), __adcl(t7, n7), __adcl(t8, n8), __adcl(t9, n9), __adcl(t10, n10))
+oor__rytpe(returnType) name##_impl(RexxCallContext *context, oor__adcl(t1, n1), oor__adcl(t2, n2), oor__adcl(t3, n3), oor__adcl(t4, n4), oor__adcl(t5, n5), oor__adcl(t6, n6), oor__adcl(t7, n7), oor__adcl(t8, n8), oor__adcl(t9, n9), oor__adcl(t10, n10))
 
 /******************************************************************************/
 /* Types (used in macro expansions and function prototypes)                   */

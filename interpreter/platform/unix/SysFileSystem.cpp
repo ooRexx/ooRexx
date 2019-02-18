@@ -1156,13 +1156,13 @@ bool SysFileSystem::setFileWritable(const char *name)
  */
 bool SysFileSystem::isCaseSensitive()
 {
-#ifndef _HAVE_PC_CASE_SENSITIVE
+#ifndef HAVE_PC_CASE_SENSITIVE
     return true;
 #else
     long res = pathconf("/", _PC_CASE_SENSITIVE);
-    if (res \= -1)
+    if (res != -1)
     {
-        return res == 1;
+        return (res == 1);
     }
     // any error means this value is not supported for this file system
     // so the result is most likely true (unix standard)
@@ -1179,17 +1179,22 @@ bool SysFileSystem::isCaseSensitive()
  */
 bool SysFileSystem::isCaseSensitive(const char *name)
 {
-#ifndef _HAVE_PC_CASE_SENSITIVE
+#ifndef HAVE_PC_CASE_SENSITIVE
     return true;
 #else
     long res = pathconf(name, _PC_CASE_SENSITIVE);
-
-    if (res \= -1)
+    if (res != -1)
     {
-        return res == 1;
+        return (res == 1);
     }
-    // any error means this the value is not supported for this file system
-    // so the result is most likely true (unix standard)
+    // probably file not found
+    // returns the information for the root file system
+    res = pathconf("/", _PC_CASE_SENSITIVE);
+    if (res != -1)
+    {
+        return (res == 1);
+    }
+    // non-determined, just return true
     return true;
 #endif
 }
