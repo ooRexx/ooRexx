@@ -443,11 +443,11 @@ void formatFileAttributes(TreeFinder *finder, FileNameBuffer &foundFileLine, str
     // now the size information
     if (finder->longSize())
     {
-        snprintf(fileAttr, sizeof(fileAttr), "%20zu ", finfo.st_size);
+        snprintf(fileAttr, sizeof(fileAttr), "%20jd ", finfo.st_size);
     }
     else
     {
-        snprintf(fileAttr, sizeof(fileAttr), "%10zu ", finfo.st_size);
+        snprintf(fileAttr, sizeof(fileAttr), "%10jd ", finfo.st_size);
     }
 
     // the order is time, size, attributes
@@ -567,8 +567,7 @@ void TreeFinder::fixupFilePath()
 **********************************************************************/
 RexxRoutine0(int, SysCls)
 {
-    system("clear");        /* do the clear               */
-    return 0;
+    return system("clear");
 }
 
 

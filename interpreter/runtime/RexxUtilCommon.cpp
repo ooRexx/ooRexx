@@ -418,7 +418,7 @@ void getUniqueFileName(const char *fileTemplate, char filler, FileNameBuffer &fi
  *
  * @param  fSpec  [required] The search pattern, may contain glob characters
  *                 and full or partial path informattion. E.g., *.bat, or
- *                 ../../*.txt, or C:\temp.  May not contain illegal file name
+ *                 ../../abc*.txt, or C:\temp.  May not contain illegal file name
  *                 characters which are: ", <, >, |, and :  The semicolon is
  *                 only legal if it is exactly the second character.  Do not use
  *                 a double quote in fSpec, it is not needed and is taken as a
