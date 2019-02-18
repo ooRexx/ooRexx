@@ -73,8 +73,6 @@
 #define lstat64 lstat
 #endif
 
-#undef HAVE_FNM_CASEFOLD
-
 const char SysFileSystem::EOF_Marker = 0x1A;
 const char *SysFileSystem::EOL_Marker = "\n";
 const char SysFileSystem::PathDelimiter = '/';
