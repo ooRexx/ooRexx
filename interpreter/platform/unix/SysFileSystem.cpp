@@ -73,6 +73,7 @@
 #define lstat64 lstat
 #endif
 
+#undef HAVE_FNM_CASEFOLD
 
 const char SysFileSystem::EOF_Marker = 0x1A;
 const char *SysFileSystem::EOL_Marker = "\n";
@@ -539,7 +540,7 @@ bool SysFileSystem::searchPath(const char *name, const char *path, FileNameBuffe
  */
 bool SysFileSystem::resolveTilde(FileNameBuffer &name)
 {
-        // save a copy of the name
+    // save a copy of the name
     AutoFileNameBuffer tempName(name);
 
     // does it start with the user home marker?
@@ -1423,7 +1424,7 @@ and that is not the same as the name of an existing file in this directory.
 Used to temporarily rename a file in place (i.e. in its directory).
 This new filename must be freed when no longer needed.
 */
-char *temporaryFilename(const char *filename, int &errInfo)
+char* temporaryFilename(const char *filename, int &errInfo)
 {
     // allocate a buffer large enough to hold the file name plus the extra characters
     // we add to the end.
@@ -1726,8 +1727,9 @@ SysFileIterator::SysFileIterator(const char *path, const char *pattern, FileName
     // spec and uppercase it.
     if (caseLess && patternSpec != NULL)
     {
-        patternSpec = strdup(patternSpec);
-        strupr(patternSpec);
+        char *upperString = strdup(patternSpec);
+        Utilities::strupper(upperString);
+        patternSpec = upperString;
     }
 #endif
 
@@ -1771,7 +1773,7 @@ void SysFileIterator::close()
     // if we had to copy the patternSpec, make sure we free the copy up
     if (caseLess && patternSpec != NULL)
     {
-        free(patternSpec);
+        free((void *)patternSpec);
         patternSpec = NULL;
     }
 #endif
@@ -1845,7 +1847,7 @@ void SysFileIterator::findNextEntry()
         flags |= FNM_CASEFOLD;
 #else
         char *upperName = strdup(testName);
-        strupr(upperName);
+        Utilities::strupper(upperName);
         testName = upperName;
 #endif
     }
@@ -1855,7 +1857,7 @@ void SysFileIterator::findNextEntry()
     {
 #ifndef HAVE_FNM_CASEFOLD
         // free the uppercase copy of the last test
-        free(testName);
+        free((void *)testName);
 #endif
         entry = readdir(handle);
         if (entry == NULL)
@@ -1868,13 +1870,13 @@ void SysFileIterator::findNextEntry()
         testName = entry->d_name;
 #ifndef HAVE_FNM_CASEFOLD
         char *upperName = strdup(testName);
-        strupr(upperName);
+        Utilities::strupper(upperName);
         testName = upperName;
 #endif
     }
 #ifndef HAVE_FNM_CASEFOLD
     // free the uppercase copy of the last test
-    free(testName);
+    free((void *)testName);
 #endif
 }
 
