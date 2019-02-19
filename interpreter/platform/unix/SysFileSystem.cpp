@@ -1182,18 +1182,36 @@ bool SysFileSystem::isCaseSensitive(const char *name)
 #ifndef HAVE_PC_CASE_SENSITIVE
     return true;
 #else
-    long res = pathconf(name, _PC_CASE_SENSITIVE);
+    AutoFree tmp = strdup(name);
+
+    while (!SysFileSystem::exists(tmp))
+    {
+        size_t len = strlen(tmp);
+        // scan backwards to find the previous directory delimiter
+        for (; len > 0; len --)
+        {
+            // is this the directory delimiter?
+            if (tmp[len] == '/')
+            {
+                tmp[len] = '\0';
+                break;
+            }
+        }
+        // ugly hack . . . to preserve the "/"
+        if (len == 0)
+        {
+            tmp[len+1] = '\0';
+            break;
+        }
+    }
+
+    // at this point the tmp variable contains something that exists
+    long res = pathconf(tmp, _PC_CASE_SENSITIVE);
     if (res != -1)
     {
         return (res == 1);
     }
-    // probably file not found
-    // returns the information for the root file system
-    res = pathconf("/", _PC_CASE_SENSITIVE);
-    if (res != -1)
-    {
-        return (res == 1);
-    }
+
     // non-determined, just return true
     return true;
 #endif
