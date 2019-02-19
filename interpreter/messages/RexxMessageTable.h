@@ -2,7 +2,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -37,7 +37,6 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  okerrtxt.h    */
 /*                                                                            */
 /* Create table of mappings between Rexx errors and error messages            */
 /*                                                                            */
@@ -48,7 +47,7 @@
 #define Table_end   0                  /* constant to mark end of table     */
 #define Table_end_msg 0
 
-ERROR_MESSAGE Message_table[] = {      /* table of major and minor errors   */
+ERROR_MAP Message_map_table[] = {     /* table of major and minor errors   */
 
 
 /* -------------------------------------------------------------------------- */

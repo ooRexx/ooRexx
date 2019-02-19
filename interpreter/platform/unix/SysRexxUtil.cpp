@@ -180,6 +180,7 @@
 
 #include "RexxUtilCommon.hpp"
 #include "Utilities.hpp"
+#include "RexxInternalApis.h"
 
 #if !defined( HAVE_UNION_SEMUN )
 union semun
@@ -1125,6 +1126,166 @@ RexxRoutine2(int, SysSetPriority, int32_t, pclass, int32_t, level)
     return rc;
 }
 
+/**
+ * Retrieve an error message from the repository
+ *
+ * @param repository The named repository (can be null, which means retrieve the rexx error message)
+ * @param setnum     The setnumber in the catalog to use
+ * @param msgnum     The target message number
+ *
+ * @return The error message text or NULL if not found.
+ */
+const char* getErrorMessage(const char *repository, int setnum, int msgnum)
+{
+    // if this is the default or explicitly "rexx.cat", then we retrieve this
+    // directly from the interpreter
+    if (repository == NULL || strcmp(repository, REXXMESSAGEFILE))
+    {
+        return RexxGetErrorMessageByNumber(msgnum);
+    }
+#if defined( HAVE_CATOPEN )
+
+#if defined( HAVE_SETLOCALE )
+    setlocale(LC_ALL, "en_US");
+#endif
+    nl_catd catalog;                     /* catalog handle             */
+/* open the catalog           */
+    if ((catalog = catopen(repository, NL_CAT_LOCALE)) == (nl_catd)-1)
+    {
+        return "Error: Message catalog not found";
+    }
+
+    char *msg = catgets(catalog, setnum, (int)msgnum, "Error: Message catalog not open");
+    catclose(catalog);                   /* close the catalog          */
+
+    return *msg == '\0' ? "Error: Message not found" : msg;      // return the message or our error
+#else
+    // if no catalog support, we just return an error message
+    return "Error: Message catalog (catopen) not supported";
+#endif
+}
+
+
+/**
+ * Format a message using passed in arguments.
+ *
+ * @param context The call context.
+ * @param message The message test
+ * @param args    The array of arguments to the function.
+ * @param firstSubstitution
+ *                The first substitution argument in the array.
+ *
+ * @return The formated test as a Rexx String object.
+ */
+RexxStringObject formatMessage(RexxCallContext *context, const char *message, RexxArrayObject args, size_t firstSubstitution)
+{
+    size_t numargs = context->ArraySize(args);
+
+    size_t subcount = numargs >= firstSubstitution ? numargs - firstSubstitution + 1 : 0;
+
+    // we only support 9 substitution values
+    if (subcount > 9)
+    {
+        context->ThrowException0(Rexx_Error_Incorrect_call_external);
+    }
+
+    // array of string values
+    const char *substitutions[9];
+    size_t msg_length = 0;               // length of the return msg
+
+    // get the string value for each of the substitutions
+    for (size_t i = firstSubstitution; i <= numargs; i++)
+    {
+        // get each of the argument objects as a string value.
+        // omitted arguments are not permitted.
+        RexxObjectPtr o = context->ArrayAt(args, i);
+        if (o == NULLOBJECT)
+        {
+            context->ThrowException0(Rexx_Error_Incorrect_call_external);
+        }
+        substitutions[i - firstSubstitution] = context->ObjectToStringValue(o);
+    }
+
+    // now scan the message calculating the size of the final message
+    size_t messageLength = strlen(message);
+
+    // scan for the substitutions and figure out how much is added
+    const char *temp = message;
+
+    while ((temp = strstr(temp, "&")))
+    {
+        char sub = *(temp + 1);
+        if (sub >= '1' && sub <= '9')
+        {
+            int subPosition = sub - '1';
+            // if we have a substitution value for this, use the
+            // real length
+            if (subPosition <= subcount)
+            {
+                messageLength += strlen(substitutions[subPosition]);
+            }
+            // subtract out the substitution characters from the length
+            messageLength -= 2;
+            temp += 2;
+        }
+        else
+        {
+            // just step over the character
+            temp++;
+        }
+    }
+
+    // now we know how long the final message is going to be, we can
+    // get a raw string object and fill it in.
+
+    RexxBufferStringObject result = context->NewBufferString(messageLength);
+
+    char *resultBuffer = (char *)context->BufferStringData(result);
+
+    const char *start = message;
+    temp = start;
+
+    // now go and make the substitutions
+    while ((temp = strstr(temp, "&")))
+    {
+        char sub = *(temp + 1);
+        if (sub >= '1' && sub <= '9')
+        {
+            int subPosition = sub - '1';
+            // copy the next section of message text
+            size_t leadSize = temp - start;
+            if (leadSize > 0)
+            {
+                memcpy(resultBuffer, start, leadSize);
+                resultBuffer += leadSize;
+            }
+            // if we have a substitution value for this, use the
+            // real length
+            if (subPosition <= subcount)
+            {
+                size_t sublen = strlen(substitutions[subPosition]);
+                memcpy(resultBuffer, substitutions[subPosition], sublen);
+                resultBuffer += sublen;
+            }
+            // subtract out the substitution characters from the length
+            start = temp + 2;
+            temp = start;
+        }
+        else
+        {
+            // just step over the character
+            temp++;
+        }
+    }
+    // handle any trailing message part
+    size_t tailLength = strlen(message) - (start - message);
+    if (tailLength > 0)
+    {
+        memcpy(resultBuffer, start, tailLength);
+    }
+
+    return context->FinishBufferString(result, messageLength);
+}
 
 
 /*************************************************************************
@@ -1140,191 +1301,15 @@ RexxRoutine2(int, SysSetPriority, int32_t, pclass, int32_t, level)
 *                              strings will be inserted (if given).      *
 *                                                                        *
 * Return:    The message with the inserted strings (if given).           *
-* Note:      The set number ist always 1. Therefore the interface        *
-*            remains the same as in OS/2 and Win.                        *
-*            Reason: keep portability                                    *
+* Note:      The set number ist always 1.
 *************************************************************************/
-
-RexxRoutine3(RexxStringObject, SysGetMessage, uint32_t, msgnum, OPTIONAL_CSTRING, msgfile, ARGLIST, args)
+RexxRoutine3(RexxStringObject, SysGetMessage, positive_wholenumber_t, msgnum, OPTIONAL_CSTRING, msgfile, ARGLIST, args)
 {
+    // this always uses one for the set number
+    const char *message = getErrorMessage(msgfile, 1, msgnum);
 
-#if defined( HAVE_CATOPEN )
-    int setnum = 1;                      /* Set number (const 1)       */
-
-    size_t numargs = context->ArrayItems(args);
-
-    // we only support 9 substitution values
-    if (numargs > 11)
-    {
-        context->InvalidRoutine();
-        return NULLOBJECT;
-    }
-    /* Get message file name.     */
-    /* Use "rexx.cat if not        */
-    /* given                      */
-    if (msgfile == NULL)
-    {
-        msgfile = REXXMESSAGEFILE;
-    }
-
-#if defined( HAVE_SETLOCALE )
-    setlocale(LC_ALL, "en_US");
-#endif
-    nl_catd catalog;                     /* catalog handle             */
-    /* open the catalog           */
-    if ((catalog = catopen(msgfile, NL_CAT_LOCALE)) == (nl_catd)-1)
-    {
-        return context->NewStringFromAsciiz("Error: Message catalog not found");
-    }
-
-    /* retrieve msg from catalog  */
-    char *msg = catgets(catalog, setnum, (int)msgnum, "Error: Message catalog not open");
-    catclose(catalog);                   /* close the catalog          */
-
-    if (*msg == '\0')                     /* if empty string returned   */
-    {
-        return context->NewStringFromAsciiz("Error: Message not found");
-    }
-
-    // copy this so we can safely modify it
-    AutoFree message = strdup(msg);
-
-    int icount = 0;                      // number of insertions
-
-    /* set number of insertions   */
-    if (numargs >= 2)
-    {
-        icount = numargs - 2;
-    }
-
-    const char *substitutions[10];       // array of string values
-    size_t msg_length = 0;               // length of the return msg
-
-    for (size_t i = 3; i <= numargs; i++)
-    {
-        // get each of the argument objects as a string value.
-        // omitted arguments are not permitted.
-        RexxObjectPtr o = context->ArrayAt(args, i);
-        if (o == NULLOBJECT)
-        {
-            context->InvalidRoutine();
-            return NULLOBJECT;
-        }
-        substitutions[i - 3] = context->ObjectToStringValue(o);
-        msg_length += strlen(substitutions[i - 3]);
-    }
-
-    msg_length += strlen(message);
-    // make sure this has enough space for replacement messages
-    msg_length = msg_length + 1;
-    if (msg_length < 100)
-    {
-        msg_length = 100;
-    }
-
-    AutoFree retstr = (char *)malloc(msg_length);
-    if (retstr == NULL)
-    {
-        return context->NewStringFromAsciiz(ERROR_NOMEM);
-    }
-
-    /* check for too much '%s' in the message                          */
-    char *temp = message;
-    int count = 0;
-    /* replace all &1..&9 with %s                                         */
-    while ((temp = strstr(temp, "&")))
-    {
-        /* replace &1..&9 ?             */
-        if (isdigit(*(temp + 1)))
-        {
-            *(temp++) = '%';
-            *(temp++) = 's';                  /* %s expected                  */
-            //      count++;
-        }
-        else
-        {
-            temp++;
-        }
-    }
-    /* now look for number of replacement variables                       */
-    temp = message;                         /* reset temp pointer          */
-    while ((temp = strstr(temp, "%s")))     /* search for the %s           */
-    {
-        count++;                            /* increment counter           */
-        temp += 2;                           /* jump over %s                */
-    }
-
-    /* generate full message with insertions                           */
-    switch (count)
-    {
-        case(0):
-        {
-            // no substitutions
-            strncpy(retstr, message, msg_length);
-            break;
-        }
-        case(1):
-        {
-            snprintf(retstr, msg_length, message, substitutions[0]);
-            break;
-        }
-        case(2):
-        {
-            snprintf(retstr, msg_length, message, substitutions[0], substitutions[1]);
-            break;
-        }
-        case(3):
-        {
-            snprintf(retstr, msg_length, message, substitutions[0], substitutions[1], substitutions[2]);
-            break;
-        }
-        case(4):
-        {
-            snprintf(retstr, msg_length, message, substitutions[0], substitutions[1], substitutions[2], substitutions[3]);
-            break;
-        }
-        case(5):
-        {
-            snprintf(retstr, msg_length, message, substitutions[0], substitutions[1], substitutions[2], substitutions[3],
-                     substitutions[4]);
-            break;
-        }
-        case(6):
-        {
-            snprintf(retstr, msg_length, message, substitutions[0], substitutions[1], substitutions[2], substitutions[3],
-                     substitutions[4], substitutions[5]);
-            break;
-        }
-        case(7):
-        {
-            snprintf(retstr, msg_length, message, substitutions[0], substitutions[1], substitutions[2], substitutions[3],
-                     substitutions[4], substitutions[5], substitutions[6]);
-            break;
-        }
-        case(8):
-        {
-            snprintf(retstr, msg_length, message, substitutions[0], substitutions[1], substitutions[2], substitutions[3],
-                     substitutions[4], substitutions[5], substitutions[6], substitutions[7]);
-            break;
-        }
-        case(9):
-        {
-            snprintf(retstr, msg_length, message, substitutions[0], substitutions[1], substitutions[2], substitutions[3],
-                     substitutions[4], substitutions[5], substitutions[6], substitutions[7], substitutions[8]);
-            break;
-        }
-        default:
-        {
-            // change the message for insertion errors
-            return context->NewStringFromAsciiz("Error: Unable to generate message (wrong number of insertions)");
-        }
-    }
-
-    return context->NewStringFromAsciiz(retstr);
-#else
-
-    return context->NewStringFromAsciiz("Error: Message catalog (catopen) not supported");
-#endif
+    // go format the message with the substitutions.
+    return formatMessage(context, message, args, 3);
 }
 
 
@@ -1347,184 +1332,13 @@ RexxRoutine3(RexxStringObject, SysGetMessage, uint32_t, msgnum, OPTIONAL_CSTRING
 *            supports the selection of a set in the msg catalog.         *
 *************************************************************************/
 
-RexxRoutine4(RexxStringObject, SysGetMessageX, uint32_t, setnum, uint32_t, msgnum, OPTIONAL_CSTRING, msgfile, ARGLIST, args)
+RexxRoutine4(RexxStringObject, SysGetMessageX, positive_wholenumber_t, setnum, positive_wholenumber_t, msgnum, OPTIONAL_CSTRING, msgfile, ARGLIST, args)
 {
-#if defined( HAVE_CATOPEN )
-    size_t numargs = context->ArrayItems(args);
+    // this always uses one for the set number
+    const char *message = getErrorMessage(msgfile, (int)setnum, (int)msgnum);
 
-    // we only support 9 substitution values
-    if (numargs > 12)
-    {
-        context->InvalidRoutine();
-        return NULLOBJECT;
-    }
-    /* Get message file name.     */
-    /* Use "rexx.cat if not        */
-    /* given                      */
-    if (msgfile == NULL)
-    {
-        msgfile = REXXMESSAGEFILE;
-    }
-#if defined( HAVE_SETLOCALE )
-    setlocale(LC_ALL, "en_US");
-#endif
-    /* open the catalog           */
-    nl_catd catalog;                     /* catalog handle             */
-    if ((catalog = catopen(msgfile, NL_CAT_LOCALE)) == (nl_catd)-1)
-    {
-        return context->NewStringFromAsciiz("Error: Message catalog not found");
-    }
-
-    /* retrieve msg from catalog  */
-    char *msg = catgets(catalog, setnum, (int)msgnum, "Error: Message catalog not open");
-    catclose(catalog);                   /* close the catalog          */
-
-
-    if (*msg == '\0')                     /* if empty string returned   */
-    {
-        return context->NewStringFromAsciiz("Error: Message not found");
-    }
-
-    // copy this so we can safely modify it
-    AutoFree message = strdup(msg);
-
-    int icount = 0;
-
-    /* set number of insertions   */
-    if (numargs >= 3)
-    {
-        icount = numargs - 3;
-    }
-
-    const char *substitutions[10];       // array of string values
-    size_t msg_length = 0;               // length of the return msg
-
-    for (size_t i = 4; i <= numargs; i++)
-    {
-        // get each of the argument objects as a string value.
-        // omitted arguments are not permitted.
-        RexxObjectPtr o = context->ArrayAt(args, i);
-        if (o == NULLOBJECT)
-        {
-            context->InvalidRoutine();
-            return NULLOBJECT;
-        }
-        substitutions[i - 4] = context->ObjectToStringValue(o);
-        msg_length += strlen(substitutions[i - 4]);
-    }
-
-    msg_length += strlen(message);
-    // make sure this has enough space for replacement messages
-    msg_length = msg_length + 1;
-    if (msg_length < 100)
-    {
-        msg_length = 100;
-    }
-
-    AutoFree retstr = (char *)malloc(msg_length);
-    if (retstr == NULL)
-    {
-        return context->NewStringFromAsciiz(ERROR_NOMEM);
-    }
-
-    /* check for too much '%s' in the message                          */
-    char *temp = message;
-    int count = 0;
-    /* replace all &1..&9 with %s                                         */
-    while ((temp = strstr(temp, "&")))
-    {
-        /* replace &1..&9 ?             */
-        if (isdigit(*(temp + 1)))
-        {
-            *(temp++) = '%';
-            *(temp++) = 's';                  /* %s expected                  */
-            //      count++;
-        }
-        else
-        {
-            temp++;
-        }
-    }
-    /* now look for number of replacement variables                       */
-    temp = message;        /* reset temp pointer          */
-    while ((temp = strstr(temp, "%s")))     /* search for the %s           */
-    {
-        count++;                            /* increment counter           */
-        temp += 2;                           /* jump over %s                */
-    }
-
-    /* generate full message with insertions                           */
-    switch (icount)
-    {
-        case(0):
-        {
-            // no substitutions
-            return context->NewStringFromAsciiz(message);
-            break;
-        }
-        case(1):
-        {
-            snprintf(retstr, msg_length, message, substitutions[0]);
-            break;
-        }
-        case(2):
-        {
-            snprintf(retstr, msg_length, message, substitutions[0], substitutions[1]);
-            break;
-        }
-        case(3):
-        {
-            snprintf(retstr, msg_length, message, substitutions[0], substitutions[1], substitutions[2]);
-            break;
-        }
-        case(4):
-        {
-            snprintf(retstr, msg_length, message, substitutions[0], substitutions[1], substitutions[2], substitutions[3]);
-            break;
-        }
-        case(5):
-        {
-            snprintf(retstr, msg_length, message, substitutions[0], substitutions[1], substitutions[2], substitutions[3],
-                     substitutions[4]);
-            break;
-        }
-        case(6):
-        {
-            snprintf(retstr, msg_length, message, substitutions[0], substitutions[1], substitutions[2], substitutions[3],
-                     substitutions[4], substitutions[5]);
-            break;
-        }
-        case(7):
-        {
-            snprintf(retstr, msg_length, message, substitutions[0], substitutions[1], substitutions[2], substitutions[3],
-                     substitutions[4], substitutions[5], substitutions[6]);
-            break;
-        }
-        case(8):
-        {
-            snprintf(retstr, msg_length, message, substitutions[0], substitutions[1], substitutions[2], substitutions[3],
-                     substitutions[4], substitutions[5], substitutions[6], substitutions[7]);
-            break;
-        }
-        case(9):
-        {
-            snprintf(retstr, msg_length, message, substitutions[0], substitutions[1], substitutions[2], substitutions[3],
-                     substitutions[4], substitutions[5], substitutions[6], substitutions[7], substitutions[8]);
-            break;
-        }
-        default:
-        {
-            // change the message for insertion errors
-            return context->NewStringFromAsciiz("Error: Unable to generate message (wrong number of insertions)");
-            break;
-        }
-    }
-
-    return context->NewStringFromAsciiz(retstr);
-#else
-
-    return context->NewStringFromAsciiz("Error: Message catalog (catopen) not supported");
-#endif
+    // go format the message with the substitutions.
+    return formatMessage(context, message, args, 4);
 }
 
 
