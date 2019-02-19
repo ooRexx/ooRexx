@@ -499,12 +499,22 @@ RexxRoutine1(RexxClassObject,
     return value;
 }
 
-// test command handler for TestAddCommandEnvironment
+// test DIRECT command handler for TestAddCommandEnvironment
+// always returns -1
+RexxObjectPtr RexxEntry dHandler(RexxExitContext *context,
+                                 RexxStringObject address,
+                                 RexxStringObject command)
+{
+    return context->WholeNumberToObject(-1);
+}
+
+
+// test REDIRECTING command handler for TestAddCommandEnvironment
 // just sets a return code identifying various I/O context functions
-RexxObjectPtr RexxEntry rcHandler(RexxExitContext *context,
-                                  RexxStringObject address,
-                                  RexxStringObject command,
-                                  RexxIORedirectorContext *ioContext)
+RexxObjectPtr RexxEntry rHandler(RexxExitContext *context,
+                                 RexxStringObject address,
+                                 RexxStringObject command,
+                                 RexxIORedirectorContext *ioContext)
 {
     size_t rc = 0;
     // we don't do actual redirection, but we want to return a five-digit
@@ -514,23 +524,11 @@ RexxObjectPtr RexxEntry rcHandler(RexxExitContext *context,
     // - IsOutputRedirected()
     // - IsErrorRedirected()
     // - AreOutputAndErrorSameTarget()
-    // if we have been installed as "redirecting" all is fine
-    // but if we have been installed as "direct" we must not try to
-    // use the I/O context, because we have been called *without* it
-    // (ignoring this will make us crash)
-    // so we only do this if our address contains the string "redirect"
-    if (strstr(context->StringData(address), "redirect"))
-    {
-      rc = rc * 10 + ioContext->IsRedirectionRequested();
-      rc = rc * 10 + ioContext->IsInputRedirected();
-      rc = rc * 10 + ioContext->IsOutputRedirected();
-      rc = rc * 10 + ioContext->IsErrorRedirected();
-      rc = rc * 10 + ioContext->AreOutputAndErrorSameTarget();
-    }
-    else
-    {
-      rc = -1;
-    }
+    rc = rc * 10 + ioContext->IsRedirectionRequested();
+    rc = rc * 10 + ioContext->IsInputRedirected();
+    rc = rc * 10 + ioContext->IsOutputRedirected();
+    rc = rc * 10 + ioContext->IsErrorRedirected();
+    rc = rc * 10 + ioContext->AreOutputAndErrorSameTarget();
 
     return context->WholeNumberToObject(rc);
 }
@@ -722,28 +720,30 @@ RexxObjectPtr RexxEntry ioHandler(RexxExitContext *context, RexxStringObject add
 }
 
 
-// will install either 'rcHandler' or 'ioHandler' (see above)
+// install 'ioHandler', 'rHandler', or 'dHandler'
 RexxRoutine2(RexxObjectPtr,
-            TestAddCommandEnvironment,
-            CSTRING, name,
-            CSTRING, type)
+             TestAddCommandEnvironment,
+             CSTRING, name,
+             CSTRING, type)
 {
-    REXXPFN handler = (REXXPFN)rcHandler;
-    if (strcmp(name, "io") == 0)
-    {
-        handler = (REXXPFN)ioHandler;
-    }
-
-    if (type[0] == 'd' || type[0] == 'D')
-    {
-        context->AddCommandEnvironment(name, handler, DIRECT_COMMAND_ENVIRONMENT);
-    }
     if (type[0] == 'r' || type[0] == 'R')
-    {
-        context->AddCommandEnvironment(name, handler, REDIRECTING_COMMAND_ENVIRONMENT);
+    {   // redirecting command handler
+        if (strcmp(name, "io") == 0)
+        {
+            context->AddCommandEnvironment(name, (REXXPFN)ioHandler, REDIRECTING_COMMAND_ENVIRONMENT);
+        }
+        else
+        {
+            context->AddCommandEnvironment(name, (REXXPFN)rHandler, REDIRECTING_COMMAND_ENVIRONMENT);
+        }
+    }
+    else
+    {   // direct command handler
+        context->AddCommandEnvironment(name, (REXXPFN)dHandler, DIRECT_COMMAND_ENVIRONMENT);
     }
     return NULLOBJECT;
 }
+
 
 
 RexxRoutineEntry orxtest_funcs[] = {
