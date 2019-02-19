@@ -197,7 +197,6 @@ union semun
 #define lstat64 lstat
 #endif
 
-#define  MAX            256            /* temporary buffer length    */
 #define REXXMESSAGEFILE    "rexx.cat"
 
 
