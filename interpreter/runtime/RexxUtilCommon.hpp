@@ -332,7 +332,7 @@ class TreeFinder
           const char AttributeIgnore = 0;
           const char IgnoreAll = 0;
           const char HaveMask = 1;
-          const char maskChars[6] = "ADHRS";
+          static const char maskChars[6];
 
           int8_t mask[8];      // our map for matching
      };

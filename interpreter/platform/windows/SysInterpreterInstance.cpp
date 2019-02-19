@@ -212,7 +212,7 @@ SysSearchPath::SysSearchPath(const char *parentDir, const char *extensionPath)
     }
 
     GetEnvironmentVariable("PATH", (char *)path + path.length(), (DWORD)pathSize + 1);
-    if (path[path.length() - 1] != ';')
+    if (path.at(path.length() - 1) != ';')
     {
         path += ";";
     }

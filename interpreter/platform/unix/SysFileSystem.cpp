@@ -100,7 +100,7 @@ bool SysFileSystem::searchFileName(const char *name, FileNameBuffer &fullName)
         bool done = canonicalizeName(fullName);
         if (done == false || fileExists(fullName) == false)
         {
-            fullName[0] = '\0';
+            fullName.at(0) = '\0';
             return false;
         }
         return true;
@@ -544,7 +544,7 @@ bool SysFileSystem::resolveTilde(FileNameBuffer &name)
     // does it start with the user home marker?
     // this is the typical case.  This is a directory based off of
     // the current users home directory.
-    if (name[1] == '\0' || name[1] == '/')
+    if (name.at(1) == '\0' || name.at(1) == '/')
     {
         // save everything after the first character
         tempName = ((const char *)name) + 1;
@@ -611,7 +611,7 @@ bool SysFileSystem::resolveTilde(FileNameBuffer &name)
 bool SysFileSystem::canonicalizeName(FileNameBuffer &name)
 {
     // does it start with the user home marker?
-    if (name[0] == '~')
+    if (name.startsWith('~'))
     {
         resolveTilde(name);
     }
@@ -619,7 +619,7 @@ bool SysFileSystem::canonicalizeName(FileNameBuffer &name)
     // current working directory.  This will also handle the
     // "." and ".." cases, which will be removed by the canonicalization
     // process.
-    else if (name[0] != '/')
+    else if (!name.startsWith('/'))
     {
         // copy the name
         FileNameBuffer tempName = name;
@@ -672,7 +672,7 @@ bool SysFileSystem::normalizePathName(const char *name, FileNameBuffer &resolved
     // we copy caracter-by-character
     size_t dest = 0;
     size_t previousSlash = dest;
-    resolvedName[dest] = '/';
+    resolvedName.at(dest) = '/';
 
     // For each character in the path name, decide whether, and where, to copy.
     for (const char *p = name; *p != '\0'; p++)
@@ -684,16 +684,16 @@ bool SysFileSystem::normalizePathName(const char *name, FileNameBuffer &resolved
             {
                 previousSlash = dest;
             }
-            if (resolvedName[dest] == '/')
+            if (resolvedName.at(dest) == '/')
             {
                 // Remove double "/"
                 continue;
             }
-            resolvedName[++dest] = *p;
+            resolvedName.at(++dest) = *p;
         }
         else if (*p == '.')
         {
-            if (resolvedName[dest] == '/')
+            if (resolvedName.at(dest) == '/')
             {
                 char next = *(p + 1);
                 if (next == '\0' || next == '/')
@@ -718,7 +718,7 @@ bool SysFileSystem::normalizePathName(const char *name, FileNameBuffer &resolved
                         // are at the root of the file system.
                         while (previousSlash > 0)
                         {
-                            if (resolvedName[--previousSlash] == '/')
+                            if (resolvedName.at(--previousSlash) == '/')
                             {
                                 break;
                             }
@@ -726,28 +726,28 @@ bool SysFileSystem::normalizePathName(const char *name, FileNameBuffer &resolved
                         continue;
                     }
                 }
-                resolvedName[++dest] = *p;
+                resolvedName.at(++dest) = *p;
             }
             else
             {
-                resolvedName[++dest] = *p;
+                resolvedName.at(++dest) = *p;
             }
         }
         else
         {
-            resolvedName[++dest] = *p;
+            resolvedName.at(++dest) = *p;
         }
     }
 
     // Terminate. Where, depends on several things.
-    if (resolvedName[dest] == '/' && dest != 0)
+    if (resolvedName.at(dest) == '/' && dest != 0)
     {
         // overwrite a trailing slash
-        resolvedName[dest] = '\0';
+        resolvedName.at(dest) = '\0';
     }
     else
     {
-        resolvedName[++dest] = '\0';
+        resolvedName.at(++dest) = '\0';
     }
     return true;
 }

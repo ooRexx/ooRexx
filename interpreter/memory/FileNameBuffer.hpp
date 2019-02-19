@@ -202,7 +202,7 @@ class FileNameBuffer
 
      // this is a mutable request, so we need to ensure the position is within the
      // current buffer size
-     inline char & operator [](size_t pos)
+     inline char & at(size_t pos)
      {
          ensureCapacity(pos + 1);
          return *(buffer + pos);

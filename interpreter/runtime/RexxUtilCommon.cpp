@@ -60,6 +60,8 @@
 
 const int INVALID_FILE_NAME = 123;       // a return value for a SysFileTree name problem
 
+const char TreeFinder::AttributeMask::maskChars[6] = "ADHRS";
+
 /**
  * A simple class for reading lines from a file.
  */

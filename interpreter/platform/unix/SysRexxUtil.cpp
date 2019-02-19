@@ -533,7 +533,7 @@ int TreeFinder::findDirectoryEnd()
     int lastSlashPos = (int)fileSpec.length() - 1;
 
     // Step back through fileSpec until at its beginning or at a '/' character
-    while (fileSpec[lastSlashPos] != '/' && lastSlashPos >= 0)
+    while (fileSpec.at(lastSlashPos) != '/' && lastSlashPos >= 0)
     {
         --lastSlashPos;
     }
