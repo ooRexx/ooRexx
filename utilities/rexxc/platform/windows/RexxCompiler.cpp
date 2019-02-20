@@ -59,7 +59,7 @@ void DisplayError(int msgid)
 
 int SysCall main(int argc, char **argv)
 {
-  bool  silent = false;
+  int  silent = 0;
   int  j = 0;
 
   for (j = 1; j < argc; j++)
