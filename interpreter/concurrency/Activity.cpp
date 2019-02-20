@@ -931,7 +931,7 @@ DirectoryClass *Activity::createExceptionObject(RexxErrorCodes errcode,
     exobj->put(rc, RC);
 
     // get the text for the primary error message
-    RexxString *errortext = SystemInterpreter::getMessageText(primary);
+    RexxString *errortext = Interpreter::getMessageText(primary);
     // we can have an error for the error!
     if (errortext == OREF_NULL)
     {
@@ -1098,7 +1098,7 @@ ArrayClass *Activity::generateStackFrames(bool skipFirst)
 RexxString *Activity::buildMessage(wholenumber_t messageCode, ArrayClass *substitutions)
 {
     // retrieve the secondary message
-    RexxString *message = SystemInterpreter::getMessageText(messageCode);
+    RexxString *message = Interpreter::getMessageText(messageCode);
     // bad message if we can't find this
     if (message == OREF_NULL)
     {
@@ -1235,7 +1235,7 @@ void Activity::reraiseException(DirectoryClass *exobj)
         sprintf(work,"%1zd%3.3zd", errornumber/1000, errornumber - primary);
         errornumber = atol(work);
 
-        RexxString *message = SystemInterpreter::getMessageText(errornumber);
+        RexxString *message = Interpreter::getMessageText(errornumber);
         ArrayClass *additional = (ArrayClass *)exobj->get(ADDITIONAL);
         message = messageSubstitution(message, additional);
         // replace the original message text
@@ -1313,7 +1313,7 @@ void Activity::display(DirectoryClass *exobj)
     // get the error code, and format a message header
     RexxString *rc = (RexxString *)exobj->get(RC);
     wholenumber_t errorCode = Interpreter::messageNumber(rc);
-    Protected<RexxString> text = SystemInterpreter::getMessageText(Message_Translations_error);
+    Protected<RexxString> text = Interpreter::getMessageText(Message_Translations_error);
 
     // get the program name
     RexxString *programname = (RexxString *)exobj->get(PROGRAM);
@@ -1323,14 +1323,14 @@ void Activity::display(DirectoryClass *exobj)
     // add on the program name if we have one.
     if (programname != OREF_NULL && programname != GlobalNames::NULLSTRING)
     {
-        text = text->concatWith(SystemInterpreter::getMessageText(Message_Translations_running), ' ');
+        text = text->concatWith(Interpreter::getMessageText(Message_Translations_running), ' ');
         text = text->concatWith(programname, ' ');
 
         // if we have a line position, add that on also
         RexxInternalObject *position = exobj->get(POSITION);
         if (position != OREF_NULL)
         {
-            text = text->concatWith(SystemInterpreter::getMessageText(Message_Translations_line), ' ');
+            text = text->concatWith(Interpreter::getMessageText(Message_Translations_line), ' ');
             text = text->concatWith(position->requestString(), ' ');
         }
     }
@@ -1346,7 +1346,7 @@ void Activity::display(DirectoryClass *exobj)
     {
         rc = (RexxString *)exobj->get(CODE);
         errorCode = Interpreter::messageNumber(rc);
-        text = SystemInterpreter::getMessageText(Message_Translations_error);
+        text = Interpreter::getMessageText(Message_Translations_error);
 
         text = text->concatWith((RexxString *)rc, ' ');
         text = text->concatWithCstring(":  ");
@@ -1369,7 +1369,7 @@ void Activity::displayDebug(DirectoryClass *exobj)
 {
     // get the leading part to indicate this is a debug error, then compose the full
     // message
-    RexxString *text = SystemInterpreter::getMessageText(Message_Translations_debug_error);
+    RexxString *text = Interpreter::getMessageText(Message_Translations_debug_error);
     text = text->concatWith((exobj->get(RC))->requestString(), ' ');
     text = text->concatWithCstring(":  ");
     text = text->concatWith((RexxString *)exobj->get(ERRORTEXT), ' ');
@@ -1379,7 +1379,7 @@ void Activity::displayDebug(DirectoryClass *exobj)
     // now any secondary message
     RexxString *secondary = (RexxString *)exobj->get(MESSAGE);
     if (secondary != OREF_NULL && secondary != (RexxString *)TheNilObject) {
-        text = SystemInterpreter::getMessageText(Message_Translations_debug_error);
+        text = Interpreter::getMessageText(Message_Translations_debug_error);
         text = text->concatWith((RexxString *)exobj->get(CODE), ' ');
         text = text->concatWithCstring(":  ");
         text = text->concat(secondary);

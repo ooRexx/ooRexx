@@ -857,8 +857,7 @@ set (parser_sources ${build_parser_dir}/Clause.cpp
             ${build_parser_dir}/ProgramSource.cpp
             ${build_parser_dir}/Scanner.cpp
             ${build_parser_dir}/Token.cpp)
-set (platform_sources ${build_interpreter_platform_dir}/ErrorMessages.cpp
-            ${build_interpreter_platform_dir}/ExternalFunctions.cpp
+set (platform_sources ${build_interpreter_platform_dir}/ExternalFunctions.cpp
             ${build_interpreter_platform_dir}/MemorySupport.cpp
             ${build_interpreter_platform_dir}/MiscSystem.cpp
             ${build_interpreter_platform_dir}/SysActivity.cpp
@@ -907,7 +906,7 @@ set (common_interpreter_sources ${classes_sources}
 # additional source files required by specific platforms
 if (WIN32)
    set (platform_interpreter_sources ${build_interpreter_platform_dir}/rexx.def
-            ${build_interpreter_platform_dir}/winmsgtb.rc)
+                                     ${build_platform_dir}/verinfo.rc)
    set (platform_interpreter_libs comctl32 shlwapi version)
 else ()
    set (platform_interpreter_sources ${build_interpreter_platform_dir}/RexxMain.cpp)
@@ -1151,8 +1150,6 @@ if (XALAN_EXECUTABLE)
     generate_message_file(${build_messages_dir}/errnumsrxqueue.xml ${build_messages_dir}/errnumsrxqueue.xsl)
     generate_message_file(${build_messages_dir}/errnumssubcom.xml ${build_messages_dir}/errnumssubcom.xsl)
     generate_message_file(${build_messages_dir}/errnumsrexxc.xml ${build_messages_dir}/errnumsrexxc.xsl)
-    generate_message_file(${build_interpreter_dir}/platform/windows/winmsgtb.rc ${build_interpreter_dir}/platform/windows/WinMessageResource.xsl)
-    generate_message_file(${build_interpreter_dir}/platform/unix/gencat.inp ${build_interpreter_dir}/platform/unix/UnixGencat.xsl)
 
     generate_class_header(PrimitiveBehaviourNames.h PrimitiveBehaviourNames.xsl)
     generate_class_header(PrimitiveBehaviours.cpp PrimitiveBehaviours.xsl)
@@ -1168,8 +1165,6 @@ if (XALAN_EXECUTABLE)
                        ${build_messages_dir}/errnumsrxqueue.xml
                        ${build_messages_dir}/errnumssubcom.xml
                        ${build_messages_dir}/errnumsrexxc.xml
-                       ${build_interpreter_dir}/platform/windows/winmsgtb.rc
-                       ${build_interpreter_dir}/platform/unix/gencat.inp
                        ${build_behaviour_dir}/PrimitiveBehaviourNames.h
                        ${build_behaviour_dir}/PrimitiveBehaviours.cpp
                        ${build_behaviour_dir}/VirtualFunctionTable.cpp

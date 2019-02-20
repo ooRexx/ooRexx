@@ -54,6 +54,7 @@
 #include "RexxInternalApis.h"
 #include "PackageManager.hpp"
 #include "PackageClass.hpp"
+#include "RexxInternalApis.h"
 
 #include <stdio.h>
 
@@ -661,4 +662,102 @@ RexxString* Interpreter::qualifyFileSystemName(RexxString *name)
     QualifiedName qualifiedName(name->getStringData());
 
     return new_string(qualifiedName);
+}
+
+// this causes the error table to be created
+#define ERROR_TABLE
+
+// define macros to build entries in the msgEntry table for msg lookup
+#define MESSAGE(code, message)   {code, message},
+
+// a define for the message table entries
+typedef struct msgEntry
+{
+     int    code;                          // symbolic code for the message
+     const char *message;                  // the error message text
+} ERROR_MESSAGE;
+
+#include "RexxErrorMessages.h"
+
+// define macros to bulid entries in the msgMap table for msg lookup */
+#define MAJOR(code)   {code, code##_msg},  // Major error codes
+#define MINOR(code)   {code, code##_msg},  // Minor error codes (sub-codes)
+
+// definition for error table mappings
+typedef struct msgMap
+{
+     int    code;                          // Symbolic code
+     int    msgid;                         // The error message number
+} ERROR_MAP;
+
+#include "RexxMessageNumbers.h"        // include  definition of errorcodes
+#include "RexxMessageTable.h"          // include actual table definition
+
+
+/**
+ * Retrieve an error message by symbolic error number mapping.
+ *
+ * @param code   The fully qualified message code.
+ *
+ * @return The character string message or NULL if not found.
+ */
+const char* REXXENTRY RexxGetErrorMessage(int code)
+{
+    for (ERROR_MESSAGE *p = Message_table;
+         p->code != 0;
+         p++)
+    {
+        // did we find the target code
+        if (p->code == code)
+        {
+            // make this into a string object
+            return p->message;
+        }
+    }
+    // no message retrieved
+    return NULL;
+}
+
+
+/**
+ * Retrieve an error message by assigned external message number. This is mapped to the appropriate Rexx error code.
+ *
+ * @param msgid   The message number
+ *
+ * @return The character string message or NULL if the message is not found.
+ */
+const char* REXXENTRY RexxGetErrorMessageByNumber(int msgid)
+{
+    for (ERROR_MAP *p = Message_map_table;
+         p->msgid != 0;
+         p++)
+    {
+        // did we find the target code
+        if (p->msgid == msgid)
+        {
+            // make this into a string object
+            return RexxGetErrorMessage(p->code);
+        }
+    }
+    // no message retrieved
+    return NULL;
+}
+
+
+/**
+ * Retrieve the message text for a give error code.
+ *
+ * @param code   The Rexx error code
+ *
+ * @return The error message associated with that code.
+ */
+RexxString* Interpreter::getMessageText(wholenumber_t code)
+{
+    const char *message = RexxGetErrorMessage(code);
+    if (message != NULL)
+    {
+        return new_string(message);
+    }
+    // no message retrieved
+    return OREF_NULL;
 }

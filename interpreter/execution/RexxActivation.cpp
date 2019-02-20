@@ -3938,7 +3938,7 @@ bool RexxActivation::doDebugPause()
         if (!settings.wasDebugPromptIssued())
         {
             // write the initial prompt and turn off for the next time.
-            activity->traceOutput(this, SystemInterpreter::getMessageText(Message_Translations_debug_prompt));
+            activity->traceOutput(this, Interpreter::getMessageText(Message_Translations_debug_prompt));
             settings.setDebugPromptIssued(true);
         }
         // save the next instruction in case we're asked to re-execute

@@ -60,8 +60,6 @@
 #include "RexxInternalApis.h"          /* Get private REXXAPI API's         */
 #include "RexxErrorCodes.h"
 
-#define BUFFERLEN         256           /* Length of message bufs used        */
-
 void DisplayError(int msgid)           /* simplified catalog access@MAE004M */
 {
     // retrieve the message from the central catalog

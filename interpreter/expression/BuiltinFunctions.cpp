@@ -864,7 +864,7 @@ BUILTIN(ERRORTEXT)
         reportException(Error_Incorrect_call_range, "ERRORTEXT", IntegerOne, error_number);
     }
     // get the error message for this number and return the text.
-    RexxString *result = SystemInterpreter::getMessageText(error_number * 1000);
+    RexxString *result = Interpreter::getMessageText(error_number * 1000);
     if (result == OREF_NULL)
     {
         result = GlobalNames::NULLSTRING;
@@ -1268,7 +1268,7 @@ BUILTIN(DATE)
         case 'L':
         {
             // the month name comes from the message repository
-            RexxString *month_name = SystemInterpreter::getMessageText(Message_Translations_January + month - 1);
+            RexxString *month_name = Interpreter::getMessageText(Message_Translations_January + month - 1);
 
             sprintf(work, "%zd %s %4.4zd", day, month_name->getStringData(), year);
             break;

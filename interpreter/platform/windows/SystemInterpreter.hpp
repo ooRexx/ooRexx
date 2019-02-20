@@ -85,7 +85,6 @@ public:
     static void *allocateResultMemory(size_t);
     static void releaseSegmentMemory(void *);
     static void *allocateSegmentMemory(size_t);
-    static RexxString *getMessageText(wholenumber_t code);
     static RexxString *getUserid();
     static bool valueFunction(RexxString *name, RexxObject *newValue, RexxString *selector, ProtectedObject &result);
     static RexxString *getDefaultAddressName();

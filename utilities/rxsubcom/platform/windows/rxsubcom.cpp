@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -120,29 +120,12 @@ int __cdecl main( int argc, char *argv[ ], char *envp[ ] )
     return 0;                           /* dummy return               */
 }
 
-
-void parmerr(int arg )
+void parmerr(int   msgid)            /* removed useless code       */
 {
-    char     dataarea[BUFFERLEN];        /* buf addr to return message   */
-    size_t   msglen = 0;                 /* length of returned message   */
-    HINSTANCE hDll=NULL;
+    // retrieve the message from the central catalog
+    const char *message = RexxGetErrorMessage(msgid);
 
-    memset(dataarea,0,BUFFERLEN);
+    printf("\n%s\n", message);    /* print the message                 */
 
-    hDll = LoadLibrary(DLLNAME);
-    if (hDll)
-    {
-        if (!LoadString(hDll, arg, dataarea, BUFFERLEN))
-        {
-            strcpy(dataarea,"Error, but no error message available.");
-        }
-    }
-    else
-    {
-        strcpy(dataarea,"Error, but no error message available because REXX.DLL not loaded.");
-    }
-
-    printf("REX%d: %s",arg, dataarea);
-    FreeLibrary(hDll);
     exit(-1);
 }

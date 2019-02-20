@@ -103,6 +103,7 @@ public:
     static void initLocal();
     static size_t getInterpreterVersion();
     static size_t getLanguageLevel();
+    static RexxString *getMessageText(wholenumber_t code);
 
     static inline int getWordSize()
     {

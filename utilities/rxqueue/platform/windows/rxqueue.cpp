@@ -57,6 +57,7 @@
 #include "rexx.h"              /* needed for queue functions & codes */
 /* used for queue name                */
 #include "RexxErrorCodes.h"    /* generated file containing message numbers */
+#include "RexxInternalApis.h"
 
 #define RXQUEUE_CLEAR    -2    /* used for queue mode CLEAR flag     */
 #define BAD_MESSAGE      -6    /* Exit RC for message not found.     */
@@ -278,36 +279,24 @@ static void options_error(int type,      /* Error type.                */
             MsgNumber = Error_RXQUE_syntax;
     } /* endswitch */
 
-    hDll = LoadLibrary(DLLNAME);
 
-    if (hDll)
+    // retrieve the message from the central catalog
+    const char *message = RexxGetErrorMessage(MsgNumber);
+    strncpy(DataArea, message, sizeof(DataArea));
+
+    const char *pszMessage;
+    /* now do the parameter substitutions in the message template... */
+    char *pInsert = strstr(DataArea, "%1");
+    if (pInsert != NULL)
     {
-        if (LoadString(hDll, MsgNumber, DataArea, sizeof(DataArea)))
-        {
-            /* check for messages with inserts */
-            if ((MsgNumber == Error_RXQUE_name) || (MsgNumber == Error_RXQUE_exist))
-            {
-                char *pInsert = NULL;
-
-                /* search %1 and replace it with %s for message insertion */
-                strncpy(DataArea2, DataArea, sizeof(DataArea2));
-                pInsert = strstr(DataArea2, "%1");
-                if (pInsert)
-                {
-                    pInsert++; /* advance to 1 of %1 */
-                    *pInsert = 's';
-                    snprintf(DataArea, sizeof(DataArea), DataArea2, quename);
-                }
-            }
-        }
-        else
-        {
-            strncpy(DataArea, "Error, but no error message available.", sizeof(DataArea));
-        }
+        pInsert++; /* advance to 1 of %1 */
+        *pInsert = 's';
+        snprintf(DataArea2, sizeof(DataArea2), DataArea, quename);
+        pszMessage = DataArea2;
     }
     else
     {
-        strncpy(DataArea, "Error, but no error message available because REXX.DLL not loaded.", sizeof(DataArea));
+        pszMessage = DataArea;
     }
 
 
@@ -317,8 +306,7 @@ static void options_error(int type,      /* Error type.                */
     /* and return an error code when we exit.                         */
     /******************************************************************/
 
-    printf("%s\n", DataArea);
-    FreeLibrary(hDll);
+    printf("%s\n", pszMessage);
 
     exit(type);
 }

@@ -49,31 +49,20 @@
 #include "RexxErrorCodes.h"
 #include "RexxInternalApis.h"
 
-#define DLLNAME "rexx.dll"
-
-#define BUFFERLEN         256          /* Length of message bufs used       */
-
-void DisplayError(HINSTANCE hDll, int err_no)
+void DisplayError(int msgid)
 {
-   char str[BUFFERLEN];
-   if (LoadString(hDll, err_no, str, BUFFERLEN))
-       printf("%s\n", str);
-   else
-       printf("Error in service program but no error message found\n");
-}
+    // retrieve the message from the central catalog
+    const char *message = RexxGetErrorMessage(msgid);
 
+    printf("%s\n", message);    /* print the message                 */
+}
 
 int SysCall main(int argc, char **argv)
 {
-  char fn[2][BUFFERLEN];
-  int  silent = 0;
+  bool  silent = false;
   int  j = 0;
 
-  HINSTANCE hDll=NULL;
-
-  hDll = LoadLibrary(DLLNAME);
-
-  for (j=1; j<argc; j++)
+  for (j = 1; j < argc; j++)
   {
       if (((argv[j][0] == '/') || (argv[j][0] == '-'))
       && ((argv[j][1] == 's') || (argv[j][1] == 'S'))) silent = j;
@@ -81,11 +70,8 @@ int SysCall main(int argc, char **argv)
   if (!silent)
   {
       char *ptr = RexxGetVersionInformation();
-      if (ptr) {
-          printf(ptr, "Tokenizer");
-          printf("\n");
-          RexxFreeMemory(ptr);
-      }
+      printf("%s\n", ptr);
+      RexxFreeMemory(ptr);
   }
 
   /* check arguments: at least 1 argument, max. 2, /s must be last */
@@ -94,31 +80,29 @@ int SysCall main(int argc, char **argv)
       (silent && (silent+1 != argc)) ||     /* /s not last arg     */
       (!silent && (argc == 4)))             /* 3 args, no /s       */
   {
-      if (argc > 2) {
-      DisplayError(hDll, Error_REXXC_cmd_parm_incorrect);
+      if (argc > 2)
+      {
+         DisplayError(Error_REXXC_cmd_parm_incorrect);
       }
-      DisplayError(hDll, Error_REXXC_wrongNrArg);
-      DisplayError(hDll, Error_REXXC_SynCheckInfo);
-      if (hDll) FreeLibrary(hDll);
+      DisplayError(Error_REXXC_wrongNrArg);
+      DisplayError(Error_REXXC_SynCheckInfo);
       exit(-1);
   }
 
-  strcpy(fn[0], argv[1]);
-  if (argc >= 3) strcpy(fn[1], argv[2]);
-
   if ( ((argc>3) || ((argc==3) && !silent)) &&
-       (strcmp(strupr(fn[0]), strupr(fn[1])) == 0))
+       (stricmp(argv[1], argv[2]) == 0))
   {
-      DisplayError(hDll, Error_REXXC_outDifferent);
-      if (hDll) FreeLibrary(hDll);
+      DisplayError(Error_REXXC_outDifferent);
       exit(-2);
   }
 
-  if (hDll) FreeLibrary(hDll);
-
-  if ((argc == 2) || ((argc==3) && silent) )  /* just doing a syntax check? */
+  if ((argc == 2) || ((argc==3) && silent) )
+  {
                                        /* go perform the translation        */
-    return RexxTranslateProgram(argv[1], NULL, NULL);
+      return RexxTranslateProgram(argv[1], NULL, NULL);
+  }
   else                                 /* translate and save the output     */
-    return RexxTranslateProgram(argv[1], argv[2], NULL);
+  {
+      return RexxTranslateProgram(argv[1], argv[2], NULL);
+  }
 }
