@@ -56,7 +56,7 @@
     #include <time.h>
 #endif
 
-#if #if defined(OPSYS_SUN) || defined(__HAIKU__)
+#if defined(OPSYS_SUN) || defined(__HAIKU__)
     #include <sched.h>
 #endif
 
