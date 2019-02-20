@@ -287,14 +287,6 @@ if (WIN32)
    set (INSTALL_SAMPLES_DIR ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME})
    set (INSTALL_MAN_DIR ${CMAKE_INSTALL_PREFIX}/share/man)
 endif ()
-# current trunk uses the C++ "override" keyword, which requires C++11
-if (CMAKE_VERSION VERSION_LESS "3.1")
-  if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11")
-  endif ()
-else ()
-  set (CMAKE_CXX_STANDARD 11)
-endif ()
 
 # Set compiler and linker flags common to all build environments
 # current trunk uses the C++ "override" keyword, which requires C++11
