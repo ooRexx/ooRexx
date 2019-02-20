@@ -75,6 +75,8 @@ void inline outOfMemoryException(RexxCallContext *c)
     c->ThrowException1(Rexx_Error_System_service_user_defined, c->String("failed to allocate memory"));
 }
 
+RexxStringObject formatMessage(RexxCallContext *context, const char *message, RexxArrayObject args, size_t firstSubstitution);
+
 /**
  * <routineName> argument <argPos> must not be a null string
  *
