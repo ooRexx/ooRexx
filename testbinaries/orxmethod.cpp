@@ -2068,6 +2068,43 @@ RexxMethod2(int,
 }
 
 
+RexxMethod1(int,
+            TestThrowException0,
+            size_t, errNo)
+{
+    context->ThrowException0(errNo);
+    return 7777; // this should never execute
+}
+
+RexxMethod2(int,
+            TestThrowException1,
+            size_t, errNo,
+            RexxObjectPtr, sub1)
+{
+    context->ThrowException1(errNo, sub1);
+    return 7777; // this should never execute
+}
+
+RexxMethod3(int,
+            TestThrowException2,
+            size_t, errNo,
+            RexxObjectPtr, sub1,
+            RexxObjectPtr, sub2)
+{
+    context->ThrowException2(errNo, sub1, sub2);
+    return 7777; // this should never execute
+}
+
+RexxMethod2(int,
+            TestThrowException,
+            size_t, errNo,
+            RexxArrayObject, subs)
+{
+    context->ThrowException(errNo, subs);
+    return 7777; // this should never execute
+}
+
+
 RexxMethod4(int,
             TestRaiseCondition,
             CSTRING, name,
@@ -2525,6 +2562,10 @@ RexxMethodEntry orxtest_methods[] = {
     REXX_METHOD(TestSetVariableReferenceValue, TestSetVariableReferenceValue),
     REXX_METHOD(TestVariableReferenceName,   TestVariableReferenceName),
     REXX_METHOD(TestVariableReferenceValue,  TestVariableReferenceValue),
+    REXX_METHOD(TestThrowException0,         TestThrowException0),
+    REXX_METHOD(TestThrowException1,         TestThrowException1),
+    REXX_METHOD(TestThrowException2,         TestThrowException2),
+    REXX_METHOD(TestThrowException,          TestThrowException),
     REXX_LAST_METHOD()
 };
 
