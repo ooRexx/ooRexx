@@ -750,6 +750,10 @@ void formatFileAttributes(TreeFinder *finder, FileNameBuffer &foundFile, WIN32_F
     }
     else
     {
+        if (longFileSize > 9999999999)
+        {
+            longFileSize = 9999999999;
+        }
         snprintf(fileAttr, sizeof(fileAttr), "%10llu ", longFileSize);
     }
 

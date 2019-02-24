@@ -447,6 +447,10 @@ void formatFileAttributes(TreeFinder *finder, FileNameBuffer &foundFileLine, str
     }
     else
     {
+        if (finfo.st_size > 9999999999)
+        {
+            finfo.st_size = 9999999999;
+        }
         snprintf(fileAttr, sizeof(fileAttr), "%10jd ", finfo.st_size);
     }
 
