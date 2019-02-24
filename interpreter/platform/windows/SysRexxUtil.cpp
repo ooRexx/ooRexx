@@ -739,17 +739,18 @@ void formatFileAttributes(TreeFinder *finder, FileNameBuffer &foundFile, WIN32_F
     // reuse the buffer
     foundFile = fileAttr;
 
+    uint64_t longFileSize = finfo.nFileSizeHigh;
+    longFileSize <<= 32;
+    longFileSize |= finfo.nFileSizeLow;
+
     // now the size information
     if (finder->longSize())
     {
-        uint64_t longFileSize = finfo.nFileSizeHigh;
-        longFileSize <<= 32;
-        longFileSize |= finfo.nFileSizeLow;
         snprintf(fileAttr, sizeof(fileAttr), "%20llu ", longFileSize);
     }
     else
     {
-        snprintf(fileAttr, sizeof(fileAttr), "%10lu ", finfo.nFileSizeLow);
+        snprintf(fileAttr, sizeof(fileAttr), "%10llu ", longFileSize);
     }
 
     // the order is time, size, attributes
