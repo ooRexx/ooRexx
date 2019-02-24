@@ -923,6 +923,18 @@ RexxMethod1(RexxObjectPtr,
     return value;
 }
 
+RexxMethod1(RexxObjectPtr,
+            TestGetObjectVariableOrNil,
+            CSTRING, name)
+{
+    RexxObjectPtr value = context->GetObjectVariable(name);
+    if (value == NULLOBJECT)
+    {
+        return context->Nil();
+    }
+    return value;
+}
+
 RexxMethod1(int,
             TestDropObjectVariable,
             CSTRING, name)
@@ -2036,6 +2048,8 @@ RexxMethod1(int,
             size_t, errNo)
 {
     context->RaiseException0(errNo);
+    // this should still get executed
+    context->SetObjectVariable("CONTINUE", context->True());
     return 0;
 }
 
@@ -2045,6 +2059,8 @@ RexxMethod2(int,
             RexxObjectPtr, sub1)
 {
     context->RaiseException1(errNo, sub1);
+    // this should still get executed
+    context->SetObjectVariable("CONTINUE", context->True());
     return 0;
 }
 
@@ -2055,6 +2071,8 @@ RexxMethod3(int,
             RexxObjectPtr, sub2)
 {
     context->RaiseException2(errNo, sub1, sub2);
+    // this should still get executed
+    context->SetObjectVariable("CONTINUE", context->True());
     return 0;
 }
 
@@ -2064,46 +2082,10 @@ RexxMethod2(int,
             RexxArrayObject, subs)
 {
     context->RaiseException(errNo, subs);
+    // this should still get executed
+    context->SetObjectVariable("CONTINUE", context->True());
     return 0;
 }
-
-
-RexxMethod1(int,
-            TestThrowException0,
-            size_t, errNo)
-{
-    context->ThrowException0(errNo);
-    return 7777; // this should never execute
-}
-
-RexxMethod2(int,
-            TestThrowException1,
-            size_t, errNo,
-            RexxObjectPtr, sub1)
-{
-    context->ThrowException1(errNo, sub1);
-    return 7777; // this should never execute
-}
-
-RexxMethod3(int,
-            TestThrowException2,
-            size_t, errNo,
-            RexxObjectPtr, sub1,
-            RexxObjectPtr, sub2)
-{
-    context->ThrowException2(errNo, sub1, sub2);
-    return 7777; // this should never execute
-}
-
-RexxMethod2(int,
-            TestThrowException,
-            size_t, errNo,
-            RexxArrayObject, subs)
-{
-    context->ThrowException(errNo, subs);
-    return 7777; // this should never execute
-}
-
 
 RexxMethod4(int,
             TestRaiseCondition,
@@ -2113,6 +2095,65 @@ RexxMethod4(int,
             OPTIONAL_RexxObjectPtr, result)
 {
     context->RaiseCondition(name, (RexxStringObject)desc, add, result);
+    // this should still get executed
+    context->SetObjectVariable("CONTINUE", context->True());
+    return 0;
+}
+
+RexxMethod1(int,
+            TestThrowException0,
+            size_t, errNo)
+{
+    context->ThrowException0(errNo);
+    // this should never execute
+    context->SetObjectVariable("CONTINUE", context->True());
+    return 0;
+}
+
+RexxMethod2(int,
+            TestThrowException1,
+            size_t, errNo,
+            RexxObjectPtr, sub1)
+{
+    context->ThrowException1(errNo, sub1);
+    // this should never execute
+    context->SetObjectVariable("CONTINUE", context->True());
+    return 0;
+}
+
+RexxMethod3(int,
+            TestThrowException2,
+            size_t, errNo,
+            RexxObjectPtr, sub1,
+            RexxObjectPtr, sub2)
+{
+    context->ThrowException2(errNo, sub1, sub2);
+    // this should never execute
+    context->SetObjectVariable("CONTINUE", context->True());
+    return 0;
+}
+
+RexxMethod2(int,
+            TestThrowException,
+            size_t, errNo,
+            RexxArrayObject, subs)
+{
+    context->ThrowException(errNo, subs);
+    // this should never execute
+    context->SetObjectVariable("CONTINUE", context->True());
+    return 0;
+}
+
+RexxMethod4(int,
+            TestThrowCondition,
+            CSTRING, name,
+            OPTIONAL_CSTRING, desc,
+            OPTIONAL_RexxArrayObject, add,
+            OPTIONAL_RexxObjectPtr, result)
+{
+    context->ThrowCondition(name, (RexxStringObject)desc, add, result);
+    // this should never execute
+    context->SetObjectVariable("CONTINUE", context->True());
     return 0;
 }
 
@@ -2456,6 +2497,7 @@ RexxMethodEntry orxtest_methods[] = {
     REXX_METHOD(TestGetScope,                TestGetScope),
     REXX_METHOD(TestSetObjectVariable,       TestSetObjectVariable),
     REXX_METHOD(TestGetObjectVariable,       TestGetObjectVariable),
+    REXX_METHOD(TestGetObjectVariableOrNil,  TestGetObjectVariableOrNil),
     REXX_METHOD(TestDropObjectVariable,      TestDropObjectVariable),
     REXX_METHOD(TestForwardMessage,          TestForwardMessage),
     REXX_METHOD(TestFindContextClass,        TestFindContextClass),
@@ -2566,6 +2608,7 @@ RexxMethodEntry orxtest_methods[] = {
     REXX_METHOD(TestThrowException1,         TestThrowException1),
     REXX_METHOD(TestThrowException2,         TestThrowException2),
     REXX_METHOD(TestThrowException,          TestThrowException),
+    REXX_METHOD(TestThrowCondition,          TestThrowCondition),
     REXX_LAST_METHOD()
 };
 
