@@ -716,19 +716,19 @@ void formatFileAttributes(TreeFinder *finder, FileNameBuffer &foundFile, WIN32_F
 
     if (finder->longTime())
     {
-        snprintf(fileAttr, sizeof(fileAttr), "%4d-%02d-%02d %02d:%02d:%02d ",
+        snprintf(fileAttr, sizeof(fileAttr), "%4d-%02d-%02d %02d:%02d:%02d  ",
                  systime.wYear, systime.wMonth, systime.wDay, systime.wHour, systime.wMinute,
                  systime.wSecond);
     }
     else if (finder->editableTime())
     {
-        snprintf(fileAttr, sizeof(fileAttr), "%02d/%02d/%02d/%02d/%02d ",
+        snprintf(fileAttr, sizeof(fileAttr), "%02d/%02d/%02d/%02d/%02d  ",
                  (systime.wYear + 100) % 100, systime.wMonth, systime.wDay,
                  systime.wHour, systime.wMinute);
     }
     else
     {
-        snprintf(fileAttr, sizeof(fileAttr), "%2d/%02d/%02d  %2d:%02d%c ",
+        snprintf(fileAttr, sizeof(fileAttr), "%2d/%02d/%02d  %2d:%02d%c  ",
                  systime.wMonth, systime.wDay, (systime.wYear + 100) % 100,
                  (systime.wHour < 13 && systime.wHour != 0 ?
                   systime.wHour : (abs(systime.wHour - (SHORT)12))),
@@ -746,7 +746,7 @@ void formatFileAttributes(TreeFinder *finder, FileNameBuffer &foundFile, WIN32_F
     // now the size information
     if (finder->longSize())
     {
-        snprintf(fileAttr, sizeof(fileAttr), "%20llu ", longFileSize);
+        snprintf(fileAttr, sizeof(fileAttr), "%20llu  ", longFileSize);
     }
     else
     {
@@ -754,7 +754,7 @@ void formatFileAttributes(TreeFinder *finder, FileNameBuffer &foundFile, WIN32_F
         {
             longFileSize = 9999999999;
         }
-        snprintf(fileAttr, sizeof(fileAttr), "%10llu ", longFileSize);
+        snprintf(fileAttr, sizeof(fileAttr), "%10llu  ", longFileSize);
     }
 
     // the order is time, size, attributes
