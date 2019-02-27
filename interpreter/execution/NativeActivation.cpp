@@ -2115,8 +2115,11 @@ void *NativeActivation::pointer(RexxObject *object)
 RexxObject *NativeActivation::dispatch()
 {
     ProtectedObject r;
-    // just run the method
-    run((MethodClass *)executable, (NativeMethod *)code, receiver, messageName, argList, argCount, r);
+    if (code != OREF_NULL)
+    {
+        // just run the method
+        run((MethodClass *)executable, (NativeMethod *)code, receiver, messageName, argList, argCount, r);
+    }
     return r;
 }
 

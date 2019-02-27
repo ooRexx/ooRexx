@@ -314,10 +314,6 @@ inline void reportNomethod(RexxErrorCodes error, RexxString *message, RexxObject
 }
 
 
-inline Activity *new_activity()  { return ActivityManager::createNewActivity(); }
-inline Activity *new_activity(Activity *parent)  { return ActivityManager::createNewActivity(parent); }
-
-
 /**
  * Return name of last message sent via messageSend()
  *
