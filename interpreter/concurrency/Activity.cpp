@@ -304,12 +304,12 @@ void Activity::enterCurrentThread()
  *               Indicates whether we're going to be running on the
  *               current thread, or creating a new thread.
  */
-Activity::Activity(bool createThread)
+Activity::Activity(GlobalProtectedObject &p, bool createThread)
 {
     // we need to protect this from garbage collection while constructing.
     // unfortunately, we can't use ProtectedObject because that requires an
     // active activity, which we can't guarantee at this point.
-    GlobalProtectedObject p(this);
+    p = this;
 
     int32_t base;         // used for determining the stack base
 

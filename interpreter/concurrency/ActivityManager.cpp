@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -47,6 +47,7 @@
 #include "NativeActivation.hpp"
 #include "SysActivity.hpp"
 #include "QueueClass.hpp"
+#include "GlobalProtectedObject.hpp"
 
 // The currently active activity.
 Activity *volatile ActivityManager::currentActivity = OREF_NULL;
@@ -490,9 +491,14 @@ NativeActivation *ActivityManager::newNativeActivation(Activity *activity)
  *
  * @return The created (or pooled) activity object.
  */
-Activity *ActivityManager::createNewActivity()
+Activity* ActivityManager::createNewActivity()
 {
     ResourceSection lock;                // lock the control information
+    // we need to protect the new Activity from garbage collection while constructing.
+    // unfortunately, we can't use ProtectedObject because that requires an
+    // active activity, which we can't guarantee at this point.
+    GlobalProtectedObject p;
+
     // try to get an activity from the cache
     Activity *activity =  (Activity *)availableActivities->pull();
     if (activity == OREF_NULL)
@@ -500,7 +506,7 @@ Activity *ActivityManager::createNewActivity()
         // we release the resource lock around creating
         // a new activation
         lock.release();
-        activity = new Activity(true);
+        activity = new Activity(p, true);
         lock.reacquire();
         // add this to our table of all activities
         allActivities->append(activity);
@@ -521,8 +527,13 @@ Activity *ActivityManager::createNewActivity()
  */
 Activity *ActivityManager::createCurrentActivity()
 {
+    // we need to protect the new Activity from garbage collection while constructing.
+    // unfortunately, we can't use ProtectedObject because that requires an
+    // active activity, which we can't guarantee at this point.
+    GlobalProtectedObject p;
+
     // create an activity object without creating a new thread
-    Activity *activity = new Activity(false);
+    Activity *activity = new Activity(p, false);
     // we need the resource lock while doing this.
     ResourceSection lock;
     // add this to the activity table and return
