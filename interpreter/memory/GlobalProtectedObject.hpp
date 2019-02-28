@@ -45,105 +45,110 @@ class RexxInstruction;
 
 class GlobalProtectedObject
 {
-friend class MemoryObject;
-public:
-    inline GlobalProtectedObject() : protectedObject(OREF_NULL), next(NULL), previous(NULL)
-    {
-        // because this is global to all threads, we might not be at the
-        // head of the list when the destructor is run, so we need to
-        // maintain a double linked list.
-        next = memoryObject.protectedObjects;
-        if (next != NULL)
-        {
-            next->previous = this;
-        }
-        memoryObject.protectedObjects = this;
-    }
+     friend class MemoryObject;
+ public:
+     inline GlobalProtectedObject() : protectedObject(OREF_NULL), next(NULL), previous(NULL)
+     {
+         // because this is global to all threads, we might not be at the
+         // head of the list when the destructor is run, so we need to
+         // maintain a double linked list.
+         next = memoryObject.protectedObjects;
+         if (next != NULL)
+         {
+             next->previous = this;
+         }
+         memoryObject.protectedObjects = this;
+     }
 
-    inline GlobalProtectedObject(RexxObject *o) : protectedObject(o), next(NULL), previous(NULL)
-    {
-        // because this is global to all threads, we might not be at the
-        // head of the list when the destructor is run, so we need to
-        // maintain a double linked list.
-        next = memoryObject.protectedObjects;
-        if (next != NULL)
-        {
-            next->previous = this;
-        }
-        memoryObject.protectedObjects = this;
-    }
+     inline GlobalProtectedObject(RexxObject *o) : protectedObject(o), next(NULL), previous(NULL)
+     {
+         // because this is global to all threads, we might not be at the
+         // head of the list when the destructor is run, so we need to
+         // maintain a double linked list.
+         next = memoryObject.protectedObjects;
+         if (next != NULL)
+         {
+             next->previous = this;
+         }
+         memoryObject.protectedObjects = this;
+     }
 
-    inline GlobalProtectedObject(RexxInternalObject *o) : protectedObject((RexxObject *)o), next(NULL), previous(NULL)
-    {
-        // because this is global to all threads, we might not be at the
-        // head of the list when the destructor is run, so we need to
-        // maintain a double linked list.
-        next = memoryObject.protectedObjects;
-        if (next != NULL)
-        {
-            next->previous = this;
-        }
-        memoryObject.protectedObjects = this;
-    }
+     inline GlobalProtectedObject(RexxInternalObject *o) : protectedObject((RexxObject *)o), next(NULL), previous(NULL)
+     {
+         // because this is global to all threads, we might not be at the
+         // head of the list when the destructor is run, so we need to
+         // maintain a double linked list.
+         next = memoryObject.protectedObjects;
+         if (next != NULL)
+         {
+             next->previous = this;
+         }
+         memoryObject.protectedObjects = this;
+     }
 
-    inline ~GlobalProtectedObject()
-    {
-        // if at the head of the chain, we just update the master pointer
-        if (previous == NULL)
-        {
-            memoryObject.protectedObjects = next;
-            // the next element has no predecessor
-            if (next != NULL)
-            {
-                next->previous = NULL;
-            }
-        }
-        else
-        {
-            // dechain
-            previous->next = next;
-            if (next != NULL)
-            {
-                next->previous = previous;
-            }
-        }
-        if (protectedObject != OREF_NULL)
-        {
-            memoryObject.holdObject(protectedObject);
-        }
-    }
+     inline ~GlobalProtectedObject()
+     {
+         // if at the head of the chain, we just update the master pointer
+         if (previous == NULL)
+         {
+             memoryObject.protectedObjects = next;
+             // the next element has no predecessor
+             if (next != NULL)
+             {
+                 next->previous = NULL;
+             }
+         }
+         else
+         {
+             // dechain
+             previous->next = next;
+             if (next != NULL)
+             {
+                 next->previous = previous;
+             }
+         }
+         if (protectedObject != OREF_NULL)
+         {
+             memoryObject.holdObject(protectedObject);
+         }
+     }
 
-    inline GlobalProtectedObject & operator=(RexxObject *o)
-    {
-        protectedObject = o;
-        return *this;
-    }
+     inline GlobalProtectedObject & operator=(RexxInternalObject *o)
+     {
+         protectedObject = o;
+         return *this;
+     }
 
-    inline bool operator == (RexxObject *o)
-    {
-        return protectedObject == o;
-    }
+     inline bool operator==(RexxInternalObject *o)
+     {
+         return protectedObject == o;
+     }
 
-    inline bool operator != (RexxObject *o)
-    {
-        return protectedObject != o;
-    }
+     inline bool operator!=(RexxInternalObject *o)
+     {
+         return protectedObject != o;
+     }
 
-    // cast conversion operators for some very common uses of protected object.
-    inline operator RexxObject *()
-    {
-        return protectedObject;
-    }
+     // cast conversion operators for some very common uses of protected object.
+     inline operator RexxObject *()
+     {
+         return (RexxObject *)protectedObject;
+     }
 
-    inline operator RexxObjectPtr ()
-    {
-        return (RexxObjectPtr)protectedObject;
-    }
+     inline operator RexxInternalObject *()
+     {
+         return protectedObject;
+     }
+
+     inline operator RexxObjectPtr ()
+     {
+         return (RexxObjectPtr)protectedObject;
+     }
 
 protected:
 
-    RexxObject *protectedObject;       // next in the chain of protected object
-    GlobalProtectedObject *next;       // the pointer protected by the object
-    GlobalProtectedObject *previous;   // the previous object in the chain
+    RexxInternalObject *protectedObject;  // next in the chain of protected object
+    GlobalProtectedObject *next;          // the pointer protected by the object
+    GlobalProtectedObject *previous;      // the previous object in the chain
 };
 #endif

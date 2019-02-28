@@ -843,7 +843,10 @@ void MemoryObject::live(size_t liveMark)
     GlobalProtectedObject *p = protectedObjects;
     while (p != NULL)
     {
-        memory_mark(p->protectedObject);
+        if (p->protectedObject != OREF_NULL)
+        {
+            memory_mark(p->protectedObject);
+        }
         p = p->next;
     }
 }
