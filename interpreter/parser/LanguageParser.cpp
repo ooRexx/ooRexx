@@ -96,7 +96,7 @@ MethodClass *LanguageParser::createMethod(RexxString *name, ArrayClass *source, 
 {
     // create the appropriate array source, then the parser, then generate the
     // code.
-    ProgramSource *programSource = new ArrayProgramSource(source);
+    Protected<ProgramSource> programSource = new ArrayProgramSource(source);
     Protected<LanguageParser> parser = new LanguageParser(name, programSource);
     return parser->generateMethod(sourceContext);
 }
@@ -117,7 +117,7 @@ MethodClass *LanguageParser::createMethod(RexxString *name, BufferClass *source)
 {
     // create the appropriate array source, then the parser, then generate the
     // code.
-    ProgramSource *programSource = new BufferProgramSource(source);
+    Protected<ProgramSource> programSource = new BufferProgramSource(source);
     Protected<LanguageParser> parser = new LanguageParser(name, programSource);
     return parser->generateMethod();
 }
@@ -138,7 +138,7 @@ MethodClass *LanguageParser::createMethod(RexxString *name, PackageClass *source
 {
     // create the appropriate program source, then the parser, then generate the
     // code.
-    ProgramSource *programSource = new FileProgramSource(name);
+    Protected<ProgramSource> programSource = new FileProgramSource(name);
     Protected<LanguageParser> parser = new LanguageParser(name, programSource);
     return parser->generateMethod(sourceContext);
 }
@@ -159,7 +159,7 @@ RoutineClass *LanguageParser::createRoutine(RexxString *name, ArrayClass *source
 {
     // create the appropriate array source, then the parser, then generate the
     // code.
-    ProgramSource *programSource = new ArrayProgramSource(source);
+    Protected<ProgramSource> programSource = new ArrayProgramSource(source);
     Protected<LanguageParser> parser = new LanguageParser(name, programSource);
     return parser->generateRoutine(sourceContext);
 }
@@ -180,7 +180,7 @@ RoutineClass *LanguageParser::createRoutine(RexxString *name, PackageClass *sour
 {
     // create the appropriate program source, then the parser, then generate the
     // code.
-    ProgramSource *programSource = new FileProgramSource(name);
+    Protected<ProgramSource> programSource = new FileProgramSource(name);
     Protected<LanguageParser> parser = new LanguageParser(name, programSource);
     return parser->generateRoutine(sourceContext);
 }
@@ -201,7 +201,7 @@ RoutineClass *LanguageParser::createRoutine(RexxString *name, BufferClass *sourc
 {
     // create the appropriate array source, then the parser, then generate the
     // code.
-    ProgramSource *programSource = new BufferProgramSource(source);
+    Protected<ProgramSource> programSource = new BufferProgramSource(source);
     Protected<LanguageParser> parser = new LanguageParser(name, programSource);
     return parser->generateRoutine();
 }
@@ -220,7 +220,7 @@ RoutineClass *LanguageParser::createProgram(RexxString *name, BufferClass *sourc
 {
     // create the appropriate array source, then the parser, then generate the
     // code.
-    ProgramSource *programSource = new BufferProgramSource(source);
+    Protected<ProgramSource> programSource = new BufferProgramSource(source);
     Protected<LanguageParser> parser = new LanguageParser(name, programSource);
     return parser->generateProgram();
 }
@@ -239,7 +239,7 @@ RoutineClass *LanguageParser::createProgram(RexxString *name, ArrayClass *source
 {
     // create the appropriate array source, then the parser, then generate the
     // code.
-    ProgramSource *programSource = new ArrayProgramSource(source);
+    Protected<ProgramSource> programSource = new ArrayProgramSource(source);
     Protected<LanguageParser> parser = new LanguageParser(name, programSource);
     return parser->generateProgram(sourceContext);
 }
@@ -258,7 +258,7 @@ RoutineClass *LanguageParser::createProgram(RexxString *name)
 {
     // create the appropriate program source, then the parser, then generate the
     // code.
-    ProgramSource *programSource = new FileProgramSource(name);
+    Protected<ProgramSource> programSource = new FileProgramSource(name);
     Protected<LanguageParser> parser = new LanguageParser(name, programSource);
     return parser->generateProgram();
 }
