@@ -97,7 +97,7 @@
 #cmakedefine HAVE_DLADDR
 
 /* Define to 1 if _PC_HAVE_CASE_SENSITIVE is a valid value */
-#cmakedefine HAVE_PC_HAVE_CASE_SENSITIVE
+#cmakedefine HAVE_PC_CASE_SENSITIVE
 
 /* Define to 1 if FNM_CASEFOLD is a valid value */
 #cmakedefine HAVE_FNM_CASEFOLD
