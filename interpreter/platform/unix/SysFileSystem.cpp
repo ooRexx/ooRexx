@@ -876,11 +876,11 @@ bool SysFileSystem::isFile(const char *name)
 
 
 /**
- * Test if a file exists using a fully qualified name.
+ * Test if a file or directory exists using a fully qualified name.
  *
- * @param name   The target file name.
+ * @param name   The target file or directory name.
  *
- * @return True if the file exists, false if it is unknown.
+ * @return True if the file or directory exists, false if it is unknown.
  */
 bool SysFileSystem::exists(const char *name)
 {

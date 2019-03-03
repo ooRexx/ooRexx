@@ -346,6 +346,7 @@ void getUniqueFileName(const char *fileTemplate, char filler, FileNameBuffer &fi
     int j = 0;
     int max = 1;
 
+    // count the number of filler chars we have
     for (int x = 0; fileTemplate[x] != 0; x++)
     {
         if (fileTemplate[x] == filler)
@@ -355,48 +356,52 @@ void getUniqueFileName(const char *fileTemplate, char filler, FileNameBuffer &fi
         }
     }
 
-
-    // Return NULL string if less than 1 or greater than 4
-    if (j == 0 || j > 5)
+    // return NULL string if no or more than the allowed number of filler chars
+    if (j == 0 || j > 9)
     {
         file = "";
         return;
     }
 
     // generate a random starting point
-    srand((int)time(NULL));
+    // we don't seed as this gives us a better distribution
     size_t num = rand();
+    if (RAND_MAX < max)
+    {   // MAX_RAND is guaranteed to be at least 32767
+        num = num * 32768 + rand();
+    }
     num = num % max;
 
     // create a working copy of the template that we can alter
     AutoFree buffer = (char *)strdup(fileTemplate);
-    // remember our starthing number in case we loop around
+    // remember our starting number in case we loop around
     size_t start = num;
 
     // loop until we find a unique name
     while (true)
     {
-        char numstr[6];
-        // get the random number as a set of 5 character digits
-        snprintf(numstr, sizeof(numstr), "%05zu", num);
+        char numstr[10];
+        // get the random number as a set of 9 character digits
+        snprintf(numstr, sizeof(numstr), "%09zu", num);
 
         // now substitute our generated characters for the filler characters
-        int i = j;
+        int i = 9 - j;
 
         for (int x = 0; fileTemplate[x] != 0; x++)
         {
             // if we have a filler, fill it in
             if (fileTemplate[x] == filler)
             {
-                buffer[x] = numstr[--i];
+                buffer[x] = numstr[i++];
             }
         }
 
         // get this as a fully qualified name
+        file.truncate(0); // qualifyStreamName requires empty string
         SysFileSystem::qualifyStreamName(buffer, file);
 
-        // if there's no matching file, we're finished.
-        if (!SysFileSystem::fileExists(file))
+        // if there's no matching file or directory, we're finished.
+        if (!SysFileSystem::exists(file))
         {
             return;
         }
