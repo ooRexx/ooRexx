@@ -40,6 +40,7 @@
 # include "config.h"
 #endif
 
+#include "LocalAPIManager.hpp"
 #include "SysLocalAPIManager.hpp"
 #include "SysCSStream.hpp"
 #include <stdlib.h>
@@ -50,6 +51,23 @@
 #include <sys/stat.h>
 #include "SysProcess.hpp"
 
+#ifdef AIX
+extern "C"
+{
+#endif
+
+int _rexxapi_fini()__attribute__((destructor));
+
+int _rexxapi_fini()
+{
+    // this shuts down the entire environment
+    LocalAPIManager::shutdownInstance();
+    return 0;
+}
+
+#ifdef AIX
+}
+#endif
 
 /**
  * Start the rxapi daemon process.
