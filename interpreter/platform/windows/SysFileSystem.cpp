@@ -1128,7 +1128,7 @@ int SysFileSystem::copyFile(const char *fromFile, const char *toFile)
 /**
  * Move a file from one location to another. This is typically just a rename, but if necessary, the file will be copied and the original unlinked.
  *
- * @param fromFile The file we´re copying from.
+ * @param fromFile The file we're copying from.
  * @param toFile   The target file.
  *
  * @return 0 if this was successful, otherwise the system error code.

@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2011-2017 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2011-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -1683,7 +1683,7 @@ done_out:
  *          determines whether the cursor should be displayed. The cursor is
  *          displayed only if the display count is greater than or equal to 0.
  *          If a mouse is installed, the initial display count is set to 0. If
- *          no mouse is installed, the display count is –1.
+ *          no mouse is installed, the display count is -1.
  *
  *          In early versions of Windows the internal counter was system wide,
  *          but now it is thread specific.  What this means in terms of ooDialog
