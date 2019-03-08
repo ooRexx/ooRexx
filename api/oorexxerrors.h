@@ -269,6 +269,7 @@
 #define Rexx_Error_Invalid_do_duplicate                                   27902
 #define Rexx_Error_Invalid_do_with_no_control                             27903
 #define Rexx_Error_Invalid_do_with_no_over                                27904
+#define Rexx_Error_Invalid_do_simple_do_counter                           27905
 #define Rexx_Error_Invalid_leave                                          28000
 #define Rexx_Error_Invalid_leave_leave                                    28001
 #define Rexx_Error_Invalid_leave_iterate                                  28002

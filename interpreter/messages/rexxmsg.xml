@@ -2128,6 +2128,15 @@ special character (such as a parenthesis).
         <SymbolicName>Error_Invalid_do_with_no_over</SymbolicName>
         <Text>OVER keyword expected for a WITH loop.</Text>
       </SubMessage>
+      <SubMessage>
+        <Code>27</Code>
+        <Subcode>905</Subcode>
+        <MessageNumber>829</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Invalid_do_simple_do_counter</SymbolicName>
+        <Text>COUNTER keyword not allowd on a simple DO instruction.</Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>

@@ -273,6 +273,7 @@ ERROR_MESSAGE Message_table[] = {      /* table of major and minor errors   */
     MESSAGE(Error_Invalid_do_duplicate, "DO or LOOP keyword &1 can be specified only once.")
     MESSAGE(Error_Invalid_do_with_no_control, "No INDEX or ITEM control variable specified on a WITH loop.")
     MESSAGE(Error_Invalid_do_with_no_over, "OVER keyword expected for a WITH loop.")
+    MESSAGE(Error_Invalid_do_simple_do_counter, "COUNTER keyword not allowd on a simple DO instruction.")
     MESSAGE(Error_Invalid_leave, "Invalid LEAVE or ITERATE.")
     MESSAGE(Error_Invalid_leave_leave, "LEAVE is valid only within a repetitive loop or labeled block instruction.")
     MESSAGE(Error_Invalid_leave_iterate, "ITERATE is valid only within a repetitive loop.")

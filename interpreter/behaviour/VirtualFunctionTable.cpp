@@ -83,6 +83,8 @@
 #include "BagClass.hpp"
 #include "RexxInfoClass.hpp"
 #include "VariableReference.hpp"
+#include "EventSemaphore.hpp"
+#include "MutexSemaphore.hpp"
 #include "RexxBehaviour.hpp"
 #include "MethodDictionary.hpp"
 #include "LibraryPackage.hpp"
@@ -380,6 +382,18 @@ void MemoryObject::buildVirtualFunctionTable()
    
    objectPtr = ::new (objectLoc) RexxClass(RESTOREIMAGE);
    virtualFunctionTable[T_VariableReferenceClass] = getVftPointer(objectLoc);
+   
+   objectPtr = ::new (objectLoc) EventSemaphoreClass(RESTOREIMAGE);
+   virtualFunctionTable[T_EventSemaphore] = getVftPointer(objectLoc);
+   
+   objectPtr = ::new (objectLoc) RexxClass(RESTOREIMAGE);
+   virtualFunctionTable[T_EventSemaphoreClass] = getVftPointer(objectLoc);
+   
+   objectPtr = ::new (objectLoc) MutexSemaphoreClass(RESTOREIMAGE);
+   virtualFunctionTable[T_MutexSemaphore] = getVftPointer(objectLoc);
+   
+   objectPtr = ::new (objectLoc) RexxClass(RESTOREIMAGE);
+   virtualFunctionTable[T_MutexSemaphoreClass] = getVftPointer(objectLoc);
    
    objectPtr = ::new (objectLoc) RexxNilObject(RESTOREIMAGE);
    virtualFunctionTable[T_NilObject] = getVftPointer(objectLoc);

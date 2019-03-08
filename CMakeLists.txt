@@ -683,11 +683,13 @@ set (classes_sources ${build_classes_dir}/ArrayClass.cpp
             ${build_classes_dir}/ClassClass.cpp
             ${build_classes_dir}/ContextClass.cpp
             ${build_classes_dir}/DirectoryClass.cpp
+            ${build_classes_dir}/EventSemaphore.cpp
             ${build_classes_dir}/IntegerClass.cpp
             ${build_classes_dir}/ListClass.cpp
             ${build_classes_dir}/MessageClass.cpp
             ${build_classes_dir}/MethodClass.cpp
             ${build_classes_dir}/MutableBufferClass.cpp
+            ${build_classes_dir}/MutexSemaphore.cpp
             ${build_classes_dir}/NumberStringClass.cpp
             ${build_classes_dir}/NumberStringMath.cpp
             ${build_classes_dir}/NumberStringMath2.cpp

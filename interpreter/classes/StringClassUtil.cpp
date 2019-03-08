@@ -57,7 +57,7 @@
  *
  * @return The argument converted to a non-negative integer value.
  */
-size_t lengthArgument(RexxObject *argument, size_t position )
+size_t lengthArgument(RexxObject *argument, size_t position)
 {
     if (argument == OREF_NULL)
     {
@@ -83,7 +83,7 @@ size_t lengthArgument(RexxObject *argument, size_t position )
  *
  * @return The argument converted to a non-negative integer value.
  */
-size_t lengthArgument(RexxObject *argument, const char *position )
+size_t lengthArgument(RexxObject *argument, const char *position)
 {
     if (argument == OREF_NULL)
     {
@@ -97,6 +97,60 @@ size_t lengthArgument(RexxObject *argument, const char *position )
     }
     return value;
 }
+
+
+/**
+ * Take in an agument passed to a method, convert it to a
+ * numeric object. If the argument is omitted, an error is
+ * raised.
+ *
+ * @param argument The argument reference to test.
+ * @param position The position of the argument (used for error reporting.)
+ *
+ * @return The argument converted to an integer value.
+ */
+wholenumber_t numberArgument(RexxObject *argument, size_t position)
+{
+    if (argument == OREF_NULL)
+    {
+        missingArgument(position);
+    }
+
+    wholenumber_t    value;
+    // converted using the ARGUMENT_DIGITS value
+    if (!argument->numberValue(value, Numerics::ARGUMENT_DIGITS))
+    {
+        reportException(Error_Incorrect_method_whole, argument);
+    }
+    return value;
+}
+
+
+/**
+ * Take in an agument passed to a method, convert it to a
+ * numeric object. If the argument is omitted, an error is
+ * raised.
+ *
+ * @param argument The argument reference to test.
+ * @param position The position of the argument (used for error reporting.)
+ *
+ * @return The argument converted to an integer value.
+ */
+wholenumber_t numberArgument(RexxObject *argument, const char *position)
+{
+    if (argument == OREF_NULL)
+    {
+        missingArgument(position);
+    }
+    wholenumber_t    value;
+    // converted using the ARGUMENT_DIGITS value
+    if (!argument->numberValue(value, Numerics::ARGUMENT_DIGITS))
+    {
+        reportException(Error_Invalid_argument_whole, position, argument);
+    }
+    return value;
+}
+
 
 
 /**

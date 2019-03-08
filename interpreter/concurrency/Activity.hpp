@@ -74,6 +74,7 @@ class ActivationBase;
 class NativeActivation;
 class RexxActivation;
 class GlobalProtectedObject;
+class MutexSemaphoreClass;
 
 typedef enum
 {
@@ -329,6 +330,9 @@ class Activity : public RexxInternalObject
     RexxObject *getLocalEnvironment(RexxString *name);
     DirectoryClass *getLocal();
     CommandHandler *resolveCommandHandler(RexxString *);
+    void addMutex(MutexSemaphoreClass *m);
+    void removeMutex(MutexSemaphoreClass *m);
+    void cleanupMutexes();
 
     static void initializeThreadContext();
 
@@ -392,7 +396,8 @@ class Activity : public RexxInternalObject
     uint64_t    randomSeed;             // random number seed
     ProtectedBase *protectedObjects;    // list of stack-based object protectors
     ActivationFrame *activationFrames;  // list of stack-based object protectors
-    Activity *nestedActivity;       // used to push down activities in threads with more than one instance
+    Activity *nestedActivity;           // used to push down activities in threads with more than one instance
+    IdentityTable *heldMutexes;         // a list of Mutex objects owned by this activity.
 
     // structures containing the various interface vectors
     static RexxThreadInterface threadContextFunctions;

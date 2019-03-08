@@ -60,30 +60,32 @@ class DoBlock : public RexxInternalObject
     void *operator new(size_t);
     inline void  operator delete(void *) { ; }
 
-    DoBlock(RexxBlockInstruction *, size_t);
+    DoBlock(RexxActivation *context, RexxBlockInstruction *i);
     inline DoBlock(RESTORETYPE restoreType) { ; };
 
     void live(size_t) override;
     void liveGeneral(MarkReason reason) override;
 
-    inline RexxBlockInstruction * getParent() {return this->parent;};
+    inline RexxBlockInstruction* getParent() { return this->parent;};
     inline void setPrevious(DoBlock *block) { previous = block; }
-    inline DoBlock *getPrevious() { return previous; }
+    inline DoBlock* getPrevious() { return previous; }
 
     inline void setControl(RexxVariableBase *v) { control = v; }
-    inline void setTo(RexxObject * value) {to = value;};
-    inline void setBy(RexxObject * value) {by = value;};
-    inline void setFor(size_t value) {forCount = value;};
-    inline void setOverIndex(size_t value) {overIndex = value;};
-    inline void setCase(RexxObject * value) {to = value;};
-    inline void setSupplier(RexxObject * value) {to = value;};
+    inline void setTo(RexxObject *value) { to = value;};
+    inline void setBy(RexxObject *value) { by = value;};
+    inline void setFor(size_t value) { forCount = value;};
+    inline void setOverIndex(size_t value) { overIndex = value;};
+    inline void setCase(RexxObject *value) { to = value;};
+    inline void setSupplier(RexxObject *value) { to = value;};
     inline void setCompare(TokenSubclass value) { compare = value;};
-    inline RexxObject *getCase() { return to; }
-    inline RexxObject *getSupplier() { return to; }
+    inline RexxObject* getCase() { return to; }
+    inline RexxObject* getSupplier() { return to; }
     inline size_t getIndent() { return indent; };
-    inline bool checkFor() { return (forCount--) > 0; };
-           bool checkControl(RexxActivation *context, ExpressionStack *stack, bool increment);
-           bool checkOver(RexxActivation *context, ExpressionStack *stack);
+    inline bool checkFor() { return counter <= forCount; };
+    bool checkControl(RexxActivation *context, ExpressionStack *stack, bool increment);
+    bool checkOver(RexxActivation *context, ExpressionStack *stack);
+    inline void newIteration() { counter++; };
+    void setCounter(RexxActivation *context);
 
 
 protected:
@@ -101,5 +103,7 @@ protected:
     size_t             overIndex;        // index position for a DO OVER
     size_t             forCount;         // number of iterations
     TokenSubclass      compare;          // type of comparison
+    RexxVariableBase  *countVariable;    // control variable for counter
+    uint64_t           counter;          // the loop iteration counter
 };
 #endif

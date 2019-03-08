@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -50,64 +50,75 @@
 
 class LanguageParser;
 
+class RexxBaseBlockInstruction : public RexxBlockInstruction
+{
+ public:
+     inline RexxBaseBlockInstruction() {; }
+     inline RexxBaseBlockInstruction(RESTORETYPE restoreType) {; };
+
+     // methods required by RexxBlockInstruction;
+     void terminate(RexxActivation *, DoBlock *)override;
+     void matchEnd(RexxInstructionEnd *, LanguageParser *)override;
+     void matchLabel(RexxInstructionEnd *_end, LanguageParser *parser);
+};
+
+/**
+ * The simplest form of DO BLOCK.  This is a non-looping block.
+ * It may have a label, but no other expressions to handle.
+ */
+class RexxInstructionSimpleDo : public RexxBaseBlockInstruction
+{
+ public:
+     inline RexxInstructionSimpleDo() {; }
+     inline RexxInstructionSimpleDo(RESTORETYPE restoreType) {; };
+     RexxInstructionSimpleDo(RexxString *l);
+
+     // required by RexxInstruction
+     void execute(RexxActivation *, ExpressionStack *)override;
+
+     // methods required by RexxBlockInstruction;
+     bool isLoop()override { return false; }
+     // most DO blocks are loops.  The simple styles will need to override.
+     EndBlockType getEndStyle()override { return DO_BLOCK; }
+};
+
 
 /**
  * The base class for a DO instruction.  This implements all of
  * the common END-matching behavior and label definitions.
  *
  */
-class RexxInstructionBaseDo : public RexxBlockInstruction
+class RexxInstructionBaseLoop : public RexxBaseBlockInstruction
 {
  public:
-    inline RexxInstructionBaseDo() { ; }
+     inline RexxInstructionBaseLoop() {;}
 
-    void live(size_t) override;
-    void liveGeneral(MarkReason reason) override;
-    void flatten(Envelope *) override;
+     void live(size_t)override;
+     void liveGeneral(MarkReason reason)override;
+     void flatten(Envelope *)override;
 
-    // required by RexxInstruction.  For most subclasses, the default
-    // is sufficient.
-    void execute(RexxActivation *, ExpressionStack *) override;
+     // required by RexxInstruction.  For most subclasses, the default
+     // is sufficient.
+     void execute(RexxActivation *, ExpressionStack *)override;
 
-    // methods required by RexxBlockInstruction;
-    void matchEnd(RexxInstructionEnd *, LanguageParser *) override;
-    // most DO blocks are loops.  The simple styles will need to override.
-    EndBlockType getEndStyle() override { return LOOP_BLOCK; }
-    // Most DOs are loops...Simple DO will override again.
-    bool isLoop() override { return true; };
+     // most DO blocks are loops.  The simple styles will need to override.
+     EndBlockType getEndStyle()override { return LOOP_BLOCK; }
+     // Most DOs are loops...Simple DO will override again.
+     bool isLoop()override { return true; };
+     RexxVariableBase* getCountVariable()override { return countVariable; }
 
-    // specific to Do loops.  Most subclasses can rely on the default
-    virtual void reExecute(RexxActivation *, ExpressionStack *, DoBlock *);
-    void terminate(RexxActivation *, DoBlock *) override;
+     // specific to Do loops.  Most subclasses can rely on the default
+     virtual void reExecute(RexxActivation *, ExpressionStack *, DoBlock *);
 
-    // most loops will want to override these two
-    virtual void setup(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock);
-    virtual bool iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first);
+     // most loops will want to override these two
+     virtual void setup(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock);
+     virtual bool iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first);
 
-    void matchLabel(RexxInstructionEnd *end, LanguageParser *source );
-    void handleDebugPause(RexxActivation *context, DoBlock *doblock);
-    void endLoop(RexxActivation *context);
-};
+     void endLoop(RexxActivation *context);
+     inline void setCountVariable(RexxVariableBase *v) { countVariable = v; }
 
-
-/**
- * The simplest form of DO BLOCK.  This is a non-looping block.
- * It may have a label, but no other expressions to handle.
- */
-class RexxInstructionSimpleDo : public RexxInstructionBaseDo
-{
- public:
-    inline RexxInstructionSimpleDo() { ; }
-    inline RexxInstructionSimpleDo(RESTORETYPE restoreType) { ; };
-           RexxInstructionSimpleDo(RexxString *l);
-
-    // required by RexxInstruction
-    void execute(RexxActivation *, ExpressionStack *) override;
-
-    // methods required by RexxBlockInstruction;
-    bool isLoop() override { return false; }
-    // most DO blocks are loops.  The simple styles will need to override.
-    EndBlockType getEndStyle() override { return DO_BLOCK; }
+ protected:
+     RexxVariableBase *countVariable;       // optional variable for a counter
 };
 
 
@@ -115,12 +126,12 @@ class RexxInstructionSimpleDo : public RexxInstructionBaseDo
  * The DO FOREVER instruction.  Checks no state, it just loops
  * until terminated via other means.
  */
-class RexxInstructionDoForever : public RexxInstructionBaseDo
+class RexxInstructionDoForever : public RexxInstructionBaseLoop
 {
  public:
     inline RexxInstructionDoForever() { ; }
     inline RexxInstructionDoForever(RESTORETYPE restoreType) { ; };
-           RexxInstructionDoForever(RexxString *l);
+           RexxInstructionDoForever(RexxString *l, RexxVariableBase *c);
 };
 
 
@@ -128,12 +139,12 @@ class RexxInstructionDoForever : public RexxInstructionBaseDo
  * The DO OVER instruction.  Takes a snap shot of an object via
  * makearray method then iterates over the array
  */
-class RexxInstructionDoOver : public RexxInstructionBaseDo
+class RexxInstructionDoOver : public RexxInstructionBaseLoop
 {
  public:
     inline RexxInstructionDoOver() { ; }
     inline RexxInstructionDoOver(RESTORETYPE restoreType) { ; };
-           RexxInstructionDoOver(RexxString *l, OverLoop &o);
+           RexxInstructionDoOver(RexxString *l, RexxVariableBase *c, OverLoop &o);
 
     void live(size_t) override;
     void liveGeneral(MarkReason reason) override;
@@ -158,7 +169,7 @@ class RexxInstructionDoOverFor : public RexxInstructionDoOver
  public:
     inline RexxInstructionDoOverFor() { ; }
     inline RexxInstructionDoOverFor(RESTORETYPE restoreType) { ; };
-           RexxInstructionDoOverFor(RexxString *l, OverLoop &o, ForLoop &f);
+           RexxInstructionDoOverFor(RexxString *l, RexxVariableBase *c, OverLoop &o, ForLoop &f);
 
     void live(size_t) override;
     void liveGeneral(MarkReason reason) override;
@@ -183,7 +194,7 @@ class RexxInstructionDoOverUntil : public RexxInstructionDoOver
  public:
     inline RexxInstructionDoOverUntil() { ; }
     inline RexxInstructionDoOverUntil(RESTORETYPE restoreType) { ; };
-           RexxInstructionDoOverUntil(RexxString *l, OverLoop &o, WhileUntilLoop &w);
+           RexxInstructionDoOverUntil(RexxString *l, RexxVariableBase *c, OverLoop &o, WhileUntilLoop &w);
 
     void live(size_t) override;
     void liveGeneral(MarkReason reason) override;
@@ -208,7 +219,7 @@ class RexxInstructionDoOverForUntil : public RexxInstructionDoOverFor
  public:
     inline RexxInstructionDoOverForUntil() { ; }
     inline RexxInstructionDoOverForUntil(RESTORETYPE restoreType) { ; };
-           RexxInstructionDoOverForUntil(RexxString *l, OverLoop &o, ForLoop &f, WhileUntilLoop &w);
+           RexxInstructionDoOverForUntil(RexxString *l, RexxVariableBase *c, OverLoop &o, ForLoop &f, WhileUntilLoop &w);
 
     void live(size_t) override;
     void liveGeneral(MarkReason reason) override;
@@ -232,7 +243,7 @@ class RexxInstructionDoOverWhile : public RexxInstructionDoOverUntil
  public:
     inline RexxInstructionDoOverWhile() { ; }
     inline RexxInstructionDoOverWhile(RESTORETYPE restoreType) { ; };
-           RexxInstructionDoOverWhile(RexxString *l, OverLoop &o, WhileUntilLoop &w);
+           RexxInstructionDoOverWhile(RexxString *l, RexxVariableBase *c, OverLoop &o, WhileUntilLoop &w);
 
     // Methods needed for loop iteration
     bool iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first) override;
@@ -249,7 +260,7 @@ class RexxInstructionDoOverForWhile : public RexxInstructionDoOverForUntil
  public:
     inline RexxInstructionDoOverForWhile() { ; }
     inline RexxInstructionDoOverForWhile(RESTORETYPE restoreType) { ; };
-           RexxInstructionDoOverForWhile(RexxString *l, OverLoop &o, ForLoop &f, WhileUntilLoop &w);
+           RexxInstructionDoOverForWhile(RexxString *l, RexxVariableBase *c, OverLoop &o, ForLoop &f, WhileUntilLoop &w);
 
     // Methods needed for loop iteration
     bool iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first) override;
@@ -260,12 +271,12 @@ class RexxInstructionDoOverForWhile : public RexxInstructionDoOverForUntil
  * The controled DO instruction.  Sets an iteration variable on
  * each pass through the loop.
  */
-class RexxInstructionControlledDo: public RexxInstructionBaseDo
+class RexxInstructionControlledDo: public RexxInstructionBaseLoop
 {
  public:
     inline RexxInstructionControlledDo() { ; }
     inline RexxInstructionControlledDo(RESTORETYPE restoreType) { ; };
-           RexxInstructionControlledDo(RexxString *l, ControlledLoop &c);
+           RexxInstructionControlledDo(RexxString *l, RexxVariableBase *cv, ControlledLoop &c);
 
     void live(size_t) override;
     void liveGeneral(MarkReason reason) override;
@@ -289,7 +300,7 @@ class RexxInstructionControlledDoUntil : public RexxInstructionControlledDo
  public:
     inline RexxInstructionControlledDoUntil() { ; }
     inline RexxInstructionControlledDoUntil(RESTORETYPE restoreType) { ; };
-           RexxInstructionControlledDoUntil(RexxString *l, ControlledLoop &c, WhileUntilLoop &w);
+           RexxInstructionControlledDoUntil(RexxString *l, RexxVariableBase *cv, ControlledLoop &c, WhileUntilLoop &w);
 
     void live(size_t) override;
     void liveGeneral(MarkReason reason) override;
@@ -312,7 +323,7 @@ class RexxInstructionControlledDoWhile : public RexxInstructionControlledDoUntil
  public:
     inline RexxInstructionControlledDoWhile() { ; }
     inline RexxInstructionControlledDoWhile(RESTORETYPE restoreType) { ; };
-           RexxInstructionControlledDoWhile(RexxString *l, ControlledLoop &c, WhileUntilLoop &w);
+           RexxInstructionControlledDoWhile(RexxString *l, RexxVariableBase *cv, ControlledLoop &c, WhileUntilLoop &w);
 
     bool iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first) override;
 };
@@ -321,12 +332,12 @@ class RexxInstructionControlledDoWhile : public RexxInstructionControlledDoUntil
 /**
  * The DO WHILE loop.  Loops while a condition is true.
  */
-class RexxInstructionDoWhile: public RexxInstructionBaseDo
+class RexxInstructionDoWhile: public RexxInstructionBaseLoop
 {
  public:
     inline RexxInstructionDoWhile() { ; }
     inline RexxInstructionDoWhile(RESTORETYPE restoreType) { ; };
-           RexxInstructionDoWhile(RexxString *l, WhileUntilLoop &w);
+           RexxInstructionDoWhile(RexxString *l, RexxVariableBase *c, WhileUntilLoop &w);
 
     void live(size_t) override;
     void liveGeneral(MarkReason reason) override;
@@ -350,7 +361,7 @@ class RexxInstructionDoUntil : public RexxInstructionDoWhile
  public:
     inline RexxInstructionDoUntil() { ; }
     inline RexxInstructionDoUntil(RESTORETYPE restoreType) { ; };
-           RexxInstructionDoUntil(RexxString *l, WhileUntilLoop &w);
+           RexxInstructionDoUntil(RexxString *l, RexxVariableBase *c, WhileUntilLoop &w);
 
     bool iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first) override;
 };
@@ -360,12 +371,12 @@ class RexxInstructionDoUntil : public RexxInstructionDoWhile
  * The DO COUNT instruction.  Just loops for a number of
  * iterations without setting a control variable.
  */
-class RexxInstructionDoCount : public RexxInstructionBaseDo
+class RexxInstructionDoCount : public RexxInstructionBaseLoop
 {
  public:
     inline RexxInstructionDoCount() { ; }
     inline RexxInstructionDoCount(RESTORETYPE restoreType) { ; };
-           RexxInstructionDoCount(RexxString *l, ForLoop &f);
+           RexxInstructionDoCount(RexxString *l, RexxVariableBase *c, ForLoop &f);
 
     void live(size_t) override;
     void liveGeneral(MarkReason reason) override;
@@ -389,7 +400,7 @@ class RexxInstructionDoCountUntil : public RexxInstructionDoCount
  public:
     inline RexxInstructionDoCountUntil() { ; }
     inline RexxInstructionDoCountUntil(RESTORETYPE restoreType) { ; };
-           RexxInstructionDoCountUntil(RexxString *l, ForLoop &f, WhileUntilLoop &w);
+           RexxInstructionDoCountUntil(RexxString *l, RexxVariableBase *c, ForLoop &f, WhileUntilLoop &w);
 
     void live(size_t) override;
     void liveGeneral(MarkReason reason) override;
@@ -413,7 +424,7 @@ class RexxInstructionDoCountWhile : public RexxInstructionDoCountUntil
  public:
     inline RexxInstructionDoCountWhile() { ; }
     inline RexxInstructionDoCountWhile(RESTORETYPE restoreType) { ; };
-           RexxInstructionDoCountWhile(RexxString *l, ForLoop &f, WhileUntilLoop &w);
+           RexxInstructionDoCountWhile(RexxString *l, RexxVariableBase *c, ForLoop &f, WhileUntilLoop &w);
 
     // Methods needed for loop iteration
     bool iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first) override;
@@ -424,12 +435,12 @@ class RexxInstructionDoCountWhile : public RexxInstructionDoCountUntil
  * The DO WITH instruction.  Takes a snap shot of an object via
  * supplier method then iterates over the supplier
  */
-class RexxInstructionDoWith : public RexxInstructionBaseDo
+class RexxInstructionDoWith : public RexxInstructionBaseLoop
 {
  public:
     inline RexxInstructionDoWith() { ; }
     inline RexxInstructionDoWith(RESTORETYPE restoreType) { ; };
-           RexxInstructionDoWith(RexxString *l, WithLoop &o);
+           RexxInstructionDoWith(RexxString *l, RexxVariableBase *c, WithLoop &o);
 
     void live(size_t) override;
     void liveGeneral(MarkReason reason) override;
@@ -454,7 +465,7 @@ class RexxInstructionDoWithFor : public RexxInstructionDoWith
  public:
     inline RexxInstructionDoWithFor() { ; }
     inline RexxInstructionDoWithFor(RESTORETYPE restoreType) { ; };
-           RexxInstructionDoWithFor(RexxString *l, WithLoop &o, ForLoop &f);
+           RexxInstructionDoWithFor(RexxString *l, RexxVariableBase *c, WithLoop &o, ForLoop &f);
 
     void live(size_t) override;
     void liveGeneral(MarkReason reason) override;
@@ -479,7 +490,7 @@ class RexxInstructionDoWithUntil : public RexxInstructionDoWith
  public:
     inline RexxInstructionDoWithUntil() { ; }
     inline RexxInstructionDoWithUntil(RESTORETYPE restoreType) { ; };
-           RexxInstructionDoWithUntil(RexxString *l, WithLoop &o, WhileUntilLoop &w);
+           RexxInstructionDoWithUntil(RexxString *l, RexxVariableBase *c, WithLoop &o, WhileUntilLoop &w);
 
     void live(size_t) override;
     void liveGeneral(MarkReason reason) override;
@@ -504,7 +515,7 @@ class RexxInstructionDoWithForUntil : public RexxInstructionDoWithFor
  public:
     inline RexxInstructionDoWithForUntil() { ; }
     inline RexxInstructionDoWithForUntil(RESTORETYPE restoreType) { ; };
-           RexxInstructionDoWithForUntil(RexxString *l, WithLoop &o, ForLoop &f, WhileUntilLoop &w);
+           RexxInstructionDoWithForUntil(RexxString *l, RexxVariableBase *c, WithLoop &o, ForLoop &f, WhileUntilLoop &w);
 
     void live(size_t) override;
     void liveGeneral(MarkReason reason) override;
@@ -528,7 +539,7 @@ class RexxInstructionDoWithWhile : public RexxInstructionDoWithUntil
  public:
     inline RexxInstructionDoWithWhile() { ; }
     inline RexxInstructionDoWithWhile(RESTORETYPE restoreType) { ; };
-           RexxInstructionDoWithWhile(RexxString *l, WithLoop &o, WhileUntilLoop &w);
+           RexxInstructionDoWithWhile(RexxString *l, RexxVariableBase *c, WithLoop &o, WhileUntilLoop &w);
 
     // Methods needed for loop iteration
     bool iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first) override;
@@ -545,7 +556,7 @@ class RexxInstructionDoWithForWhile : public RexxInstructionDoWithForUntil
  public:
     inline RexxInstructionDoWithForWhile() { ; }
     inline RexxInstructionDoWithForWhile(RESTORETYPE restoreType) { ; };
-           RexxInstructionDoWithForWhile(RexxString *l, WithLoop &o, ForLoop &f, WhileUntilLoop &w);
+           RexxInstructionDoWithForWhile(RexxString *l, RexxVariableBase *c, WithLoop &o, ForLoop &f, WhileUntilLoop &w);
 
     // Methods needed for loop iteration
     bool iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first) override;

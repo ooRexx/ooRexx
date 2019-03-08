@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -51,11 +51,13 @@
  * Initialize a Do While block
  *
  * @param l      The block label.
+ * @param c      A variable name for setting a counter (optional)
  * @param w      The conditional control information.
  */
-RexxInstructionDoWhile::RexxInstructionDoWhile(RexxString *l, WhileUntilLoop &w)
+RexxInstructionDoWhile::RexxInstructionDoWhile(RexxString *l, RexxVariableBase *c, WhileUntilLoop &w)
 {
     label = l;
+    countVariable = c;
     whileLoop = w;
 }
 
@@ -71,6 +73,7 @@ void RexxInstructionDoWhile::live(size_t liveMark)
     memory_mark(nextInstruction);
     memory_mark(end);
     memory_mark(label);
+    memory_mark(countVariable);
 
     // helpers for additional types of loops handle marking here
     whileLoop.live(liveMark);
@@ -90,6 +93,7 @@ void RexxInstructionDoWhile::liveGeneral(MarkReason reason)
     memory_mark_general(nextInstruction);
     memory_mark_general(end);
     memory_mark_general(label);
+    memory_mark_general(countVariable);
 
     // helpers for additional types of loops handle marking here
     whileLoop.liveGeneral(reason);
@@ -108,6 +112,7 @@ void RexxInstructionDoWhile::flatten(Envelope *envelope)
     flattenRef(nextInstruction);
     flattenRef(end);
     flattenRef(label);
+    flattenRef(countVariable);
 
     // flatten is a bit of a pain with embedded objects because
     // everything depends on having correct pointers to object references in
@@ -142,11 +147,13 @@ bool RexxInstructionDoWhile::iterate(RexxActivation *context, ExpressionStack *s
  * Initialize a Do Until block
  *
  * @param l      The block label.
+ * @param c      A variable name for setting a counter (optional)
  * @param w      The conditional control information.
  */
-RexxInstructionDoUntil::RexxInstructionDoUntil(RexxString *l, WhileUntilLoop &w)
+RexxInstructionDoUntil::RexxInstructionDoUntil(RexxString *l, RexxVariableBase *c, WhileUntilLoop &w)
 {
     label = l;
+    countVariable = c;
     whileLoop = w;
 }
 

@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -119,7 +119,7 @@
  * @return An executable instruction object, or OREF_NULL if
  *         we've reached the end of a code block.
  */
-RexxInstruction *LanguageParser::nextInstruction()
+RexxInstruction* LanguageParser::nextInstruction()
 {
     RexxInstruction *workingInstruction = OREF_NULL;
     // get the first token of the clause
@@ -273,182 +273,182 @@ RexxInstruction *LanguageParser::nextInstruction()
                 return nopNew();
                 break;
 
-            // DROP instruction
+                // DROP instruction
             case KEYWORD_DROP:
                 return dropNew();
                 break;
 
-            // SIGNAL instruction
+                // SIGNAL instruction
             case KEYWORD_SIGNAL:
                 return signalNew();
                 break;
 
-            // CALL instruction, in all of its forms
+                // CALL instruction, in all of its forms
             case KEYWORD_CALL:
                 return callNew();
                 break;
 
-            // RAISE instruction
+                // RAISE instruction
             case KEYWORD_RAISE:
                 return raiseNew();
                 break;
 
-            // ADDRESS instruction
+                // ADDRESS instruction
             case KEYWORD_ADDRESS:
                 return addressNew();
                 break;
 
-            // NUMERIC instruction
+                // NUMERIC instruction
             case KEYWORD_NUMERIC:
                 return numericNew();
                 break;
 
-            // TRACE instruction
+                // TRACE instruction
             case KEYWORD_TRACE:
                 return traceNew();
                 break;
 
-            // DO instruction, all variants
+                // DO instruction, all variants
             case KEYWORD_DO:
                 // the option indicates this is a DO instruction.
                 return createLoop(false);
                 break;
 
-            // all variants of the LOOP instruction
+                // all variants of the LOOP instruction
             case KEYWORD_LOOP:
                 // the option indicates this is a LOOP instruction.
                 return createLoop(true);
                 break;
 
-            // EXIT instruction
+                // EXIT instruction
             case KEYWORD_EXIT:
                 return exitNew();
                 break;
 
-            // INTERPRET instruction
+                // INTERPRET instruction
             case KEYWORD_INTERPRET:
                 return interpretNew();
                 break;
 
-            // PUSH instruction
+                // PUSH instruction
             case KEYWORD_PUSH:
                 return pushNew();
                 break;
 
-            // QUEUE instruction
+                // QUEUE instruction
             case KEYWORD_QUEUE:
                 return queueNew();
                 break;
 
-            // REPLY instruction
+                // REPLY instruction
             case KEYWORD_REPLY:
                 return replyNew();
                 break;
 
-            // RETURN instruction
+                // RETURN instruction
             case KEYWORD_RETURN:
                 return returnNew();
                 break;
 
-            // IF instruction
+                // IF instruction
             case KEYWORD_IF:
                 return ifNew();
                 break;
 
-            // ITERATE instruction
+                // ITERATE instruction
             case KEYWORD_ITERATE:
                 return leaveNew(KEYWORD_ITERATE);
                 break;
 
-            // LEAVE instruction
+                // LEAVE instruction
             case KEYWORD_LEAVE:
                 return leaveNew(KEYWORD_LEAVE);
                 break;
 
-            // EXPOSE instruction
+                // EXPOSE instruction
             case KEYWORD_EXPOSE:
                 return exposeNew();
                 break;
 
-            // FORWARD instruction
+                // FORWARD instruction
             case KEYWORD_FORWARD:
                 return forwardNew();
                 break;
 
-            // PROCEDURE instruction
+                // PROCEDURE instruction
             case KEYWORD_PROCEDURE:
                 return procedureNew();
                 break;
 
-            // GUARD instruction
+                // GUARD instruction
             case KEYWORD_GUARD:
                 return guardNew();
                 break;
 
-            // USE instruction
+                // USE instruction
             case KEYWORD_USE:
                 return useNew();
                 break;
 
-            // ARG instruction
+                // ARG instruction
             case KEYWORD_ARG:
                 return parseNew(SUBKEY_ARG);
                 break;
 
-            // PULL instruction
+                // PULL instruction
             case KEYWORD_PULL:
                 return parseNew(SUBKEY_PULL);
                 break;
 
-            // PARSE instruction
+                // PARSE instruction
             case KEYWORD_PARSE:
                 return parseNew(SUBKEY_NONE);
                 break;
 
-            // SAY instruction
+                // SAY instruction
             case KEYWORD_SAY:
                 return sayNew();
                 break;
 
-            // OPTIONS instruction
+                // OPTIONS instruction
             case KEYWORD_OPTIONS:
                 return optionsNew();
                 break;
 
-            // select instruction
+                // select instruction
             case KEYWORD_SELECT:
                 return selectNew();
                 break;
 
-            // WHEN instruction in the context of a SELECT
+                // WHEN instruction in the context of a SELECT
             case KEYWORD_WHEN:
                 // this parses as if it was an IF, but creates
                 // a different target instruction.
                 return whenNew();
                 break;
 
-            // OTEHRWISE in a SELECT
+                // OTEHRWISE in a SELECT
             case KEYWORD_OTHERWISE:
                 return otherwiseNew(first);
                 break;
 
-            // ELSE instruction...possibly unexpected.
+                // ELSE instruction...possibly unexpected.
             case KEYWORD_ELSE:
                 return elseNew(first);
                 break;
 
-            // END instruction for some block instruction (DO, LOOP, SELECT, OTHERWISE).
+                // END instruction for some block instruction (DO, LOOP, SELECT, OTHERWISE).
             case KEYWORD_END:
                 return endNew();
                 break;
 
-            // THEN instruction.  IF processing handles THEN directly.  Found
-            // in a naked context like this, we have an invalid THEN.
+                // THEN instruction.  IF processing handles THEN directly.  Found
+                // in a naked context like this, we have an invalid THEN.
             case KEYWORD_THEN:
                 syntaxError(Error_Unexpected_then_then);
                 break;
 
-            // invalid KEYWORD (should really never happen)
+                // invalid KEYWORD (should really never happen)
             default:
                 reportException(Error_Interpretation_switch, "keyword", keyword);
                 break;
@@ -495,12 +495,12 @@ RexxInstruction *LanguageParser::nextInstruction()
  *
  * @return A newly created instruction object with basic instruction initialization.
  */
-RexxInstruction *LanguageParser::sourceNewObject(size_t size, RexxBehaviour *_behaviour,
-    InstructionKeyword type )
+RexxInstruction* LanguageParser::sourceNewObject(size_t size, RexxBehaviour *_behaviour,
+                                                 InstructionKeyword type)
 {
     RexxInternalObject *newObject = new_object(size);
     newObject->setBehaviour(_behaviour);
-    ::new ((void *)newObject) RexxInstruction (clause, type);
+    ::new((void *)newObject)RexxInstruction(clause, type);
     currentInstruction = (RexxInstruction *)newObject;
     return (RexxInstruction *)newObject;
 }
@@ -535,8 +535,8 @@ RexxInstruction *LanguageParser::sourceNewObject(size_t size, RexxBehaviour *_be
  *
  * @return A newly created instruction object with basic instruction initialization.
  */
-RexxInstruction *LanguageParser::sourceNewObject(size_t size, size_t count, size_t itemSize,
-    RexxBehaviour *_behaviour, InstructionKeyword type )
+RexxInstruction* LanguageParser::sourceNewObject(size_t size, size_t count, size_t itemSize,
+                                                 RexxBehaviour *_behaviour, InstructionKeyword type)
 {
     // for variable size instructions, there is always an extra field at the end of the object
     // for the first slot allocation.  If the count is zero, then we subtract the item size from
@@ -560,7 +560,7 @@ RexxInstruction *LanguageParser::sourceNewObject(size_t size, size_t count, size
  *
  * @return An instruction object that can perform this function.
  */
-RexxInstruction *LanguageParser::addressNew()
+RexxInstruction* LanguageParser::addressNew()
 {
     RexxInternalObject *dynamicAddress = OREF_NULL;
     RexxString *environment = OREF_NULL;
@@ -646,13 +646,13 @@ RexxInstruction *LanguageParser::addressNew()
     if (ioConfig == OREF_NULL)
     {
         RexxInstruction *newObject = new_instruction(ADDRESS, Address);
-        ::new ((void *)newObject) RexxInstructionAddress(dynamicAddress, environment, command);
+        ::new((void *)newObject)RexxInstructionAddress(dynamicAddress, environment, command);
         return newObject;
     }
     else
     {
         RexxInstruction *newObject = new_instruction(ADDRESS, AddressWith);
-        ::new ((void *)newObject) RexxInstructionAddressWith(dynamicAddress, environment, command, ioConfig);
+        ::new((void *)newObject)RexxInstructionAddressWith(dynamicAddress, environment, command, ioConfig);
         return newObject;
     }
 }
@@ -668,7 +668,7 @@ RexxInstruction *LanguageParser::addressNew()
  *
  * @return A new instruction object.
  */
-CommandIOConfiguration *LanguageParser::parseAddressWith()
+CommandIOConfiguration* LanguageParser::parseAddressWith()
 {
     Protected<CommandIOConfiguration> ioConfig = new CommandIOConfiguration();
 
@@ -813,7 +813,7 @@ OutputOption::Enum LanguageParser::parseRedirectOutputOptions()
         case SUBKEY_APPEND:
             return OutputOption::APPEND;
 
-        // probably one of the target type keywords
+            // probably one of the target type keywords
         default:
             // back up and return the default
             previousToken();
@@ -859,7 +859,7 @@ void LanguageParser::parseRedirectOptions(RexxInternalObject *&source, Redirecti
             break;
         }
 
-        // a string stream name. Can be a literal or an expression
+            // a string stream name. Can be a literal or an expression
         case SUBKEY_STREAM:
         {
             type = RedirectionType::STREAM_NAME;
@@ -874,8 +874,8 @@ void LanguageParser::parseRedirectOptions(RexxInternalObject *&source, Redirecti
             break;
         }
 
-        // determined by evaluating an expression to an object and figuring
-        // out what to do at run time.
+            // determined by evaluating an expression to an object and figuring
+            // out what to do at run time.
         case SUBKEY_USING:
         {
             type = RedirectionType::USING_OBJECT;
@@ -906,7 +906,7 @@ void LanguageParser::parseRedirectOptions(RexxInternalObject *&source, Redirecti
  *
  * @return An assignment instruction object.
  */
-RexxInstruction *LanguageParser::assignmentNew(RexxToken  *target )
+RexxInstruction* LanguageParser::assignmentNew(RexxToken  *target)
 {
     // so far, we only know that the target is a symbol.  Verify that this
     // really is a variable symbol.  This handles raising an error if not valid.
@@ -917,7 +917,7 @@ RexxInstruction *LanguageParser::assignmentNew(RexxToken  *target )
 
     // build an instruction object and return it.
     RexxInstruction *newObject = new_instruction(ASSIGNMENT, Assignment);
-    ::new ((void *)newObject) RexxInstructionAssignment(addVariable(target), expr);
+    ::new((void *)newObject)RexxInstructionAssignment(addVariable(target), expr);
     return newObject;
 }
 
@@ -931,7 +931,7 @@ RexxInstruction *LanguageParser::assignmentNew(RexxToken  *target )
  *
  * @return The constructed instruction object.
  */
-RexxInstruction *LanguageParser::assignmentOpNew(RexxToken *target, RexxToken *operation)
+RexxInstruction* LanguageParser::assignmentOpNew(RexxToken *target, RexxToken *operation)
 {
     // make sure this is a variable
     needVariable(target);
@@ -946,7 +946,7 @@ RexxInstruction *LanguageParser::assignmentOpNew(RexxToken *target, RexxToken *o
 
     // now everything is the same as an assignment operator
     RexxInstruction *newObject = new_instruction(ASSIGNMENT, Assignment);
-    ::new ((void *)newObject) RexxInstructionAssignment(variable, expr);
+    ::new((void *)newObject)RexxInstructionAssignment(variable, expr);
     return newObject;
 }
 
@@ -958,7 +958,7 @@ RexxInstruction *LanguageParser::assignmentOpNew(RexxToken *target, RexxToken *o
  *
  * @return An executable instruction object for te target instruction.
  */
-RexxInstruction *LanguageParser::callOnNew(InstructionSubKeyword type)
+RexxInstruction* LanguageParser::callOnNew(InstructionSubKeyword type)
 {
     // The processing of the CONDITION name is the same for both CALL ON
     // and CALL OFF
@@ -1061,7 +1061,7 @@ RexxInstruction *LanguageParser::callOnNew(InstructionSubKeyword type)
 
     // create a new instruction object
     RexxInstruction *newObject = new_instruction(CALL_ON, CallOn);
-    ::new ((void *)newObject) RexxInstructionCallOn(conditionName, labelName, builtinIndex);
+    ::new((void *)newObject)RexxInstructionCallOn(conditionName, labelName, builtinIndex);
 
     // if this is the ON form, we have some end parsing resolution to perform.
     if (type == SUBKEY_ON)
@@ -1080,7 +1080,7 @@ RexxInstruction *LanguageParser::callOnNew(InstructionSubKeyword type)
  *
  * @return A new object for executing this call.
  */
-RexxInstruction *LanguageParser::dynamicCallNew(RexxToken *token)
+RexxInstruction* LanguageParser::dynamicCallNew(RexxToken *token)
 {
     // this is a full expression in parens
     RexxInternalObject *targetName = parenExpression(token);
@@ -1093,8 +1093,8 @@ RexxInstruction *LanguageParser::dynamicCallNew(RexxToken *token)
     size_t argCount = parseArgList(OREF_NULL, TERM_EOC);
 
     // create a new instruction object
-    RexxInstruction *newObject = new_variable_instruction(CALL_VALUE, DynamicCall, argCount, RexxObject *);
-    ::new ((void *)newObject) RexxInstructionDynamicCall(targetName, argCount, subTerms);
+    RexxInstruction *newObject = new_variable_instruction(CALL_VALUE, DynamicCall, argCount, RexxObject * );
+    ::new((void *)newObject)RexxInstructionDynamicCall(targetName, argCount, subTerms);
 
     // NOTE:  The name of the call cannot be determined until run time, so we don't
     // add this to the reference list for later processing
@@ -1110,7 +1110,7 @@ RexxInstruction *LanguageParser::dynamicCallNew(RexxToken *token)
  *
  * @return A new object for executing this call.
  */
-RexxInstruction *LanguageParser::qualifiedCallNew(RexxToken *token)
+RexxInstruction* LanguageParser::qualifiedCallNew(RexxToken *token)
 {
     RexxString *namespaceName = token->value();
 
@@ -1120,7 +1120,7 @@ RexxInstruction *LanguageParser::qualifiedCallNew(RexxToken *token)
     token = nextToken();
     if (!token->isSymbol())
     {
-       syntaxError(Error_Symbol_expected_qualified_call, token);
+        syntaxError(Error_Symbol_expected_qualified_call, token);
     }
 
     RexxString *routineName = token->value();
@@ -1129,8 +1129,8 @@ RexxInstruction *LanguageParser::qualifiedCallNew(RexxToken *token)
     size_t argCount = parseArgList(OREF_NULL, TERM_EOC);
 
     // create a new instruction object
-    RexxInstruction *newObject = new_variable_instruction(CALL_QUALIFIED, QualifiedCall, argCount, RexxObject *);
-    ::new ((void *)newObject) RexxInstructionQualifiedCall(namespaceName, routineName, argCount, subTerms);
+    RexxInstruction *newObject = new_variable_instruction(CALL_QUALIFIED, QualifiedCall, argCount, RexxObject * );
+    ::new((void *)newObject)RexxInstructionQualifiedCall(namespaceName, routineName, argCount, subTerms);
 
     // NOTE:  The call target has no reliance on the labels because it is always an external
     // call.  This does not need a resolve step.
@@ -1145,7 +1145,7 @@ RexxInstruction *LanguageParser::qualifiedCallNew(RexxToken *token)
  *
  * @return An executable call instruction object.
  */
-RexxInstruction *LanguageParser::callNew()
+RexxInstruction* LanguageParser::callNew()
 {
     BuiltinCode builtin_index;
     RexxString *targetName = OREF_NULL;
@@ -1221,8 +1221,8 @@ RexxInstruction *LanguageParser::callNew()
     }
 
     // create a new Call instruction.  This only handles the simple calls.
-    RexxInstruction *newObject = new_variable_instruction(CALL, Call, argCount, RexxObject *);
-    ::new ((void *)newObject) RexxInstructionCall(targetName, argCount, subTerms, builtin_index);
+    RexxInstruction *newObject = new_variable_instruction(CALL, Call, argCount, RexxObject * );
+    ::new((void *)newObject)RexxInstructionCall(targetName, argCount, subTerms, builtin_index);
 
     // add to our references list, but only if this is a form where
     // internal calls are allowed.
@@ -1239,7 +1239,7 @@ RexxInstruction *LanguageParser::callNew()
  *
  * @return A COMMAND instruction instance.
  */
-RexxInstruction *LanguageParser::commandNew()
+RexxInstruction* LanguageParser::commandNew()
 {
     // this is pretty simple...parse the optional expresson and create the
     // instruction instance.  NOTE:  we already know we have something to
@@ -1247,7 +1247,7 @@ RexxInstruction *LanguageParser::commandNew()
     RexxInternalObject *expression = parseExpression(TERM_EOC);
 
     RexxInstruction *newObject = new_instruction(COMMAND, Command);
-    ::new ((void *)newObject) RexxInstructionCommand(expression);
+    ::new((void *)newObject)RexxInstructionCommand(expression);
     return newObject;
 }
 
@@ -1258,11 +1258,12 @@ RexxInstruction *LanguageParser::commandNew()
  * can also include a WHILE or UNTIL modifier (but not both).
  *
  * @param label     Any label obtained from the LABEL keyword.
+ * @param c      A variable name for setting a counter (optional)
  * @param nameToken The control variable name token.
  *
  * @return A contructed instruction object of the appropriate type.
  */
-RexxInstruction *LanguageParser::newControlledLoop(RexxString *label, RexxToken *nameToken)
+RexxInstruction* LanguageParser::newControlledLoop(RexxString *label, RexxVariableBase *countVariable, RexxToken *nameToken)
 {
     // a contruct to fill in for the instruction.
     ControlledLoop control;
@@ -1366,7 +1367,7 @@ RexxInstruction *LanguageParser::newControlledLoop(RexxString *label, RexxToken 
                 break;
             }
 
-            // invalid loop subkey (should really never happen)
+                // invalid loop subkey (should really never happen)
             default:
             {
                 reportException(Error_Interpretation_switch, "loop subkey", token->subKeyword());
@@ -1391,24 +1392,24 @@ RexxInstruction *LanguageParser::newControlledLoop(RexxString *label, RexxToken 
         case SUBKEY_NONE:
         {
             RexxInstruction *newObject = new_instruction(LOOP_CONTROLLED, ControlledDo);
-            ::new ((void *)newObject) RexxInstructionControlledDo(label, control);
+            ::new((void *)newObject)RexxInstructionControlledDo(label, countVariable, control);
             return newObject;
         }
-        // Controlled loop with a WHILE conditional
+            // Controlled loop with a WHILE conditional
         case SUBKEY_WHILE:
         {
             RexxInstruction *newObject = new_instruction(LOOP_CONTROLLED_WHILE, ControlledDoWhile);
-            ::new ((void *)newObject) RexxInstructionControlledDoWhile(label, control, conditional);
+            ::new((void *)newObject)RexxInstructionControlledDoWhile(label, countVariable, control, conditional);
             return newObject;
         }
-        // Controlled loop with an UNTIL conditional.
+            // Controlled loop with an UNTIL conditional.
         case SUBKEY_UNTIL:
         {
             RexxInstruction *newObject = new_instruction(LOOP_CONTROLLED_UNTIL, ControlledDoUntil);
-            ::new ((void *)newObject) RexxInstructionControlledDoUntil(label, control, conditional);
+            ::new((void *)newObject)RexxInstructionControlledDoUntil(label, countVariable, control, conditional);
             return newObject;
         }
-        // invalid controlled loop subkey (should really never happen)
+            // invalid controlled loop subkey (should really never happen)
         default:
         {
             reportException(Error_Interpretation_switch, "controlled loop subkey", conditionalType);
@@ -1429,12 +1430,13 @@ RexxInstruction *LanguageParser::newControlledLoop(RexxString *label, RexxToken 
  *
  * @return A contructed instruction object of the appropriate type.
  */
-RexxInstruction *LanguageParser::newDoOverLoop(RexxString *label, RexxToken *nameToken)
+RexxInstruction* LanguageParser::newDoOverLoop(RexxString *label, RexxVariableBase *countVariable, RexxToken *nameToken)
 {
     // a construct to fill in for the instruction.
     OverLoop control;
     ForLoop forLoop;
     WhileUntilLoop conditional;
+
     // track while/until forms
     InstructionSubKeyword conditionalType = SUBKEY_NONE;
 
@@ -1487,7 +1489,7 @@ RexxInstruction *LanguageParser::newDoOverLoop(RexxString *label, RexxToken *nam
                 break;
             }
 
-            // invalid DO OVER loop subkey (should really never happen)
+                // invalid DO OVER loop subkey (should really never happen)
             default:
             {
                 reportException(Error_Interpretation_switch, "DO OVER loop subkey", token->subKeyword());
@@ -1516,49 +1518,49 @@ RexxInstruction *LanguageParser::newDoOverLoop(RexxString *label, RexxToken *nam
             if (forLoop.forCount == OREF_NULL)
             {
                 RexxInstruction *newObject = new_instruction(LOOP_OVER, DoOver);
-                ::new ((void *)newObject) RexxInstructionDoOver(label, control);
+                ::new((void *)newObject)RexxInstructionDoOver(label, countVariable, control);
                 return newObject;
             }
             else
             {
                 RexxInstruction *newObject = new_instruction(LOOP_OVER_FOR, DoOverFor);
-                ::new ((void *)newObject) RexxInstructionDoOverFor(label, control, forLoop);
+                ::new((void *)newObject)RexxInstructionDoOverFor(label, countVariable, control, forLoop);
                 return newObject;
             }
         }
-        // DO OVER with a WHILE conditional
+            // DO OVER with a WHILE conditional
         case SUBKEY_WHILE:
         {
             if (forLoop.forCount == OREF_NULL)
             {
                 RexxInstruction *newObject = new_instruction(LOOP_OVER_WHILE, DoOverWhile);
-                ::new ((void *)newObject) RexxInstructionDoOverWhile(label, control, conditional);
+                ::new((void *)newObject)RexxInstructionDoOverWhile(label, countVariable, control, conditional);
                 return newObject;
             }
             else
             {
                 RexxInstruction *newObject = new_instruction(LOOP_OVER_FOR_WHILE, DoOverForWhile);
-                ::new ((void *)newObject) RexxInstructionDoOverForWhile(label, control, forLoop, conditional);
+                ::new((void *)newObject)RexxInstructionDoOverForWhile(label, countVariable, control, forLoop, conditional);
                 return newObject;
             }
         }
-        // DO OVER with an UNTIL conditional.
+            // DO OVER with an UNTIL conditional.
         case SUBKEY_UNTIL:
         {
             if (forLoop.forCount == OREF_NULL)
             {
                 RexxInstruction *newObject = new_instruction(LOOP_OVER_UNTIL, DoOverUntil);
-                ::new ((void *)newObject) RexxInstructionDoOverUntil(label, control, conditional);
+                ::new((void *)newObject)RexxInstructionDoOverUntil(label, countVariable, control, conditional);
                 return newObject;
             }
             else
             {
                 RexxInstruction *newObject = new_instruction(LOOP_OVER_FOR_UNTIL, DoOverForUntil);
-                ::new ((void *)newObject) RexxInstructionDoOverForUntil(label, control, forLoop, conditional);
+                ::new((void *)newObject)RexxInstructionDoOverForUntil(label, countVariable, control, forLoop, conditional);
                 return newObject;
             }
         }
-        // invalid DO OVER conditional (should really never happen)
+            // invalid DO OVER conditional (should really never happen)
         default:
         {
             reportException(Error_Interpretation_switch, "DO OVER conditional", conditionalType);
@@ -1578,7 +1580,7 @@ RexxInstruction *LanguageParser::newDoOverLoop(RexxString *label, RexxToken *nam
  *
  * @return A contructed instruction object of the appropriate type.
  */
-RexxInstruction *LanguageParser::newDoWithLoop(RexxString *label)
+RexxInstruction* LanguageParser::newDoWithLoop(RexxString *label, RexxVariableBase *countVariable)
 {
     // a construct to fill in for the instruction.
     WithLoop withLoop;
@@ -1618,7 +1620,7 @@ RexxInstruction *LanguageParser::newDoWithLoop(RexxString *label)
                 continue;
             }
 
-            // an item variable
+                // an item variable
             case SUBKEY_ITEM:
             {
                 if (withLoop.itemVar != OREF_NULL)
@@ -1699,7 +1701,7 @@ RexxInstruction *LanguageParser::newDoWithLoop(RexxString *label)
                 break;
             }
 
-            // invalid DO WITH conditional (should really never happen)
+                // invalid DO WITH conditional (should really never happen)
             default:
             {
                 reportException(Error_Interpretation_switch, "DO WITH conditional", conditionalType);
@@ -1728,49 +1730,49 @@ RexxInstruction *LanguageParser::newDoWithLoop(RexxString *label)
             if (forLoop.forCount == OREF_NULL)
             {
                 RexxInstruction *newObject = new_instruction(LOOP_WITH, DoWith);
-                ::new ((void *)newObject) RexxInstructionDoWith(label, withLoop);
+                ::new((void *)newObject)RexxInstructionDoWith(label, countVariable, withLoop);
                 return newObject;
             }
             else
             {
                 RexxInstruction *newObject = new_instruction(LOOP_WITH_FOR, DoWithFor);
-                ::new ((void *)newObject) RexxInstructionDoWithFor(label, withLoop, forLoop);
+                ::new((void *)newObject)RexxInstructionDoWithFor(label, countVariable, withLoop, forLoop);
                 return newObject;
             }
         }
-        // DO WITH with a WHILE conditional
+            // DO WITH with a WHILE conditional
         case SUBKEY_WHILE:
         {
             if (forLoop.forCount == OREF_NULL)
             {
                 RexxInstruction *newObject = new_instruction(LOOP_WITH_WHILE, DoWithWhile);
-                ::new ((void *)newObject) RexxInstructionDoWithWhile(label, withLoop, conditional);
+                ::new((void *)newObject)RexxInstructionDoWithWhile(label, countVariable, withLoop, conditional);
                 return newObject;
             }
             else
             {
                 RexxInstruction *newObject = new_instruction(LOOP_WITH_FOR_WHILE, DoWithForWhile);
-                ::new ((void *)newObject) RexxInstructionDoWithForWhile(label, withLoop, forLoop, conditional);
+                ::new((void *)newObject)RexxInstructionDoWithForWhile(label, countVariable, withLoop, forLoop, conditional);
                 return newObject;
             }
         }
-        // DO WITH with an UNTIL conditional.
+            // DO WITH with an UNTIL conditional.
         case SUBKEY_UNTIL:
         {
             if (forLoop.forCount == OREF_NULL)
             {
                 RexxInstruction *newObject = new_instruction(LOOP_WITH_UNTIL, DoWithUntil);
-                ::new ((void *)newObject) RexxInstructionDoWithUntil(label, withLoop, conditional);
+                ::new((void *)newObject)RexxInstructionDoWithUntil(label, countVariable, withLoop, conditional);
                 return newObject;
             }
             else
             {
                 RexxInstruction *newObject = new_instruction(LOOP_WITH_FOR_UNTIL, DoWithForUntil);
-                ::new ((void *)newObject) RexxInstructionDoWithForUntil(label, withLoop, forLoop, conditional);
+                ::new((void *)newObject)RexxInstructionDoWithForUntil(label, countVariable, withLoop, forLoop, conditional);
                 return newObject;
             }
         }
-        // invalid DO WITH conditional (should really never happen)
+            // invalid DO WITH conditional (should really never happen)
         default:
         {
             reportException(Error_Interpretation_switch, "DO WITH conditional", conditionalType);
@@ -1788,10 +1790,10 @@ RexxInstruction *LanguageParser::newDoWithLoop(RexxString *label)
  *
  * @return An instruction object for a do block.
  */
-RexxInstruction *LanguageParser::newSimpleDo(RexxString *label)
+RexxInstruction* LanguageParser::newSimpleDo(RexxString *label)
 {
     RexxInstruction *newObject = new_instruction(SIMPLE_BLOCK, SimpleDo);
-    ::new ((void *)newObject) RexxInstructionSimpleDo(label);
+    ::new((void *)newObject)RexxInstructionSimpleDo(label);
     return newObject;
 }
 
@@ -1800,13 +1802,15 @@ RexxInstruction *LanguageParser::newSimpleDo(RexxString *label)
  * Create an instance of a DO FOREVER loop.
  *
  * @param label  The optional block label.
+ * @param countVariable
+ *               The optional counter variable.
  *
  * @return An instruction object for a do block.
  */
-RexxInstruction *LanguageParser::newLoopForever(RexxString *label)
+RexxInstruction* LanguageParser::newLoopForever(RexxString *label, RexxVariableBase *countVariable)
 {
     RexxInstruction *newObject = new_instruction(LOOP_FOREVER, DoForever);
-    ::new ((void *)newObject) RexxInstructionDoForever(label);
+    ::new((void *)newObject)RexxInstructionDoForever(label, countVariable);
     return newObject;
 }
 
@@ -1815,13 +1819,15 @@ RexxInstruction *LanguageParser::newLoopForever(RexxString *label)
  * Create an instance of a DO WHILE loop.
  *
  * @param label  The optional block label.
+ * @param countVariable
+ *               The optional counter variable.
  *
  * @return An instruction object for a do block.
  */
-RexxInstruction *LanguageParser::newLoopWhile(RexxString *label, WhileUntilLoop &conditional)
+RexxInstruction* LanguageParser::newLoopWhile(RexxString *label, RexxVariableBase *countVariable, WhileUntilLoop &conditional)
 {
     RexxInstruction *newObject = new_instruction(LOOP_WHILE, DoWhile);
-    ::new ((void *)newObject) RexxInstructionDoWhile(label, conditional);
+    ::new((void *)newObject)RexxInstructionDoWhile(label, countVariable, conditional);
     return newObject;
 }
 
@@ -1830,13 +1836,15 @@ RexxInstruction *LanguageParser::newLoopWhile(RexxString *label, WhileUntilLoop 
  * Create an instance of a DO WHILE loop.
  *
  * @param label  The optional block label.
+ * @param countVariable
+ *               The optional counter variable.
  *
  * @return An instruction object for a do block.
  */
-RexxInstruction *LanguageParser::newLoopUntil(RexxString *label, WhileUntilLoop &conditional)
+RexxInstruction* LanguageParser::newLoopUntil(RexxString *label, RexxVariableBase *countVariable, WhileUntilLoop &conditional)
 {
     RexxInstruction *newObject = new_instruction(LOOP_UNTIL, DoUntil);
-    ::new ((void *)newObject) RexxInstructionDoUntil(label, conditional);
+    ::new((void *)newObject)RexxInstructionDoUntil(label, countVariable, conditional);
     return newObject;
 }
 
@@ -1848,10 +1856,12 @@ RexxInstruction *LanguageParser::newLoopUntil(RexxString *label, WhileUntilLoop 
  * WHILE and DO UNTIL.
  *
  * @param label  The instruction label.
+ * @param countVariable
+ *               The optional counter variable.
  *
  * @return An instruction of the appropriate type.
  */
-RexxInstruction *LanguageParser::parseForeverLoop(RexxString *label)
+RexxInstruction* LanguageParser::parseForeverLoop(RexxString *label, RexxVariableBase *countVariable)
 {
     // a contruct to fill in for the instruction.
     WhileUntilLoop conditional;
@@ -1859,7 +1869,7 @@ RexxInstruction *LanguageParser::parseForeverLoop(RexxString *label)
     // track while/until forms
     InstructionSubKeyword conditionalType = SUBKEY_NONE;
 
-    // process an additional conditional.
+    // this also does not allow anything after the loop conditional
     conditional.conditional = parseLoopConditional(conditionalType, Error_Invalid_do_forever);
 
     // NOTE:  We parse until we hit the end of clause or found an error,
@@ -1876,19 +1886,19 @@ RexxInstruction *LanguageParser::parseForeverLoop(RexxString *label)
         // Straight DO FOREVER
         case SUBKEY_NONE:
         {
-            return newLoopForever(label);
+            return newLoopForever(label, countVariable);
         }
-        // DO FOREVER with a WHILE conditional...identical to a DO WHILE
+            // DO FOREVER with a WHILE conditional...identical to a DO WHILE
         case SUBKEY_WHILE:
         {
-            return newLoopWhile(label, conditional);
+            return newLoopWhile(label, countVariable, conditional);
         }
-        // DO FOREVER with an UNTIL conditional...identical to a DO UNTIL
+            // DO FOREVER with an UNTIL conditional...identical to a DO UNTIL
         case SUBKEY_UNTIL:
         {
-            return newLoopUntil(label, conditional);
+            return newLoopUntil(label, countVariable, conditional);
         }
-        // invalid DO FOREVER conditional (should really never happen)
+            // invalid DO FOREVER conditional (should really never happen)
         default:
         {
             reportException(Error_Interpretation_switch, "DO FOREVER conditional", conditionalType);
@@ -1907,7 +1917,7 @@ RexxInstruction *LanguageParser::parseForeverLoop(RexxString *label)
  *
  * @return An instruction of the appropriate type.
  */
-RexxInstruction *LanguageParser::parseCountLoop(RexxString *label)
+RexxInstruction* LanguageParser::parseCountLoop(RexxString *label, RexxVariableBase *countVariable)
 {
     // the For count controller
     ForLoop forCount;
@@ -1946,24 +1956,24 @@ RexxInstruction *LanguageParser::parseCountLoop(RexxString *label)
         case SUBKEY_NONE:
         {
             RexxInstruction *newObject = new_instruction(LOOP_COUNT, DoCount);
-            ::new ((void *)newObject) RexxInstructionDoCount(label, forCount);
+            ::new((void *)newObject)RexxInstructionDoCount(label, countVariable, forCount);
             return newObject;
         }
-        // DO count with a WHILE conditional
+            // DO count with a WHILE conditional
         case SUBKEY_WHILE:
         {
             RexxInstruction *newObject = new_instruction(LOOP_COUNT_WHILE, DoCountWhile);
-            ::new ((void *)newObject) RexxInstructionDoCountWhile(label, forCount, conditional);
+            ::new((void *)newObject)RexxInstructionDoCountWhile(label, countVariable, forCount, conditional);
             return newObject;
         }
-        // DO count with an UNTIL conditional.
+            // DO count with an UNTIL conditional.
         case SUBKEY_UNTIL:
         {
             RexxInstruction *newObject = new_instruction(LOOP_COUNT_UNTIL, DoCountUntil);
-            ::new ((void *)newObject) RexxInstructionDoCountUntil(label, forCount, conditional);
+            ::new((void *)newObject)RexxInstructionDoCountUntil(label, countVariable, forCount, conditional);
             return newObject;
         }
-        // invalid DO count conditional (should really never happen)
+            // invalid DO count conditional (should really never happen)
         default:
         {
             reportException(Error_Interpretation_switch, "DO count conditional", conditionalType);
@@ -1985,7 +1995,7 @@ RexxInstruction *LanguageParser::parseCountLoop(RexxString *label)
  * @return An appropriate instruction object for the type of block
  *         construct.
  */
-RexxInstruction *LanguageParser::createLoop(bool isLoop)
+RexxInstruction* LanguageParser::createLoop(bool isLoop)
 {
     // we may need to parse ahead a bit to determine the type of loop, so
     // get a reset position before getting next token
@@ -1996,31 +2006,57 @@ RexxInstruction *LanguageParser::createLoop(bool isLoop)
 
     // label parsing is handled here.
     RexxString *label = OREF_NULL;
+    // the counter parsing is also
+    RexxVariableBase *countVariable = OREF_NULL;
 
-    // before doing anything, we need to test for a "LABEL name" before other options.  We
-    // need to make certain we check that the LABEL keyword is not being
+    // before doing anything, we need to test for a "LABEL name" and/or "COUNTER name" before other options.  We
+    // need to make certain we check that the keyword is not being
     // used as control variable.
-    if (token->isSymbol())
+    while (token->isSymbol())
     {
         // potentially a label.  Check the keyword value
-        if (token->subKeyword() == SUBKEY_LABEL)
+        if (token->subKeyword() == SUBKEY_LABEL || token->subKeyword() == SUBKEY_COUNTER)
         {
-            // if the next token is a symbol, this is a label.
+            // if the next token is a symbol, this is a label or counter
             RexxToken *name = nextReal();
             if (name->isSymbol())
             {
-                // save the label name.
-                label = name->value();
+                if (token->subKeyword() == SUBKEY_LABEL)
+                {
+                    // this can only be specified once. If we see it a second time, it is handled as part of the loop type
+                    if (label != OREF_NULL)
+                    {
+                        break;
+                    }
+                    // save the label name.
+                    label = name->value();
+                }
+                else
+                {
+                    if (countVariable != OREF_NULL)
+                    {
+                        break;
+                    }
+                    // get a retriever to be able to access this token.
+                    countVariable = addVariable(name);
+                }
+
                 // update the reset position before stepping to the next token
                 currentPosition = markPosition();
                 // step to the next token for processing the following parts
                 token = nextReal();
+                // if we've had both global options specified, everything else after this
+                // is part of the loop type.
+                if (countVariable != OREF_NULL && label != OREF_NULL)
+                {
+                    break;
+                }
             }
             // is this "symbol ="?  Handle as a controlled loop
             else if (name->isSubtype(OPERATOR_EQUAL))
             {
                 // This is a controlled loop, we're all positioned to process this.
-                return newControlledLoop(label, token);
+                return newControlledLoop(label, countVariable, token);
             }
             // similar to assignment instructions, any equal sign triggers this to
             // be a controlled form, even if the the "=" is part of a larger instruction
@@ -2035,6 +2071,10 @@ RexxInstruction *LanguageParser::createLoop(bool isLoop)
                 syntaxError(Error_Symbol_expected_LABEL);
             }
         }
+        else
+        {
+            break;
+        }
     }
 
 
@@ -2045,10 +2085,15 @@ RexxInstruction *LanguageParser::createLoop(bool isLoop)
         // A LOOP instruction with nothing is a LOOP FOREVER.
         if (isLoop)
         {
-            return newLoopForever(label);
+            return newLoopForever(label, countVariable);
         }
         else
         {
+            // IF this is just a simple DO, the count variable is not allowed.
+            if (countVariable != OREF_NULL)
+            {
+                syntaxError(Error_Invalid_do_simple_do_counter);
+            }
             return newSimpleDo(label);
         }
     }
@@ -2071,13 +2116,13 @@ RexxInstruction *LanguageParser::createLoop(bool isLoop)
         else if (second->isSubtype(OPERATOR_EQUAL))
         {
             // go parse a controlled do loop.
-            return newControlledLoop(label, token);
+            return newControlledLoop(label, countVariable, token);
         }
         // DO name OVER collection form?
         else if (second->subKeyword() == SUBKEY_OVER)
         {
             // parse and return the DO OVER options
-            return newDoOverLoop(label, token);
+            return newDoOverLoop(label, countVariable, token);
         }
         // not a controlled form, but this could be a conditional form.
         else
@@ -2093,12 +2138,12 @@ RexxInstruction *LanguageParser::createLoop(bool isLoop)
                 // WITH INDEX var ITEM var OVER expr....with a potention WHILE or UNTIL modifier
                 case SUBKEY_WITH:
                 {
-                    return newDoWithLoop(label);
+                    return newDoWithLoop(label, countVariable);
                 }
                 // FOREVER...this can have either a WHILE or UNTIL modifier.
                 case SUBKEY_FOREVER:         // DO FOREVER
                 {
-                    return parseForeverLoop(label);
+                    return parseForeverLoop(label, countVariable);
                 }
 
                 // WHILE cond
@@ -2113,7 +2158,7 @@ RexxInstruction *LanguageParser::createLoop(bool isLoop)
                     previousToken();
                     conditional.conditional = parseLoopConditional(conditionalType, Error_None);
                     // We know this is WHILE already, so we can create this directly
-                    return newLoopWhile(label, conditional);
+                    return newLoopWhile(label, countVariable, conditional);
                 }
 
                 // DO UNTIL cond
@@ -2128,7 +2173,7 @@ RexxInstruction *LanguageParser::createLoop(bool isLoop)
                     previousToken();
                     conditional.conditional = parseLoopConditional(conditionalType, Error_None);
                     // We know this is UNTIL already, so we can create this directly
-                    return newLoopUntil(label, conditional);
+                    return newLoopUntil(label, countVariable, conditional);
                 }
 
                 // not a real DO keyword, probably DO expr form, which can also have
@@ -2137,7 +2182,7 @@ RexxInstruction *LanguageParser::createLoop(bool isLoop)
                     // push the first token back
                     previousToken();
                     // and go parse this out.
-                    return parseCountLoop(label);
+                    return parseCountLoop(label, countVariable);
             }
         }
     }
@@ -2147,7 +2192,7 @@ RexxInstruction *LanguageParser::createLoop(bool isLoop)
         // push the first token back
         previousToken();
         // and go parse this out.
-        return parseCountLoop(label);
+        return parseCountLoop(label, countVariable);
     }
     // should never get here
     return OREF_NULL;
@@ -4517,9 +4562,9 @@ size_t LanguageParser::processVariableList(InstructionKeyword type )
 
 
 /**
- * Allow for WHILE or UNTIL keywords following some other looping
- * construct.  This returns SUBKEY_WHILE or SUBKEY_UNTIL to flag
- * the caller that a conditional has been used.
+ * Allow for WHILE or UNTIL keywords following some other
+ * looping construct.  This returns SUBKEY_WHILE or SUBKEY_UNTIL
+ * to flag the caller that a conditional has been used.
  *
  * @param condition_type
  *               An option pointer for a place to return the condition type (WHILE or UNTIL)
@@ -4527,7 +4572,7 @@ size_t LanguageParser::processVariableList(InstructionKeyword type )
  *
  * @return A parsed out expression object.
  */
-RexxInternalObject *LanguageParser::parseLoopConditional(InstructionSubKeyword &conditionType, RexxErrorCodes error_message )
+RexxInternalObject *LanguageParser::parseLoopConditional(InstructionSubKeyword &conditionType, RexxErrorCodes error_message)
 {
     RexxInternalObject *conditional = OREF_NULL;
 

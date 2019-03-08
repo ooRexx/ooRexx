@@ -50,6 +50,7 @@ class RexxInstructionEnd;
 class RexxInstructionEndIf;
 class RexxClause;
 class LanguageParser;
+class RexxVariableBase;
 
 #include "SourceLocation.hpp"
 
@@ -124,25 +125,27 @@ class DoBlock;
 class RexxBlockInstruction : public RexxInstruction
 {
  public:
-    RexxBlockInstruction() {;};
-    RexxBlockInstruction(RESTORETYPE restoreType) { ; };
+     RexxBlockInstruction() {;};
+     RexxBlockInstruction(RESTORETYPE restoreType) {; };
 
-    // virtual functions required by subclasses to override.
+     // virtual functions required by subclasses to override.
 
-    bool isBlock() override { return true; }
-    // all block instructions are also control instructions.
-    bool isControl() override { return true; }
+     bool isBlock()override { return true; }
+     // all block instructions are also control instructions.
+     bool isControl()override { return true; }
 
-    virtual EndBlockType getEndStyle() = 0;
-    virtual bool isLoop() { return false; };
-    virtual void matchEnd(RexxInstructionEnd *, LanguageParser *) { ; };
-    virtual void terminate(RexxActivation *, DoBlock *) { ; };
+     virtual EndBlockType getEndStyle() = 0;
+     virtual bool isLoop() { return false; };
+     virtual void matchEnd(RexxInstructionEnd *, LanguageParser *) {; };
+     virtual void terminate(RexxActivation *, DoBlock *) {; };
+     virtual RexxVariableBase* getCountVariable() { return OREF_NULL; }
 
-    // inherited behaviour
-    // NOTE: tokens on ends and label instructions are interned strings, so
-    // we can just do pointer compares
-    bool isLabel(RexxString *name) { return name == label; }
-    RexxString *getLabel() { return label; };
+     // inherited behaviour
+     // NOTE: tokens on ends and label instructions are interned strings, so
+     // we can just do pointer compares
+     bool isLabel(RexxString *name) { return name == label; }
+     RexxString* getLabel() { return label; };
+     void handleDebugPause(RexxActivation *context, DoBlock *doblock);
 
     RexxString *label;         // the block instruction label
     RexxInstructionEnd *end;   // the END matching the block instruction

@@ -36,7 +36,6 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                                */
 /*                                                                            */
 /* Setup initial class definitions during an image build                      */
 /*                                                                            */
@@ -91,6 +90,8 @@
 #include "ActivityManager.hpp"
 #include "ProgramSource.hpp"
 #include "VariableReference.hpp"
+#include "EventSemaphore.hpp"
+#include "MutexSemaphore.hpp"
 
 
 /**
@@ -104,7 +105,7 @@
  */
 void MemoryObject::defineMethod(const char *name, RexxBehaviour *behaviour, PCPPM entryPoint, size_t arguments, const char *entryPointName)
 {
-    behaviour->defineMethod(name, entryPoint, arguments, entryPointName);
+        behaviour->defineMethod(name, entryPoint, arguments, entryPointName);
 }
 
 
@@ -118,12 +119,31 @@ void MemoryObject::defineMethod(const char *name, RexxBehaviour *behaviour, PCPP
  *                   method.
  * @param arguments  The method argument style (argument count or array indicator).
  */
-void MemoryObject::defineProtectedMethod(const char *name, RexxBehaviour * behaviour, PCPPM entryPoint, size_t arguments, const char *entryPointName)
+void MemoryObject::defineProtectedMethod(const char *name, RexxBehaviour *behaviour, PCPPM entryPoint, size_t arguments, const char *entryPointName)
 {
-    MethodClass *method = behaviour->defineMethod(name, entryPoint, arguments, entryPointName);
-    // mark as protected after the fact
-    method->setProtected();
+        MethodClass *method = behaviour->defineMethod(name, entryPoint, arguments, entryPointName);
+        // mark as protected after the fact
+        method->setProtected();
 }
+
+
+/**
+ * Add a C++ method to an object's behaviour.  This method is
+ * marked as unguarded.
+ *
+ * @param name       The name of the method.
+ * @param behaviour  The target behaviour.
+ * @param entryPoint The entry point of the C++ method that implements the
+ *                   method.
+ * @param arguments  The method argument style (argument count or array indicator).
+ */
+void MemoryObject::defineUnguardedMethod(const char *name, RexxBehaviour *behaviour, PCPPM entryPoint, size_t arguments, const char *entryPointName)
+{
+        MethodClass *method = behaviour->defineMethod(name, entryPoint, arguments, entryPointName);
+        // mark as protected after the fact
+        method->setUnguarded();
+}
+
 
 
 /**
@@ -258,7 +278,6 @@ void MemoryObject::createImage(const char *imageTarget)
     BagClass::createInstance();
     ListClass::createInstance();
     QueueClass::createInstance();
-    VariableReference::createInstance();
 
     // We keep handy references to a number of commonly used
     // integer objects.
@@ -300,6 +319,8 @@ void MemoryObject::createImage(const char *imageTarget)
     StackFrameClass::createInstance();
     RexxInfo::createInstance();
     VariableReference::createInstance();
+    EventSemaphoreClass::createInstance();
+    MutexSemaphoreClass::createInstance();
 
     // build the common retrievers table.  This is needed before we can parse an
     // Rexx code.
@@ -335,6 +356,7 @@ void MemoryObject::createImage(const char *imageTarget)
 #define AddClassMethod(name, entryPoint, args) defineMethod(name, currentClassBehaviour, CPPM(entryPoint), args, #entryPoint);
 #define AddClassProtectedMethod(name, entryPoint, args) defineProtectedMethod(name, currentClassBehaviour, CPPM(entryPoint), args, #entryPoint);
 #define AddClassPrivateMethod(name, entryPoint, args) definePrivateMethod(name, currentClassBehaviour, CPPM(entryPoint), args, #entryPoint);
+#define AddClassUnguardedMethod(name, entryPoint, args) defineUnguardedMethod(name, currentClassBehaviour, CPPM(entryPoint), args, #entryPoint);
 #define HideClassMethod(name) currentClassBehaviour->hideMethod(name);
 #define RemoveClassMethod(name) currentClassBehaviour->removeMethod(name);
 
@@ -345,6 +367,7 @@ void MemoryObject::createImage(const char *imageTarget)
 #define AddMethod(name, entryPoint, args) defineMethod(name, currentInstanceBehaviour, CPPM(entryPoint), args, #entryPoint);
 #define AddProtectedMethod(name, entryPoint, args) defineProtectedMethod(name, currentInstanceBehaviour, CPPM(entryPoint), args, #entryPoint);
 #define AddPrivateMethod(name, entryPoint, args) definePrivateMethod(name, currentInstanceBehaviour, CPPM(entryPoint), args, #entryPoint);
+#define AddUnguardedMethod(name, entryPoint, args) defineUnguardedMethod(name, currentInstanceBehaviour, CPPM(entryPoint), args, #entryPoint);
 #define HideMethod(name) currentInstanceBehaviour->hideMethod(name);
 #define RemoveMethod(name) currentInstanceBehaviour->removeMethod(name);
 
@@ -1212,80 +1235,126 @@ EndClassDefinition(RexxContext);
 
 StartClassDefinition(RexxInfo)
 
-        AddClassMethod("New", RexxInfo::newRexx, A_COUNT);
+AddClassMethod("New", RexxInfo::newRexx, A_COUNT);
 
-    CompleteClassMethodDefinitions();
+CompleteClassMethodDefinitions();
 
-        AddMethod("Copy", RexxInfo::copyRexx, 0);
-        AddMethod("Package", RexxInfo::getPackage, 0);
-        AddMethod("Digits", RexxInfo::getDigits, 0);
-        AddMethod("InternalDigits", RexxInfo::getInternalDigits, 0);
-        AddMethod("Form", RexxInfo::getForm, 0);
-        AddMethod("Fuzz", RexxInfo::getFuzz, 0);
-        AddMethod("LanguageLevel", RexxInfo::getLanguageLevel, 0);
-        AddMethod("Version", RexxInfo::getInterpreterVersion, 0);
-        AddMethod("Name", RexxInfo::getInterpreterName, 0);
-        AddMethod("Date", RexxInfo::getInterpreterDate, 0);
-        AddMethod("Platform", RexxInfo::getPlatform, 0);
-        AddMethod("Architecture", RexxInfo::getArchitecture, 0);
-        AddMethod("EndOfLine", RexxInfo::getFileEndOfLine, 0);
-        AddMethod("PathSeparator", RexxInfo::getPathSeparator, 0);
-        AddMethod("DirectorySeparator", RexxInfo::getDirectorySeparator, 0);
-        AddMethod("CaseSensitiveFiles", RexxInfo::getCaseSensitiveFiles, 0);
-        AddMethod("MajorVersion", RexxInfo::getMajorVersion, 0);
-        AddMethod("Release", RexxInfo::getRelease, 0);
-        AddMethod("Modification", RexxInfo::getModification, 0);
-        AddMethod("Revision", RexxInfo::getRevision, 0);
-        AddMethod("internalMaxNumber", RexxInfo::getInternalMaxNumber, 0);
-        AddMethod("internalMinNumber", RexxInfo::getInternalMinNumber, 0);
-        AddMethod("maxExponent", RexxInfo::getMaxExponent, 0);
-        AddMethod("minExponent", RexxInfo::getMinExponent, 0);
-        AddMethod("maxPathLength", RexxInfo::getMaxPathLength, 0);
-        AddMethod("maxArraySize", RexxInfo::getMaxArraySize, 0);
+AddMethod("Copy", RexxInfo::copyRexx, 0);
+AddMethod("Package", RexxInfo::getPackage, 0);
+AddMethod("Digits", RexxInfo::getDigits, 0);
+AddMethod("InternalDigits", RexxInfo::getInternalDigits, 0);
+AddMethod("Form", RexxInfo::getForm, 0);
+AddMethod("Fuzz", RexxInfo::getFuzz, 0);
+AddMethod("LanguageLevel", RexxInfo::getLanguageLevel, 0);
+AddMethod("Version", RexxInfo::getInterpreterVersion, 0);
+AddMethod("Name", RexxInfo::getInterpreterName, 0);
+AddMethod("Date", RexxInfo::getInterpreterDate, 0);
+AddMethod("Platform", RexxInfo::getPlatform, 0);
+AddMethod("Architecture", RexxInfo::getArchitecture, 0);
+AddMethod("EndOfLine", RexxInfo::getFileEndOfLine, 0);
+AddMethod("PathSeparator", RexxInfo::getPathSeparator, 0);
+AddMethod("DirectorySeparator", RexxInfo::getDirectorySeparator, 0);
+AddMethod("CaseSensitiveFiles", RexxInfo::getCaseSensitiveFiles, 0);
+AddMethod("MajorVersion", RexxInfo::getMajorVersion, 0);
+AddMethod("Release", RexxInfo::getRelease, 0);
+AddMethod("Modification", RexxInfo::getModification, 0);
+AddMethod("Revision", RexxInfo::getRevision, 0);
+AddMethod("internalMaxNumber", RexxInfo::getInternalMaxNumber, 0);
+AddMethod("internalMinNumber", RexxInfo::getInternalMinNumber, 0);
+AddMethod("maxExponent", RexxInfo::getMaxExponent, 0);
+AddMethod("minExponent", RexxInfo::getMinExponent, 0);
+AddMethod("maxPathLength", RexxInfo::getMaxPathLength, 0);
+AddMethod("maxArraySize", RexxInfo::getMaxArraySize, 0);
 
-    CompleteMethodDefinitions();
+CompleteMethodDefinitions();
 
-    CompleteClassDefinition(RexxInfo);
+CompleteClassDefinition(RexxInfo);
 
 EndSpecialClassDefinition(RexxInfo);
 
 
-    /***************************************************************************/
-    /*           VariableReference                                             */
-    /***************************************************************************/
+/***************************************************************************/
+/*           VariableReference                                             */
+/***************************************************************************/
 
 StartClassDefinition(VariableReference)
 
-        AddClassMethod("New", VariableReference::newRexx, A_COUNT);
+AddClassMethod("New", VariableReference::newRexx, A_COUNT);
 
-    CompleteClassMethodDefinitions();
+CompleteClassMethodDefinitions();
 
-        AddMethod("Name", VariableReference::getName, 0);
-        AddMethod("Value", VariableReference::getValue, 0);
-        AddMethod("Value=", VariableReference::setValueRexx, 1);
-        AddMethod("Unknown", VariableReference::unknownRexx, 2);
-        AddMethod("Request", VariableReference::request, 1);
+AddMethod("Name", VariableReference::getName, 0);
+AddMethod("Value", VariableReference::getValue, 0);
+AddMethod("Value=", VariableReference::setValueRexx, 1);
+AddMethod("Unknown", VariableReference::unknownRexx, 2);
+AddMethod("Request", VariableReference::request, 1);
 
-    // We want various operator methods that we inherit from the object
-    // class to be redirected to our unknown method, so we block these methods
-    // in our instance method directory.
-        HideMethod("==");
-        HideMethod("=");
-        HideMethod("\\==");
-        HideMethod("\\=");
-        HideMethod("<>");
-        HideMethod("><");
+// We want various operator methods that we inherit from the object
+// class to be redirected to our unknown method, so we block these methods
+// in our instance method directory.
+HideMethod("==");
+HideMethod("=");
+HideMethod("\\==");
+HideMethod("\\=");
+HideMethod("<>");
+HideMethod("><");
 
-    CompleteMethodDefinitions();
+CompleteMethodDefinitions();
 
-    CompleteClassDefinition(VariableReference);
+CompleteClassDefinition(VariableReference);
 
 EndClassDefinition(VariableReference);
 
 
-    /***************************************************************************/
-    /*           STEM                                                          */
-    /***************************************************************************/
+/***************************************************************************/
+/*           EventSemaphore                                                */
+/***************************************************************************/
+
+StartClassDefinition(EventSemaphore)
+
+AddClassMethod("New", EventSemaphoreClass::newRexx, A_COUNT);
+
+CompleteClassMethodDefinitions();
+
+AddUnguardedMethod("Close", EventSemaphoreClass::close, 0);
+AddMethod("Uninit", EventSemaphoreClass::close, 0);
+AddUnguardedMethod("Post", EventSemaphoreClass::post, 0);
+AddUnguardedMethod("Reset", EventSemaphoreClass::reset, 0);
+AddUnguardedMethod("Wait", EventSemaphoreClass::wait, 1);
+AddUnguardedMethod("IsPosted", EventSemaphoreClass::posted, 0);
+
+CompleteMethodDefinitions();
+
+CompleteClassDefinition(EventSemaphore);
+
+EndClassDefinition(EventSemaphore);
+
+
+/***************************************************************************/
+/*           MutexSemaphore                                                */
+/***************************************************************************/
+
+StartClassDefinition(MutexSemaphore)
+
+AddClassMethod("New", MutexSemaphoreClass::newRexx, A_COUNT);
+
+CompleteClassMethodDefinitions();
+
+AddUnguardedMethod("Close", MutexSemaphoreClass::close, 0);
+AddMethod("Uninit", MutexSemaphoreClass::close, 0);
+AddUnguardedMethod("Release", MutexSemaphoreClass::release, 0);
+AddUnguardedMethod("Acquire", MutexSemaphoreClass::request, 1);
+
+CompleteMethodDefinitions();
+
+CompleteClassDefinition(MutexSemaphore);
+
+EndClassDefinition(MutexSemaphore);
+
+
+/***************************************************************************/
+/*           STEM                                                          */
+/***************************************************************************/
 
 StartClassDefinition(Stem)
 

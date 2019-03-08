@@ -273,7 +273,8 @@ private:
 
     void defineMethod(const char *name, RexxBehaviour * behaviour, PCPPM entryPoint, size_t arguments, const char *entryPointName);
     void defineProtectedMethod(const char *name, RexxBehaviour * behaviour, PCPPM entryPoint, size_t arguments, const char *entryPointName);
-    void definePrivateMethod(const char *name, RexxBehaviour * behaviour, PCPPM entryPoint, size_t arguments, const char *entryPointName);
+    void definePrivateMethod(const char *name, RexxBehaviour *behaviour, PCPPM entryPoint, size_t arguments, const char *entryPointName);
+    void defineUnguardedMethod(const char *name, RexxBehaviour *behaviour, PCPPM entryPoint, size_t arguments, const char *entryPointName);
     void addToEnvironment(const char *name, RexxInternalObject *value);
     void addToSystem(const char *name, RexxInternalObject *value);
     void completeSystemClass(const char *name, RexxClass *classObj);

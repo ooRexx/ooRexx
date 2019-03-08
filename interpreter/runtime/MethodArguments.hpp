@@ -190,9 +190,69 @@ inline RexxString *optionalStringArgument(RexxObject *o, RexxString *d, size_t p
  *
  * @return The argument value, in string form.
  */
-inline RexxString *optionalStringArgument(RexxObject *o, RexxString *d, const char *p)
+inline RexxString* optionalStringArgument(RexxObject *o, RexxString *d, const char *p)
 {
     return (o == OREF_NULL ? d : stringArgument(o, p));
+}
+
+
+/**
+ * Take in an agument passed to a method, convert it to a
+ * numeric object. If the argument is omitted, an error is
+ * raised.
+ *
+ * @param argument The argument reference to test.
+ * @param position The position of the argument (used for error reporting.)
+ *
+ * @return The argument converted to an integer value.
+ */
+wholenumber_t numberArgument(RexxObject *argument, size_t position);
+
+
+/**
+ * Take in an agument passed to a method, convert it to a
+ * numeric object. If the argument is omitted, an error is
+ * raised.
+ *
+ * @param argument The argument reference to test.
+ * @param position The position of the argument (used for error reporting.)
+ *
+ * @return The argument converted to an integer value.
+ */
+wholenumber_t numberArgument(RexxObject *argument, const char *position);
+
+
+/**
+ * Parse an optional whole number method argument.  this must be
+ * a whole number.  Raises a number if the argument not a
+ * numeric value.
+ *
+ * @param o      The object to check.
+ * @param d      The default value to return if the argument was omitted.
+ * @param p      The argument position.
+ *
+ * @return The converted numeric value of the object.
+ */
+inline wholenumber_t optionalNumberArgument(RexxObject *o, wholenumber_t d, size_t p)
+{
+    return (o == OREF_NULL ? d : numberArgument(o, p));
+}
+
+
+/**
+ * Parse an optional whole number method argument.  this must be
+ * a whole number.  Raises a number if the argument not a
+ * numeric value.
+ *
+ * @param o      The object to check.
+ * @param d      The default value to return if the argument was omitted.
+ * @param p      The argument position.
+ *
+ * @return The converted numeric value of the object.
+ */
+inline wholenumber_t optionalNumberArgument(RexxObject *o, wholenumber_t d, const char *p)
+{
+    return (o == OREF_NULL ? d : numberArgument(o, p));
 }
 
 

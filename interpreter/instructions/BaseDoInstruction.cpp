@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -50,149 +50,70 @@
 #include "LanguageParser.hpp"
 #include "RexxActivation.hpp"
 
-// NOTE:  some of the DO instructions don't add additional references, so they can
-// just inherit these base marking methods.  Subclasses that do add additional
-// references will need to also mark these objects.
-
-/**
- * Perform garbage collection on a live object.
- *
- * @param liveMark The current live mark.
- */
-void RexxInstructionBaseDo::live(size_t liveMark)
-{
-    // must be first object marked
-    memory_mark(nextInstruction);
-    memory_mark(end);
-    memory_mark(label);
-}
 
 
 /**
- * Perform generalized live marking on an object.  This is
- * used when mark-and-sweep processing is needed for purposes
- * other than garbage collection.
+ * Common method for handling debug pauses at block boundaries.
  *
- * @param reason The reason for the marking call.
+ * @param context The current activation context.
+ * @param doblock The active deblock (if any).
  */
-void RexxInstructionBaseDo::liveGeneral(MarkReason reason)
+void RexxBlockInstruction::handleDebugPause(RexxActivation *context, DoBlock *doblock)
 {
-    // must be first object marked
-    memory_mark_general(nextInstruction);
-    memory_mark_general(end);
-    memory_mark_general(label);
-}
-
-
-/**
- * Flatten a source object.
- *
- * @param envelope The envelope that will hold the flattened object.
- */
-void RexxInstructionBaseDo::flatten(Envelope *envelope)
-{
-    setUpFlatten(RexxInstructionBaseDo)
-
-    flattenRef(nextInstruction);
-    flattenRef(end);
-    flattenRef(label);
-
-    cleanUpFlatten
-}
-
-
-/**
- * Base execute method for a DO instruction.  This performs all
- * common execution steps and delegates the continue tests to
- * the subclasses
- *
- * @param context The current execution context.
- * @param stack   The current evaluation stack.
- */
-void RexxInstructionBaseDo::execute(RexxActivation *context, ExpressionStack *stack)
-{
-    // trace on entry
-    context->traceInstruction(this);
-
-    // all we do here is create a new doblock and make it active
-    DoBlock *doblock = new DoBlock (this, context->getIndent());
-    context->newBlockInstruction(doblock);
-
-    // perform loop specific initialization
-    setup(context, stack, doblock);
-
-    // now perform the initial iteration checks
-    if (!iterate(context, stack, doblock, true))
+    // do blocks will only do the debug pause on first execution, so
+    // the context needs to determine if we're at a good point.  If this is a
+    // re-execute option, then we need to redo everything from the start.
+    if (context->conditionalPauseInstruction())
     {
-        // nothing to process, terminate the loop now
-        terminate(context, doblock);
+        // if we have a doblock for this, do termination cleanup
+        if (doblock != OREF_NULL)
+        {
+            this->terminate(context, doblock);
+        }
+        // no block required, just remove the nesting
+        else
+        {
+            context->removeBlockInstruction();
+        }
+        // this makes us the next instruction to be executed
+        context->setNext(this);
     }
-
-    // handle a debug pause that might cause re-execution
-    handleDebugPause(context, OREF_NULL);
 }
 
 
 /**
- * Base re-execute method for do loops.  This does all common
- * logic, then delegates the continue steps to the subclasses.
+ * Perform parse-time match ups between a DO block and
+ * an END instruction.  This performs all appropriate label name
+ * matching and
  *
- * @param context The current execution context.
- * @param stack   The current evaluation stack.
- * @param doblock The doblock associated with this loop instance.
+ * @param partner The matched up END instruction.
+ * @param parser  The current parser context.
  */
-void RexxInstructionBaseDo::reExecute(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock)
+void RexxBaseBlockInstruction::matchEnd(RexxInstructionEnd *partner, LanguageParser *parser)
 {
-    // change control to the top of the loop
-    context->setNext(nextInstruction);
-    context->traceInstruction(this);
-    context->indent();
-
-    // now perform the loop iteration checkes now...if we're good, we just return
-    if (iterate(context, stack, doblock, false))
-    {
-        // we're all good.
-        return;
-    }
-
-    // we need to terminate this loop
-    endLoop(context);
+    // make sure we have a good name match
+    matchLabel(partner, parser);
+    // hook up the END as our partner in crime.
+    end = partner;
+    // let the END instruction know what action it needs to perform at instruction
+    // end.
+    partner->setStyle(getEndStyle());
 }
 
 
 /**
- * Base setup routine for a loop.  This performs any initial
- * setup instructions for a loop subclass and is called
- * before the first iteration test is performed.
+ * Terminate a DO or LOOP.  This is really the same for all loop
+ * types, so is implemented in the base class
  *
  * @param context The current execution context.
- * @param stack   The current evaluation stack.
- * @param doblock The doblock associated with this loop instance.
+ * @param doblock Our doblock, provided by the context.
  */
-void RexxInstructionBaseDo::setup(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock)
+void RexxBaseBlockInstruction::terminate(RexxActivation *context, DoBlock *doblock)
 {
-    // default is no setup
-    return;
-}
-
-
-/**
- * Perform a test on whether this loop iteration should
- * be executed or not.
- *
- * @param context The current execution context.
- * @param stack   The current evaluation stack.
- * @param doblock The doblock for this instruction instance.
- * @param first   True if this is the first iteration, false for
- *                reExecute iterations.
- *
- * @return true if we should execute the loop block, false if
- *         we should terminate the loop.
- */
-bool RexxInstructionBaseDo::iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first)
-{
-    // the default is basically a DO FOREVER loop.
-    return true;
+    // reset the DO block
+    context->terminateBlockInstruction(doblock->getIndent());
+    // The next instruction is the one after the END
+    context->setNext(end->nextInstruction);
 }
 
 
@@ -203,7 +124,7 @@ bool RexxInstructionBaseDo::iterate(RexxActivation *context, ExpressionStack *st
  * @param _end   The candidate end statement.
  * @param parser The LanguageParser context (used for error reporting).
  */
-void RexxInstructionBaseDo::matchLabel(RexxInstructionEnd *_end, LanguageParser *parser)
+void RexxBaseBlockInstruction::matchLabel(RexxInstructionEnd *_end, LanguageParser *parser)
 {
     // get the END name.
     RexxString *name = _end->endName();
@@ -236,68 +157,164 @@ void RexxInstructionBaseDo::matchLabel(RexxInstructionEnd *_end, LanguageParser 
 }
 
 
+
+// NOTE:  some of the DO instructions don't add additional references, so they can
+// just inherit these base marking methods.  Subclasses that do add additional
+// references will need to also mark these objects.
+
 /**
- * Perform parse-time match ups between a DO block and
- * an END instruction.  This performs all appropriate label name
- * matching and
+ * Perform garbage collection on a live object.
  *
- * @param partner The matched up END instruction.
- * @param parser  The current parser context.
+ * @param liveMark The current live mark.
  */
-void RexxInstructionBaseDo::matchEnd(RexxInstructionEnd *partner, LanguageParser *parser)
+void RexxInstructionBaseLoop::live(size_t liveMark)
 {
-    // make sure we have a good name match
-    matchLabel(partner, parser);
-    // hook up the END as our partner in crime.
-    end = partner;
-    // let the END instruction know what action it needs to perform at instruction
-    // end.
-    partner->setStyle(getEndStyle());
+    // must be first object marked
+    memory_mark(nextInstruction);
+    memory_mark(end);
+    memory_mark(label);
+    memory_mark(countVariable);
 }
 
 
 /**
- * Common method for handling debug pauses at block boundaries.
+ * Perform generalized live marking on an object.  This is
+ * used when mark-and-sweep processing is needed for purposes
+ * other than garbage collection.
  *
- * @param context The current activation context.
- * @param doblock The active deblock (if any).
+ * @param reason The reason for the marking call.
  */
-void RexxInstructionBaseDo::handleDebugPause(RexxActivation *context, DoBlock *doblock)
+void RexxInstructionBaseLoop::liveGeneral(MarkReason reason)
 {
-    // do blocks will only do the debug pause on first execution, so
-    // the context needs to determine if we're at a good point.  If this is a
-    // re-execute option, then we need to redo everything from the start.
-    if (context->conditionalPauseInstruction())
-    {
-        // if we have a doblock for this, do termination cleanup
-        if (doblock != OREF_NULL)
-        {
-            this->terminate(context, doblock);
-        }
-        // no block required, just remove the nesting
-        else
-        {
-            context->removeBlockInstruction();
-        }
-        // this makes us the next instruction to be executed
-        context->setNext(this);
-    }
+    // must be first object marked
+    memory_mark_general(nextInstruction);
+    memory_mark_general(end);
+    memory_mark_general(label);
+    memory_mark_general(countVariable);
 }
 
 
 /**
- * Terminate a DO or LOOP.  This is really the same for all loop
- * types, so is implemented in the base class
+ * Flatten a source object.
+ *
+ * @param envelope The envelope that will hold the flattened object.
+ */
+void RexxInstructionBaseLoop::flatten(Envelope *envelope)
+{
+    setUpFlatten(RexxInstructionBaseLoop)
+
+    flattenRef(nextInstruction);
+    flattenRef(end);
+    flattenRef(label);
+    flattenRef(countVariable);
+
+    cleanUpFlatten
+}
+
+
+/**
+ * Base execute method for a DO instruction.  This performs all
+ * common execution steps and delegates the continue tests to
+ * the subclasses
  *
  * @param context The current execution context.
- * @param doblock Our doblock, provided by the context.
+ * @param stack   The current evaluation stack.
  */
-void RexxInstructionBaseDo::terminate(RexxActivation *context, DoBlock *doblock )
+void RexxInstructionBaseLoop::execute(RexxActivation *context, ExpressionStack *stack)
 {
-    // reset the DO block
-    context->terminateBlockInstruction(doblock->getIndent());
-    // The next instruction is the one after the END
-    context->setNext(end->nextInstruction);
+    // trace on entry
+    context->traceInstruction(this);
+
+    // all we do here is create a new doblock and make it active
+    Protected<DoBlock> doblock = new DoBlock(context, this);
+    context->newBlockInstruction(doblock);
+
+    // perform loop specific initialization
+    setup(context, stack, doblock);
+
+    // update the iteration counters
+    doblock->newIteration();
+    // now perform the initial iteration checks
+    if (!iterate(context, stack, doblock, true))
+    {
+        // nothing to process, terminate the loop now
+        terminate(context, doblock);
+    }
+    else
+    {
+        // we only set the counter variable if we are entering the loop body
+        doblock->setCounter(context);
+    }
+
+    // handle a debug pause that might cause re-execution
+    handleDebugPause(context, OREF_NULL);
+}
+
+
+/**
+ * Base re-execute method for do loops.  This does all common
+ * logic, then delegates the continue steps to the subclasses.
+ *
+ * @param context The current execution context.
+ * @param stack   The current evaluation stack.
+ * @param doblock The doblock associated with this loop instance.
+ */
+void RexxInstructionBaseLoop::reExecute(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock)
+{
+    // change control to the top of the loop
+    context->setNext(nextInstruction);
+    context->traceInstruction(this);
+    context->indent();
+
+    // update the iteration counters
+    doblock->newIteration();
+
+    // now perform the loop iteration checkes now...if we're good, we just return
+    if (iterate(context, stack, doblock, false))
+    {
+        doblock->setCounter(context);
+        // we're all good.
+        return;
+    }
+
+    // we need to terminate this loop
+    endLoop(context);
+}
+
+
+/**
+ * Base setup routine for a loop.  This performs any initial
+ * setup instructions for a loop subclass and is called
+ * before the first iteration test is performed.
+ *
+ * @param context The current execution context.
+ * @param stack   The current evaluation stack.
+ * @param doblock The doblock associated with this loop instance.
+ */
+void RexxInstructionBaseLoop::setup(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock)
+{
+    // default is no setup
+    return;
+}
+
+
+/**
+ * Perform a test on whether this loop iteration should
+ * be executed or not.
+ *
+ * @param context The current execution context.
+ * @param stack   The current evaluation stack.
+ * @param doblock The doblock for this instruction instance.
+ * @param first   True if this is the first iteration, false for
+ *                reExecute iterations.
+ *
+ * @return true if we should execute the loop block, false if
+ *         we should terminate the loop.
+ */
+bool RexxInstructionBaseLoop::iterate(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock, bool first)
+{
+    // the default is basically a DO FOREVER loop.
+    return true;
 }
 
 
@@ -307,7 +324,7 @@ void RexxInstructionBaseDo::terminate(RexxActivation *context, DoBlock *doblock 
  *
  * @param context The current execution context.
  */
-void RexxInstructionBaseDo::endLoop(RexxActivation *context)
+void RexxInstructionBaseLoop::endLoop(RexxActivation *context)
 {
     // pop the block instruction and remove the execution nest.
     context->popBlockInstruction();

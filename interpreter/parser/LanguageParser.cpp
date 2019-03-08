@@ -1419,7 +1419,7 @@ RexxCode *LanguageParser::translateBlock()
                 }
                 else                           /* must be a DO block                */
                 {
-                    ((RexxInstructionBaseDo *)second)->matchEnd((RexxInstructionEnd *)instruction, this);
+                    ((RexxBlockInstruction *)second)->matchEnd((RexxInstructionEnd *)instruction, this);
                 }
 
                 // We've just completed a large block instruction.  It is possible that

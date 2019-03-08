@@ -138,7 +138,7 @@ void RexxInstructionEnd::execute(RexxActivation *context, ExpressionStack *stack
             context->setIndent(doBlock->getIndent());
             context->traceInstruction(this);
             // tell the DO/LOOP instruction we're back around.
-            ((RexxInstructionBaseDo *)(doBlock->getParent()))->reExecute(context, stack, doBlock);
+            ((RexxInstructionBaseLoop *)(doBlock->getParent()))->reExecute(context, stack, doBlock);
             break;
         }
 

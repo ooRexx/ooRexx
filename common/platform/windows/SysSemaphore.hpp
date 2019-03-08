@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -50,16 +50,17 @@
 
 #include <stdlib.h>
 
-inline void waitHandle(HANDLE s, bool noMessageLoop);
+inline bool waitHandle(HANDLE s, bool noMessageLoop);
 inline bool waitHandle(HANDLE s, uint32_t timeout, bool noMessageLoop);
 
-class SysSemaphore {
-public:
-     SysSemaphore() : sem(0) { ; }
+class SysSemaphore
+{
+ public:
+     SysSemaphore() : sem(0) {; }
      SysSemaphore(bool create);
-     ~SysSemaphore() { ; }
+     ~SysSemaphore() {; }
      void create();
-     inline void open() { ; }
+     inline void open() {; }
      void close();
      void post() { SetEvent(sem); };
      inline void wait()
@@ -69,7 +70,7 @@ public:
 
      inline bool wait(uint32_t timeout)
      {
-         return WaitForSingleObject(sem, timeout) != WAIT_OBJECT_0;
+         return waitHandle(sem, timeout, SysSemaphore::noMessageLoop());
      }
 
      inline void reset() { ResetEvent(sem); }
@@ -90,10 +91,10 @@ public:
      static inline void setNoMessageLoop() { TlsSetValue(tlsNoMessageLoopIndex, (LPVOID)1); }
      static inline bool noMessageLoop() { return usingTls && ((DWORD_PTR)TlsGetValue(tlsNoMessageLoopIndex) == 1); }
 
-protected:
+ protected:
      HANDLE sem;
 
-private:
+ private:
      static bool usingTls;
      static DWORD tlsNoMessageLoopIndex;
 
@@ -102,20 +103,29 @@ private:
 
 class SysMutex
 {
-public:
+ public:
      SysMutex() : mutexMutex(0), bypassMessageLoop(false) { }
      SysMutex(bool create, bool critical);
-     ~SysMutex() { ; }
+     ~SysMutex() {; }
      void create(bool critical = false);
      void close();
-     inline void request()
+     inline bool request()
      {
-         waitHandle(mutexMutex, bypassMessageLoop || SysSemaphore::noMessageLoop());
+         return waitHandle(mutexMutex, bypassMessageLoop || SysSemaphore::noMessageLoop());
      }
 
-     inline void release()
+     inline bool request(uint32_t timeout)
      {
-         ReleaseMutex(mutexMutex);
+         return waitHandle(mutexMutex, timeout, bypassMessageLoop || SysSemaphore::noMessageLoop());
+     }
+
+     inline bool release()
+     {
+         if (mutexMutex != 0)
+         {
+             return ReleaseMutex(mutexMutex) != 0;
+         }
+         return false;
      }
 
      inline bool requestImmediate()
@@ -123,7 +133,7 @@ public:
          return WaitForSingleObject(mutexMutex, 0) != WAIT_TIMEOUT;
      }
 
-protected:
+ protected:
      HANDLE mutexMutex;              // the actual mutex
      bool bypassMessageLoop;         // a force off for the message loop
 };
@@ -159,38 +169,128 @@ protected:
  *  the queue so that they are no longer 'new.'  Once PeekMessage is called,
  *  all the messages on the queue need to be processed.
  */
-inline void waitHandle(HANDLE s, bool bypassMessageLoop)
+inline bool waitHandle(HANDLE s, bool bypassMessageLoop)
 {
     // If no message loop is flagged, then use WaitForSingleobject()
-    if ( bypassMessageLoop )
+    if (bypassMessageLoop)
     {
         WaitForSingleObject(s, INFINITE);
-        return;
+        return true;
     }
 
     // If already signaled, return.
-    if ( WaitForSingleObject(s, 0) == WAIT_OBJECT_0 )
+    if (WaitForSingleObject(s, 0) == WAIT_OBJECT_0)
     {
-        return;
+        return true;
     }
 
-    MSG msg = {0};
+    MSG msg = { 0 };
 
     do
     {
-        while ( PeekMessage(&msg, NULL, 0, 0, PM_REMOVE) )
+        while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
         {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
 
             // Check to see if signaled.
-            if ( WaitForSingleObject(s, 0) == WAIT_OBJECT_0 )
+            if (WaitForSingleObject(s, 0) == WAIT_OBJECT_0)
             {
-                return;
+                return true;
             }
         }
-    } while ( MsgWaitForMultipleObjects(1, &s, FALSE, INFINITE, QS_ALLINPUT) == WAIT_OBJECT_0 + 1 );
+    }
+    while (MsgWaitForMultipleObjects(1, &s, FALSE, INFINITE, QS_ALLINPUT) == WAIT_OBJECT_0 + 1);
+    return true;
 }
 
+
+/**
+ *  Wait for a synchronization object to be in the signaled state.
+ *
+ *  Any thread that creates windows must process messages.  A thread that
+ *  calls WaitForSingelObject with an infinite timeout risks deadlocking the
+ *  system.  MS's solution for this is to use MsgWaitForMultipleObjects to
+ *  wait on the object, or a new message arriving in the message queue. Some
+ *  threads create windows indirectly, an example is COM with CoInitialize.
+ *  Since we can't know if the current thread has a message queue that needs
+ *  processing, we use MsgWaitForMultipleObjects.
+ *
+ *  However, with the introduction of the C++ native API in ooRexx 4.0.0, it
+ *  became possible for external native libraries to attach a thread with an
+ *  active window procedure to the interpreter. If a wait is done on that
+ *  thread, here in waitHandle(), PeekMessage() causes non-queued messages to be
+ *  dispatched, and the window procedure is reentered. This can cause the Rexx
+ *  program to hang. In addition, in the one known extension where this problem
+ *  happens, ooDialog, the messages need to be passed to the dialog manager
+ *  rather than dispatched directly to the window.
+ *
+ *  For this special case, the thread can explicity ask, through
+ *  RexxSetProcessMessages(), that messages are *not* processed during this
+ *  wait. Thread local storage is used to keep track of a flag signalling this
+ *  case on a per-thread basis.
+ *
+ *  Note that MsgWaitForMultipleObjects only returns if a new message is
+ *  placed in the queue.  PeekMessage alters the state of all messages in
+ *  the queue so that they are no longer 'new.'  Once PeekMessage is called,
+ *  all the messages on the queue need to be processed.
+ */
+inline bool waitHandle(HANDLE s, uint32_t timeOut, bool bypassMessageLoop)
+{
+    // If no message loop is flagged, then use WaitForSingleobject()
+    if (bypassMessageLoop)
+    {
+        return WaitForSingleObject(s, timeOut) == WAIT_OBJECT_0;
+    }
+
+    // If already signaled, return.
+    if (WaitForSingleObject(s, 0) == WAIT_OBJECT_0)
+    {
+        return true;
+    }
+
+    MSG msg = { 0 };
+
+    // calculate our target stop time
+    ULONGLONG stopTime = GetTickCount64() + timeOut;
+
+    while (true)
+    {
+        while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+        {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+
+            // Check to see if signaled.
+            if (WaitForSingleObject(s, 0) == WAIT_OBJECT_0)
+            {
+                return true;
+            }
+        }
+
+        // now
+        ULONGLONG currentTime = GetTickCount64();
+        // this is a time out situation
+        if (currentTime > stopTime)
+        {
+            return false;
+        }
+        timeOut = (uint32_t)(stopTime - currentTime);
+        // now wait for some action on the objects
+        DWORD rc = MsgWaitForMultipleObjects(1, &s, FALSE, timeOut, QS_ALLINPUT);
+        // we got what we want for our semaphore
+        if (rc == WAIT_OBJECT_0)
+        {
+            return true;
+        }
+        // if not for the message queue, we have either a timeout or a failure,
+        // either is a false return
+        else if (rc != WAIT_OBJECT_0 + 1)
+        {
+            return false;
+        }
+    }
+    return true;
+}
 
 #endif

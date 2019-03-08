@@ -99,6 +99,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <Class id="Bag" class="BagClass" include="BagClass.hpp"/>
 <Class id="RexxInfo" class="RexxInfo" include="RexxInfoClass.hpp"/>
 <Class id="VariableReference" class="VariableReference" include="VariableReference.hpp"/>
+<Class id="EventSemaphore" class="EventSemaphoreClass" include="EventSemaphore.hpp"/>
+<Class id="MutexSemaphore" class="MutexSemaphoreClass" include="MutexSemaphore.hpp"/>
 </Exported>
 <Internal>
 <Class id="NilObject" class="RexxNilObject" include="ObjectClass.hpp"/>

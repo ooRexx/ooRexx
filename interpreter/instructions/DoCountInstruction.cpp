@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -51,11 +51,13 @@
  * Initialize a Do count block.
  *
  * @param l      The block label.
+ * @param c      A variable name for setting a counter (optional)
  * @param f      The FOR loop control information.
  */
-RexxInstructionDoCount::RexxInstructionDoCount(RexxString *l, ForLoop &f)
+RexxInstructionDoCount::RexxInstructionDoCount(RexxString *l, RexxVariableBase *c, ForLoop &f)
 {
     label = l;
+    countVariable = c;
     forLoop = f;
 }
 
@@ -71,6 +73,7 @@ void RexxInstructionDoCount::live(size_t liveMark)
     memory_mark(nextInstruction);
     memory_mark(end);
     memory_mark(label);
+    memory_mark(countVariable);
 
     // helpers for additional types of loops handle marking here
     forLoop.live(liveMark);
@@ -90,6 +93,7 @@ void RexxInstructionDoCount::liveGeneral(MarkReason reason)
     memory_mark_general(nextInstruction);
     memory_mark_general(end);
     memory_mark_general(label);
+    memory_mark_general(countVariable);
 
     // helpers for additional types of loops handle marking here
     forLoop.liveGeneral(reason);
@@ -108,6 +112,7 @@ void RexxInstructionDoCount::flatten(Envelope *envelope)
     flattenRef(nextInstruction);
     flattenRef(end);
     flattenRef(label);
+    flattenRef(countVariable);
 
     // flatten is a bit of a pain with embedded objects because
     // everything depends on having correct pointers to object references in
@@ -158,12 +163,14 @@ bool RexxInstructionDoCount::iterate(RexxActivation *context, ExpressionStack *s
  * Initialize a Do count UNTIL block.
  *
  * @param l      The block label.
+ * @param c      A variable name for setting a counter (optional)
  * @param f      The FOR loop control information.
  * @param w      The block conditional information.
  */
-RexxInstructionDoCountUntil::RexxInstructionDoCountUntil(RexxString *l, ForLoop &f, WhileUntilLoop &w)
+RexxInstructionDoCountUntil::RexxInstructionDoCountUntil(RexxString *l, RexxVariableBase *c, ForLoop &f, WhileUntilLoop &w)
 {
     label = l;
+    countVariable = c;
     forLoop = f;
     whileLoop = w;
 }
@@ -180,6 +187,7 @@ void RexxInstructionDoCountUntil::live(size_t liveMark)
     memory_mark(nextInstruction);
     memory_mark(end);
     memory_mark(label);
+    memory_mark(countVariable);
 
     // helpers for additional types of loops handle marking here
     forLoop.live(liveMark);
@@ -200,6 +208,7 @@ void RexxInstructionDoCountUntil::liveGeneral(MarkReason reason)
     memory_mark_general(nextInstruction);
     memory_mark_general(end);
     memory_mark_general(label);
+    memory_mark_general(countVariable);
 
     // helpers for additional types of loops handle marking here
     forLoop.liveGeneral(reason);
@@ -219,6 +228,7 @@ void RexxInstructionDoCountUntil::flatten(Envelope *envelope)
     flattenRef(nextInstruction);
     flattenRef(end);
     flattenRef(label);
+    flattenRef(countVariable);
 
     // flatten is a bit of a pain with embedded objects because
     // everything depends on having correct pointers to object references in
@@ -260,12 +270,14 @@ bool RexxInstructionDoCountUntil::iterate(RexxActivation *context, ExpressionSta
  * Initialize a Do count WHILE block.
  *
  * @param l      The block label.
+ * @param c      A variable name for setting a counter (optional)
  * @param f      The FOR loop control information.
  * @param w      The block conditional information.
  */
-RexxInstructionDoCountWhile::RexxInstructionDoCountWhile(RexxString *l, ForLoop &f, WhileUntilLoop &w)
+RexxInstructionDoCountWhile::RexxInstructionDoCountWhile(RexxString *l, RexxVariableBase *c, ForLoop &f, WhileUntilLoop &w)
 {
     label = l;
+    countVariable = c;
     forLoop = f;
     whileLoop = w;
 }

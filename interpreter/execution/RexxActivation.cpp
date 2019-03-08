@@ -1035,7 +1035,7 @@ void RexxActivation::iterate(RexxString *name)
                 setIndent(doblock->getIndent());
                 // have the loop handle a re-execution.  This will
                 // determine if we continue or terminate.
-                ((RexxInstructionBaseDo *)loop)->reExecute(this, &stack, doblock);
+                ((RexxInstructionBaseLoop *)loop)->reExecute(this, &stack, doblock);
                 return;
             }
 
@@ -1051,7 +1051,7 @@ void RexxActivation::iterate(RexxString *name)
             }
             // got our target, reset the indent and do the loop.
             setIndent(doblock->getIndent());
-            ((RexxInstructionBaseDo *)loop)->reExecute(this, &stack, doblock);
+            ((RexxInstructionBaseLoop *)loop)->reExecute(this, &stack, doblock);
             return;
         }
         // terminate this block instruction and step to the

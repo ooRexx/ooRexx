@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -45,8 +45,7 @@
 #include "DoInstruction.hpp"
 #include "DoBlock.hpp"
 #include "RexxActivation.hpp"
-
-
+#include "Numerics.hpp"
 
 /**
  * Allocate a new DoBlock object.
@@ -67,10 +66,18 @@ void * DoBlock::operator new(size_t size)
  * @param _parent The instruction this represents.
  * @param _indent The current trace indentation level.
  */
-DoBlock::DoBlock(RexxBlockInstruction* _parent, size_t  _indent )
+DoBlock::DoBlock(RexxActivation *context, RexxBlockInstruction *_parent)
 {
     parent = _parent;
-    indent = _indent;
+    indent = context->getIndent();
+    countVariable = parent->getCountVariable();
+    // if we have a count variable, then we need to set the initial value
+    // to zero before we do the loop termination tests.
+    if (countVariable != OREF_NULL)
+    {
+        countVariable->assign(context, IntegerZero);
+        context->traceKeywordResult(GlobalNames::COUNTER, IntegerZero);
+    }
 }
 
 
@@ -86,6 +93,7 @@ void DoBlock::live(size_t liveMark)
     memory_mark(control);
     memory_mark(to);
     memory_mark(by);
+    memory_mark(countVariable);
 }
 
 
@@ -103,6 +111,25 @@ void DoBlock::liveGeneral(MarkReason reason)
     memory_mark_general(control);
     memory_mark_general(to);
     memory_mark_general(by);
+    memory_mark_general(countVariable);
+}
+
+
+/**
+ * Handle a new iteration of a loop, with setting of the counter variable, if required.
+ *
+ * @param context The current execution context,
+ * @param v       The counter variable (if any) to set.
+ */
+void DoBlock::setCounter(RexxActivation *context)
+{
+    if (countVariable != OREF_NULL)
+    {
+        // assign the control variable and trace this result
+        Protected<RexxObject> c =  Numerics::uint64ToObject(counter);
+        countVariable->assign(context, c);
+        context->traceKeywordResult(GlobalNames::COUNTER, c);
+    }
 }
 
 

@@ -75,6 +75,8 @@
 #include "NumberStringClass.hpp"
 #include "RexxInfoClass.hpp"
 #include "VariableReference.hpp"
+#include "EventSemaphore.hpp"
+#include "MutexSemaphore.hpp"
 #include "SysFile.hpp"
 #include "SysProcess.hpp"
 #include <stdio.h>
@@ -1828,6 +1830,8 @@ void MemoryObject::restore()
     RESTORE_CLASS(StackFrame, RexxClass);
     RESTORE_CLASS(RexxInfo, RexxClass);
     RESTORE_CLASS(VariableReference, RexxClass);
+    RESTORE_CLASS(EventSemaphore, RexxClass);
+    RESTORE_CLASS(MutexSemaphore, RexxClass);
 
     // mark the memory object as old space.
     memoryObject.setOldSpace();

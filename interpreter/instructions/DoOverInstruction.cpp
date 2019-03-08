@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -51,11 +51,13 @@
  * Initialize a Do Over block.
  *
  * @param l      The optional label.
+ * @param c      A variable name for setting a counter (optional)
  * @param o      The loop control information.
  */
-RexxInstructionDoOver::RexxInstructionDoOver(RexxString *l, OverLoop &o)
+RexxInstructionDoOver::RexxInstructionDoOver(RexxString *l, RexxVariableBase *c, OverLoop &o)
 {
     label = l;
+    countVariable = c;
     overLoop = o;
 }
 
@@ -71,6 +73,7 @@ void RexxInstructionDoOver::live(size_t liveMark)
     memory_mark(nextInstruction);
     memory_mark(end);
     memory_mark(label);
+    memory_mark(countVariable);
 
     // helpers for additional types of loops handle marking here
     overLoop.live(liveMark);
@@ -90,6 +93,7 @@ void RexxInstructionDoOver::liveGeneral(MarkReason reason)
     memory_mark_general(nextInstruction);
     memory_mark_general(end);
     memory_mark_general(label);
+    memory_mark_general(countVariable);
 
     // helpers for additional types of loops handle marking here
     overLoop.liveGeneral(reason);
@@ -108,6 +112,7 @@ void RexxInstructionDoOver::flatten(Envelope *envelope)
     flattenRef(nextInstruction);
     flattenRef(end);
     flattenRef(label);
+    flattenRef(countVariable);
 
     // flatten is a bit of a pain with embedded objects because
     // everything depends on having correct pointers to object references in
@@ -159,12 +164,14 @@ bool RexxInstructionDoOver::iterate(RexxActivation *context, ExpressionStack *st
  * Initialize a Do Over For block.
  *
  * @param l      The optional label.
+ * @param c      A variable name for setting a counter (optional)
  * @param o      The loop control information.
  * @param f      The loop For control
  */
-RexxInstructionDoOverFor::RexxInstructionDoOverFor(RexxString *l, OverLoop &o, ForLoop &f)
+RexxInstructionDoOverFor::RexxInstructionDoOverFor(RexxString *l, RexxVariableBase *c, OverLoop &o, ForLoop &f)
 {
     label = l;
+    countVariable = c;
     overLoop = o;
     forLoop = f;
 }
@@ -181,6 +188,7 @@ void RexxInstructionDoOverFor::live(size_t liveMark)
     memory_mark(nextInstruction);
     memory_mark(end);
     memory_mark(label);
+    memory_mark(countVariable);
 
     // helpers for additional types of loops handle marking here
     overLoop.live(liveMark);
@@ -201,6 +209,7 @@ void RexxInstructionDoOverFor::liveGeneral(MarkReason reason)
     memory_mark_general(nextInstruction);
     memory_mark_general(end);
     memory_mark_general(label);
+    memory_mark_general(countVariable);
 
     // helpers for additional types of loops handle marking here
     overLoop.liveGeneral(reason);
@@ -220,6 +229,7 @@ void RexxInstructionDoOverFor::flatten(Envelope *envelope)
     flattenRef(nextInstruction);
     flattenRef(end);
     flattenRef(label);
+    flattenRef(countVariable);
 
     // flatten is a bit of a pain with embedded objects because
     // everything depends on having correct pointers to object references in
@@ -274,12 +284,14 @@ bool RexxInstructionDoOverFor::iterate(RexxActivation *context, ExpressionStack 
  * Initialize a Do Over Until block
  *
  * @param l      The loop label.
+ * @param c      A variable name for setting a counter (optional)
  * @param o      The loop control information.
  * @param w      The loop conditional information.
  */
-RexxInstructionDoOverUntil::RexxInstructionDoOverUntil(RexxString *l, OverLoop &o, WhileUntilLoop &w)
+RexxInstructionDoOverUntil::RexxInstructionDoOverUntil(RexxString *l, RexxVariableBase *c, OverLoop &o, WhileUntilLoop &w)
 {
     label = l;
+    countVariable = c;
     overLoop = o;
     whileLoop = w;
 }
@@ -296,6 +308,7 @@ void RexxInstructionDoOverUntil::live(size_t liveMark)
     memory_mark(nextInstruction);
     memory_mark(end);
     memory_mark(label);
+    memory_mark(countVariable);
 
     // helpers for additional types of loops handle marking here
     overLoop.live(liveMark);
@@ -316,6 +329,7 @@ void RexxInstructionDoOverUntil::liveGeneral(MarkReason reason)
     memory_mark_general(nextInstruction);
     memory_mark_general(end);
     memory_mark_general(label);
+    memory_mark_general(countVariable);
 
     // helpers for additional types of loops handle marking here
     overLoop.liveGeneral(reason);
@@ -335,6 +349,7 @@ void RexxInstructionDoOverUntil::flatten(Envelope *envelope)
     flattenRef(nextInstruction);
     flattenRef(end);
     flattenRef(label);
+    flattenRef(countVariable);
 
     // flatten is a bit of a pain with embedded objects because
     // everything depends on having correct pointers to object references in
@@ -377,12 +392,14 @@ bool RexxInstructionDoOverUntil::iterate(RexxActivation *context, ExpressionStac
  * Initialize a Do Over While block
  *
  * @param l      The loop label.
+ * @param c      A variable name for setting a counter (optional)
  * @param o      The loop control information.
  * @param w      The loop conditional information.
  */
-RexxInstructionDoOverWhile::RexxInstructionDoOverWhile(RexxString *l, OverLoop &o, WhileUntilLoop &w)
+RexxInstructionDoOverWhile::RexxInstructionDoOverWhile(RexxString *l, RexxVariableBase *c, OverLoop &o, WhileUntilLoop &w)
 {
     label = l;
+    countVariable = c;
     overLoop = o;
     whileLoop = w;
 }
@@ -414,12 +431,14 @@ bool RexxInstructionDoOverWhile::iterate(RexxActivation *context, ExpressionStac
  * Initialize a Do Over For Until block
  *
  * @param l      The loop label.
+ * @param c      A variable name for setting a counter (optional)
  * @param o      The loop control information.
  * @param w      The loop conditional information.
  */
-RexxInstructionDoOverForUntil::RexxInstructionDoOverForUntil(RexxString *l, OverLoop &o, ForLoop &f, WhileUntilLoop &w)
+RexxInstructionDoOverForUntil::RexxInstructionDoOverForUntil(RexxString *l, RexxVariableBase *c, OverLoop &o, ForLoop &f, WhileUntilLoop &w)
 {
     label = l;
+    countVariable = c;
     overLoop = o;
     forLoop = f;
     whileLoop = w;
@@ -437,6 +456,7 @@ void RexxInstructionDoOverForUntil::live(size_t liveMark)
     memory_mark(nextInstruction);
     memory_mark(end);
     memory_mark(label);
+    memory_mark(countVariable);
 
     // helpers for additional types of loops handle marking here
     overLoop.live(liveMark);
@@ -458,6 +478,7 @@ void RexxInstructionDoOverForUntil::liveGeneral(MarkReason reason)
     memory_mark_general(nextInstruction);
     memory_mark_general(end);
     memory_mark_general(label);
+    memory_mark_general(countVariable);
 
     // helpers for additional types of loops handle marking here
     overLoop.liveGeneral(reason);
@@ -478,6 +499,7 @@ void RexxInstructionDoOverForUntil::flatten(Envelope *envelope)
     flattenRef(nextInstruction);
     flattenRef(end);
     flattenRef(label);
+    flattenRef(countVariable);
 
     // flatten is a bit of a pain with embedded objects because
     // everything depends on having correct pointers to object references in
@@ -521,12 +543,14 @@ bool RexxInstructionDoOverForUntil::iterate(RexxActivation *context, ExpressionS
  * Initialize a Do Over For While block
  *
  * @param l      The loop label.
+ * @param c      A variable name for setting a counter (optional)
  * @param o      The loop control information.
  * @param w      The loop conditional information.
  */
-RexxInstructionDoOverForWhile::RexxInstructionDoOverForWhile(RexxString *l, OverLoop &o, ForLoop &f, WhileUntilLoop &w)
+RexxInstructionDoOverForWhile::RexxInstructionDoOverForWhile(RexxString *l, RexxVariableBase *c, OverLoop &o, ForLoop &f, WhileUntilLoop &w)
 {
     label = l;
+    countVariable = c;
     overLoop = o;
     forLoop = f;
     whileLoop = w;

@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -75,6 +75,8 @@
 #include "MethodArguments.hpp"
 #include "MutableBufferClass.hpp"
 #include "SysProcess.hpp"
+#include "MutexSemaphore.hpp"
+#include "IdentityTableClass.hpp"
 
 #include <stdio.h>
 #include <time.h>
@@ -234,6 +236,9 @@ void Activity::runThread()
         // no longer an active activity
         deactivate();
 
+        // make sure we clean up any mutexes we hold
+        cleanupMutexes();
+
         // reset our semaphores
         runSem.reset();
         guardSem.reset();
@@ -263,6 +268,8 @@ void Activity::cleanupActivityResources()
     runSem.close();
     guardSem.close();
     currentThread.close();
+    // make sure any mutexes we are holding get released
+    cleanupMutexes();
 }
 
 
@@ -3446,7 +3453,66 @@ void Activity::validateThread()
  *
  * @return The last message name.
  */
-RexxString *Activity::getLastMessageName()
+RexxString* Activity::getLastMessageName()
 {
     return activationFrames->messageName();
 }
+
+
+/**
+ * Register this mutex with the activity as being held.
+ *
+ * @param sem    the semaphore to add
+ */
+void Activity::addMutex(MutexSemaphoreClass *sem)
+{
+    if (heldMutexes == OREF_NULL)
+    {
+        heldMutexes = new_identity_table();
+    }
+    heldMutexes->put(sem, sem);
+}
+
+
+/**
+ * Remove a mutex from the activity held list
+ *
+ * @param sem    the semaphore to remove
+ */
+void Activity::removeMutex(MutexSemaphoreClass *sem)
+{
+    // if we don't have a mutex table or this semaphore does not appear
+    // in our table, then it is probably owned by a a nested activity. Pass
+    // this request along to the pushed down activity
+    if (heldMutexes == OREF_NULL || !heldMutexes->hasIndex(sem))
+    {
+        heldMutexes->remove(sem);
+    }
+    else if (nestedActivity != OREF_NULL)
+    {
+        nestedActivity->removeMutex(sem);
+    }
+}
+
+
+/**
+ * Cleanup any held mutexes on activity termination.
+ */
+void Activity::cleanupMutexes()
+{
+    if (heldMutexes != OREF_NULL)
+    {
+        Protected<ArrayClass> semaphores = heldMutexes->allIndexes();
+        for (size_t i = 1; i <= semaphores->items(); i++)
+        {
+            MutexSemaphoreClass *mutex = (MutexSemaphoreClass *)semaphores->get(i);
+            // release the semaphore until we get a failure so the nesting is unwound.
+            mutex->forceLockRelease();
+        }
+
+        // clear out the mutex list.
+        heldMutexes->empty();
+        heldMutexes = OREF_NULL;
+    }
+}
+

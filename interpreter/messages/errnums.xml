@@ -1493,6 +1493,12 @@ special character (such as a parenthesis).
 <para>OVER keyword expected for a WITH loop.</para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>905</term>
+<listitem>
+<para>COUNTER keyword not allowd on a simple DO instruction.</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 <section id="ERR28">

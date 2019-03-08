@@ -741,6 +741,7 @@
 #define Error_Incorrect_call_stem_size_msg                           826
 #define Error_Incorrect_call_stem_range_msg                          827
 #define Error_Incorrect_call_stem_sparse_array_msg                   828
+#define Error_Invalid_do_simple_do_counter_msg                       829
 
 
 #endif

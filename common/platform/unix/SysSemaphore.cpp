@@ -193,10 +193,16 @@ void SysSemaphore::wait()
     pthread_setschedparam(pthread_self(),SCHED_OTHER, &schedparam);
 }
 
-bool SysSemaphore::wait(uint32_t t)           // takes a timeout in msecs
+
+/**
+ * Fill in a timespec given a timeout value.
+ *
+ * @param t      The time to wait, in milliseconds.
+ * @param ts
+ */
+void SysSemaphore::createTimeOut(uint32_t t, timespec &ts)
 {
     struct timeval  tv;
-    struct timespec ts;
 
     int result = 0;
     gettimeofday(&tv, NULL);                  // get current time
@@ -209,10 +215,26 @@ bool SysSemaphore::wait(uint32_t t)           // takes a timeout in msecs
     tv.tv_sec += t / 1000;                    // add requested seconds
     ts.tv_sec = tv.tv_sec;                    // copy timeval to timespec; seconds ..
     ts.tv_nsec = tv.tv_usec * 1000;           // .. and microsecs to nanosecs
+}
+
+
+/**
+ * Wait for the event, with a timeout.
+ *
+ * @param t      The timeout value, in milliseconds.
+ *
+ * @return       true if the event occurrec, false if there was
+ *               a timeout.
+ */
+bool SysSemaphore::wait(uint32_t t)           // takes a timeout in msecs
+{
+    struct timespec ts;                       // fill in the timeout spec
+    createTimeOut(t, ts);
+
     pthread_mutex_lock(&(this->semMutex));    // Lock access to semaphore
     while (result == 0 && !this->postedCount) // Has it been posted? Spurious wakeups may occur
     {                                         // wait with timeout
-        result = pthread_cond_timedwait(&(this->semCond),&(this->semMutex),&ts);
+        result = pthread_cond_timedwait(&(this->semCond), &(this->semMutex), &ts);
     }
     pthread_mutex_unlock(&(this->semMutex));    // Release mutex lock
     // a false return means this timed out
@@ -270,33 +292,48 @@ void SysMutex::create(bool critical)
     pthread_mutexattr_t mutexattr;
 
     iRC = pthread_mutexattr_init(&mutexattr);
-    if ( iRC == 0 )
+    if (iRC == 0)
     {
-    #if defined( HAVE_PTHREAD_MUTEX_RECURSIVE ) /* Linux most likely */
-            iRC = pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_RECURSIVE);
-    #elif defined( HAVE_PTHREAD_MUTEX_ERRORCHECK )
-            iRC = pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_ERRORCHECK);
-    #else
-            fprintf(stderr," *** ERROR: Unknown 2nd argument to pthread_mutexattr_settype()!\n");
-    #endif
+#if defined( HAVE_PTHREAD_MUTEX_RECURSIVE ) /* Linux most likely */
+        iRC = pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_RECURSIVE);
+#elif defined( HAVE_PTHREAD_MUTEX_ERRORCHECK )
+        iRC = pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_ERRORCHECK);
+#else
+        fprintf(stderr, " *** ERROR: Unknown 2nd argument to pthread_mutexattr_settype()!\n");
+#endif
     }
-    if ( iRC == 0 )
+    if (iRC == 0)
     {
         iRC = pthread_mutex_init(&(this->mutexMutex), &mutexattr);
     }
-    if ( iRC == 0 )
+    if (iRC == 0)
     {
         iRC = pthread_mutexattr_destroy(&mutexattr); /* It does not affect       */
     }
 #else                                             /* mutexes created with it  */
     iRC = pthread_mutex_init(&(this->mutexMutex), NULL);
 #endif
-    if ( iRC != 0 )
+    if (iRC != 0)
     {
-        fprintf(stderr," *** ERROR: At RexxMutex(), pthread_mutex_init - RC = %d !\n", iRC);
+        fprintf(stderr, " *** ERROR: At RexxMutex(), pthread_mutex_init - RC = %d !\n", iRC);
     }
 
     created = true;
+}
+
+
+/**
+ * Lock the mutex with a wait time.
+ *
+ * @param t      The time to wait
+ *
+ * @return true of the lock was obtained, false otherwise.
+ */
+bool SysMutex::request(uint32_t t)
+{
+    struct timespec ts;                       // fill in the timeout spec
+    SysSemaphore::createTimeOut(t, ts);
+    return pthread_mutex_timedlock(&mutexMutex, &ts) == 0;
 }
 
 

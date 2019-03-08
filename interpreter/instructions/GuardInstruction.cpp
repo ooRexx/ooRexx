@@ -158,7 +158,7 @@ void RexxInstructionGuard::execute(RexxActivation *context, ExpressionStack *sta
         }
 
         // initialize the guard SEM
-        ActivityManager::currentActivity->guardSet();
+        context->getActivity()->guardSet();
         // get the expression result
         RexxObject *result = expression->evaluate(context, stack);
         context->traceKeywordResult(GlobalNames::WHEN, result);
