@@ -3,7 +3,7 @@
 /* Define to 1 if you have the <attr/xattr.h> header file. */
 #cmakedefine HAVE_ATTR_XATTR_H
 
-/* Define to 1 if you have the `catopen' function. */
+/* Define to 1 if you have the 'catopen' function. */
 #cmakedefine HAVE_CATOPEN
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
@@ -18,37 +18,37 @@
 /* Define to 1 if you have the <filehdr.h> header file. */
 #cmakedefine HAVE_FILEHDR_H
 
-/* Define to 1 if you have the `fstat' function. */
+/* Define to 1 if you have the 'fstat' function. */
 #cmakedefine HAVE_FSTAT
 
-/* Define to 1 if you have the `gcvt' function. */
+/* Define to 1 if you have the 'gcvt' function. */
 #cmakedefine HAVE_GCVT
 
-/* Define to 1 if you have the `geteuid' function. */
+/* Define to 1 if you have the 'geteuid' function. */
 #cmakedefine HAVE_GETEUID
 
-/* Define to 1 if you have the `getpgrp' function. */
+/* Define to 1 if you have the 'getpgrp' function. */
 #cmakedefine HAVE_GETPGRP
 
-/* Define to 1 if you have the `getpwuid' function. */
+/* Define to 1 if you have the 'getpwuid' function. */
 #cmakedefine HAVE_GETPWUID
 
-/* Define to 1 if you have the `gettimeofday' function. */
+/* Define to 1 if you have the 'gettimeofday' function. */
 #cmakedefine HAVE_GETTIMEOFDAY
 
-/* Define to 1 if you have the `getuserattr' function. */
+/* Define to 1 if you have the 'getuserattr' function. */
 #cmakedefine HAVE_GETUSERATTR
 
-/* Define to 1 if you have the `IDtouser' function. */
+/* Define to 1 if you have the 'IDtouser' function. */
 #cmakedefine HAVE_IDTOUSER
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #cmakedefine HAVE_INTTYPES_H
 
-/* Define to 1 if you have the `pthread' library (-lpthread). */
+/* Define to 1 if you have the 'pthread' library (-lpthread). */
 #cmakedefine HAVE_LIBPTHREAD
 
-/* Define to 1 if you have the `rt' library (-lrt). */
+/* Define to 1 if you have the 'rt' library (-lrt). */
 #cmakedefine HAVE_LIBRT
 
 /* Define to 1 if you have the <limits.h> header file. */
@@ -63,7 +63,7 @@
 /* Define to 1 if you have the <memory.h> header file. */
 #cmakedefine HAVE_MEMORY_H
 
-/* Define to 1 if you have the `memset' function. */
+/* Define to 1 if you have the 'memset' function. */
 #cmakedefine HAVE_MEMSET
 
 /* Define to 1 if you have the <mesg.h> header file. */
@@ -78,7 +78,7 @@
 /* Define to 1 if you have the <nl_types.h> header file. */
 #cmakedefine HAVE_NL_TYPES_H
 
-/* Define to 1 if you have the `nsleep' function. */
+/* Define to 1 if you have the 'nsleep' function. */
 #cmakedefine HAVE_NSLEEP
 
 /* Define to 1 if you have the <pthread.h> header file. */
@@ -108,22 +108,28 @@
 /* Define to 1 if KDMKTONE is a valid value */
 #cmakedefine HAVE_KDMKTONE
 
+/* Define to 1 if _NSGetExecutablePath is a valid function */
+#cmakedefine HAVE_NSGETEXECUTABLEPATH
+
+/* Define to 1 if getexecname is a valid function */
+#cmakedefine HAVE_GETEXECNAME
+
 /* Define to 1 if you have the <pwd.h> header file. */
 #cmakedefine HAVE_PWD_H
 
 /* Define to 1 if you have the <sched.h> header file. */
 #cmakedefine HAVE_SCHED_H
 
-/* Define to 1 if you have the `setlocale' function. */
+/* Define to 1 if you have the 'setlocale' function. */
 #cmakedefine HAVE_SETLOCALE
 
-/* Define to 1 if you have the `sighold' function. */
+/* Define to 1 if you have the 'sighold' function. */
 #cmakedefine HAVE_SIGHOLD
 
 /* Define to 1 if you have the <signal.h> header file. */
 #cmakedefine HAVE_SIGNAL_H
 
-/* Define to 1 if you have the `sigprocmask' function. */
+/* Define to 1 if you have the 'sigprocmask' function. */
 #cmakedefine HAVE_SIGPROCMASK
 
 /* Define to 1 if you have the <stdarg.h> header file. */
@@ -135,7 +141,7 @@
 /* Define to 1 if you have the <stdlib.h> header file. */
 #cmakedefine HAVE_STDLIB_H
 
-/* Define to 1 if you have the `strdup' function. */
+/* Define to 1 if you have the 'strdup' function. */
 #cmakedefine HAVE_STRDUP
 
 /* Define to 1 if you have the <strings.h> header file. */
@@ -201,7 +207,7 @@
 /* Define to 1 if you have the <ncurses.h> header file. */
 #cmakedefine HAVE_NCURSES_H
 
-/* Define to 1 if you have the `vprintf' function. */
+/* Define to 1 if you have the 'vprintf' function. */
 #cmakedefine HAVE_VPRINTF
 
 /* Name of package */

@@ -60,12 +60,13 @@ class SysProcess
      {
          return _getpid();
      }
-     static const char* getExecutableLocation();
+     static const char* getExecutableFullPath();
+     static const char* getLibraryLocation();
      static void beep(int frequency, int duration);
 
  protected:
-
-     static const char *executableLocation;
+     static const char* executableFullPath;
+     static const char* libraryLocation;
 };
 #endif
 

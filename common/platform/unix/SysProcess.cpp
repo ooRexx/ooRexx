@@ -54,7 +54,7 @@
 #endif
 
 #ifdef HAVE_DLFCN_H
-#include <dlfcn.h>
+# include <dlfcn.h>
 #endif
 
 #include <fcntl.h>
@@ -68,11 +68,17 @@
 #include <sys/types.h>
 #include <errno.h>
 #ifdef HAVE_KDMKTONE
-#include <linux/kd.h>
+# include <linux/kd.h>
+#endif
+#ifdef HAVE_NSGETEXECUTABLEPATH
+# include <mach-o/dyld.h>
 #endif
 
-// location of our executables
-const char *SysProcess::executableLocation = NULL;
+
+// full path of the currently running executable
+const char *SysProcess::executableFullPath = NULL;
+// directory of our Rexx shared libraries
+const char *SysProcess::libraryLocation = NULL;
 
 /**
  * Get the current user name information.
@@ -102,11 +108,70 @@ void SysProcess::getUserID(char *buffer)
  *
  * @return A character string of the location (does not need to be freed by the caller)
  */
-const char* SysProcess::getExecutableLocation()
+const char* SysProcess::getExecutableFullPath()
 {
-    if (executableLocation != NULL)
+    if (executableFullPath != NULL)
     {
-        return executableLocation;
+        return executableFullPath;
+    }
+
+    char path[PATH_MAX];
+
+#ifdef HAVE_NSGETEXECUTABLEPATH
+    // Darwin
+    uint32_t length = sizeof(path);
+    if (_NSGetExecutablePath(path, &length) != 0)
+    {
+        path[0] = '\0';
+    }
+#elif defined HAVE_GETEXECNAME
+    // SunOS, Solaris et al.
+    if (getexecname(), path) == NULL)
+    {
+        path[0] = '\0';
+    }
+#else
+    const char *procfs[3];
+    procfs[0] = "/proc/self/exe";     // LINUX
+    procfs[1] = "/proc/curproc/exe";  // BSD
+    procfs[2] = "/proc/curproc/file"; // FreeBSD, DragonFly BSD
+
+    ssize_t bytes = 0;
+    for (int i = 0; i < sizeof(procfs) / sizeof(procfs[0]) && bytes == 0; i++)
+    {
+        bytes = readlink(procfs[i], path, sizeof(path));
+        if (bytes == -1 || bytes == sizeof(path))
+        {
+            bytes = 0;
+        }
+    }
+    path[bytes] = '\0'; // we must always add a trailing NUL
+#endif
+
+    // this is the file location with any symbolic links resolved.
+    char *modulePath = realpath(path, NULL);
+    if (modulePath == NULL)
+    {
+        return NULL;
+    }
+
+    // save this for future use
+    executableFullPath = modulePath;
+    return executableFullPath;
+}
+
+
+/**
+ * Determine the location of the Rexx shared libraries. This returns the
+ * directory portion of the library path with a trailing slash.
+ *
+ * @return A character string of the location (does not need to be freed by the caller)
+ */
+const char* SysProcess::getLibraryLocation()
+{
+    if (libraryLocation != NULL)
+    {
+        return libraryLocation;
     }
 
 #ifdef HAVE_DLADDR
@@ -120,32 +185,32 @@ const char* SysProcess::getExecutableLocation()
 
     // this is the file location with any symbolic links
     // resolved.
-    char *moduleName = realpath(dlInfo.dli_fname, NULL);
+    char *modulePath = realpath(dlInfo.dli_fname, NULL);
 
-    size_t nameLength = strlen(moduleName);
+    size_t pathLength = strlen(modulePath);
+
     // scan backwards to find the last directory delimiter
-
-    for (; nameLength > 0; nameLength--)
+    for (; pathLength > 0; pathLength--)
     {
         // is this the directory delimiter?
-        if (moduleName[nameLength - 1] == '/')
+        if (modulePath[pathLength - 1] == '/')
         {
             // terminate the string after the first encountered slash and quit
-            moduleName[nameLength] = '\0';
+            modulePath[pathLength] = '\0';
             break;
         }
     }
 
     // belt-and-braces, make sure we found a directory
-    if (nameLength == 0)
+    if (pathLength == 0)
     {
-        free(moduleName);
+        free(modulePath);
         return NULL;
     }
 
     // save this for future use
-    executableLocation = moduleName;
-    return executableLocation;
+    libraryLocation = modulePath;
+    return libraryLocation;
 #else
     // no means to determine this, so we always return NULL
     return NULL;
@@ -156,8 +221,6 @@ const char* SysProcess::getExecutableLocation()
 /**
  * do a beep tone
  *
- * @param frequency The frequency to beep at
- * @param duration  The duration to beep (in milliseconds)
  * @param frequency The frequency to beep at
  * @param duration  The duration to beep (in milliseconds)
  *

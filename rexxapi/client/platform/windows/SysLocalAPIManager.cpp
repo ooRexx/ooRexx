@@ -104,7 +104,7 @@ void SysLocalAPIManager::startServerProcess()
 
     char *fullExeName = NULL;
     // determine the location from location of rexxapi.dll.
-    const char *installLocation =  SysProcess::getExecutableLocation();
+    const char *installLocation =  SysProcess::getLibraryLocation();
 
     // we should get this, if not, we'll just work from the path
     if (installLocation == NULL)

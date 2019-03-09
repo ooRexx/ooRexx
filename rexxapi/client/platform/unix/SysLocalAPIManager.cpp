@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -74,7 +74,10 @@ int _rexxapi_fini()
  */
 void SysLocalAPIManager::startServerProcess()
 {
-    char apiExeName[] = "rxapi";
+#define RXAPI "rxapi"
+#define DOTDOT_BIN_RXAPI "../bin/" RXAPI
+#define DOT_RXAPI "./" RXAPI
+    char apiExeName[] = RXAPI;
     char *apiExeArg[2];
     apiExeArg[0] = apiExeName;
     apiExeArg[1] = NULL;
@@ -84,62 +87,57 @@ void SysLocalAPIManager::startServerProcess()
         return;
     }
 
-    // we will make multiple attempts at locating this. First choice
-    // is to pick up rxapi from the same location as librexxapi, if we can determine
-    // this.
-    AutoFree fullExeName;
-    // determine the location from location of rexxapi.dll.
-    const char *installLocation =  SysProcess::getExecutableLocation();
 
-    // we should get this, if not, we'll just work from the path
-    if (installLocation == NULL)
-    {
-        fullExeName = strdup(apiExeName);
-    }
-    else
-    {
-        size_t commandSize = strlen(installLocation) + strlen(apiExeName) + 1;
-
-        fullExeName = (char *)malloc(commandSize);
-        // NB: the executable location includes the trailing "\" character
-        // however, the path might contain blanks, so we'll need to enclose the
-        // command name in quotes
-        snprintf(fullExeName, commandSize, "%s%s", installLocation, apiExeName);
-    }
-
-
-	pid_t pid = fork();
-	if (pid < 0)
+    pid_t pid = fork();
+    if (pid < 0)
     {
         throw new ServiceException(API_FAILURE, "Unable to start API server");
-	}
+    }
 
-	if (pid != 0)
+    if (pid != 0)
     {
         // we are the parent process
-		return;
-	}
+        return;
+    }
     // if we get here we are the child process
 
     // become the session leader
-	setsid();
+    setsid();
 
     // housekeeping - chdir to the root subdir and close all open files
-	int ignore = chdir("/");
-	umask(0);
-	for(int i = 0; i < 1024; i++)
+    int ignore = chdir("/");
+    umask(0);
+    for(int i = 0; i < 1024; i++)
     {
-		close(i);
-	}
+        close(i);
+    }
 
-    // now start rxapi
-    execvp(fullExeName, apiExeArg);
+    // we will make multiple attempts at locating rxapi, first with a full path.
+    // while on Windows the rxapi executable is located in the same directory
+    // as the rexxapi library, on Unix these two are in different paths.
+    // typically the rexxapi library is in install-path/lib/ or in
+    // install-path/lib64/ and the rxapi executable is in install-path/bin/
+    // so we try to locate rxapi with ../bin/rxapi relative to the library
+    // location.
+    AutoFree fullExeName = NULL;
+    const char *installLocation =  SysProcess::getLibraryLocation();
+    if (installLocation != NULL)
+    {
+        // the library location includes the trailing "/" character
+        size_t commandSize = strlen(installLocation) + strlen(DOTDOT_BIN_RXAPI) + 1;
 
-    // if we make it here, then this failed. try using an unqualified name and try to locate it in the path
-    execvp(apiExeName, apiExeArg);
+        fullExeName = (char *)malloc(commandSize);
+        // the path might contain blanks, so we'll need to enclose the
+        // command name in quotes
+        snprintf(fullExeName, commandSize, "%s%s", installLocation, DOTDOT_BIN_RXAPI);
+        execvp(fullExeName, apiExeArg);
+    }
+
+    // next we use the unqualified rxapi name and try to locate it on $PATH
+    execvp(RXAPI, apiExeArg);
 
     // did this still fail? Last attempt, try to load this from the current directory
-    execvp("./rxapi", apiExeArg);
+    execvp(DOT_RXAPI, apiExeArg);
 
     // still no luck? This is a launch failure. Because we are the forked process,
     // we need to exit immediately.

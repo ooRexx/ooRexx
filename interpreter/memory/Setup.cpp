@@ -1265,6 +1265,8 @@ AddMethod("maxExponent", RexxInfo::getMaxExponent, 0);
 AddMethod("minExponent", RexxInfo::getMinExponent, 0);
 AddMethod("maxPathLength", RexxInfo::getMaxPathLength, 0);
 AddMethod("maxArraySize", RexxInfo::getMaxArraySize, 0);
+        AddMethod("executable", RexxInfo::getRexxExecutable, 0);
+        AddMethod("libraryPath", RexxInfo::getRexxLibrary, 0);
 
 CompleteMethodDefinitions();
 

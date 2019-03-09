@@ -1217,6 +1217,8 @@ PCPPM CPPCode::exportedMethods[] =
     CPPM(RexxInfo::getMinExponent),
     CPPM(RexxInfo::getMaxPathLength),
     CPPM(RexxInfo::getMaxArraySize),
+    CPPM(RexxInfo::getRexxExecutable),
+    CPPM(RexxInfo::getRexxLibrary),
 
     CPPM(VariableReference::newRexx),
     CPPM(VariableReference::getName),

@@ -740,8 +740,8 @@ void MemoryObject::loadImage(char *&imageBuffer, size_t &imageSize)
 {
     FileNameBuffer fullname;
 
-    // first try for a colocated image file
-    const char *installLocation =  SysProcess::getExecutableLocation();
+    // BASEIMAGE should be located together with the Rexx shared libraries
+    const char *installLocation =  SysProcess::getLibraryLocation();
     if (installLocation != NULL)
     {
         fullname = installLocation;
@@ -754,7 +754,7 @@ void MemoryObject::loadImage(char *&imageBuffer, size_t &imageSize)
 
     fullname = BASEIMAGE;
 
-    // colocation failed, try the current directory next
+    // try the current directory next
     if (loadImage(imageBuffer, imageSize, fullname))
     {
         return;
@@ -772,7 +772,7 @@ void MemoryObject::loadImage(char *&imageBuffer, size_t &imageSize)
             return;
         }
     }
-    Interpreter::logicError("no startup image");   /* open failure                      */
+    Interpreter::logicError("cannot locate startup image " BASEIMAGE);
 }
 
 

@@ -46,7 +46,10 @@
 #include "SysProcess.hpp"
 
 
-const char *SysProcess::executableLocation = NULL;
+// full path of the currently running executable
+const char *SysProcess::executableFullPath = NULL;
+// directory of our Rexx shared libraries
+const char *SysProcess::libraryLocation = NULL;
 
 /**
  * Get the current user name information.
@@ -61,55 +64,71 @@ void SysProcess::getUserID(char *buffer)
 
 
 /**
- * Determine the location of the running program. This returns the path
- * of the current executable.
+ * Determine the location of the running program. This returns the full path
+ * of the currently running executable.
+ *
+ * @return A character string of the path (does not need to be freed by the caller)
+ */
+const char *SysProcess::getExecutableFullPath()
+{
+    if (executableFullPath != NULL)
+    {
+        return executableFullPath;
+    }
+
+    char modulePath[MAX_PATH];
+
+    // NULL means the current executable
+    GetModuleFileName(NULL, modulePath, sizeof(modulePath));
+
+    // save a copy of this
+    executableFullPath = strdup(modulePath);
+    return executableFullPath;
+}
+
+
+/**
+ * Determine the location of the rexxapi.dll library. This returns the
+ * directory portion of the library's path with a trailing backslash.
  *
  * @return A character string of the location (does not need to be freed by the caller)
  */
-const char *SysProcess::getExecutableLocation()
+const char *SysProcess::getLibraryLocation()
 {
-    if (executableLocation != NULL)
+    if (libraryLocation != NULL)
     {
-        return executableLocation;
+        return libraryLocation;
     }
 
-    // we do everything relative to rexxapi.dll
+     // look up rexxapi.dll
     HMODULE module = GetModuleHandle("rexxapi");
 
-    // this should work, since it should be us!
-    if (module == NULL)
-    {
-        return NULL;
-    }
+    char modulePath[MAX_PATH];
+    GetModuleFileName(module, modulePath, sizeof(modulePath));
 
-    char moduleName[MAX_PATH];
-
-    GetModuleFileName(module, moduleName, sizeof(moduleName));
-
-    size_t nameLength = strlen(moduleName);
+    size_t pathLength = strlen(modulePath);
 
     // scan backwards to find the last directory delimiter
-
-    for (;nameLength > 0; nameLength--)
+    for (; pathLength > 0; pathLength--)
     {
         // is this the directory delimiter?
-        if (moduleName[nameLength - 1] == '\\')
+        if (modulePath[pathLength - 1] == '\\')
         {
             // terminate the string after the first encountered backslash and quit
-            moduleName[nameLength] = '\0';
+            modulePath[pathLength] = '\0';
             break;
         }
     }
 
     // belt-and-braces, make sure we found a directory
-    if (nameLength == 0)
+    if (pathLength == 0)
     {
         return NULL;
     }
 
     // save a copy of this
-    executableLocation = strdup(moduleName);
-    return executableLocation;
+    libraryLocation = strdup(modulePath);
+    return libraryLocation;
 }
 
 

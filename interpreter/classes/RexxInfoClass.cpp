@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -48,6 +48,7 @@
 #include "MethodArguments.hpp"
 #include "Interpreter.hpp"
 #include "SystemInterpreter.hpp"
+#include "SysProcess.hpp"
 
 RexxClass *RexxInfo::classInstance = OREF_NULL;   // singleton class instance
 
@@ -479,6 +480,45 @@ RexxObject *RexxInfo::getMaxArraySize()
 {
     // see interpreter/classes/ArrayClass.hpp
     return new_integer(Numerics::MAX_WHOLENUMBER / 10);
+}
+
+
+/**
+ * Return the full path of the currently running executable.
+ *
+ * @return A full path name as a string or .nil if this cannot be determined.
+ */
+RexxObject *RexxInfo::getRexxExecutable()
+{
+    const char *path = SysProcess::getExecutableFullPath();
+    if (path == NULL)
+    {
+        return TheNilObject;
+    }
+    else
+    {
+        return new_string(path);
+    }
+}
+
+
+/**
+ * Return the Rexx library directory.
+ *
+ * @return The directory portion of the path of the Rexx shared libraries,
+ *         including a trailing (back)slash.
+ */
+RexxObject *RexxInfo::getRexxLibrary()
+{
+    const char *path = SysProcess::getLibraryLocation();
+    if (path == NULL)
+    {
+        return TheNilObject;
+    }
+    else
+    {
+        return new_string(path);
+    }
 }
 
 
