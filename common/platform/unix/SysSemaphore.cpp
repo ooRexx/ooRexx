@@ -51,6 +51,7 @@
 #include <memory.h>
 #include <stdio.h>
 #include <sys/time.h>
+#include <algorithm>
 #ifdef AIX
     #include <sys/sched.h>
     #include <time.h>
@@ -63,6 +64,51 @@
 #include <errno.h>
 
 #include "SysSemaphore.hpp"
+
+#ifndef HAVE_PTHREAD_MUTEX_TIMEDLOCK
+
+/**
+ * Fix for systems that don't have pthread_mutex_timedlock
+ *
+ * @param mutex  The mutex we're waiting on
+ * @param abs_timeout
+ *               The time timeout value
+ *
+ * @return zero or an error code.
+ */
+int pthread_mutex_timedlock(pthread_mutex_t *mutex, const struct timespec *abs_timeout)
+{
+    int pthread_rc;
+
+    struct timespec remaining = *abs_timeout;
+    while ((pthread_rc = pthread_mutex_trylock(mutex)) == EBUSY)
+    {
+        struct timespec ts;
+        ts.tv_sec = 0;
+        ts.tv_nsec = (remaining.tv_sec > 0 ? 10000000 : std::min(remaining.tv_nsec, (long)10000000));
+
+        struct timespec slept;
+        nanosleep(&ts, &slept);
+        ts.tv_nsec -= slept.tv_nsec;
+        if (ts.tv_nsec <= remaining.tv_nsec)
+        {
+            remaining.tv_nsec -= ts.tv_nsec;
+        }
+        else
+        {
+            remaining.tv_sec--;
+            remaining.tv_nsec = (1000000 - (ts.tv_nsec - remaining.tv_nsec));
+        }
+        if (remaining.tv_sec < 0 || (!remaining.tv_sec && remaining.tv_nsec <= 0))
+        {
+            return ETIMEDOUT;
+        }
+    }
+
+    return pthread_rc;
+}
+#endif
+
 
 
 /* ********************************************************************** */
@@ -229,6 +275,7 @@ void SysSemaphore::createTimeOut(uint32_t t, timespec &ts)
 bool SysSemaphore::wait(uint32_t t)           // takes a timeout in msecs
 {
     struct timespec ts;                       // fill in the timeout spec
+    int result = 0;
     createTimeOut(t, ts);
 
     pthread_mutex_lock(&(this->semMutex));    // Lock access to semaphore
@@ -337,6 +384,9 @@ bool SysMutex::request(uint32_t t)
 }
 
 
+/**
+ * Close the mutex semaphore.
+ */
 void SysMutex::close()
 {
     if (created)

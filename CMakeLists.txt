@@ -388,6 +388,7 @@ if (NOT WIN32)
   set(CMAKE_REQUIRED_LIBRARIES pthread)
   set(CMAKE_REQUIRED_DEFINITIONS "-D_GNU_SOURCE=1")
   check_function_exists(pthread_mutexattr_settype HAVE_PTHREAD_MUTEXATTR_SETTYPE)
+  check_function_exists(pthread_mutex_timedlock HAVE_PTHREAD_MUTEX_TIMEDLOCK)
 # Some platforms use an enum for these values rather than defines
 # so we cannot use the simpler check_symbol_exists test to check for these.
   check_c_source_compiles("#include <pthread.h>

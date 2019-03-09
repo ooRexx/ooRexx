@@ -87,6 +87,9 @@
 /* Define to 1 if you have pthread_mutexattr_settype function */
 #cmakedefine HAVE_PTHREAD_MUTEXATTR_SETTYPE
 
+/* Define to 1 if you have pthread_mutex_timedlock function */
+#cmakedefine HAVE_PTHREAD_MUTEX_TIMEDLOCK
+
 /* Define to 1 if PTHREAD_MUTEX_ERRORCHECK is a valid value */
 #cmakedefine HAVE_PTHREAD_MUTEX_ERRORCHECK
 
