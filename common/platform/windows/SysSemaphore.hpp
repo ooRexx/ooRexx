@@ -111,11 +111,21 @@ class SysMutex
      void close();
      inline bool request()
      {
+         if (mutexMutex == 0)
+         {
+             return false;
+         }
+
          return waitHandle(mutexMutex, bypassMessageLoop || SysSemaphore::noMessageLoop());
      }
 
      inline bool request(uint32_t timeout)
      {
+         if (mutexMutex == 0)
+         {
+             return false;
+         }
+
          return waitHandle(mutexMutex, timeout, bypassMessageLoop || SysSemaphore::noMessageLoop());
      }
 

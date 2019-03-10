@@ -587,6 +587,7 @@ ERROR_MESSAGE Message_table[] = {      /* table of major and minor errors   */
     MESSAGE(Error_No_method_private, "Object \"&1\" cannot accept private message \"&2\" from this context.")
     MESSAGE(Error_No_method_package, "Object \"&1\" cannot accept package scope message \"&2\" from a different package caller.")
     MESSAGE(Error_No_method_constant, "Constant \"&2\" of object \"&1\" has not been initialized.")
+    MESSAGE(Error_No_method_unhandled, "An unhandled NOMETHOD condition has been raised.")
     MESSAGE(Error_No_method_user_defined, "&1.")
     MESSAGE(Error_Execution, "Execution error.")
     MESSAGE(Error_Execution_user_defined, "&1.")

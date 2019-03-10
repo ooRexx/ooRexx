@@ -586,6 +586,7 @@ ERROR_MAP Message_map_table[] = {     /* table of major and minor errors   */
       MINOR(Error_No_method_private)
       MINOR(Error_No_method_package)
       MINOR(Error_No_method_constant)
+      MINOR(Error_No_method_unhandled)
       MINOR(Error_No_method_user_defined)
   MAJOR(Error_Execution)
       MINOR(Error_Execution_user_defined)

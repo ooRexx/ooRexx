@@ -44,7 +44,7 @@
 /*****************************************************************************/
 
 #ifdef HAVE_CONFIG_H
-    #include "config.h"
+#include "config.h"
 #endif
 
 #include <pthread.h>
@@ -53,12 +53,12 @@
 #include <sys/time.h>
 #include <algorithm>
 #ifdef AIX
-    #include <sys/sched.h>
-    #include <time.h>
+#include <sys/sched.h>
+#include <time.h>
 #endif
 
 #if defined(OPSYS_SUN) || defined(__HAIKU__)
-    #include <sched.h>
+#include <sched.h>
 #endif
 
 #include <errno.h>
@@ -66,6 +66,49 @@
 #include "SysSemaphore.hpp"
 
 #ifndef HAVE_PTHREAD_MUTEX_TIMEDLOCK
+
+// we test every 10 milliseconds
+#define TIMESLICE 10000000L
+
+/**
+ * Check to see if we have gone beyond the appointed time.
+ *
+ * @param ts     The target time
+ * @param nextInterval
+ *               The return next wait interval if this still has not timed out.
+ *
+ * @return true if we have gone beyond the target time, false otherwise.
+ */
+bool checkTimeOut(const struct timespec *ts, long &nextInterval)
+{
+
+    struct timespec currentTime;
+    clock_gettime(CLOCK_REALTIME, &currentTime);       // get the current time
+
+    // if target time seconds are greater, we have not timed out
+    if (ts->tv_sec > currentTime.tv_sec)
+    {
+        return false;
+    }
+    // if the seconds are the same, we calculate the delta
+    // and check
+    if (ts->tv_sec == currentTime.tv_sec)
+    {
+        // calculate unconditionally, we use the sign to then determine if this was a time out
+        nextInterval = ts->tv_sec - currentTime.tv_sec;
+        if (nextInterval < 0)
+        {
+            return true;      // a negative result is a timeout
+        }
+        // we never wait longer than 10 milliseconds
+        nextInterval = std::min(nextInterval, TIMESLICE);
+        return false;
+    }
+
+    // the target seconds are less, so we are done
+    return true;
+}
+
 
 /**
  * Fix for systems that don't have pthread_mutex_timedlock
@@ -80,51 +123,26 @@ int pthread_mutex_timedlock(pthread_mutex_t *mutex, const struct timespec *abs_t
 {
     int pthread_rc;
 
-    struct timespec remaining;
-    struct timeval now;
+    long waitInterval;
 
-    // compute the remaining timeout value
-    gettimeofday(&now, NULL);
-    remaining.tv_sec = abs_timeout->tv_sec - now.tv_sec;
-    remaining.tv_nsec = abs_timeout->tv_nsec - now.tv_usec * 1000;
-    if (remaining.tv_nsec < 0)
-    {
-        remaining.tv_nsec += 1000000000;
-        remaining.tv_sec--;
-    }
-
-    // did this already time out?
-    if (remaining.tv_sec < 0)
+    // we might already be timed out
+    if (checkTimeOut(abs_timeout, waitInterval))
     {
         return ETIMEDOUT;
     }
-
-// we test every 10 milliseconds
-#define TIMESLICE 10000000L
 
     while ((pthread_rc = pthread_mutex_trylock(mutex)) == EBUSY)
     {
         struct timespec ts;
         ts.tv_sec = 0;
-        ts.tv_nsec = (remaining.tv_sec > 0 ? TIMESLICE : std::min(remaining.tv_nsec, TIMESLICE));
+        ts.tv_nsec = waitInterval;
 
-        struct timespec unslept;
-        if (nanosleep(&ts, &unslept) == 0)
-        {
-            // we've slept our full timeslice
-            remaining.tv_nsec -= ts.tv_nsec;
-        }
-        else
-        {
-            // we've slept less than our timeslice
-            remaining.tv_nsec -= ts.tv_nsec - unslept.tv_nsec;
-        }
-        if (remaining.tv_nsec < 0)
-        {
-            remaining.tv_nsec += 1000000000;
-            remaining.tv_sec--;
-        }
-        if (remaining.tv_sec < 0 || (remaining.tv_sec == 0 && remaining.tv_nsec <= 0))
+        struct timespec slept;
+        nanosleep(&ts, &slept);
+
+        // check for a timeout immediately, this also gives us our
+        // next wait interval
+        if (checkTimeOut(abs_timeout, waitInterval))
         {
             return ETIMEDOUT;
         }
@@ -133,7 +151,6 @@ int pthread_mutex_timedlock(pthread_mutex_t *mutex, const struct timespec *abs_t
     return pthread_rc;
 }
 #endif
-
 
 
 /* ********************************************************************** */
@@ -157,65 +174,65 @@ SysSemaphore::SysSemaphore(bool createSem)
     }
 }
 
-
-
-
+/**
+ * Create the semaphore
+ */
 void SysSemaphore::create()
 {
     int iRC = 0;
 
     if (!created)
     {
-                                        // Clear mutex/cond prior to init
-    //  this->semMutex = NULL;
-    //  this->semCond = NULL;
+        // Clear mutex/cond prior to init
+        //  this->semMutex = NULL;
+        //  this->semCond = NULL;
 
-    /* The original settings for pthread_mutexattr_settype() were:
-       AIX  : PTHREAD_MUTEX_RECURSIVE
-       SUNOS: PTHREAD_MUTEX_ERRORCHECK
-       LINUX: PTHREAD_MUTEX_RECURSIVE_NP
-    */
+        /* The original settings for pthread_mutexattr_settype() were:
+           AIX  : PTHREAD_MUTEX_RECURSIVE
+           SUNOS: PTHREAD_MUTEX_ERRORCHECK
+           LINUX: PTHREAD_MUTEX_RECURSIVE_NP
+        */
 
-    #if defined( HAVE_PTHREAD_MUTEXATTR_SETTYPE )
+#if defined( HAVE_PTHREAD_MUTEXATTR_SETTYPE )
         pthread_mutexattr_t mutexattr;
 
         iRC = pthread_mutexattr_init(&mutexattr);
-        if ( iRC == 0 )
+        if (iRC == 0)
         {
-    #if defined( HAVE_PTHREAD_MUTEX_RECURSIVE ) /* Linux most likely */
+#if defined( HAVE_PTHREAD_MUTEX_RECURSIVE ) /* Linux most likely */
             iRC = pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_RECURSIVE);
-    #elif defined( HAVE_PTHREAD_MUTEX_ERRORCHECK )
+#elif defined( HAVE_PTHREAD_MUTEX_ERRORCHECK )
             iRC = pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_ERRORCHECK);
-    // no valid mutex errors found, likely a config.h problem
-    #else
-            #error Configuration error for pthread semaphores.  Check the defines in config.h
-    #endif
+            // no valid mutex errors found, likely a config.h problem
+#else
+#error Configuration error for pthread semaphores.  Check the defines in config.h
+#endif
         }
-        if ( iRC == 0 )
+        if (iRC == 0)
         {
             iRC = pthread_mutex_init(&(this->semMutex), &mutexattr);
         }
-        if ( iRC == 0 )
+        if (iRC == 0)
         {
             iRC = pthread_mutexattr_destroy(&mutexattr); /* It does not affect       */
         }
-        if ( iRC == 0 )                                 /* mutexes created with it  */
+        if (iRC == 0)                                 /* mutexes created with it  */
         {
             iRC = pthread_cond_init(&(this->semCond), NULL);
         }
-    #else
+#else
         iRC = pthread_mutex_init(&(this->semMutex), NULL);
-        if ( iRC == 0 )
+        if (iRC == 0)
         {
             iRC = pthread_cond_init(&(this->semCond), NULL);
         }
-    #endif
-        if ( iRC != 0 )
+#endif
+        if (iRC != 0)
         {
-            fprintf(stderr," *** ERROR: At RexxSemaphore(), pthread_mutex_init - RC = %d !\n", iRC);
-            if ( iRC == EINVAL )
+            fprintf(stderr, " *** ERROR: At RexxSemaphore(), pthread_mutex_init - RC = %d !\n", iRC);
+            if (iRC == EINVAL)
             {
-                fprintf(stderr," *** ERROR: Application was not built thread safe!\n");
+                fprintf(stderr, " *** ERROR: Application was not built thread safe!\n");
             }
         }
         this->postedCount = 0;
@@ -223,6 +240,9 @@ void SysSemaphore::create()
     }
 }
 
+/**
+ * Close an event semaphore
+ */
 void SysSemaphore::close()
 {
     if (created)
@@ -234,6 +254,9 @@ void SysSemaphore::close()
 }
 
 
+/**
+ * Post that an event has occurred.
+ */
 void SysSemaphore::post()
 {
     int rc;
@@ -244,6 +267,10 @@ void SysSemaphore::post()
     rc = pthread_mutex_unlock(&(this->semMutex));    // Unlock access to Semaphore mutex
 }
 
+
+/**
+ * Wait for an event semaphore to be posted.
+ */
 void SysSemaphore::wait()
 {
     int rc;
@@ -253,7 +280,7 @@ void SysSemaphore::wait()
     pthread_getschedparam(pthread_self(), &schedpolicy, &schedparam);
     i_prio = schedparam.sched_priority;
     schedparam.sched_priority = 100;
-    pthread_setschedparam(pthread_self(),SCHED_OTHER, &schedparam);
+    pthread_setschedparam(pthread_self(), SCHED_OTHER, &schedparam);
     rc = pthread_mutex_lock(&(this->semMutex));      // Lock access to semaphore
     if (this->postedCount == 0)                      // Has it been posted?
     {
@@ -261,7 +288,7 @@ void SysSemaphore::wait()
     }
     pthread_mutex_unlock(&(this->semMutex));    // Release mutex lock
     schedparam.sched_priority = i_prio;
-    pthread_setschedparam(pthread_self(),SCHED_OTHER, &schedparam);
+    pthread_setschedparam(pthread_self(), SCHED_OTHER, &schedparam);
 }
 
 
@@ -273,19 +300,20 @@ void SysSemaphore::wait()
  */
 void SysSemaphore::createTimeOut(uint32_t t, timespec &ts)
 {
-    struct timeval  tv;
-
     int result = 0;
-    gettimeofday(&tv, NULL);                  // get current time
-    tv.tv_usec += (t % 1000) * 1000;          // add fractions of seconds
-    if (tv.tv_usec >= 1000000)                // did microseconds overflow?
+    clock_gettime(CLOCK_REALTIME, &ts);       // get the current time
+    time_t deltaSeconds = (time_t)(t / 1000); // get the seconds part of this
+                                              // we need to convert to nanoseconds
+    long deltaNanoSeconds = ((long)(t % 1000)) * 1000000l;
+
+    ts.tv_nsec += deltaNanoSeconds;           // add fractions of seconds
+    if (ts.tv_nsec > 1000000000l)             // did nanoseconds overflow?
     {
-        tv.tv_usec -= 1000000;                // correct microsecond overflow ..
-        tv.tv_sec += 1;                       // .. by adding a second
+        ts.tv_nsec -= 1000000000l;            // correct microsecond overflow ..
+        ts.tv_sec += 1;                       // .. by adding a second
     }
-    tv.tv_sec += t / 1000;                    // add requested seconds
-    ts.tv_sec = tv.tv_sec;                    // copy timeval to timespec; seconds ..
-    ts.tv_nsec = tv.tv_usec * 1000;           // .. and microsecs to nanosecs
+
+    ts.tv_sec += deltaSeconds;                // add requested seconds
 }
 
 
@@ -313,6 +341,9 @@ bool SysSemaphore::wait(uint32_t t)           // takes a timeout in msecs
     return result != ETIMEDOUT;
 }
 
+/**
+ * Reset the semaphore
+ */
 void SysSemaphore::reset()
 {
     pthread_mutex_lock(&(this->semMutex));      // Lock access to semaphore
@@ -403,6 +434,11 @@ void SysMutex::create(bool critical)
  */
 bool SysMutex::request(uint32_t t)
 {
+    if (!created)
+    {
+        return false;
+    }
+
     struct timespec ts;                       // fill in the timeout spec
     SysSemaphore::createTimeOut(t, ts);
     return pthread_mutex_timedlock(&mutexMutex, &ts) == 0;

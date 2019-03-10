@@ -742,6 +742,7 @@
 #define Error_Incorrect_call_stem_range_msg                          827
 #define Error_Incorrect_call_stem_sparse_array_msg                   828
 #define Error_Invalid_do_simple_do_counter_msg                       829
+#define Error_No_method_unhandled_msg                                830
 
 
 #endif

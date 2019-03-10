@@ -5078,6 +5078,15 @@ special character (such as a parenthesis).
       </SubMessage>
       <SubMessage>
         <Code>97</Code>
+        <Subcode>005</Subcode>
+        <MessageNumber>830</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_No_method_unhandled</SymbolicName>
+        <Text>An unhandled NOMETHOD condition has been raised.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>97</Code>
         <Subcode>900</Subcode>
         <MessageNumber>646</MessageNumber>
         <Component>Rexx</Component>

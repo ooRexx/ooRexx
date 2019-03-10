@@ -81,7 +81,7 @@ public:
      inline void open() { ; }
      void close();
      bool request(uint32_t t);
-     inline bool request() { return pthread_mutex_lock(&mutexMutex) == 0; }
+     inline bool request() { if (!created) return false; return pthread_mutex_lock(&mutexMutex) == 0; }
      inline bool release() { return pthread_mutex_unlock(&mutexMutex) == 0; }
      inline bool requestImmediate() { return pthread_mutex_trylock(&mutexMutex) == 0;}
 

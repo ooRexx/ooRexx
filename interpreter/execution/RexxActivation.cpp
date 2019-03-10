@@ -1699,10 +1699,31 @@ void RexxActivation::raise(RexxString *condition, RexxObject *rc, RexxString *de
             trapped = _sender->trap(condition, conditionobj);
         }
 
-        // is this an untrapped HALT condition?  Need to transform into a SYNTAX error
-        if (!trapped && condition->strCompare(GlobalNames::HALT))
+        // If this was untrapped and either a HALT or a NOMETHOD condition, then we need to raise an error
+        if (!trapped)
         {
-            reportException(Error_Program_interrupted_condition, GlobalNames::HALT);
+            if (condition->strCompare(GlobalNames::HALT))
+            {
+                reportException(Error_Program_interrupted_condition, GlobalNames::HALT);
+            }
+            else if (condition->strCompare(GlobalNames::HALT))
+            {
+                // this is sort of tricky...the standard no method error requires a message name
+                // and a receiver object. If we don't have two objects in the ADDITIONAL, then we
+                // need to issue a generic message.
+                if (additional != OREF_NULL && isOfClass(Array, additional))
+                {
+                    RexxObject *receiver = (RexxObject *)((ArrayClass *)additional)->get(1);
+                    RexxObject *messageName = (RexxObject *)((ArrayClass *)additional)->get(2);
+                    if (receiver != OREF_NULL && messageName != OREF_NULL)
+                    {
+                        reportException(Error_No_method_name, receiver, messageName);
+                    }
+                }
+
+                // if the error was not issued above, we fall through to here
+                reportException(Error_No_method_unhandled);
+            }
         }
 
         // process the return part, then unwind the call stack

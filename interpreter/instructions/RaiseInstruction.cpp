@@ -244,7 +244,7 @@ void RexxInstructionRaise::execute(RexxActivation *context, ExpressionStack *sta
         // get this expression value
         _additional = additional[0]->evaluate(context, stack);
         // trace what we got
-        context->traceKeywordResult(GlobalNames::ARRAY, _additional);
+        context->traceKeywordResult(GlobalNames::ADDITIONAL, _additional);
     }
     // given a return result value to pass back to the caller?
     if (resultValue != OREF_NULL)

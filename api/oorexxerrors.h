@@ -583,6 +583,7 @@
 #define Rexx_Error_No_method_private                                      97002
 #define Rexx_Error_No_method_package                                      97003
 #define Rexx_Error_No_method_constant                                     97004
+#define Rexx_Error_No_method_unhandled                                    97005
 #define Rexx_Error_No_method_user_defined                                 97900
 #define Rexx_Error_Execution                                              98000
 #define Rexx_Error_Execution_user_defined                                 98900

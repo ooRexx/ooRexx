@@ -3588,6 +3588,12 @@ special character (such as a parenthesis).
 </listitem>
 </varlistentry>
 <varlistentry>
+<term>005</term>
+<listitem>
+<para>An unhandled NOMETHOD condition has been raised.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
 <term>900</term>
 <listitem>
 <para>
