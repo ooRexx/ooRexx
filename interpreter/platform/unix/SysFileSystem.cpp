@@ -79,6 +79,10 @@ const char SysFileSystem::PathDelimiter = '/';
 const char SysFileSystem::NewLine = '\n';
 const char SysFileSystem::CarriageReturn = '\r';
 
+// .DateTime~new(1970, 1, 1) - .DateTime~new(1, 1, 1)~totalSeconds
+const int64_t StatEpoch = 62135596800;           // seconds between 0001-01-01 and 1970-01-01
+const int64_t NoTimeStamp = -999999999999999999; // invalid file time
+
 /**
  * Search for a given filename, returning the fully
  * resolved name if it is found.
@@ -959,9 +963,8 @@ int get_utc_offset(time_t time)
  *
  * @param name   The target name.
  *
- * @return the file time value for the modified date, or -1 for any
- *         errors.  The time is returned in ticks units (and as such,
- *         it doesn't include the st_mtim.tv_usec microseconds part)
+ * @return the file time value for the modified date, or -999999999999999999
+ *         for any errors.  The time is returned in microseconds.
  */
 int64_t SysFileSystem::getLastModifiedDate(const char *name)
 {
@@ -969,9 +972,19 @@ int64_t SysFileSystem::getLastModifiedDate(const char *name)
 
     if (stat64(name, &st))
     {
-        return -1;
+        return NoTimeStamp;
     }
-    return (int64_t)st.st_mtime + get_utc_offset(st.st_mtime);
+    int64_t temp = (int64_t)st.st_mtime + get_utc_offset(st.st_mtime) + StatEpoch;
+    temp *= 1000000;
+
+    // add microseconds, if available
+#ifdef HAVE_STAT_ST_MTIM
+    temp += st.st_mtim.tv_nsec / 1000;
+#elif defined HAVE_STAT_ST_MTIMESPEC
+    temp += st.st_mtimespec.tv_nsec / 1000;
+#endif
+
+    return temp;
 }
 
 
@@ -980,9 +993,8 @@ int64_t SysFileSystem::getLastModifiedDate(const char *name)
  *
  * @param name   The target name.
  *
- * @return the file time value for the modified date, or -1 for any
- *         errors.  The time is returned in ticks units (and as such,
- *         it doesn't include the st_mtim.tv_usec microseconds part)
+ * @return the file time value for the modified date, or -999999999999999999
+ *         for any errors.  The time is returned in microseconds.
  */
 int64_t SysFileSystem::getLastAccessDate(const char *name)
 {
@@ -990,9 +1002,19 @@ int64_t SysFileSystem::getLastAccessDate(const char *name)
 
     if (stat64(name, &st))
     {
-        return -1;
+        return NoTimeStamp;
     }
-    return (int64_t)st.st_atime + get_utc_offset(st.st_atime);
+    int64_t temp = (int64_t)st.st_atime + get_utc_offset(st.st_atime) + StatEpoch;
+    temp *= 1000000;
+
+    // add microseconds, if available
+#ifdef HAVE_STAT_ST_MTIM
+    temp += st.st_atim.tv_nsec / 1000;
+#elif defined HAVE_STAT_ST_MTIMESPEC
+    temp += st.st_atimespec.tv_nsec / 1000;
+#endif
+
+    return temp;
 }
 
 
@@ -1065,16 +1087,27 @@ bool SysFileSystem::isHidden(const char *name)
  */
 bool SysFileSystem::setLastModifiedDate(const char *name, int64_t time)
 {
-    struct stat64 statbuf;
-    struct utimbuf timebuf;
-    if (stat64(name, &statbuf) != 0)
+    struct stat64 st;
+    struct timeval times[2];
+    if (stat64(name, &st) != 0)
     {
         return false;
     }
 
-    timebuf.actime = statbuf.st_atime;
-    timebuf.modtime = (time_t)time - get_utc_offset(time);
-    return utime(name, &timebuf) == 0;
+    // get microseconds, if available
+    long usec_a = 0;
+#ifdef HAVE_STAT_ST_MTIM
+    usec_a = st.st_atim.tv_nsec / 1000;
+#elif defined HAVE_STAT_ST_MTIMESPEC
+    usec_a = st.st_atimespec.tv_nsec / 1000;
+#endif
+
+    times[0].tv_sec = st.st_atime;
+    times[0].tv_usec = usec_a;
+    long seconds = (time_t)time / 1000000 - StatEpoch;
+    times[1].tv_sec = seconds - get_utc_offset(seconds);
+    times[1].tv_usec = (time_t)time % 1000000;
+    return utimes(name, times) == 0;
 }
 
 
@@ -1088,16 +1121,27 @@ bool SysFileSystem::setLastModifiedDate(const char *name, int64_t time)
  */
 bool SysFileSystem::setLastAccessDate(const char *name, int64_t time)
 {
-    struct stat64 statbuf;
-    struct utimbuf timebuf;
-    if (stat64(name, &statbuf) != 0)
+    struct stat64 st;
+    struct timeval times[2];
+    if (stat64(name, &st) != 0)
     {
         return false;
     }
 
-    timebuf.modtime = statbuf.st_mtime;
-    timebuf.actime = (time_t)time - get_utc_offset(time);
-    return utime(name, &timebuf) == 0;
+    // get microseconds, if available
+    long usec_m = 0;
+#ifdef HAVE_STAT_ST_MTIM
+    usec_m = st.st_mtim.tv_nsec / 1000;
+#elif defined HAVE_STAT_ST_MTIMESPEC
+    usec_m = st.st_mtimespec.tv_nsec / 1000;
+#endif
+
+    times[1].tv_sec = st.st_mtime;
+    times[1].tv_usec = usec_m;
+    long seconds = (time_t)time / 1000000 - StatEpoch;
+    times[0].tv_sec = seconds - get_utc_offset(seconds);
+    times[0].tv_usec = (time_t)time % 1000000;
+    return utimes(name, times) == 0;
 }
 
 

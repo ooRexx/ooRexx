@@ -2593,6 +2593,8 @@ RexxRoutine3(int, SysSetFileDateTime, CSTRING, name, OPTIONAL_CSTRING, newdate, 
                 {
                     fOk = false;
                 }
+                // We never receive fractions of seconds.  Set them to zero.
+                sLocalSysTime.wMilliseconds = 0;
             }
 
             if (newdate == NULL && newtime == NULL)

@@ -114,6 +114,12 @@
 /* Define to 1 if getexecname is a valid function */
 #cmakedefine HAVE_GETEXECNAME
 
+/* Define to 1 if struct lstat has a member st_mtim */
+#cmakedefine HAVE_STAT_ST_MTIM
+
+/* Define to 1 if struct lstat has a member st_mtimespec */
+#cmakedefine HAVE_STAT_ST_MTIMESPEC
+
 /* Define to 1 if you have the <pwd.h> header file. */
 #cmakedefine HAVE_PWD_H
 

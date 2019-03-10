@@ -58,33 +58,38 @@ const char SysFileSystem::PathDelimiter = '\\'; // directory path delimiter
 const char SysFileSystem::NewLine = '\n';
 const char SysFileSystem::CarriageReturn = '\r';
 
-const int64_t EpochDate = 116444736000000000;   // the number of ticks to January 1, 1970.
+const int64_t FiletimeEpoch = 50491123200000000; // microseconds between 0001-01-01 and 1601-01-01
+const int64_t NoTimeStamp = -999999999999999999; // invalid file time
 
 /**
- * Convert a file time into ticks since 1970
+ * Convert a file time into microseconds since 0001-01-01 00:00:00
  *
  * Search MSDN for 'Converting a time_t Value to a File Time' for following implementation.
  *
  * @param timeStamp The source time stamp
  *
- * @return The corresponding tick value.
+ * @return The corresponding microseconds value.
  */
-int64_t FileTimeToTicks(FILETIME &timeStamp)
+int64_t FileTimeToMicroseconds(FILETIME &timeStamp)
 {
-    int64_t tempResult = ((int64_t) timeStamp.dwHighDateTime << (int64_t)32) | (int64_t)timeStamp.dwLowDateTime;
-    return (tempResult - EpochDate) / 10000000;
+    // FILETIME contains a 64-bit value representing the number of 100-nanosecond
+    // intervals since January 1, 1601 (UTC).
+    int64_t temp = ((int64_t) timeStamp.dwHighDateTime << (int64_t)32) | (int64_t)timeStamp.dwLowDateTime;
+    return temp / 10 + FiletimeEpoch;
 }
 
 /**
- * Convert a tick value back into a FILETIME structure.
+ * Convert a microsecond value back into a FILETIME structure.
  *
- * @param ticks     The source ticks value
+ * @param usecs     The source microseconds value
  * @param timeStamp The target time stame structure.
  */
-void TicksToFileTime(uint64_t ticks, FILETIME &timeStamp)
+void MicrosecondsToFileTime(uint64_t usecs, FILETIME &timeStamp)
 {
     // convert back to a file time
-    int64_t temp = (ticks * (int64_t)10000000) + EpochDate;
+    // FILETIME needs a 64-bit value representing the number of 100-nanosecond
+    // intervals since January 1, 1601 (UTC).
+    int64_t temp = (usecs - FiletimeEpoch) * 10;
 
     timeStamp.dwHighDateTime = (DWORD)(temp >> 32);
     timeStamp.dwLowDateTime = (DWORD)temp;
@@ -750,8 +755,8 @@ bool SysFileSystem::exists(const char *name)
  *
  * @param name   The target name.
  *
- * @return the file time value for the modified date, or -1 for any
- *         errors.
+ * @return the file time value for the modified date, or -999999999999999999
+ *         for any errors.
  */
 int64_t SysFileSystem::getLastModifiedDate(const char *name)
 {
@@ -759,7 +764,7 @@ int64_t SysFileSystem::getLastModifiedDate(const char *name)
                                   NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
     if ( newHandle == INVALID_HANDLE_VALUE )
     {
-        return -1;
+        return NoTimeStamp;
     }
 
     FILETIME lastWriteGetTime, lastWriteTime;
@@ -767,13 +772,13 @@ int64_t SysFileSystem::getLastModifiedDate(const char *name)
            FileTimeToLocalFileTime(&lastWriteGetTime, &lastWriteTime)) )
     {
         CloseHandle(newHandle);
-        return -1;
+        return NoTimeStamp;
     }
 
     CloseHandle(newHandle);
 
     // convert to ticks
-    return FileTimeToTicks(lastWriteTime);
+    return FileTimeToMicroseconds(lastWriteTime);
 }
 
 
@@ -782,7 +787,7 @@ int64_t SysFileSystem::getLastModifiedDate(const char *name)
  *
  * @param name   The target name.
  *
- * @return the file time value for the last access date, or -1
+ * @return the file time value for the last access date, or -999999999999999999
  *         for any errors.
  */
 int64_t SysFileSystem::getLastAccessDate(const char *name)
@@ -791,7 +796,7 @@ int64_t SysFileSystem::getLastAccessDate(const char *name)
                                   NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
     if ( newHandle == INVALID_HANDLE_VALUE )
     {
-        return -1;
+        return NoTimeStamp;
     }
 
     FILETIME fileLastAccessTime, lastAccessTime;
@@ -799,13 +804,13 @@ int64_t SysFileSystem::getLastAccessDate(const char *name)
            FileTimeToLocalFileTime(&fileLastAccessTime, &lastAccessTime)) )
     {
         CloseHandle(newHandle);
-        return -1;
+        return NoTimeStamp;
     }
 
     CloseHandle(newHandle);
 
     // convert to ticks
-    return FileTimeToTicks(lastAccessTime);
+    return FileTimeToMicroseconds(lastAccessTime);
 }
 
 
@@ -896,7 +901,7 @@ bool SysFileSystem::setLastModifiedDate(const char *name, int64_t time)
     }
 
     // convert back to a file time
-    TicksToFileTime(time, localFileTime);
+    MicrosecondsToFileTime(time, localFileTime);
 
     if ( LocalFileTimeToFileTime(&localFileTime, &fileTime) &&
          SetFileTime(hFile, NULL, NULL, &fileTime) )
@@ -947,7 +952,7 @@ bool SysFileSystem::setLastAccessDate(const char *name, int64_t time)
     }
 
     // convert back to a file time
-    TicksToFileTime(time, localFileTime);
+    MicrosecondsToFileTime(time, localFileTime);
 
     if (LocalFileTimeToFileTime(&localFileTime, &fileTime) &&
         SetFileTime(hFile, NULL, &fileTime, NULL))
