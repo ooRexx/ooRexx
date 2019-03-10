@@ -80,26 +80,51 @@ int pthread_mutex_timedlock(pthread_mutex_t *mutex, const struct timespec *abs_t
 {
     int pthread_rc;
 
-    struct timespec remaining = *abs_timeout;
+    struct timespec remaining;
+    struct timeval now;
+
+    // compute the remaining timeout value
+    gettimeofday(&now, NULL);
+    remaining.tv_sec = abs_timeout->tv_sec - now.tv_sec;
+    remaining.tv_nsec = abs_timeout->tv_nsec - now.tv_usec * 1000;
+    if (remaining.tv_nsec < 0)
+    {
+        remaining.tv_nsec += 1000000000;
+        remaining.tv_sec--;
+    }
+
+    // did this already time out?
+    if (remaining.tv_sec < 0)
+    {
+        return ETIMEDOUT;
+    }
+
+// we test every 10 milliseconds
+#define TIMESLICE 10000000L
+
     while ((pthread_rc = pthread_mutex_trylock(mutex)) == EBUSY)
     {
         struct timespec ts;
         ts.tv_sec = 0;
-        ts.tv_nsec = (remaining.tv_sec > 0 ? 10000000 : std::min(remaining.tv_nsec, (long)10000000));
+        ts.tv_nsec = (remaining.tv_sec > 0 ? TIMESLICE : std::min(remaining.tv_nsec, TIMESLICE));
 
-        struct timespec slept;
-        nanosleep(&ts, &slept);
-        ts.tv_nsec -= slept.tv_nsec;
-        if (ts.tv_nsec <= remaining.tv_nsec)
+        struct timespec unslept;
+        if (nanosleep(&ts, &unslept) == 0)
         {
+            // we've slept our full timeslice
             remaining.tv_nsec -= ts.tv_nsec;
         }
         else
         {
-            remaining.tv_sec--;
-            remaining.tv_nsec = (1000000 - (ts.tv_nsec - remaining.tv_nsec));
+            // we've slept less than our timeslice
+            remaining.tv_nsec -= ts.tv_nsec - unslept.tv_nsec;
         }
-        if (remaining.tv_sec < 0 || (!remaining.tv_sec && remaining.tv_nsec <= 0))
+        if (remaining.tv_nsec < 0)
+        {
+            remaining.tv_nsec += 1000000000;
+            remaining.tv_sec--;
+        }
+        if (remaining.tv_sec < 0 || (remaining.tv_sec == 0 && remaining.tv_nsec <= 0))
         {
             return ETIMEDOUT;
         }
@@ -253,7 +278,7 @@ void SysSemaphore::createTimeOut(uint32_t t, timespec &ts)
     int result = 0;
     gettimeofday(&tv, NULL);                  // get current time
     tv.tv_usec += (t % 1000) * 1000;          // add fractions of seconds
-    if (tv.tv_usec > 1000000)                 // did microseconds overflow?
+    if (tv.tv_usec >= 1000000)                // did microseconds overflow?
     {
         tv.tv_usec -= 1000000;                // correct microsecond overflow ..
         tv.tv_sec += 1;                       // .. by adding a second
