@@ -99,7 +99,7 @@ class LineReader
          // we read every thing initially
          fileResidual = fileSize;
          // allocate a buffer to hold the entire file, but cap at a pretty good size
-         bufferSize = std::min((size_t)fileSize, InitialBufferSize);
+         bufferSize = (size_t)std::min(fileSize, (int64_t)InitialBufferSize);
          buffer = (char *)malloc(bufferSize);
          if (buffer == NULL)
          {
@@ -146,7 +146,7 @@ class LineReader
              readLength = bufferSize - dataLength;
          }
 
-         readLength = std::min(fileResidual, readLength);
+         readLength = (size_t)std::min(fileResidual, (int64_t)readLength);
 
          size_t actualLength = 0;
          // if the read fails or we don't get anything, return a failure
@@ -331,7 +331,7 @@ class LineReader
      size_t bufferSize;            // current size of the buffer
      int64_t fileSize;             // full size of the file
      size_t dataLength;            // the data left in the buffer
-     size_t fileResidual;          // the amount of unread data in the file
+     int64_t fileResidual;         // the amount of unread data in the file
      size_t lineStart;             // start of the line in the current buffer
      size_t scanOffset;            // the current scan offset
      SysFile file;                 // the file information we are reading
@@ -1902,7 +1902,7 @@ RexxRoutine4(CSTRING, SysFileSearch, CSTRING, needle, CSTRING, file, RexxStemObj
     // was the option specified?
     if (opts != NULL)
     {
-        for (int i = 0; i < strlen(opts); i++)
+        for (size_t i = 0; i < strlen(opts); i++)
         {
             switch (toupper(opts[i]))
             {
@@ -2246,7 +2246,7 @@ RexxStringObject formatMessage(RexxCallContext *context, const char *message, Re
         char sub = *(temp + 1);
         if (sub >= '1' && sub <= '9')
         {
-            int subPosition = sub - '1';
+            size_t subPosition = (size_t)(sub - '1');
             // if we have a substitution value for this, use the
             // real length
             if (subPosition < subcount)
@@ -2280,7 +2280,7 @@ RexxStringObject formatMessage(RexxCallContext *context, const char *message, Re
         char sub = *(temp + 1);
         if (sub >= '1' && sub <= '9')
         {
-            int subPosition = sub - '1';
+            size_t subPosition = (size_t)(sub - '1');
             // copy the next section of message text
             size_t leadSize = temp - start;
             if (leadSize > 0)
