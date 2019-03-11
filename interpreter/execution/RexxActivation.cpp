@@ -1706,7 +1706,11 @@ void RexxActivation::raise(RexxString *condition, RexxObject *rc, RexxString *de
             {
                 reportException(Error_Program_interrupted_condition, GlobalNames::HALT);
             }
-            else if (condition->strCompare(GlobalNames::HALT))
+            // untrapped NOMETHOD conditions are also defined as giving an error. This is a little
+            // trickier because the normal NOMETHOD error message includes both the receive and the message
+            // name. If we have enough additional information for the full message, we'll use that, otherwise
+            // we'll use a generic message that doesn't require substitutions.
+            else if (condition->strCompare(GlobalNames::NOMETHOD))
             {
                 // this is sort of tricky...the standard no method error requires a message name
                 // and a receiver object. If we don't have two objects in the ADDITIONAL, then we
