@@ -131,10 +131,14 @@ const char* SysProcess::getExecutableFullPath()
         path[0] = '\0';
     }
 #else
-    const char *procfs[3];
+    const char *procfs[4];
+    char proc_path[32];
+
     procfs[0] = "/proc/self/exe";     // LINUX
     procfs[1] = "/proc/curproc/exe";  // BSD
     procfs[2] = "/proc/curproc/file"; // FreeBSD, DragonFly BSD
+    snprintf(proc_path, sizeof(proc_path), "/proc/%d/path/a.out", getpid());
+    procfs[3] = proc_path;            // Solaris, OpenIndiana
 
     ssize_t bytes = 0;
     for (int i = 0; i < sizeof(procfs) / sizeof(procfs[0]) && bytes == 0; i++)
