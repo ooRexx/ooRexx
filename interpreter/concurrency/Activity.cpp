@@ -114,6 +114,7 @@ void Activity::live(size_t liveMark)
     memory_mark(requiresTable);
     memory_mark(waitingObject);
     memory_mark(dispatchMessage);
+    memory_mark(heldMutexes);
 
     // have the frame stack do its own marking.
     frameStack.live(liveMark);
@@ -142,6 +143,7 @@ void Activity::liveGeneral(MarkReason reason)
     memory_mark_general(requiresTable);
     memory_mark_general(waitingObject);
     memory_mark_general(dispatchMessage);
+    memory_mark_general(heldMutexes);
 
     /* have the frame stack do its own marking. */
     frameStack.liveGeneral(reason);
