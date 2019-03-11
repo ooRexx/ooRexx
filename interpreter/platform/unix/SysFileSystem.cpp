@@ -1095,7 +1095,7 @@ bool SysFileSystem::setLastModifiedDate(const char *name, int64_t time)
     }
 
     // get microseconds, if available
-    long usec_a = 0;
+    int64_t usec_a = 0;
 #ifdef HAVE_STAT_ST_MTIM
     usec_a = st.st_atim.tv_nsec / 1000;
 #elif defined HAVE_STAT_ST_MTIMESPEC
@@ -1104,9 +1104,9 @@ bool SysFileSystem::setLastModifiedDate(const char *name, int64_t time)
 
     times[0].tv_sec = st.st_atime;
     times[0].tv_usec = usec_a;
-    long seconds = (time_t)time / 1000000 - StatEpoch;
+    int64_t seconds = time / 1000000 - StatEpoch;
     times[1].tv_sec = seconds - get_utc_offset(seconds);
-    times[1].tv_usec = (time_t)time % 1000000;
+    times[1].tv_usec = time % 1000000;
     return utimes(name, times) == 0;
 }
 
@@ -1129,7 +1129,7 @@ bool SysFileSystem::setLastAccessDate(const char *name, int64_t time)
     }
 
     // get microseconds, if available
-    long usec_m = 0;
+    int64_t usec_m = 0;
 #ifdef HAVE_STAT_ST_MTIM
     usec_m = st.st_mtim.tv_nsec / 1000;
 #elif defined HAVE_STAT_ST_MTIMESPEC
@@ -1138,9 +1138,9 @@ bool SysFileSystem::setLastAccessDate(const char *name, int64_t time)
 
     times[1].tv_sec = st.st_mtime;
     times[1].tv_usec = usec_m;
-    long seconds = (time_t)time / 1000000 - StatEpoch;
+    int64_t seconds = time / 1000000 - StatEpoch;
     times[0].tv_sec = seconds - get_utc_offset(seconds);
-    times[0].tv_usec = (time_t)time % 1000000;
+    times[0].tv_usec = time % 1000000;
     return utimes(name, times) == 0;
 }
 
