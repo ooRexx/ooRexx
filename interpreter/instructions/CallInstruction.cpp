@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -43,6 +43,7 @@
 /******************************************************************************/
 #include "RexxCore.h"
 #include "StringClass.hpp"
+#include "DirectoryClass.hpp"
 #include "StringTableClass.hpp"
 #include "ArrayClass.hpp"
 #include "VariableDictionary.hpp"
@@ -614,7 +615,10 @@ void RexxInstructionCallOn::trap(RexxActivation *context, DirectoryClass  *condi
     // likely give an error, since we call with no arguments
     else if (builtinIndex != NO_BUILTIN)
     {
-        (*(LanguageParser::builtinTable[builtinIndex]))(context, 0, context->getStack());
+        // arguments to builtins are passed on the stack
+        context->getStack()->push(conditionObj);
+
+        (*(LanguageParser::builtinTable[builtinIndex]))(context, 1, context->getStack());
     }
     // this is an external call.
     else
@@ -622,7 +626,7 @@ void RexxInstructionCallOn::trap(RexxActivation *context, DirectoryClass  *condi
         // we need to provide the variable, but we don't cache the result in this case
         RoutineClass *resolvedRoutine = OREF_NULL;
 
-        context->externalCall(resolvedRoutine, targetName, NULL, 0, GlobalNames::SUBROUTINE, result);
+        context->externalCall(resolvedRoutine, targetName, (RexxObject **)&conditionObj, 1, GlobalNames::SUBROUTINE, result);
     }
 
     // NOTE:  Any result object is ignored for a CALL ON trap

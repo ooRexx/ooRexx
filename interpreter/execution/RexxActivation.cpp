@@ -3116,7 +3116,7 @@ RexxObject * RexxActivation::internalCallTrap(RexxString *name, RexxInstruction 
     newActivation->setConditionObj(conditionObj);
     activity->pushStackFrame(newActivation);
     // and go run this.
-    return newActivation->run(OREF_NULL, name, NULL, 0, target, resultObj);
+    return newActivation->run(OREF_NULL, name, (RexxObject **)&conditionObj, 1, target, resultObj);
 }
 
 
