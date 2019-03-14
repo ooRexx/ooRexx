@@ -283,7 +283,7 @@ class LineReader
      bool findLine(const char *&line, size_t &size)
      {
          // look for a line feed character for the end of the last line
-         const char *linend = (const char *)memchr(buffer + scanOffset, SysFileSystem::NewLine, bufferSize - scanOffset);
+         const char *linend = (const char *)memchr(buffer + scanOffset, SysFileSystem::NewLine, dataLength);
          // did we get a hit?
          if (linend != NULL)
          {
