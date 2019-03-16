@@ -145,6 +145,11 @@ class LineReader
              readLocation = buffer + dataLength;
              readLength = bufferSize - dataLength;
          }
+         else
+         {
+             scanOffset = 0;
+             lineStart = 0;
+         }
 
          readLength = (size_t)std::min(fileResidual, (int64_t)readLength);
 
@@ -227,15 +232,11 @@ class LineReader
       */
      bool getLine(const char *&line, size_t &size)
      {
-         // if we're out of data, ten read the next buffer, unless there's
-         // nothing left of the file
-         if (dataLength == 0)
+         if (dataLength == 0 && fileResidual == 0)
          {
-             if (!readNextBuffer())
-             {
-                 return false;
-             }
+             return false;
          }
+
          // the last line left the offset already set up us
          lineStart = scanOffset;
 
@@ -244,15 +245,15 @@ class LineReader
          {
              return true;
          }
-         // ok, we have some data in the buffer, but no linend. First, adjust the buffer by
-         // shifting the remainder of the buffer to the front and reading more data from the file.
+         // ok, we found no line end. First, adjust the buffer by shifting the
+         // remainder of the buffer to the front and reading more data from the file.
          readNextBuffer();
          // look for a line in the adjusted buffer
          if (findLine(line, size))
          {
              return true;
          }
-         // even with more data, we didn't fine a lind end. Try expanding the buffer and
+         // even with more data, we didn't find a line end. Try expanding the buffer and
          // try again (and again, and again, as long as we can)
          while (expandBuffer())
          {
@@ -309,6 +310,7 @@ class LineReader
 
          // we will scan from the current end location on the next scan
          // rather than rescanning the part we already have in the buffer.
+         dataLength = 0;
          scanOffset += dataLength;
 
          return false;
