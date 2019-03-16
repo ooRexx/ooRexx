@@ -166,8 +166,10 @@ class LineReader
              fileResidual -= readLength;
          }
 
-         // add in any length left from the original buffer.
-         dataLength += actualLength;
+         // At this point, datalength is the length left to scan. We might have some
+         // left over from the previous buffer, but we are scanning from the end of our
+         // old data, so the new dataLength needs to be the length we just read in.
+         dataLength = actualLength;
 
          // scan for an eof character, if there is one
          char *endptr = (char *)memchr(buffer + scanOffset, SysFileSystem::EOF_Marker, actualLength);
@@ -175,7 +177,7 @@ class LineReader
          if (endptr != NULL)
          {
              // if we hit the EOF, then we ignore the rest of the file
-             dataLength = endptr - buffer;
+             dataLength = endptr - (buffer + scanOffset);
              fileResidual = 0;
          }
          return true;
@@ -307,7 +309,7 @@ class LineReader
 
          // we will scan from the current end location on the next scan
          // rather than rescanning the part we already have in the buffer.
-         scanOffset = bufferSize;
+         scanOffset += dataLength;
 
          return false;
      }
