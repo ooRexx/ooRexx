@@ -252,7 +252,7 @@ class LineReader
          {
              return true;
          }
-         // even with more data, we didn't fine a line end. Try expanding the buffer and
+         // even with more data, we didn't fine a lind end. Try expanding the buffer and
          // try again (and again, and again, as long as we can)
          while (expandBuffer())
          {
@@ -265,7 +265,7 @@ class LineReader
 
          // no longer possible to expand the buffer... return what we have
          line = buffer + lineStart;
-         size = dataLength;
+         size = (scanOffset + dataLength) - lineStart;
 
          // no more data to process
          dataLength = 0;
@@ -332,7 +332,7 @@ class LineReader
      AutoFree buffer;              // the current buffer
      size_t bufferSize;            // current size of the buffer
      int64_t fileSize;             // full size of the file
-     size_t dataLength;            // the data left in the buffer
+     size_t dataLength;            // the data left in the buffer to search through
      int64_t fileResidual;         // the amount of unread data in the file
      size_t lineStart;             // start of the line in the current buffer
      size_t scanOffset;            // the current scan offset
