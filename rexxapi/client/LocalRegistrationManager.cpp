@@ -333,6 +333,10 @@ RexxReturnCode LocalRegistrationManager::resolveCallback(RegistrationType type, 
                     }
                 }
             }
+            else
+            {
+                return RXSUBCOM_NOTREG;
+            }
         }
         else
         {
