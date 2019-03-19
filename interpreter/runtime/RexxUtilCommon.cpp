@@ -1882,22 +1882,23 @@ RexxRoutine1(int, SysFileDelete, CSTRING, path)
 }
 
 
-/*************************************************************************
-* Function:  SysFileSearch                                               *
-*                                                                        *
-* Syntax:    call SysFileSearch target, file, stem [, options]           *
-*                                                                        *
-* Params:    target  - String to search for.                             *
-*            file    - Filespec to search.                               *
-*            stem    - Stem variable name to place results in.           *
-*            options - Any combo of the following:                       *
-*                       'C' - Case sensitive search (non-default).       *
-*                       'N' - Preceed each found string in result stem   *
-*                              with it line number in file (non-default).*
-*                                                                        *
-* Return:    NO_UTIL_ERROR   - Successful.                               *
-*            ERROR_NOMEM     - Out of memory.                            *
-*************************************************************************/
+/**
+ * SysFileSearch searches a file for lines containing needle.
+ *
+ * @param needle  The string to search for.
+ * @param file    The name of the file to search.
+ * @param stem    The name of the stem variable that will receive each
+ *                file line containing needle.
+ * @param opts    A string of options.  A combination of the following chars:
+ *                'C' - Case-sensitive search (non-default)
+ *                'I' - Case-insensitive search (default)
+ *                'N' - Precede each found string in result stem
+ *                      with its line number in file (non-default)
+* @return  0 on success, non-zero on error.
+ *         ERROR_FILEOPEN if file cannot be openend.
+ *         ERROR_NOMEM if not enough memory.
+ */
+
 RexxRoutine4(CSTRING, SysFileSearch, CSTRING, needle, CSTRING, file, RexxStemObject, stem, OPTIONAL_CSTRING, opts)
 {
     bool        linenums = false;        // should line numbers be inclued in the output
@@ -2005,7 +2006,7 @@ RexxRoutine4(CSTRING, SysFileSearch, CSTRING, needle, CSTRING, file, RexxStemObj
 
     // make sure we update the count with the number of return items
     context->SetStemArrayElement(stem, 0, context->StringSizeToObject(currentStemIndex));
-    return "";                           /* no error on call           */
+    return "0"; // success
 }
 
 
