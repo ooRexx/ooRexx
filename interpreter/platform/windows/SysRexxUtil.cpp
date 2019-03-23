@@ -597,7 +597,9 @@ void TreeFinder::validateFileSpecName()
     const char *pos = strchr((const char *)fileSpec, ':');
     if (pos != NULL)
     {
-        if (((int32_t)(pos - fileSpec + 1)) != 2)
+        // c:\temp, \\?\c:\temp, \\.\c:\temp are all valid
+        int32_t p = (int32_t)(pos - fileSpec + 1);
+        if (p != 2 && p != 6)
         {
             throw InvalidFileName;
         }

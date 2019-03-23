@@ -110,6 +110,11 @@ class FileNameBuffer
          }
      }
 
+     inline void empty()
+     {
+         buffer[0] = '\0';
+     }
+
      inline FileNameBuffer &operator=(const char *s)
      {
          ensureCapacity(strlen(s) + 1);
@@ -211,6 +216,18 @@ class FileNameBuffer
      inline bool startsWith(char c)
      {
          return buffer[0] == c;
+     }
+
+     inline bool startsWith(const char *s)
+     {
+         size_t slen = strlen(s);
+         size_t len = length();
+         if (slen > len)
+         {
+             return false;
+         }
+
+         return strcmp(buffer, s) == 0;
      }
 
      inline bool endsWith(char c)

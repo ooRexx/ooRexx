@@ -1193,12 +1193,41 @@ const char* SysFileSystem::getPathStart(const char *name)
 SysFileIterator::SysFileIterator(const char *path, const char *pattern, FileNameBuffer &buffer, bool c)
 {
     // we can bypass limits on length of the path if we prepend the file spec with
-    // the special marker
-    buffer = "\\\\?\\";
+    // the special prefix \\?\ for local paths or \\?\UNC\ for UNC paths
+    // (see https://docs.microsoft.com/en-us/dotnet/standard/io/file-path-formats)
+    // Note: prepending this prefix will stop Windows converting slashes in the
+    // path to backslashes.
+
+    // don't double-prefix if we've already been given a prefix
+    // if starts with ..    prefix with ..
+    // \\.\xxx              (leave as-is)
+    // \\?\xxx              (leave as-is)
+    // \\xxx                \\?\UNC\xxx
+    // xxx                  \\?\xxx
+    if (path[0] == '\\' && path[1] == '\\')
+    {
+        if (path[2] != '.' && path[2] != '?')
+        {
+            // this is a UNC path .. prefix with "\\?\UNC\"
+            buffer = "\\\\?\\UNC\\";
+            buffer += path + 2;
+        }
+        else
+        {
+            // this is already prefixed, keep it as-is
+            buffer = path;
+        }
+    }
+    else
+    {
+        // this is a local path .. prefix with "\\?\"
+        buffer = "\\\\?\\";
+        buffer += path;
+    }
 
     // save the pattern and convert into a wild card
     // search
-    buffer += path;
+
     // make sure there is a trailing delimiter
     buffer.addFinalPathDelimiter();
     // if no pattern was given, then just use a wild card
@@ -1215,6 +1244,7 @@ SysFileIterator::SysFileIterator(const char *path, const char *pattern, FileName
         // we need to save this for short name filtering
         fileSpec = pattern;
     }
+printf("SysFileIterator: path=%s pattern=%s buffer=%s\n", path, pattern, (char *)buffer);
 
     // this assumes we'll fail...if we find something,
     // we'll flip this
