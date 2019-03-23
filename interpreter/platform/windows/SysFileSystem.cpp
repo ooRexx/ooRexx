@@ -1244,7 +1244,6 @@ SysFileIterator::SysFileIterator(const char *path, const char *pattern, FileName
         // we need to save this for short name filtering
         fileSpec = pattern;
     }
-printf("SysFileIterator: path=%s pattern=%s buffer=%s\n", path, pattern, (char *)buffer);
 
     // this assumes we'll fail...if we find something,
     // we'll flip this
