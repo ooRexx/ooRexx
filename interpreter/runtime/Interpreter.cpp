@@ -753,7 +753,7 @@ const char* REXXENTRY RexxGetErrorMessageByNumber(int msgid)
  */
 RexxString* Interpreter::getMessageText(wholenumber_t code)
 {
-    const char *message = RexxGetErrorMessage(code);
+    const char *message = RexxGetErrorMessage((int)code);
     if (message != NULL)
     {
         return new_string(message);

@@ -83,10 +83,17 @@ class AutoFree
      operator char *() const { return value; }
      int operator==(char *p) { return value == p; }
 
-     char *realloc(size_t newLen)
+     bool realloc(size_t newLen)
      {
-         value = (char *)::realloc(value, newLen);
-         return value;
+         // on failure, realloc returns NULL, but doesn't free the old buffer
+         char *newValue;
+         newValue = (char *)::realloc(value, newLen);
+         if (newValue == NULL)
+         {
+             return false;
+         }
+         value = newValue;
+         return true;
      }
  private:
      char *value;
