@@ -575,29 +575,26 @@ RexxRoutine0(int, SysCls)
 }
 
 
-/*************************************************************************
-* Function:  SysMkDir                                                    *
-*                                                                        *
-* Syntax:    call SysMkDir dir                                           *
-*                                                                        *
-* Params:    dir - Directory to be created.                              *
-*                                                                        *
-* Return:    NO_UTIL_ERROR                                               *
-*                                                                        *
-*************************************************************************/
+/**
+ * SysMkDir creates a directory.  No intermediate directories are created.
+ *
+ * @param path       The directory path.
+ * @param mode       Optional file mode.  Valid values are 0 .. 511.
+ *
+ * @return zero if the directory was created successfully, else errno.
+ */
 RexxRoutine2(int, SysMkDir, CSTRING, path, OPTIONAL_int32_t, mode)
 {
     RoutineQualifiedName qualifiedName(context, path);
 
-    /* Make the dir; standard permissions are rwxr-xr-x                */
-    /* we do not restrict permission, this is done by root in the file */
-    /* /etc/security/user. We allow anything. System restricts         */
-    /* according to the user settings --> smitty/user                  */
+    // Create the directory.  By default, we create with all mode bits set,
+    // but the directory will always be created with the restrictions
+    // specified with the umask command.
     if (argumentOmitted(2))
     {
         mode = S_IRWXU | S_IRWXG | S_IRWXO;
     }
-    return mkdir(qualifiedName, mode);
+    return mkdir(qualifiedName, mode) == 0 ? 0 : errno;
 }
 
 
