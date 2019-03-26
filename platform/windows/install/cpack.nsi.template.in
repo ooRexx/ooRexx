@@ -2889,8 +2889,8 @@ Function un.Ok_Stop_RxAPI_leave
   Pop $R0
 
   MessageBox MB_OK|MB_ICONEXCLAMATION|MB_TOPMOST \
-             "Can not determine conclusively that rxapi is currently stopped.  It may be$\n\
-             that you do not have sufficient privileges to uninstall ${SHORTNAME}.$\n\$\n\
+             "Can not determine conclusively that rxapi is currently stopped.$\n\
+             You may not have sufficient privileges to uninstall ${SHORTNAME}.$\n$\n\
              The uninstall will quit.$\n$\n\
              If you believe you do have sufficient privileges to do the uninstall,$\n\
              you can:$\n$\n\
