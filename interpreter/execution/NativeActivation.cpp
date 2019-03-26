@@ -1912,7 +1912,7 @@ wholenumber_t NativeActivation::positiveWholeNumberValue(RexxObject *o, size_t p
     // convert using the whole value range
     if (!Numerics::objectToSignedInteger(o, temp, Numerics::MAX_WHOLENUMBER, 1))
     {
-        reportException(Error_Invalid_argument_positive, position, o);
+        reportException(Error_Invalid_argument_positive, position + 1, o);
     }
     return temp;
 }
@@ -1933,7 +1933,7 @@ wholenumber_t NativeActivation::nonnegativeWholeNumberValue(RexxObject *o, size_
     // convert using the whole value range
     if (!Numerics::objectToSignedInteger(o, temp, Numerics::MAX_WHOLENUMBER, 0))
     {
-        reportException(Error_Invalid_argument_nonnegative, position, o);
+        reportException(Error_Invalid_argument_nonnegative, position + 1, o);
     }
     return temp;
 }
