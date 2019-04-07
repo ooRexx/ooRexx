@@ -103,7 +103,7 @@ if (ORX_SHEBANG)
       else ()
          if (APPLE)
             # APPLE-special: install into homedirectory's Applications folder
-            set (OOREXX_SHEBANG_PROGRAM "$ENV{HOME}/Applications/ooRexx${ORX_VER_STR}/bin/rexx")
+            set (OOREXX_SHEBANG_PROGRAM "$ENV{HOME}/Applications/ooRexx${ORX_MAJOR}/bin/rexx")
          else ()
             set (OOREXX_SHEBANG_PROGRAM "${CMAKE_INSTALL_PREFIX}/bin/rexx")
          endif ()
@@ -261,11 +261,11 @@ if (WIN32)
 
    # if the user didn't specify a CMAKE_INSTALL_PREFIX
    # we override the CMake default of /usr/local, instead using:
-   # * $HOME/Applications/ooRexxV.R.M on macOS
+   # * $HOME/Applications/ooRexxV on macOS
    # * /usr on other Unix-like systems
    if (APPLE)
      if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-       set (CMAKE_INSTALL_PREFIX $ENV{HOME}/Applications/ooRexx${ORX_VERSION}
+       set (CMAKE_INSTALL_PREFIX $ENV{HOME}/Applications/ooRexx${ORX_MAJOR}
          CACHE PATH "Default install path" FORCE)
      endif()
      set (INSTALL_LIB_DIR ${CMAKE_INSTALL_PREFIX}/lib)
