@@ -2148,13 +2148,13 @@ RexxStringObject formatMessage(RexxCallContext *context, const char *message, Re
 /*************************************************************************
 * Function:  SysFormatMessage                                            *
 *                                                                        *
-* Syntax:    call SysFormatMessage message, subs                         *
+* Syntax:    SysFormatMessage(message, subs)                             *
 *                                                                        *
 * Params:    message        - String error message with insertion        *
 *                             indicators.                                *
-*            subs           - Insertion strings.  For messages which     *
-*                              contain %1, %2, etc, the subs[1]. sibs[2] *
-*                              strings will be inserted (if given).      *
+*            substitutions  - An array of insertion strings.  For        *
+*                             messages containing &1, &2, .., any given  *
+*                             substitutions[] strings will be inserted.  *
 *                                                                        *
 * Return:    The message with the inserted strings (if given).           *
 *************************************************************************/
