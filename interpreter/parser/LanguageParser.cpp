@@ -176,13 +176,25 @@ RoutineClass *LanguageParser::createRoutine(RexxString *name, ArrayClass *source
  *
  * @return An executable routine object.
  */
-RoutineClass *LanguageParser::createRoutine(RexxString *name, PackageClass *sourceContext)
+RoutineClass* LanguageParser::createRoutine(RexxString *name, PackageClass *sourceContext)
 {
-    // create the appropriate program source, then the parser, then generate the
-    // code.
-    Protected<ProgramSource> programSource = new FileProgramSource(name);
-    Protected<LanguageParser> parser = new LanguageParser(name, programSource);
-    return parser->generateRoutine(sourceContext);
+    // load the file into a buffer
+    Protected<BufferClass> program_buffer = FileProgramSource::readProgram(name->getStringData());
+    // if this failed, report an error now.
+    if (program_buffer == (BufferClass *)OREF_NULL)
+    {
+        reportException(Error_Program_unreadable_name, name);
+    }
+
+    // try to restore a flattened program first
+    Protected<RoutineClass> routine = RoutineClass::restore(name, program_buffer);
+    if (routine != (RoutineClass *)OREF_NULL)
+    {
+        return routine;
+    }
+
+    // process this from the source
+    return createRoutine(name, program_buffer);
 }
 
 
@@ -197,8 +209,14 @@ RoutineClass *LanguageParser::createRoutine(RexxString *name, PackageClass *sour
  *
  * @return An executable method object.
  */
-RoutineClass *LanguageParser::createRoutine(RexxString *name, BufferClass *source)
+RoutineClass* LanguageParser::createRoutine(RexxString *name, BufferClass *source)
 {
+    // try to restore a flattened program first
+    Protected<RoutineClass> routine = RoutineClass::restore(name, source);
+    if (routine != (RoutineClass *)OREF_NULL)
+    {
+        return routine;
+    }
     // create the appropriate array source, then the parser, then generate the
     // code.
     Protected<ProgramSource> programSource = new BufferProgramSource(source);
@@ -216,8 +234,14 @@ RoutineClass *LanguageParser::createRoutine(RexxString *name, BufferClass *sourc
  *
  * @return An executable method object.
  */
-RoutineClass *LanguageParser::createProgram(RexxString *name, BufferClass *source)
+RoutineClass* LanguageParser::createProgram(RexxString *name, BufferClass *source)
 {
+    // try to restore a flattened program first
+    Protected<RoutineClass> routine = RoutineClass::restore(name, source);
+    if (routine != (RoutineClass *)OREF_NULL)
+    {
+        return routine;
+    }
     // create the appropriate array source, then the parser, then generate the
     // code.
     Protected<ProgramSource> programSource = new BufferProgramSource(source);
@@ -235,7 +259,7 @@ RoutineClass *LanguageParser::createProgram(RexxString *name, BufferClass *sourc
  *
  * @return An executable method object.
  */
-RoutineClass *LanguageParser::createProgram(RexxString *name, ArrayClass *source, PackageClass *sourceContext)
+RoutineClass* LanguageParser::createProgram(RexxString *name, ArrayClass *source, PackageClass *sourceContext)
 {
     // create the appropriate array source, then the parser, then generate the
     // code.
@@ -254,7 +278,7 @@ RoutineClass *LanguageParser::createProgram(RexxString *name, ArrayClass *source
  *
  * @return An executable method object.
  */
-RoutineClass *LanguageParser::createProgram(RexxString *name)
+RoutineClass* LanguageParser::createProgram(RexxString *name)
 {
     // create the appropriate program source, then the parser, then generate the
     // code.
@@ -273,19 +297,19 @@ RoutineClass *LanguageParser::createProgram(RexxString *name)
  *
  * @return A resulting Routine object, if possible.
  */
-RoutineClass *LanguageParser::createProgramFromFile(RexxString *filename)
+RoutineClass* LanguageParser::createProgramFromFile(RexxString *filename)
 {
     // load the file into a buffer
     Protected<BufferClass> program_buffer = FileProgramSource::readProgram(filename->getStringData());
     // if this failed, report an error now.
-    if (program_buffer == OREF_NULL)
+    if (program_buffer == (BufferClass *)OREF_NULL)
     {
         reportException(Error_Program_unreadable_name, filename);
     }
 
     // try to restore a flattened program first
-    RoutineClass *routine = RoutineClass::restore(filename, program_buffer);
-    if (routine != OREF_NULL)
+    Protected<RoutineClass> routine = RoutineClass::restore(filename, program_buffer);
+    if (routine != (RoutineClass *)OREF_NULL)
     {
         return routine;
     }
