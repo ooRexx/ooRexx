@@ -443,7 +443,7 @@ void formatFileAttributes(TreeFinder *finder, FileNameBuffer &foundFileLine, str
     // now the size information
     if (finder->longSize())
     {
-        snprintf(fileAttr, sizeof(fileAttr), "%20jd  ", finfo.st_size);
+        snprintf(fileAttr, sizeof(fileAttr), "%20jd  ", (intmax_t)finfo.st_size);
     }
     else
     {
@@ -451,7 +451,7 @@ void formatFileAttributes(TreeFinder *finder, FileNameBuffer &foundFileLine, str
         {
             finfo.st_size = 9999999999;
         }
-        snprintf(fileAttr, sizeof(fileAttr), "%10jd  ", finfo.st_size);
+        snprintf(fileAttr, sizeof(fileAttr), "%10jd  ", (intmax_t)finfo.st_size);
     }
 
     // the order is time, size, attributes
