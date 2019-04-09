@@ -562,15 +562,6 @@ RexxReturnCode LocalQueueManager::mapReturnResult(ServiceMessage &m)
 {
     switch (m.result)
     {
-        case INVALID_QUEUE_NAME:
-            return RXQUEUE_BADQNAME;
-
-        case BAD_FIFO_LIFO:
-            return RXQUEUE_PRIORITY;
-
-        case BAD_WAIT_FLAG:
-            return RXQUEUE_BADWAITFLAG;
-
         case QUEUE_DOES_NOT_EXIST:
             return RXQUEUE_NOTREG;
 
