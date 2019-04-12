@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2007-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2007-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -295,42 +295,8 @@ exit
     end
     signal off syntax
 
-    -- Run the code in a dynamically created method
-
-    found_cc = .false
-    do ca = 1 to code_array~items
-        a_ca = code_array[ca]~strip()
-        if a_ca~pos('::') = 1 then
-            do
-                found_cc = .true
-                leave ca
-            end
-    end
-
-    if \found_cc then
-        do
-            exec = .executor~new('oorexxtry.code',code_array)
-            exec~run(arg_array)
-        end
-    else
-        do
-            tempFile = '.\ooRexxTry_test9999.rex'
-            c_stream = .stream~new(tempFile)
-            c_stream~open('Write Replace')
-            do ca = 1 to code_array~items
-                c_stream~lineout(code_array[ca])
-            end
-            c_stream~close
-            arg_string = ''
-            do ca = 1 to arg_array~items
-                arg_ca = '"'arg_array[ca]'"'
-                arg_string = arg_string','arg_ca
-            end
-            arg_string = arg_string~strip('b',',')
-            exec = .executor~new('oorexxtry.code','call ooRexxTry_test9999.rex' arg_string)
-            exec~run(arg_array)
-            rv = SysFileDelete(tempFile)
-        end
+    exec = .executor~new('oorexxtry.code',code_array)
+    exec~run(arg_array)
 
     if .emsg \= '' then
         do
@@ -775,11 +741,11 @@ return iarray
 -- Class that dynamically creates a method to take the arguments and execute the code
 ::class executor public
 ::method init
-    expose rt_method
-    use arg method_name,code
+    expose rt_routine
+    use arg routine_name,code
     .local~Error? = .false
     signal on syntax name ExecSyntax
-    rt_method = .method~new(method_name, code)
+    rt_routine = .routine~new(routine_name, code)
 return
 
 -- Syntax trap similiar to rexxc.exe
@@ -796,7 +762,7 @@ return
 
 -- Method that actually runs our code
 ::method run
-    expose rt_method say_string
+    expose rt_routine say_string
     signal on syntax name RunSyntax
     .local~run_results = .directory~new
     .local~say_stg = ''
@@ -809,7 +775,7 @@ return
             .output~destination(theSayMonitor)
             -- Run the Code
             args = arg(1)
-            self~run:super(rt_method, 'a', args)
+            rt_routine~callWith(args)
             -- Test if there was anything returned by the code
             if symbol('result') = 'VAR' then
                 my_result = result
