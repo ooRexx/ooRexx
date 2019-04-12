@@ -48,6 +48,8 @@
 #include "ExternalFileBuffer.hpp"
 #include "SysProcess.hpp"
 
+#include <ctype.h>
+
 // FILESPEC function options
 #define FILESPEC_PATH         'P'
 #define FILESPEC_NAME         'N'

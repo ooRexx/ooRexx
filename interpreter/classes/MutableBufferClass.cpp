@@ -41,6 +41,8 @@
 /*                                                                            */
 /******************************************************************************/
 #include <algorithm>
+#include <ctype.h>
+
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "MutableBufferClass.hpp"

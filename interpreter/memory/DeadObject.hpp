@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -46,8 +46,10 @@
 #define Included_DeadObject
 
 #include <string.h>
+#include <stdio.h>
 
-void FOUND(); void NOTFOUND();
+void FOUND();
+void NOTFOUND();
 /* Dead chains are doubly linked lists.  The anchors are in the memoryobj dead   */
 /* arrays.  The first element of each dead list is a dead object 3 words long.   */
 /* The first and third words are next and prev pointers, and the second is the   */

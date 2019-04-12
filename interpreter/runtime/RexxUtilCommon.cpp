@@ -44,6 +44,7 @@
 #include <time.h>
 #include <algorithm>
 #include <math.h>
+#include <ctype.h>
 #include <cmath>
 #include <cfloat>
 #include "oorexxapi.h"

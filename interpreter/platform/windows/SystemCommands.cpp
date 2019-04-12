@@ -59,6 +59,8 @@
 #include "CommandHandler.hpp"
 #include "SysThread.hpp"
 
+#include <ctype.h>
+
 #define CMDBUFSIZE 8092                // maximum commandline length
 #define CMDDEFNAME "CMD.EXE"           // default Windows cmomand handler
 #define UNKNOWN_COMMAND 1              /* unknown command return code    */

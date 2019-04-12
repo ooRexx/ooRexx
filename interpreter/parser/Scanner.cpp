@@ -48,6 +48,7 @@
 #include "GlobalNames.hpp"
 
 #include <stdio.h>
+#include <ctype.h>
 
 
 /*********************************************************************
