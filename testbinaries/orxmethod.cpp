@@ -1742,8 +1742,8 @@ RexxMethod1(RexxArrayObject,             // Return type
 }
 
 RexxMethod1(RexxClassObject,             // Return type
-           TestOptionalClassArg,         // Function routine name
-           OPTIONAL_RexxClassObject, arg1)        // Argument
+            TestOptionalClassArg,         // Function routine name
+            OPTIONAL_RexxClassObject, arg1)        // Argument
 {
     if (argumentOmitted(1))
     {
@@ -1763,6 +1763,17 @@ RexxMethod3(RexxObjectPtr,
 {
     return context->SendMessage(target, name, args);
 }
+
+RexxMethod4(RexxObjectPtr,
+            TestSendMessageScoped,
+            RexxObjectPtr, target,
+            CSTRING, name,
+            RexxClassObject, scope,
+            RexxArrayObject, args)
+{
+    return context->SendMessageScoped(target, name, scope, args);
+}
+
 
 RexxMethod2(RexxObjectPtr,
             TestSendMessage0,
@@ -2544,6 +2555,7 @@ RexxMethodEntry orxtest_methods[] = {
     REXX_METHOD(TestNewStringTable,          TestNewStringTable),
     REXX_METHOD(TestIsStringTable,           TestIsStringTable),
     REXX_METHOD(TestSendMessage,             TestSendMessage),
+    REXX_METHOD(TestSendMessageScoped,       TestSendMessageScoped),
     REXX_METHOD(TestSendMessage0,            TestSendMessage0),
     REXX_METHOD(TestSendMessage1,            TestSendMessage1),
     REXX_METHOD(TestSendMessage2,            TestSendMessage2),

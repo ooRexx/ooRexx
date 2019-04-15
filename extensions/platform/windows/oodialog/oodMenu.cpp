@@ -3235,7 +3235,7 @@ RexxMethod1(RexxObjectPtr, menu_uninit, CSELF, cMenuPtr)
     CppMenu *cMenu = (CppMenu *)cMenuPtr;
 
 #ifdef _DEBUG
-#if 1
+#if 0
     printf("In UNINIT() of Menu class cMenu=%p\n", cMenu);
 #endif
 #endif

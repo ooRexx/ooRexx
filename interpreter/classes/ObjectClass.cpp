@@ -744,10 +744,25 @@ void RexxObject::checkRestrictedMethod(const char *methodName)
  * @param result    A ProtectedObject used for returning a result and
  *                  protecting it from garbage collection.
  */
-RexxObject *RexxObject::sendMessage(RexxString *message, ArrayClass  *arguments, ProtectedObject &result)
+RexxObject* RexxObject::sendMessage(RexxString *message, ArrayClass  *arguments, ProtectedObject &result)
 {
     return messageSend(message, arguments->messageArgs(), arguments->messageArgCount(), result);
 }
+
+
+/**
+ * Send a message to an object.
+ *
+ * @param message   The message name.
+ * @param arguments An array of the arguments.
+ * @param result    A ProtectedObject used for returning a result and
+ *                  protecting it from garbage collection.
+ */
+RexxObject* RexxObject::sendMessage(RexxString *message, RexxClass *scope, ArrayClass  *arguments, ProtectedObject &result)
+{
+    return messageSend(message, arguments->messageArgs(), arguments->messageArgCount(), scope, result);
+}
+
 
 
 /**

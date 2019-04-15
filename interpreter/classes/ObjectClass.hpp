@@ -487,7 +487,8 @@ class RexxObject : public RexxInternalObject
     MethodClass *checkPackage(MethodClass *, RexxErrorCodes &);
     void         checkRestrictedMethod(const char *methodName);
     void         processProtectedMethod(RexxString *, MethodClass *, RexxObject **, size_t, ProtectedObject &);
-    RexxObject  *sendMessage(RexxString *, ArrayClass *, ProtectedObject &);
+    RexxObject* sendMessage(RexxString *, ArrayClass *, ProtectedObject &);
+    RexxObject* sendMessage(RexxString *, RexxClass *, ArrayClass *, ProtectedObject &);
     inline RexxObject *sendMessage(RexxString *message, ProtectedObject &result) { return messageSend(message, OREF_NULL, 0, result); };
     inline RexxObject *sendMessage(RexxString *message, RexxObject **args, size_t argCount, ProtectedObject &result) { return messageSend(message, args, argCount, result); };
     inline RexxObject *sendMessage(RexxString *message, RexxObject *argument1, ProtectedObject &result)
