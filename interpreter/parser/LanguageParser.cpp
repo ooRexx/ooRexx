@@ -194,7 +194,7 @@ RoutineClass* LanguageParser::createRoutine(RexxString *name, PackageClass *sour
     }
 
     // process this from the source
-    return createRoutine(name, program_buffer);
+    return createRoutine(name, program_buffer, sourceContext);
 }
 
 
@@ -209,7 +209,7 @@ RoutineClass* LanguageParser::createRoutine(RexxString *name, PackageClass *sour
  *
  * @return An executable method object.
  */
-RoutineClass* LanguageParser::createRoutine(RexxString *name, BufferClass *source)
+RoutineClass* LanguageParser::createRoutine(RexxString *name, BufferClass *source, PackageClass *sourceContext)
 {
     // try to restore a flattened program first
     Protected<RoutineClass> routine = RoutineClass::restore(name, source);
@@ -221,7 +221,7 @@ RoutineClass* LanguageParser::createRoutine(RexxString *name, BufferClass *sourc
     // code.
     Protected<ProgramSource> programSource = new BufferProgramSource(source);
     Protected<LanguageParser> parser = new LanguageParser(name, programSource);
-    return parser->generateRoutine();
+    return parser->generateRoutine(sourceContext);
 }
 
 

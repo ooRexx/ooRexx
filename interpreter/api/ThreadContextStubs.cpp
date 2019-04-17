@@ -548,7 +548,7 @@ RexxRoutineObject RexxEntry NewRoutine(RexxThreadContext *c, CSTRING n, CSTRING 
         Protected<BufferClass> source = new_buffer(s, l);
 
         // convert the name to a string instance, and check the environments.
-        return (RexxRoutineObject)context.ret(LanguageParser::createRoutine(name, source));
+        return (RexxRoutineObject)context.ret(LanguageParser::createRoutine(name, source, OREF_NULL));
     }
     catch (NativeActivation *)
     {

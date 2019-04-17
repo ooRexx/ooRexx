@@ -434,7 +434,7 @@ class LanguageParser: public RexxInternalObject
     static MethodClass *createMethod(RexxString *name, BufferClass *source);
     static MethodClass *createMethod(RexxString *name, PackageClass *sourceContext);
     static RoutineClass *createRoutine(RexxString *name, ArrayClass *source, PackageClass *sourceContext);
-    static RoutineClass *createRoutine(RexxString *name, BufferClass *source);
+    static RoutineClass *createRoutine(RexxString *name, BufferClass *source, PackageClass *sourceContext);
     static RoutineClass *createRoutine(RexxString *name, PackageClass *sourceContext);
     static RoutineClass *createProgram(RexxString *name, BufferClass *source);
     static RoutineClass *createProgram(RexxString *name, ArrayClass *source, PackageClass *sourceContext);

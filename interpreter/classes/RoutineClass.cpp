@@ -527,7 +527,7 @@ RoutineClass *RoutineClass::newRexx(RexxObject **init_args, size_t argCount)
  * Create a routine object from a file.
  *
  * @param filename The target file name.
- * @param scope    The scope that the new method object will be given.
+ * @param scope    The scope that the new routine object will be given.
  *
  * @return The created routine object.
  */
@@ -542,7 +542,7 @@ RoutineClass *RoutineClass::newFileRexx(RexxString *filename, PackageClass *sour
     // parse all of the options
     processNewFileExecutableArgs(filename, sourceContext);
 
-    // go create a method from filename
+    // go create a routine from filename
     Protected<RoutineClass> newRoutine = LanguageParser::createRoutine(filename, sourceContext);
 
     // complete the initialization

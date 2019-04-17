@@ -754,6 +754,7 @@ RexxObject* RexxObject::sendMessage(RexxString *message, ArrayClass  *arguments,
  * Send a message to an object.
  *
  * @param message   The message name.
+ * @param scope     The scope where to start searching.
  * @param arguments An array of the arguments.
  * @param result    A ProtectedObject used for returning a result and
  *                  protecting it from garbage collection.
