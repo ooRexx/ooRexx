@@ -2014,29 +2014,30 @@ RexxInstruction* LanguageParser::createLoop(bool isLoop)
     // used as control variable.
     while (token->isSymbol())
     {
-        // potentially a label.  Check the keyword value
+        // potentially a label or a counter.  Check the keyword value
         if (token->subKeyword() == SUBKEY_LABEL || token->subKeyword() == SUBKEY_COUNTER)
         {
+            // if we already had COUNTER, this is part of the loop
+            if (countVariable != OREF_NULL && token->subKeyword() == SUBKEY_COUNTER)
+            {
+                break;
+            }
+            // if we already had LABEL, this is part of the loop
+            if (label != OREF_NULL && token->subKeyword() == SUBKEY_LABEL)
+            {
+                break;
+            }
             // if the next token is a symbol, this is a label or counter
             RexxToken *name = nextReal();
             if (name->isSymbol())
             {
                 if (token->subKeyword() == SUBKEY_LABEL)
                 {
-                    // this can only be specified once. If we see it a second time, it is handled as part of the loop type
-                    if (label != OREF_NULL)
-                    {
-                        break;
-                    }
                     // save the label name.
                     label = name->value();
                 }
                 else
                 {
-                    if (countVariable != OREF_NULL)
-                    {
-                        break;
-                    }
                     // get a retriever to be able to access this token.
                     countVariable = addVariable(name);
                 }
@@ -2052,7 +2053,7 @@ RexxInstruction* LanguageParser::createLoop(bool isLoop)
                     break;
                 }
             }
-            // is this "symbol ="?  Handle as a controlled loop
+            // is this symbol "="?  Handle as a controlled loop
             else if (name->isSubtype(OPERATOR_EQUAL))
             {
                 // This is a controlled loop, we're all positioned to process this.
@@ -2068,7 +2069,7 @@ RexxInstruction* LanguageParser::createLoop(bool isLoop)
             else
             {
                 // this is either an end-of-clause or something not a symbol.  This is an error.
-                syntaxError(Error_Symbol_expected_LABEL);
+                syntaxError(token->subKeyword() == SUBKEY_LABEL ? Error_Symbol_expected_LABEL : Error_Symbol_expected_counter);
             }
         }
         else
@@ -2099,7 +2100,7 @@ RexxInstruction* LanguageParser::createLoop(bool isLoop)
     }
 
     // we've already handled the control variable version where the variable happens to
-    // be named LABEL above.  We still need to check for this with any other name.
+    // be named LABEL or COUNTER above.  We still need to check for this with any other name.
     if (token->isSymbol())
     {
         // this can be a control variable or keyword.  We need to look ahead

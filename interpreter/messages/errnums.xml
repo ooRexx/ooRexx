@@ -901,6 +901,12 @@ special character (such as a parenthesis).
 <para>Symbol expected after WITH keyword.</para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>934</term>
+<listitem>
+<para>Symbol expected after COUNTER keyword.</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 <section id="ERR21">

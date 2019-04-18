@@ -184,6 +184,7 @@ ERROR_MAP Message_map_table[] = {     /* table of major and minor errors   */
       MINOR(Error_Symbol_expected_after_use_arg_reference)
       MINOR(Error_Symbol_expected_after_stem_keyword)
       MINOR(Error_Symbol_expected_address_with)
+      MINOR(Error_Symbol_expected_counter)
   MAJOR(Error_Invalid_data)
       MINOR(Error_Invalid_data_user_defined)
       MINOR(Error_Invalid_data_nop)

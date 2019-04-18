@@ -185,6 +185,7 @@ ERROR_MESSAGE Message_table[] = {      /* table of major and minor errors   */
     MESSAGE(Error_Symbol_expected_after_use_arg_reference, "Simple variable or stem symbol expected after > or < USE ARG reference operator; found &1.")
     MESSAGE(Error_Symbol_expected_after_stem_keyword, "Stem symbol expected after STEM keyword.")
     MESSAGE(Error_Symbol_expected_address_with, "Symbol expected after WITH keyword.")
+    MESSAGE(Error_Symbol_expected_counter, "Symbol expected after COUNTER keyword.")
     MESSAGE(Error_Invalid_data, "Invalid data on end of clause.")
     MESSAGE(Error_Invalid_data_user_defined, "&1.")
     MESSAGE(Error_Invalid_data_nop, "Data must not follow the NOP keyword; found \"&1\".")

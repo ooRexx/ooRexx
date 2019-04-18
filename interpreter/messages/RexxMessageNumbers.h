@@ -424,6 +424,7 @@
 #define Error_Execution_nometaclass_msg                              484
 #define Error_Execution_noclass_msg                                  485
 #define Error_Execution_cyclic_msg                                   486
+#define Error_Symbol_expected_counter_msg                            487
 #define Error_Execution_noarray_msg                                  488
 #define Error_Execution_nostring_msg                                 489
 #define Error_Execution_message_reuse_msg                            490

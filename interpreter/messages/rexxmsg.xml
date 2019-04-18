@@ -1300,6 +1300,15 @@ special character (such as a parenthesis).
         <SymbolicName>Error_Symbol_expected_address_with</SymbolicName>
         <Text>Symbol expected after WITH keyword.</Text>
       </SubMessage>
+      <SubMessage>
+        <Code>20</Code>
+        <Subcode>934</Subcode>
+        <MessageNumber>487</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Symbol_expected_counter</SymbolicName>
+        <Text>Symbol expected after COUNTER keyword.</Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>
