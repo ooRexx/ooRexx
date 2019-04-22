@@ -695,6 +695,20 @@ class RexxString : public RexxObject
         return "0123456789ABCDEF"[n];
     }
 
+    static inline int hexDigitToInt(char ch)
+    {
+        return DIGITS_HEX_LOOKUP[(unsigned char)ch];
+    }
+
+    static inline char packByte2(const char *bytes)
+    {
+        // covert each hex digit and combind into a single value
+        int nibble1 = hexDigitToInt(bytes[0]);
+        int nibble2 = hexDigitToInt(bytes[1]);
+        /* combine the two digits            */
+
+        return ((nibble1 << 4) | nibble2);
+    }
 
     static RexxString *newString(const char *, size_t);
     static RexxString *newString(const char *, size_t, const char *, size_t);

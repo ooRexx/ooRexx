@@ -673,19 +673,6 @@ int  StringUtil::caselessCompare(const char *string1, const char *string2, size_
 
 
 /**
- * Convert a hex digit to its integer value equivalent.
- *
- * @param ch     The input character.
- *
- * @return the integer value of the digit.
- */
-int StringUtil::hexDigitToInt(char ch)
-{
-    return RexxString::DIGITS_HEX_LOOKUP[(unsigned char)ch];
-}
-
-
-/**
  * The value of the buffer contents
  * interpreted as the binary expansion
  * of a byte, with most significant
@@ -909,7 +896,7 @@ RexxString *StringUtil::packHex(const char *string, size_t stringLength)
         // copy the digits into out buffer...we're copying either 1 or 2 characters
         copyGroupedChars(buf + 2 - b, source, stringLength, b, RexxString::DIGITS_HEX_LOOKUP, scanned);
         // now convert this into a single character and insert into the destination string
-        *destination++ = packByte2(buf);
+        *destination++ = RexxString::packByte2(buf);
         source += scanned;
         stringLength -= scanned;
         nibbles -= b;

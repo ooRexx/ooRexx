@@ -66,22 +66,12 @@ public:
     static size_t caselessLastPos(const char *stringData, size_t hastackLen, RexxString  *needle, size_t _start, size_t range);
     static const char *caselessLastPos(const char *needle, size_t needleLen, const char *haystack, size_t haystackLen);
     static int caselessCompare(const char *, const char *, size_t);
-    static int hexDigitToInt(char ch);
     static char packByte(const char *String);
     static void unpackNibble(int Val, char *p);
     static char packNibble(const char *String);
     static RexxString *packHex(const char *String, size_t StringLength);
     static size_t copyGroupedChars(char *destination, const char *source, size_t length, size_t count, char set[256], size_t &scannedSize);
     static size_t validateGroupedSet(const char *string, size_t length, char set[256], int modulus, bool hex);
-    static inline char packByte2(const char *bytes)
-    {
-        // covert each hex digit and combind into a single value
-        int nibble1 = hexDigitToInt(bytes[0]);
-        int nibble2 = hexDigitToInt(bytes[1]);
-        /* combine the two digits            */
-
-        return ((nibble1 << 4) | nibble2);
-    }
     static bool validateGroupedSetQuiet(const char *string, size_t length, char set[256], int modulus, size_t &packedSize);
     static const char* validateStrictSet(const char *string, char set[256], size_t length);
     static RexxObject *dataType(RexxString *String, char Option );

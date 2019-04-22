@@ -699,7 +699,7 @@ RexxString *RexxString::x2b()
         if (ch != ch_SPACE && ch != ch_TAB)
         {
             // convert to a decimal number first, then unpack that into the nibble
-            int val = StringUtil::hexDigitToInt(ch);
+            int val = RexxString::hexDigitToInt(ch);
             StringUtil::unpackNibble(val, destination);
             destination += 4;
             nibbles--;
