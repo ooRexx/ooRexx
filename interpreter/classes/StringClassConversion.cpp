@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -187,13 +187,13 @@ RexxString *RexxString::decodeBase64()
     {
         for (int i = 0; i < 4; i++)
         {
-            char ch = *source++;
+            unsigned char ch = *source++;
 
             // first, find the matching character
-            const char *match = strchr(DIGITS_BASE64, ch);
+            unsigned char digitValue = DIGITS_BASE64_LOOKUP[ch];
             // if we did not find a match, this could be
             // an end of buffer filler characters
-            if (match == NULL)
+            if (digitValue == '\xff')
             {
                 // if this is '=' and we're looking at
                 // one of the last two digits, we've hit the
@@ -207,9 +207,6 @@ RexxString *RexxString::decodeBase64()
                 reportException(Error_Incorrect_method_invbase64);
             }
 
-            // get the reduced digit value
-            int digitValue = (int)(match - DIGITS_BASE64);
-
             // digit value is the binary value of this digit.  Now, based
             // on which digit of the input set we're working on, we update
             // the values in the output buffer.  We only have 6 bits of
@@ -218,26 +215,26 @@ RexxString *RexxString::decodeBase64()
             {
                 // first digit, all 6 bits go into the current position, shifted
                 case 0:
-                    *destination = (char)(digitValue << 2);
+                    *destination = digitValue << 2;
                     break;
                 // second digit.  2 bits are used to complete the current
                 // character, 4 bits are inserted into the next character
                 case 1:
-                    *destination |= (char)(digitValue >> 4);
+                    *destination |= digitValue >> 4;
                     destination++;
-                    *destination = (char)(digitValue << 4);
+                    *destination = digitValue << 4;
                     break;
                 // third digit.  4 bits are used to complete the
                 // current character, the remaining 2 bits go into the next one.
                 case 2:
-                    *destination |= (char)(digitValue >> 2);
+                    *destination |= digitValue >> 2;
                     destination++;
-                    *destination = (char)(digitValue << 6);
+                    *destination = digitValue << 6;
                     break;
                 // last character of the set.  All 6 bits are inserted into
                 // the current output position.
                 case 3:
-                    *destination |= (char)digitValue;
+                    *destination |= digitValue;
                     destination++;
                     break;
             }
@@ -633,7 +630,7 @@ RexxString *RexxString::b2x()
     }
 
     // validate the string content, getting a bit count back.
-    size_t bits = StringUtil::validateSet(getStringData(), getLength(), "01", 4, false);
+    size_t bits = StringUtil::validateGroupedSet(getStringData(), getLength(), RexxString::DIGITS_BIN_LOOKUP, 4, false);
     // every 4 bits will be one hex character in the result
     RexxString *retval = raw_string((bits + 3) / 4);
 
@@ -641,37 +638,34 @@ RexxString *RexxString::b2x()
     const char *source = getStringData();
     size_t length = getLength();
 
-    char nibble[4];
-    size_t jump;        // string movement offset
-
-    // if this is not evenly divisible by 4, then the first nibble has an odd number of characters.
-    size_t excess = bits % 4;
-
-    if (excess != 0)
+    // we know the string conforms to the rules for the string, so we just
+    // need to process all of the bits and convert
+    while (bits > 0)
     {
-        memset(nibble, '0', 4);
+        char nibble[4];
+        // this will really on impact the first nibble, since we will be working
+        // in groups of 4 after that.  Find out how many bit digits we need to
+        // process for the next nibble
+        size_t excess = bits % 4;
+        // zero means we have a full nibble to process
+        if (excess == 0)
+        {
+            excess = 4;
+        }
+        // fill the nibble with zero bits for the non-used ones
+        else
+        {
+            memset(nibble, '0', 4);
+        }
+        size_t jump;        // string movement offset
         // get the next nibble worth of characters
-        StringUtil::chGetSm(&nibble[0] + (4 - excess), source, length, excess, jump);
+        StringUtil::copyGroupedChars(&nibble[0] + (4 - excess), source, length, excess, RexxString::DIGITS_BIN_LOOKUP, jump);
         // insert into the destination as a hex character
         *destination++ = StringUtil::packNibble(nibble);
         source += jump;
         length -= jump;
         // we should be working with multiples of 4 after the first one.
         bits -= excess;
-    }
-
-    // we know the string conforms to the rules for the string, so we just
-    // need to process all of the bits and convert
-    while (bits > 0)
-    {
-        // get the next nibble worth of characters
-        StringUtil::chGetSm(&nibble[0], source, length, 4, jump);
-        // insert into the destination as a hex character
-        *destination++ = StringUtil::packNibble(nibble);
-        source += jump;
-        length -= jump;
-        // we should be working with multiples of 4 after the first one.
-        bits -= 4;
     }
     return retval;
 }
@@ -690,7 +684,7 @@ RexxString *RexxString::x2b()
         return GlobalNames::NULLSTRING;
     }
     // validate the content and grouping of the string, returning the count of set characters
-    size_t nibbles = StringUtil::validateSet(getStringData(), getLength(), "0123456789ABCDEFabcdef", 2, true);
+    size_t nibbles = StringUtil::validateGroupedSet(getStringData(), getLength(), RexxString::DIGITS_HEX_LOOKUP, 2, true);
     // every hex nibble will expand to 4 bit characters
     RexxString *retval = raw_string(nibbles * 4);
 

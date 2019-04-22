@@ -673,17 +673,30 @@ int  StringUtil::caselessCompare(const char *string1, const char *string2, size_
 
 
 /**
+ * Convert a hex digit to its integer value equivalent.
+ *
+ * @param ch     The input character.
+ *
+ * @return the integer value of the digit.
+ */
+int StringUtil::hexDigitToInt(char ch)
+{
+    return RexxString::DIGITS_HEX_LOOKUP[(unsigned char)ch];
+}
+
+
+/**
  * The value of the buffer contents
  * interpreted as the binary expansion
  * of a byte, with most significant
- * bit in s[0] and least significant
- * bit in s[7].
+ * bit in string[0] and least significant
+ * bit in string[7].
  *
  * @param string The string to pack (must be 8 digits)
  *
  * @return The single packed character.
  */
-char StringUtil::packByte(const char *string )
+char StringUtil::packByte(const char *string)
 {
     char result = 0;
     // loop through all 8 characters
@@ -702,8 +715,8 @@ char StringUtil::packByte(const char *string )
  * The value of the buffer contents
  * interpreted as the binary expansion
  * of a byte, with most significant
- * bit in s[0] and least significant
- * bit in s[7].
+ * bit in string[0] and least significant
+ * bit in string[7].
  *
  * @param string Pack 4 characters into a hex string value.
  *
@@ -723,24 +736,24 @@ char StringUtil::packNibble(const char *string)
 /**
  * Validate blocks in string
  *
- * A string is considered valid if consists
- * of zero or more characters belonging to
- * the null-terminated C string set in
- * groups of size modulus.  The first group
- * may have fewer than modulus characters.
- * The groups are optionally separated by
- * one or more blanks.
+ * A string is considered valid if it consists of zero or more characters
+ * belonging to the character set, in groups of size modulus.
+ * The first group may have fewer than modulus characters.
+ * The groups are optionally separated by one or more whitespace chars.
  *
- * @param String  The string to validate.
- * @param Length  The string length.
- * @param Set     The valid characters in the set.
- * @param Modulus The size of the smallest allowed grouping.
- * @param Hex     Indicates this is a hex or binary string.  Used for issuing
- *                the correct error type.
+ * @param string   The string to validate.
+ * @param length   The string length.
+ * @param set      The set of valid characters.
+ * @param modulus  The size of the smallest allowed grouping.
+ * @param hex      Indicates this is a hex or binary string.  Used for issuing
+ *                 the correct error message.
  *
  * @return The number of valid digits found.
+ *
+ * This version raises errors for invalid characters.
+ * See also validateGroupedSetQuiet().
  */
-size_t StringUtil::validateSet(const char *string, size_t length, const char *set, int modulus, bool hex)
+size_t StringUtil::validateGroupedSet(const char *string, size_t length, char set[256], int modulus, bool hex)
 {
     // leading whitespace not permitted
     if (*string == RexxString::ch_SPACE || *string == RexxString::ch_TAB)
@@ -761,7 +774,7 @@ size_t StringUtil::validateSet(const char *string, size_t length, const char *se
         ch = *current++;
 
         // if this is in the set, then add in the count of digits
-        if (ch != '\0' && strchr(set, ch) != NULL)
+        if (set[(unsigned char)ch] != '\xff')
         {
             count++;
         }
@@ -812,20 +825,18 @@ size_t StringUtil::validateSet(const char *string, size_t length, const char *se
 
 
 /**
- * Scan string for next members of
- * character set
+ * Copy at most count characters from set from source to destination.
  *
- * @param Destination
- *               The string where the characters are packed.
- * @param Source The source for the string data.
- * @param Length The length of the input string.
- * @param Count  The number of valid characters in the string.
- * @param ScannedSize
- *               The returned scan size.
+ * @param destination  The string where the characters are packed.
+ * @param source       The source for the string data.
+ * @param length       The length of the input string.
+ * @param count        The number of valid characters in the string.
+ * @param set          The mapped set of allowed characters.
+ * @param scannedSize  The returned scan size.
  *
- * @return
+ * @return  number of characters copied
  */
-size_t  StringUtil::chGetSm(char *destination, const char *source, size_t length, size_t count, size_t &scannedSize)
+size_t StringUtil::copyGroupedChars(char *destination, const char *source, size_t length, size_t count, char set[256], size_t &scannedSize)
 {
     // make sure the scanned size is initialized
     scannedSize = 0;
@@ -838,9 +849,7 @@ size_t  StringUtil::chGetSm(char *destination, const char *source, size_t length
         scannedSize++;
 
         // if this is one of our target characters, copy it to the destination
-        // note that we have already validated the string contents, so we don't look for
-        // specific characters here.
-        if (ch != '\0' && ch != RexxString::ch_SPACE && ch != RexxString::ch_TAB)
+        if (set[(unsigned char)ch] != '\xff')
         {
             *destination++ = ch;
             // if we've copied the desired number of characters, we're finished
@@ -878,38 +887,32 @@ RexxString *StringUtil::packHex(const char *string, size_t stringLength)
 
     const char *source = string;
     // perform the validation and get a character count
-    size_t nibbles = validateSet(source, stringLength, "0123456789ABCDEFabcdef", 2, true);
+    size_t nibbles = validateGroupedSet(source, stringLength, RexxString::DIGITS_HEX_LOOKUP, 2, true);
     // get a result string, with rounding in case we have an odd number of digits
     RexxString *retval = raw_string((nibbles + 1) / 2);
 
     char *destination = retval->getWritableData();
 
-    char     buf[8];
-    size_t scanned;
-
-    // process the first character outside the loop if we have an odd number of nibbles
-    if (nibbles % 2 != 0)
-    {
-        // use zero as the front and scan for the next character
-        buf[0] = '0';
-        chGetSm(buf + 1, source, stringLength, 1, scanned);
-        // now convert this into a single character and insert into the destination string
-        *destination++ = packByte2(buf);
-        source += scanned;
-        stringLength -= scanned;
-        nibbles--;
-    }
-
-    // process all of the remaining nibbles in pairs
+    // process all of the nibbles
     while (nibbles > 0)
     {
-        // copy the digits into our buffer...we're always copying 2 characters
-        chGetSm(buf, source, stringLength, 2, scanned);
+        char     buf[8];
+        // we do this two characters at a time, but the first group might
+        // only be one digit if we have an odd number
+        size_t b = nibbles % 2 == 0 ? 2 : 1;
+        // if we have an odd number, pad the buffer with zeros
+        if (b == 1)
+        {
+            memset(buf, '0', 2);
+        }
+        size_t scanned;
+        // copy the digits into out buffer...we're copying either 1 or 2 characters
+        copyGroupedChars(buf + 2 - b, source, stringLength, b, RexxString::DIGITS_HEX_LOOKUP, scanned);
         // now convert this into a single character and insert into the destination string
         *destination++ = packByte2(buf);
         source += scanned;
         stringLength -= scanned;
-        nibbles -= 2;
+        nibbles -= b;
     }
     return retval;
 }
@@ -937,20 +940,20 @@ void StringUtil::unpackNibble(int Val, char *p)
 
 
 /**
- * Find the first occurrence of the set non-member in a string.
+ * Validate that string contains characters only from given set.
  *
- * @param String The string to search.
- * @param Set    The character set.
- * @param Length The length to search.
+ * @param string The string to search.
+ * @param set    The character set.
+ * @param length The length to search.
  *
- * @return The position of a match.
+ * @return NULL if all chars match, otherwise the position of the failed match.
  */
-const char *StringUtil::memcpbrk(const char *string, const char *set, size_t length)
+const char* StringUtil::validateStrictSet(const char *string, char set[256], size_t length)
 {
     while (length--)
     {
-        // a null character or one in the set will terminate
-        if (*string == '\0' || !strchr(set, *string))
+        // any character outside the set will terminate
+        if (set[(unsigned char)*string] == '\xff')
         {
             return string;
         }
@@ -964,23 +967,23 @@ const char *StringUtil::memcpbrk(const char *string, const char *set, size_t len
 /**
  * Validate blocks in string
  *
- * A string is considered valid if consists
- * of zero or more characters belonging to
- * the null-terminated C string set in
- * groups of size modulus.  The first group
- * may have fewer than modulus characters.
- * The groups are optionally separated by
- * one or more blanks.  This version does not raise errors.
+ * A string is considered valid if it consists of zero or more characters
+ * belonging to the character set, in groups of size modulus.
+ * The first group may have fewer than modulus characters.
+ * The groups are optionally separated by one or more whitespace chars.
  *
- * @param String     The string to validate.
- * @param Length     The string length.
- * @param Set        The validation set.
- * @param Modulus    The set modulus
- * @param PackedSize The final packed size.
+ * @param string   The string to validate.
+ * @param length   The string length.
+ * @param set      The set of valid characters.
+ * @param modulus  The size of the smallest allowed grouping.
+ * @param count    The number of valid digits found.
  *
- * @return The count of located characters.
+ * @return true for a valid string, false otherwise.
+ *
+ * This is the "quiet" version, it does not raise errors.
+ * See also validateGroupedSet()
  */
-bool StringUtil::validateCharacterSet(const char *string, size_t length, const char *set, int modulus, size_t &count)
+bool StringUtil::validateGroupedSetQuiet(const char *string, size_t length, char set[256], int modulus, size_t &count)
 {
     // leading whitespace not permitted
     if (*string == RexxString::ch_SPACE || *string == RexxString::ch_TAB)
@@ -1001,7 +1004,7 @@ bool StringUtil::validateCharacterSet(const char *string, size_t length, const c
         ch = *current++;
 
         // if this is in the set, then add in the count of digits
-        if (ch != '\0' && strchr(set, ch) != NULL)
+        if (set[(unsigned char)ch] != '\xff')
         {
             count++;
         }
@@ -1065,22 +1068,22 @@ RexxObject *StringUtil::dataType(RexxString *string, char option )
     switch (toupper(option))
     {
         case RexxString::DATATYPE_ALPHANUMERIC:
-            return booleanObject(len != 0 && !memcpbrk(scanp, RexxString::ALPHANUM, len));
+            return booleanObject(len != 0 && !validateStrictSet(scanp, RexxString::ALPHANUM_LOOKUP, len));
 
         case RexxString::DATATYPE_BINARY:
         {
             size_t count;
-            return booleanObject(len == 0 || validateCharacterSet(scanp, len, RexxString::BINARY, 4, count));
+            return booleanObject(len == 0 || validateGroupedSetQuiet(scanp, len, RexxString::DIGITS_BIN_LOOKUP, 4, count));
         }
 
         case RexxString::DATATYPE_LOWERCASE:
-            return booleanObject(len != 0 && !memcpbrk(scanp, RexxString::LOWER_ALPHA, len));
+            return booleanObject(len != 0 && !validateStrictSet(scanp, RexxString::LOWER_ALPHA_LOOKUP, len));
 
         case RexxString::DATATYPE_UPPERCASE:
-            return booleanObject(len != 0 && !memcpbrk(scanp, RexxString::UPPER_ALPHA, len));
+            return booleanObject(len != 0 && !validateStrictSet(scanp, RexxString::UPPER_ALPHA_LOOKUP, len));
 
         case RexxString::DATATYPE_MIXEDCASE:
-            return booleanObject(len != 0 && !memcpbrk(scanp, RexxString::MIXED_ALPHA, len));
+            return booleanObject(len != 0 && !validateStrictSet(scanp, RexxString::MIXED_ALPHA_LOOKUP, len));
 
         case RexxString::DATATYPE_WHOLE_NUMBER:
         {
@@ -1121,7 +1124,7 @@ RexxObject *StringUtil::dataType(RexxString *string, char option )
         case RexxString::DATATYPE_HEX:
         {
             size_t count;
-            return booleanObject(len == 0 || validateCharacterSet(scanp, len, RexxString::HEX_CHAR_STR, 2, count));
+            return booleanObject(len == 0 || validateGroupedSetQuiet(scanp, len, RexxString::DIGITS_HEX_LOOKUP, 2, count));
         }
 
         case RexxString::DATATYPE_SYMBOL:

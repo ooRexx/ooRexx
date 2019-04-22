@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -41,8 +41,8 @@
 /* Primitive String Class Definition                                          */
 /*                                                                            */
 /******************************************************************************/
-#ifndef Included_RexxString
-#define Included_RexxString
+#ifndef Included_StringClass
+#define Included_StringClass
 
 #include "IntegerClass.hpp"
 #include "StringUtil.hpp"
@@ -748,9 +748,9 @@ class RexxString : public RexxObject
     static const char ch_NINE;
 
     // character validation sets for the datatype function
-    static const char *HEX_CHAR_STR;
+    static const char *DIGITS_HEX;
     static const char *ALPHANUM;
-    static const char *BINARY;
+    static const char *DIGITS_BIN;
     static const char *LOWER_ALPHA;
     static const char *MIXED_ALPHA;
     static const char *UPPER_ALPHA;
@@ -769,6 +769,17 @@ class RexxString : public RexxObject
     static const char *SPACE;
     static const char *UPPER;
     static const char *XDIGIT;
+
+    // Mapped character validation sets allow direct lookup.
+    // Those will be created from their unmapped string counterparts.
+    static struct lookupInit { lookupInit(); } lookupInitializer;
+    static char DIGITS_HEX_LOOKUP[256];
+    static char DIGITS_BASE64_LOOKUP[256];
+    static char DIGITS_BIN_LOOKUP[256];
+    static char ALPHANUM_LOOKUP[256];
+    static char LOWER_ALPHA_LOOKUP[256];
+    static char MIXED_ALPHA_LOOKUP[256];
+    static char UPPER_ALPHA_LOOKUP[256];
 
 
   protected:

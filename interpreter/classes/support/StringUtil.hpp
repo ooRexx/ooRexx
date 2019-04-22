@@ -66,26 +66,13 @@ public:
     static size_t caselessLastPos(const char *stringData, size_t hastackLen, RexxString  *needle, size_t _start, size_t range);
     static const char *caselessLastPos(const char *needle, size_t needleLen, const char *haystack, size_t haystackLen);
     static int caselessCompare(const char *, const char *, size_t);
-    static inline int hexDigitToInt(char  ch)
-    {
-        // for digits, just subtract the character zero
-        if (isdigit(ch))
-        {
-            return ch - '0';
-        }
-        // for the alpha digits, subtract A to get the relative value, then
-        // add 10 to that result
-        else
-        {
-            return toupper(ch) - 'A' + 10;
-        }
-    }
+    static int hexDigitToInt(char ch);
     static char packByte(const char *String);
     static void unpackNibble(int Val, char *p);
     static char packNibble(const char *String);
     static RexxString *packHex(const char *String, size_t StringLength);
-    static size_t chGetSm(char *Destination, const char *Source, size_t Length, size_t Count, size_t &ScannedSize);
-    static size_t validateSet(const char *String, size_t Length, const char *Set, int Modulus, bool Hex);
+    static size_t copyGroupedChars(char *destination, const char *source, size_t length, size_t count, char set[256], size_t &scannedSize);
+    static size_t validateGroupedSet(const char *string, size_t length, char set[256], int modulus, bool hex);
     static inline char packByte2(const char *bytes)
     {
         // covert each hex digit and combind into a single value
@@ -95,8 +82,8 @@ public:
 
         return ((nibble1 << 4) | nibble2);
     }
-    static bool validateCharacterSet(const char *String, size_t Length, const char *Set, int Modulus, size_t &PackedSize);
-    static const char *memcpbrk(const char *String, const char *Set, size_t Length);
+    static bool validateGroupedSetQuiet(const char *string, size_t length, char set[256], int modulus, size_t &packedSize);
+    static const char* validateStrictSet(const char *string, char set[256], size_t length);
     static RexxObject *dataType(RexxString *String, char Option );
     static size_t wordCount(const char *String, size_t   StringLength );
     static size_t countStr(const char *hayStack, size_t hayStackLength, RexxString *needle, size_t maxCount);
