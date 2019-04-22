@@ -641,34 +641,37 @@ RexxString *RexxString::b2x()
     const char *source = getStringData();
     size_t length = getLength();
 
-    // we know the string conforms to the rules for the string, so we just
-    // need to process all of the bits and convert
-    while (bits > 0)
+    char nibble[4];
+    size_t jump;        // string movement offset
+
+    // if this is not evenly divisible by 4, then the first nibble has an odd number of characters.
+    size_t excess = bits % 4;
+
+    if (excess != 0)
     {
-        char nibble[4];
-        // this will really on impact the first nibble, since we will be working
-        // in groups of 4 after that.  Find out how many bit digits we need to
-        // process for the next nibble
-        size_t excess = bits % 4;
-        // zero means we have a full nibble to process
-        if (excess == 0)
-        {
-            excess = 4;
-        }
-        // fill the nibble with zero bits for the non-used ones
-        else
-        {
-            memset(nibble, '0', 4);
-        }
-        size_t jump;        // string movement offset
+        memset(nibble, '0', 4);
         // get the next nibble worth of characters
-        StringUtil::chGetSm(&nibble[0] + (4 - excess), source, length, excess, "01", jump);
+        StringUtil::chGetSm(&nibble[0] + (4 - excess), source, length, excess, jump);
         // insert into the destination as a hex character
         *destination++ = StringUtil::packNibble(nibble);
         source += jump;
         length -= jump;
         // we should be working with multiples of 4 after the first one.
         bits -= excess;
+    }
+
+    // we know the string conforms to the rules for the string, so we just
+    // need to process all of the bits and convert
+    while (bits > 0)
+    {
+        // get the next nibble worth of characters
+        StringUtil::chGetSm(&nibble[0], source, length, 4, jump);
+        // insert into the destination as a hex character
+        *destination++ = StringUtil::packNibble(nibble);
+        source += jump;
+        length -= jump;
+        // we should be working with multiples of 4 after the first one.
+        bits -= 4;
     }
     return retval;
 }

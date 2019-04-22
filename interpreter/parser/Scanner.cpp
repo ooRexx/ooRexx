@@ -416,7 +416,7 @@ CharacterClass LanguageParser::locateToken(unsigned int &character, bool blanksS
  *
  * @return A Rexx string packed into 8-bit character form.
  */
-RexxString *LanguageParser::packHexLiteral(size_t start, size_t length)
+RexxString* LanguageParser::packHexLiteral(size_t start, size_t length)
 {
     // ""X is legal...it is just a null string
     // the rest is not nearly as easy :-)
@@ -432,7 +432,7 @@ RexxString *LanguageParser::packHexLiteral(size_t start, size_t length)
     // our count of nibble characters we find...we can calculate the result length from this
     int nibbleCount = 0;
     // a pointer for scanning the data
-    const char * inPointer = current + start;
+    const char *inPointer = current + start;
 
     /* first scan is to check REXX rules for validity of grouping             */
     /* and to remove blanks                                                   */
@@ -451,8 +451,8 @@ RexxString *LanguageParser::packHexLiteral(size_t start, size_t length)
             // blanks at the beginning of the string, and if we are past the
             // first group, then blanks must appear at even character boundaries.
             if (i == 0  ||                 // this is the test for the beginning
-               (!firstGroup &&             // ok, we've processed the first group, this must be on a boundary
-                ((groupCount & 1) != 0)))  // not evenly divisible by two...bad placement.
+                (!firstGroup &&             // ok, we've processed the first group, this must be on a boundary
+                 ((groupCount & 1) != 0)))  // not evenly divisible by two...bad placement.
             {
                 // update the error information
                 clauseLocation = clause->getLocation();
@@ -488,6 +488,11 @@ RexxString *LanguageParser::packHexLiteral(size_t start, size_t length)
         // report this at the end position...there might be
         // prior trailing blanks, but one is as good as another.
         syntaxError(Error_Invalid_hex_hexblank, new_integer(length));
+    }
+    // check the size of the last group and make sure it is not odd.
+    else if (!firstGroup && (groupCount & 1) != 0)
+    {
+        syntaxError(Error_Invalid_hex_invhex_group);
     }
 
     // second scan is to create the string value determined by the
@@ -570,7 +575,7 @@ RexxString *LanguageParser::packHexLiteral(size_t start, size_t length)
         value->putChar(outPosition++, byte);
     }
 
-    // return this...the caller will handle making this a common string.
+// return this...the caller will handle making this a common string.
     return value;
 }
 
@@ -586,7 +591,7 @@ RexxString *LanguageParser::packHexLiteral(size_t start, size_t length)
  *
  * @return A Rexx string packed into 8-bit character form.
  */
-RexxString *LanguageParser::packBinaryLiteral(size_t start, size_t length)
+RexxString* LanguageParser::packBinaryLiteral(size_t start, size_t length)
 {
     // ""B is legal...it is just a null string
     // the rest is not nearly as easy :-)
@@ -601,7 +606,7 @@ RexxString *LanguageParser::packBinaryLiteral(size_t start, size_t length)
     int bitCount = 0;
     // a pointer for scanning the data
     // scanning right-to-left makes it easier to identify correct whitepace positioning
-    const char * inPointer = current + start + length - 1;
+    const char *inPointer = current + start + length - 1;
 
     /* first scan is to check REXX rules for validity of grouping             */
     /* and to remove blanks                                                   */
@@ -619,14 +624,19 @@ RexxString *LanguageParser::packBinaryLiteral(size_t start, size_t length)
             // now check to see if this is in a valid position.  We do not allow
             // blanks at the end of the string, and blanks must appear at even
             // nibble (4 bit) boundaries.
-            if (i == length  ||            // this is the test for the end
-               (groupCount & 3) != 0)      // not evenly divisible by four...bad placement.
+            if (i == length)              // this is the test for the end
             {
                 // update the error information
                 clauseLocation = clause->getLocation();
                 syntaxError(Error_Invalid_hex_binblank, new_integer(i));
 
             }
+            // not evenly divisible by four...bad blank placement
+            else if ((groupCount & 3) != 0)
+            {
+                syntaxError(Error_Invalid_hex_invbin_group);
+            }
+
             // we start a new group now
             groupCount = 0;
         }
@@ -645,7 +655,8 @@ RexxString *LanguageParser::packBinaryLiteral(size_t start, size_t length)
 
     // now we need to check for leading blanks.  If our last group count is
     // now zero, which means we've not seen a real character since our last
-    // blank character.  This means leading blanks!
+    // blank character.  This means leading blanks!  Since we scan backwards,
+    // the last seen group can have an odd number.
 
     if (groupCount == 0)
     {
@@ -653,6 +664,7 @@ RexxString *LanguageParser::packBinaryLiteral(size_t start, size_t length)
         // more leading blanks, but one is as good as another.
         syntaxError(Error_Invalid_hex_binblank, new_integer(1));
     }
+
 
     // second scan is to create the string value determined by the
     // hex constant.

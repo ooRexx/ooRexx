@@ -107,6 +107,8 @@
 #define Rexx_Error_Invalid_hex_binblank                                   15002
 #define Rexx_Error_Invalid_hex_invhex                                     15003
 #define Rexx_Error_Invalid_hex_invbin                                     15004
+#define Rexx_Error_Invalid_hex_invhex_group                               15005
+#define Rexx_Error_Invalid_hex_invbin_group                               15006
 #define Rexx_Error_Label_not_found                                        16000
 #define Rexx_Error_Label_not_found_name                                   16001
 #define Rexx_Error_Unexpected_procedure                                   17000
@@ -579,6 +581,8 @@
 #define Rexx_Error_Incorrect_method_nil_not_orderable                     93973
 #define Rexx_Error_Incorrect_method_no_method_type                        93974
 #define Rexx_Error_Incorrect_method_invalid_value_for                     93975
+#define Rexx_Error_Incorrect_method_invhex_group                          93976
+#define Rexx_Error_Incorrect_method_invbin_group                          93977
 #define Rexx_Error_No_method                                              97000
 #define Rexx_Error_No_method_name                                         97001
 #define Rexx_Error_No_method_private                                      97002

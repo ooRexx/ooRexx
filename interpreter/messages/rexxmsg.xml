@@ -616,6 +616,24 @@ Say NOT EQUALS
         <SymbolicName>Error_Invalid_hex_invbin</SymbolicName>
         <Text>Only 0, 1, and whitespace characters are valid in a binary string; found <q><Sub position="1" name="character"/></q>.</Text>
       </SubMessage>
+      <SubMessage>
+        <Code>15</Code>
+        <Subcode>005</Subcode>
+        <MessageNumber>833</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Invalid_hex_invhex_group</SymbolicName>
+        <Text>Hexidecimal strings must be grouped in units that are multiples of two characters.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>15</Code>
+        <Subcode>006</Subcode>
+        <MessageNumber>834</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Invalid_hex_invbin_group</SymbolicName>
+        <Text>Binary strings must be grouped in units that are multiples of four characters.</Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>
@@ -5036,6 +5054,24 @@ special character (such as a parenthesis).
         <Severity>Warning</Severity>
         <SymbolicName>Error_Incorrect_method_invalid_value_for</SymbolicName>
         <Text>Invalid <Sub position="1" name="option"/> value; found <q><Sub position="2" name="value"/></q>.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>93</Code>
+        <Subcode>976</Subcode>
+        <MessageNumber>831</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Incorrect_method_invhex_group</SymbolicName>
+        <Text>Hexidecimal strings must be grouped in units that are multiples of two characters.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>93</Code>
+        <Subcode>977</Subcode>
+        <MessageNumber>832</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Incorrect_method_invbin_group</SymbolicName>
+        <Text>Binary strings must be grouped in units that are multiples of four characters.</Text>
       </SubMessage>
     </Subcodes>
   </Message>

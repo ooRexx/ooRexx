@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -44,6 +44,8 @@
 #ifndef Included_StringUtil
 #define Included_StringUtil
 
+#include <ctype.h>
+
 class RexxInteger;
 class ArrayClass;
 
@@ -64,14 +66,35 @@ public:
     static size_t caselessLastPos(const char *stringData, size_t hastackLen, RexxString  *needle, size_t _start, size_t range);
     static const char *caselessLastPos(const char *needle, size_t needleLen, const char *haystack, size_t haystackLen);
     static int caselessCompare(const char *, const char *, size_t);
-    static int hexDigitToInt(char  ch);
+    static inline int hexDigitToInt(char  ch)
+    {
+        // for digits, just subtract the character zero
+        if (isdigit(ch))
+        {
+            return ch - '0';
+        }
+        // for the alpha digits, subtract A to get the relative value, then
+        // add 10 to that result
+        else
+        {
+            return toupper(ch) - 'A' + 10;
+        }
+    }
     static char packByte(const char *String);
     static void unpackNibble(int Val, char *p);
     static char packNibble(const char *String);
     static RexxString *packHex(const char *String, size_t StringLength);
-    static size_t chGetSm(char *Destination, const char *Source, size_t Length, size_t Count, const char *Set, size_t &ScannedSize);
+    static size_t chGetSm(char *Destination, const char *Source, size_t Length, size_t Count, size_t &ScannedSize);
     static size_t validateSet(const char *String, size_t Length, const char *Set, int Modulus, bool Hex);
-    static char packByte2(const char *Byte);
+    static inline char packByte2(const char *bytes)
+    {
+        // covert each hex digit and combind into a single value
+        int nibble1 = hexDigitToInt(bytes[0]);
+        int nibble2 = hexDigitToInt(bytes[1]);
+        /* combine the two digits            */
+
+        return ((nibble1 << 4) | nibble2);
+    }
     static bool validateCharacterSet(const char *String, size_t Length, const char *Set, int Modulus, size_t &PackedSize);
     static const char *memcpbrk(const char *String, const char *Set, size_t Length);
     static RexxObject *dataType(RexxString *String, char Option );

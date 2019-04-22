@@ -50,8 +50,6 @@
 #include "MethodArguments.hpp"
 #include "NumberStringClass.hpp"
 
-#include <ctype.h>
-
 /**
  * Extract a substring from a data buffer.
  *
@@ -674,30 +672,6 @@ int  StringUtil::caselessCompare(const char *string1, const char *string2, size_
 }
 
 
-
-/**
- * Convert a hex digit to it's integer value equivalent.
- *
- * @param ch     The input character.
- *
- * @return the integer value of the digit.
- */
-int StringUtil::hexDigitToInt(char  ch)
-{
-    // for digits, just subtract the character zero
-    if (isdigit(ch))
-    {
-        return ch - '0';
-    }
-    // for the alpha digits, subtract A to get the relative value, then
-    // add 10 to that result
-    else
-    {
-        return toupper(ch) - 'A' + 10;
-    }
-}
-
-
 /**
  * The value of the buffer contents
  * interpreted as the binary expansion
@@ -743,31 +717,6 @@ char StringUtil::packNibble(const char *string)
     memcpy(buf+4, string, 4);            // copy next 4 bytes from the string
     int i = packByte(buf);               // pack to a single byte
     return "0123456789ABCDEF"[i];        // convert to a printable character
-}
-
-
-/**
- * Pack 2 0123456789ABCDEFabcdef chars into
- * byte
- *
- * The value of the buffer contents
- * interpreted as the hex expansion
- * of a byte, with most significant
- * nibble in s[0] and least significant
- * nibble in s[2].
- *
- * @param Byte   The pointer to the hex digit pair to pack.
- *
- * @return The single byte encoding of the pair of digits.
- */
-char StringUtil::packByte2(const char *bytes)
-{
-    // covert each hex digit and combind into a single value
-    int nibble1 = hexDigitToInt(bytes[0]);
-    int nibble2 = hexDigitToInt(bytes[1]);
-    /* combine the two digits            */
-
-    return ((nibble1 << 4) | nibble2);
 }
 
 
@@ -837,13 +786,12 @@ size_t StringUtil::validateSet(const char *string, size_t length, const char *se
                 // the residue needs to remain the same as the first gap
                 else if (residue != (count % modulus))
                 {
-                    reportException(hex ? Error_Incorrect_method_hexblank : Error_Incorrect_method_binblank, spaceLocation - string);
+                    reportException(hex ? Error_Incorrect_method_invhex_group : Error_Incorrect_method_invbin_group);
                 }
             }
             // the remaining possibility is an invalid character
             else
             {
-
                 reportException(hex ? Error_Incorrect_method_invhex : Error_Incorrect_method_invbin, new_string(ch));
             }
         }
@@ -851,9 +799,13 @@ size_t StringUtil::validateSet(const char *string, size_t length, const char *se
 
     // we've hit the end.  We could have ended on whitespace, which is an error, or the final grouping
     // has the wrong number of characters
-    if ((ch == RexxString::ch_SPACE || ch == RexxString::ch_TAB) || (spaceFound && ((count % modulus) != residue)))
+    if (ch == RexxString::ch_SPACE || ch == RexxString::ch_TAB)
     {
         reportException(hex ? Error_Incorrect_method_hexblank : Error_Incorrect_method_binblank, spaceLocation - string);
+    }
+    else if (spaceFound && ((count % modulus) != residue))
+    {
+        reportException(hex ? Error_Incorrect_method_invhex_group : Error_Incorrect_method_invbin_group);
     }
     return count;
 }
@@ -868,13 +820,12 @@ size_t StringUtil::validateSet(const char *string, size_t length, const char *se
  * @param Source The source for the string data.
  * @param Length The length of the input string.
  * @param Count  The number of valid characters in the string.
- * @param Set    The set of allowed characters.
  * @param ScannedSize
  *               The returned scan size.
  *
  * @return
  */
-size_t  StringUtil::chGetSm(char *destination, const char *source, size_t length, size_t count, const char *characterSet, size_t &scannedSize)
+size_t  StringUtil::chGetSm(char *destination, const char *source, size_t length, size_t count, size_t &scannedSize)
 {
     // make sure the scanned size is initialized
     scannedSize = 0;
@@ -887,7 +838,9 @@ size_t  StringUtil::chGetSm(char *destination, const char *source, size_t length
         scannedSize++;
 
         // if this is one of our target characters, copy it to the destination
-        if (ch != '\0' && strchr(characterSet, ch) != NULL)
+        // note that we have already validated the string contents, so we don't look for
+        // specific characters here.
+        if (ch != '\0' && ch != RexxString::ch_SPACE && ch != RexxString::ch_TAB)
         {
             *destination++ = ch;
             // if we've copied the desired number of characters, we're finished
@@ -924,33 +877,39 @@ RexxString *StringUtil::packHex(const char *string, size_t stringLength)
     }
 
     const char *source = string;
-    // perform the validation and get a character cound
+    // perform the validation and get a character count
     size_t nibbles = validateSet(source, stringLength, "0123456789ABCDEFabcdef", 2, true);
     // get a result string, with rounding in case we have an odd number of digits
     RexxString *retval = raw_string((nibbles + 1) / 2);
 
     char *destination = retval->getWritableData();
 
-    // process all of the nibbles
-    while (nibbles > 0)
+    char     buf[8];
+    size_t scanned;
+
+    // process the first character outside the loop if we have an odd number of nibbles
+    if (nibbles % 2 != 0)
     {
-        char     buf[8];
-        // we do this two characters at a time, but the first group might
-        // only be one digit if we have an odd number
-        size_t b = nibbles % 2 == 0 ? 2 : 1;
-        // if we have an odd number, pad the buffer with zeros
-        if (b == 1)
-        {
-            memset(buf, '0', 2);
-        }
-        size_t scanned;
-        // copy the digits into out buffer...we're copying either 1 or 2 characters
-        chGetSm(buf + 2 - b, source, stringLength, b, "0123456789ABCDEFabcdef", scanned);
+        // use zero as the front and scan for the next character
+        buf[0] = '0';
+        chGetSm(buf + 1, source, stringLength, 1, scanned);
         // now convert this into a single character and insert into the destination string
         *destination++ = packByte2(buf);
         source += scanned;
         stringLength -= scanned;
-        nibbles -= b;
+        nibbles--;
+    }
+
+    // process all of the remaining nibbles in pairs
+    while (nibbles > 0)
+    {
+        // copy the digits into our buffer...we're always copying 2 characters
+        chGetSm(buf, source, stringLength, 2, scanned);
+        // now convert this into a single character and insert into the destination string
+        *destination++ = packByte2(buf);
+        source += scanned;
+        stringLength -= scanned;
+        nibbles -= 2;
     }
     return retval;
 }

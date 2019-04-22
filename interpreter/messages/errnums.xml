@@ -432,6 +432,18 @@ Say NOT EQUALS
 <para>Only 0, 1, and whitespace characters are valid in a binary string; found "<emphasis role="italic">character</emphasis>".</para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>005</term>
+<listitem>
+<para>Hexidecimal strings must be grouped in units that are multiples of two characters.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>006</term>
+<listitem>
+<para>Binary strings must be grouped in units that are multiples of four characters.</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 <section id="ERR16">
@@ -3557,6 +3569,18 @@ special character (such as a parenthesis).
 <term>975</term>
 <listitem>
 <para>Invalid <emphasis role="italic">option</emphasis> value; found "<emphasis role="italic">value</emphasis>".</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>976</term>
+<listitem>
+<para>Hexidecimal strings must be grouped in units that are multiples of two characters.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>977</term>
+<listitem>
+<para>Binary strings must be grouped in units that are multiples of four characters.</para>
 </listitem>
 </varlistentry>
 </variablelist>
