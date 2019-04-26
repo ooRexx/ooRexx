@@ -144,6 +144,9 @@ RexxString *RexxString::encodeBase64()
 /**
  * Reverse the effect of an encodebase64 operation, converting
  * a string in Base64 format into a "normal" character string.
+ * This supports Base64 encoding as described by RFC 2045, but
+ * does not allow (ignore) characters outside of the base64 alphabet.
+ * See https://tools.ietf.org/html/rfc2045#page-24
  *
  * @return The converted character string.
  */
@@ -165,7 +168,7 @@ RexxString *RexxString::decodeBase64()
 
     const char *source = getStringData();
 
-    // figure out the string length.  The last couple of digits
+    // figure out the string length.  The last one or two characters
     // might be the '=' placeholders, so we reduce the output
     // length if we have those.
     size_t outputLength = (inputLength / 4) * 3;
@@ -193,7 +196,7 @@ RexxString *RexxString::decodeBase64()
             unsigned char digitValue = DIGITS_BASE64_LOOKUP[ch];
             // if we did not find a match, this could be
             // an end of buffer filler characters
-            if (digitValue == '\xff')
+            if (digitValue == (unsigned char)'\xff')
             {
                 // if this is '=' and we're looking at
                 // one of the last two digits, we've hit the
