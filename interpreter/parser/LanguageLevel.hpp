@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -36,16 +36,15 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                                */
 /*                                                                            */
-/* Languate translator defintions.                                            */
+/* Language translator defintions.                                            */
 /*                                                                            */
 /******************************************************************************/
 #ifndef Included_LanguageLevel
 #define Included_LanguageLevel
 
 /**
- * This is a marker of the lanuage level required by
+ * This is a marker of the language level required by
  * a code package.  These are numeric indicators of the
  * in the form MMmmrr, where MM is the major language
  * level, mm is the minor language level and rr is an
@@ -59,10 +58,11 @@
  */
 typedef enum
 {
-    LanguageLevel0605 = 060500,
+    LanguageLevel0605 = 60500,                       // 060500
     DefaultLanguageLevel = LanguageLevel0605,        // the default language level for translated programs
     MinimumLanguageLevel = LanguageLevel0605,        // the lowest language level we can interpret
     MaximumLanguageLevel = LanguageLevel0605,        // the highest language level we can interpret
+    makeEnum32bit = 0xffffffff                       // make sure this enum is 32 bits wide
 } LanguageLevel;
 
 #endif

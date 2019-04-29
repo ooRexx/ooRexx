@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -77,9 +77,10 @@ void *ProgramMetaData::operator new (size_t size, BufferClass *buff)
  */
 ProgramMetaData::ProgramMetaData(LanguageLevel level, BufferClass *image)
 {
-    // add the leading header
+    // add the leading header, zero out remainder
+    memset(&fileTag, '\0', sizeof(fileTag));
     strcpy(fileTag, compiledHeader);
-    // fill in the version specifics and the hardward architecture type
+    // fill in the version specifics and the hardware architecture type
     magicNumber = MAGICNUMBER;
     imageVersion = METAVERSION;
     // this is the number of bits in a word
@@ -87,6 +88,7 @@ ProgramMetaData::ProgramMetaData(LanguageLevel level, BufferClass *image)
     bigEndian = Interpreter::isBigEndian();
     // this is the language level required to execute this program
     requiredLevel = level;
+    memset(&reserved, '\0', sizeof(reserved));
 
     // copy in the image information
     imageSize = image->getDataLength();
@@ -102,7 +104,8 @@ ProgramMetaData::ProgramMetaData(LanguageLevel level, BufferClass *image)
  */
 ProgramMetaData::ProgramMetaData(LanguageLevel level, size_t bufferSize)
 {
-    // add the leading header
+    // add the leading header, zero out remainder
+    memset(&fileTag, '\0', sizeof(fileTag));
     strcpy(fileTag, compiledHeader);
     // fill in the version specifics and the hardward architecture type
     magicNumber = MAGICNUMBER;
@@ -112,6 +115,7 @@ ProgramMetaData::ProgramMetaData(LanguageLevel level, size_t bufferSize)
     bigEndian = Interpreter::isBigEndian();
     // this is the language level required to execute this program
     requiredLevel = level;
+    memset(&reserved, '\0', sizeof(reserved));
 
     // copy in the image information
     imageSize = bufferSize;
