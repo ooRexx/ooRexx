@@ -48,15 +48,7 @@
 #include "SysFile.hpp"
 #include "FileNameBuffer.hpp"
 
-#define nbt_line_end "\n"
-#define nbt_line_end_size 1
-
-#define std_line_end "\n"
-#define std_line_end_size 1
-
 #define ctrl_z 0x1a                    /* end-of-file marker                */
-#define nl     '\n'                    /* new line character                */
-#define cr     '\r'                    /* carriage return character         */
 
 
 /*****************************************************************************/

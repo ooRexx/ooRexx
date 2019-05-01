@@ -85,8 +85,9 @@ class LineReader
       */
      bool open(const char *fileName)
      {
-         // if we can't open the file, return
-         if (!file.open(fileName, RX_O_RDONLY, RX_S_IREAD, RX_SH_DENYWR))
+         // if we can't open the file or this is a directory, return
+         if (!file.open(fileName, RX_O_RDONLY, RX_S_IREAD, RX_SH_DENYWR) ||
+             SysFileSystem::isDirectory(fileName))
          {
              return false;
          }
