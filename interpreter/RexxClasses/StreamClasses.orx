@@ -500,6 +500,15 @@ return position
 
 -- ooRexx File class
 ::CLASS "File" public inherit Comparable Orderable
+
+-- REXX in "library REXX" must be in uppercase
+
+::method file_temporary_path class private external "library REXX"
+::method temporaryPath class
+  use strict arg
+  return self~new(self~file_temporary_path)
+
+
 ::METHOD init
   expose path qualifiedPath
 

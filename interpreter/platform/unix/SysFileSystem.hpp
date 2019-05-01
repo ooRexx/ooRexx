@@ -140,6 +140,7 @@ class SysFileSystem
      static bool  resolveTilde(FileNameBuffer &name);
      static const char* getPathStart(const char *name);
      static const char* getPathEnd(const char *name);
+     static bool getTemporaryPath(FileNameBuffer &temporary);
 };
 
 class SysFileIterator

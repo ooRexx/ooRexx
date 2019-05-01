@@ -304,3 +304,14 @@ RexxMethod2(logical_t, file_rename, CSTRING, fromName, CSTRING, toName)
 }
 
 
+/**
+ * Return the temporary directory.
+ */
+RexxMethod0(RexxStringObject, file_temporary_path)
+{
+    MethodFileNameBuffer temporary(context);
+    SysFileSystem::getTemporaryPath(temporary);
+    return context->String(temporary);
+}
+
+

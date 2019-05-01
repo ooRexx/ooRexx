@@ -1181,6 +1181,26 @@ const char* SysFileSystem::getPathStart(const char *name)
 }
 
 
+/**
+ * Retrieve the location where temporary files should be stored.
+ * This will be the value of environment variable TMP, TEMP, or USERPROFILE,
+ * if defined, otherwise the current working directory.
+ *
+ * @return true if successful, false otherwise.
+ */
+bool SysFileSystem::getTemporaryPath(FileNameBuffer &temporary)
+{
+    if (!SystemInterpreter::getEnvironmentVariable("TMP", temporary) &&
+        !SystemInterpreter::getEnvironmentVariable("TEMP", temporary) &&
+        !SystemInterpreter::getEnvironmentVariable("USERPROFILE", temporary) &&
+        !SysFileSystem::getCurrentDirectory(temporary))
+    {
+        return false;
+    }
+    return true;
+}
+
+
 
 /**
  * Create a new SysFileIterator instance.
