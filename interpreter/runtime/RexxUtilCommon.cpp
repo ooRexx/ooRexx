@@ -1499,12 +1499,12 @@ void writeVariable(SysFile &file, RexxCallContext *context, const char *stem, Re
 
     size_t bytesWritten;
 
-    file.write("Name=", sizeof("Name="), bytesWritten);
+    file.write("Name=", strlen("Name="), bytesWritten);
     file.write(stem, strlen(stem), bytesWritten);
     file.write(nameData, nameLength, bytesWritten);
-    file.write(", Value='", sizeof(", Value='"), bytesWritten);
+    file.write(", Value='", strlen(", Value='"), bytesWritten);
     file.write(valueData, valueLength, bytesWritten);
-    file.write("'\r\n", sizeof("'\r\n"), bytesWritten);
+    file.write("'\r\n", strlen("'\r\n"), bytesWritten);
 
     // now release the local references
 
@@ -1523,12 +1523,10 @@ void writeVariable(SysFile &file, RexxCallContext *context, const char *stem, Re
 *                       (dump is written to stdout if omitted)           *
 *                                                                        *
 * Return:    0 - dump completed OK                                       *
-*            -1 - failure during dump                                    *
 *************************************************************************/
 RexxRoutine1(int, SysDumpVariables, OPTIONAL_CSTRING, fileName)
 {
     SysFile   outFile;
-    ;
 
     if (fileName != NULL)
     {
@@ -1592,7 +1590,7 @@ RexxRoutine1(int, SysDumpVariables, OPTIONAL_CSTRING, fileName)
         // a simple variable
         else
         {
-            // get the stem value
+            // get the variable value
             RexxObjectPtr value = context->SupplierItem(variableSupplier);
 
             // and write it out
@@ -1604,6 +1602,7 @@ RexxRoutine1(int, SysDumpVariables, OPTIONAL_CSTRING, fileName)
         context->SupplierNext(variableSupplier);
     }
 
+    outFile.close();
     return 0;
 }
 
