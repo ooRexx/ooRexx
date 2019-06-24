@@ -333,7 +333,7 @@ RexxInternalObject *RexxString::unflatten(Envelope *envelope)
  */
 RexxString *RexxString::stringValue()
 {
-    if (!isBaseClass())
+    if (isBaseClass())
     {
         return this;
     }
