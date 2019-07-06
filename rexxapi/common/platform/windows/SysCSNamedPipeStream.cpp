@@ -45,6 +45,9 @@
 #include "SysProcess.hpp"
 #include "oorexxapi.h"
 
+#include "aclapi.h"
+#include "sddl.h"
+
 // the pipe name used for this userid
 const char *SysServerNamedPipeConnectionManager::userPipeName = NULL;
 // the named mutex used for this userid
@@ -242,9 +245,30 @@ bool SysNamedPipeConnection::connect(const char *pipeName)
  */
 ApiConnection *SysServerNamedPipeConnectionManager::acceptConnection()
 {
+    // because daemon process is launched from a running rexx process, it
+    // inherits the security profile of launching process. If that process has
+    // elevated priviledges, non-priviledged processes cannot connect to the daemon
+    // named pipe because of the default security profile. We need to override
+    // this so all connections can be accepted. This profile will allow any connections,
+    // which is not really ideal. Better would be to have a security profile that allows
+    // connections only from the same logged in user, but have two months of wrestling
+    // with trying to understand the Windows security APIs, I gave up and implemented
+    // something that works. I welcome anybody to take a stab at doing this.
+
+    SECURITY_ATTRIBUTES sa = {0};
+    SECURITY_DESCRIPTOR sd = { 0 };
+
+    InitializeSecurityDescriptor(&sd, SECURITY_DESCRIPTOR_REVISION);
+
+    SetSecurityDescriptorDacl(&sd, TRUE, NULL, FALSE);
+
+    sa.bInheritHandle = false;
+    sa.lpSecurityDescriptor = &sd;
+    sa.nLength = sizeof(sa);
+
     // We need to create a new named pipe instance for each inbound connection
     HANDLE clientHandle = CreateNamedPipe(userPipeName, PIPE_ACCESS_DUPLEX, PIPE_TYPE_BYTE |
-        PIPE_WAIT | PIPE_REJECT_REMOTE_CLIENTS, PIPE_UNLIMITED_INSTANCES, 1024, 1024, 0, NULL);
+        PIPE_WAIT | PIPE_REJECT_REMOTE_CLIENTS, PIPE_UNLIMITED_INSTANCES, 1024, 1024, 0, &sa);
 
     if (clientHandle == INVALID_HANDLE_VALUE)
     {
