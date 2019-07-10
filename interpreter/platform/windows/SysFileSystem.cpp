@@ -150,6 +150,7 @@ bool SysFileSystem::getFullPathName(const char *name, FileNameBuffer &fullName)
     return rc > 0;
 }
 
+
 /**
  * Primitive search path with retry for buffer size problems.
  *
@@ -172,6 +173,12 @@ bool SysFileSystem::searchOnPath(const char *name, const char *path, const char 
     {
         fullName.ensureCapacity(rc);
         rc = SearchPath(path, name, extension, (DWORD)fullName.capacity(), fullName, &filePart);
+    }
+
+    // We want the name using the real case, so we have to do one extra step.
+    if (rc > 0)
+    {
+        getLongName(fullName);
     }
 
     return rc > 0;
