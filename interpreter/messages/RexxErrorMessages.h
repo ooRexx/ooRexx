@@ -64,6 +64,7 @@ ERROR_MESSAGE Message_table[] = {      /* table of major and minor errors   */
     MESSAGE(Error_Program_unreadable_notfound, "Failure during initialization: Program \"&1\" was not found.")
     MESSAGE(Error_Program_unreadable_output_error, "Error writing output file \"&1\".")
     MESSAGE(Error_Program_unreadable_version, "Program \"&1\" cannot be run by this version of the REXX interpreter.")
+    MESSAGE(Error_Program_unreadable_invalid_encoding, "Encoded compiled program \"&1\" cannot be decoded.")
     MESSAGE(Error_Program_not_tokenized, "Failure during initialization: Program \"&1\" needs to be tokenized. To run untokenized scripts you need a full version of Object REXX.")
     MESSAGE(Error_Program_interrupted, "Program interrupted.")
     MESSAGE(Error_Program_interrupted_condition, "Program interrupted with &1 condition.")

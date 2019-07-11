@@ -42,6 +42,8 @@
 #include "LanguageLevel.hpp"
 
 class BufferClass;
+class SysFile;
+class RoutineClass;
 
 class ProgramMetaData
 {
@@ -54,12 +56,14 @@ public:
 
     size_t getDataSize();
     size_t getHeaderSize();
-    BufferClass *extractBufferData();
     char *getImageData();
     size_t getImageSize() { return imageSize; }
-    bool validate(bool &);
-    void write(FILE *handle, BufferClass *program);
-    BufferClass *read(RexxString *name, FILE *handle);
+
+    bool validate(RexxString *fileName);
+    void write(SysFile &target, BufferClass *program, bool encode);
+
+    static RoutineClass* restore(RexxString *fileName, BufferClass *buffer);
+    static bool processRestoreData(RexxString *fileName, BufferClass *data, ProgramMetaData *&metaData);
 
 protected:
     enum

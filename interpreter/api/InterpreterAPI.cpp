@@ -114,15 +114,15 @@ void REXXENTRY RexxCreateInterpreterImage(const char *target)
 /*                                                                            */
 /******************************************************************************/
 int REXXENTRY RexxStart(
-  size_t argcount,                     /* Number of args in arglist         */
-  PCONSTRXSTRING arglist,              /* Array of args                     */
-  const char *programname,             /* REXX program to run               */
-  PRXSTRING instore,                   /* Instore array                     */
-  const char *envname,                 /* Initial cmd environment           */
-  int   calltype,                      /* How the program is called         */
-  PRXSYSEXIT exits,                    /* Array of system exit names        */
-  short * retcode,                     /* Integer form of result            */
-  PRXSTRING result)                    /* Result returned from program      */
+    size_t argcount,                     /* Number of args in arglist         */
+    PCONSTRXSTRING arglist,              /* Array of args                     */
+    const char *programname,             /* REXX program to run               */
+    PRXSTRING instore,                   /* Instore array                     */
+    const char *envname,                 /* Initial cmd environment           */
+    int   calltype,                      /* How the program is called         */
+    PRXSYSEXIT exits,                    /* Array of system exit names        */
+    short *retcode,                     /* Integer form of result            */
+    PRXSTRING result)                    /* Result returned from program      */
 {
     if (calltype == RXCOMMAND && argcount == 1 && arglist[0].strptr != NULL && arglist[0].strlength > 0 &&
         StringUtil::caselessCompare(arglist[0].strptr, "//T", arglist[0].strlength) == 0)
@@ -133,6 +133,7 @@ int REXXENTRY RexxStart(
         // this just translates and gives the error, potentially returning
         // the instore image
         arguments.outputName = NULL;
+        arguments.encode = false;
         // go run this program
         arguments.invoke(exits, envname);
 
@@ -144,11 +145,11 @@ int REXXENTRY RexxStart(
     // interpreter call.  This gets all of the RexxStart arguments, then
     // gets dispatched on the other side of the interpreter boundary
     RexxStartDispatcher arguments;
-                                       /* copy all of the arguments into    */
-                                       /* the info control block, which is  */
-                                       /* passed across the kernel boundary */
-                                       /* into the real RexxStart method    */
-                                       /* this is a real execution          */
+    /* copy all of the arguments into    */
+    /* the info control block, which is  */
+    /* passed across the kernel boundary */
+    /* into the real RexxStart method    */
+    /* this is a real execution          */
     arguments.argcount = argcount;
     arguments.arglist = arglist;
     arguments.programName = programname;
@@ -179,15 +180,16 @@ int REXXENTRY RexxStart(
  *
  * @return The error return code (if any).
  */
-RexxReturnCode REXXENTRY RexxTranslateProgram(const char *inFile, const char *outFile, PRXSYSEXIT exits)
+RexxReturnCode REXXENTRY RexxCompileProgram(const char *inFile, const char *outFile, PRXSYSEXIT exits, bool encode)
 {
     TranslateDispatcher arguments;
     // this gets processed from disk, always.
     arguments.programName = inFile;
     arguments.instore = NULL;
-    // this just translates and gives the error, potentially returning
-    // the instore image
+    // this saves to a file, possible base65 encoded
     arguments.outputName = outFile;
+    arguments.encode = encode;
+
     // go run this program
     arguments.invoke(exits, NULL);
 
@@ -196,6 +198,22 @@ RexxReturnCode REXXENTRY RexxTranslateProgram(const char *inFile, const char *ou
     Interpreter::terminateInterpreter();
 
     return (RexxReturnCode)arguments.rc;       /* return the error code (negated)   */
+}
+
+
+/**
+ * Translate a program and store the translated results in an
+ * external file.
+ *
+ * @param inFile  The input source file.
+ * @param outFile The output source.
+ * @param exits   The exits to use during the translation process.
+ *
+ * @return The error return code (if any).
+ */
+RexxReturnCode REXXENTRY RexxTranslateProgram(const char *inFile, const char *outFile, PRXSYSEXIT exits)
+{
+    return RexxCompileProgram(inFile, outFile, exits, false);
 }
 
 

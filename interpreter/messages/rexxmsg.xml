@@ -97,6 +97,15 @@ optional for the subcodes.
       <SubMessage>
         <Code>3</Code>
         <Subcode>904</Subcode>
+        <MessageNumber>560</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Program_unreadable_invalid_encoding</SymbolicName>
+        <Text>Encoded compiled program <q><Sub position="1" name="program_name"/></q> cannot be decoded.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>3</Code>
+        <Subcode>904</Subcode>
         <MessageNumber>602</MessageNumber>
         <Component>Rexx</Component>
         <Severity>Warning</Severity>

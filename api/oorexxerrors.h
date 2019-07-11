@@ -60,6 +60,7 @@
 #define Rexx_Error_Program_unreadable_notfound                            3901
 #define Rexx_Error_Program_unreadable_output_error                        3902
 #define Rexx_Error_Program_unreadable_version                             3903
+#define Rexx_Error_Program_unreadable_invalid_encoding                    3904
 #define Rexx_Error_Program_not_tokenized                                  3904
 #define Rexx_Error_Program_interrupted                                    4000
 #define Rexx_Error_Program_interrupted_condition                          4001

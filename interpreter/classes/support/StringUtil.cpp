@@ -1721,3 +1721,116 @@ size_t StringUtil::caselessWordPos(const char *data, size_t length, RexxString  
     }
     return 0;                          // not found
 }
+
+
+/**
+ * Reverse the effect of an encodebase64 operation, converting
+ * a string in Base64 format into a "normal" character string.
+ * This supports Base64 encoding as described by RFC 2045, but
+ * does not allow (ignore) characters outside of the base64 alphabet.
+ * See https://tools.ietf.org/html/rfc2045#page-24
+ *
+ * @param input  Pointer to the data to decode
+ * @param inputLength
+ *               The length of the input to decode
+ * @param output The output buffer (which can be the same as the input if decoding in place.
+ * @param outputLength
+ *               The final decoded length, which will be <= to the input length
+ *
+ * @return true if this was decoded successfully, false if there were any decoding errors.
+ */
+bool StringUtil::decodeBase64(const char *source, size_t inputLength, char *destination, size_t &outputLength)
+{
+    // default this to a null string
+    outputLength = 0;
+
+    // a null string remains a null string.
+    if (inputLength == 0)
+    {
+        return true;
+    }
+
+    // to be a valid base64 encoding, the digits must be
+    // a encoded in 4-character units.
+    if (inputLength % 4 > 0)
+    {
+        return false;
+    }
+
+    // figure out the string length.  The last one or two characters
+    // might be the '=' placeholders, so we reduce the output
+    // length if we have those.
+    outputLength = (inputLength / 4) * 3;
+    if (*(source + inputLength - 1) == '=')
+    {
+        outputLength--;
+    }
+    if (*(source + inputLength - 2) == '=')
+    {
+        outputLength--;
+    }
+
+    // now loop through the input string 4 digits at a time.
+    while (inputLength > 0)
+    {
+        for (int i = 0; i < 4; i++)
+        {
+            unsigned char ch = *source++;
+
+            // first, find the matching character
+            unsigned char digitValue = RexxString::DIGITS_BASE64_LOOKUP[ch];
+            // if we did not find a match, this could be
+            // an end of buffer filler characters
+            if (digitValue == (unsigned char)'\xff')
+            {
+                // if this is '=' and we're looking at
+                // one of the last two digits, we've hit the
+                // end
+                if (ch == '=' && inputLength <= 4 && i >= 2)
+                {
+                    break;
+                }
+
+                // found an invalid character
+                return false;
+            }
+
+            // digit value is the binary value of this digit.  Now, based
+            // on which digit of the input set we're working on, we update
+            // the values in the output buffer.  We only have 6 bits of
+            // character data at this point.
+            switch (i)
+            {
+                // first digit, all 6 bits go into the current position, shifted
+                case 0:
+                    *destination = digitValue << 2;
+                    break;
+                    // second digit.  2 bits are used to complete the current
+                    // character, 4 bits are inserted into the next character
+                case 1:
+                    *destination |= digitValue >> 4;
+                    destination++;
+                    *destination = digitValue << 4;
+                    break;
+                    // third digit.  4 bits are used to complete the
+                    // current character, the remaining 2 bits go into the next one.
+                case 2:
+                    *destination |= digitValue >> 2;
+                    destination++;
+                    *destination = digitValue << 6;
+                    break;
+                    // last character of the set.  All 6 bits are inserted into
+                    // the current output position.
+                case 3:
+                    *destination |= digitValue;
+                    destination++;
+                    break;
+            }
+        }
+        // reduce the length by the quartet we just processed
+        inputLength -= 4;
+    }
+
+    // all processed without error, this is good.
+    return true;
+}

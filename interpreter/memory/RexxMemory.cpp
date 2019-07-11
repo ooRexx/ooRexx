@@ -1427,12 +1427,17 @@ void MemoryObject::saveImage(const char *imageTarget)
 
     resetMarkHandler();
 
-    FILE *image = fopen(imageTarget == NULL ? BASEIMAGE : imageTarget, "wb");
+    SysFile image;
+
+    image.open(imageTarget == NULL ? BASEIMAGE : imageTarget, RX_O_CREAT | RX_O_TRUNC | RX_O_WRONLY, RX_S_IREAD | RX_S_IWRITE, RX_SH_DENYRW);
+
     // place the real size at the beginning of the buffer
     memcpy(imageBuffer, &saveHandler.imageOffset, sizeof(size_t));
     // and finally write this entire image out.
-    fwrite(imageBuffer, 1, saveHandler.imageOffset, image);
-    fclose(image);
+    size_t written = 0;
+
+    image.write(imageBuffer, saveHandler.imageOffset, written);
+    image.close();
     free(imageBuffer);
 
 #ifdef MEMPROFILE

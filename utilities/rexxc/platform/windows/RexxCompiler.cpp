@@ -49,7 +49,7 @@
 #include "RexxErrorCodes.h"
 #include "RexxInternalApis.h"
 
-void DisplayError(int msgid)
+void displayError(int msgid)
 {
     // retrieve the message from the central catalog
     const char *message = RexxGetErrorMessage(msgid);
@@ -57,52 +57,91 @@ void DisplayError(int msgid)
     printf("%s\n", message);    /* print the message                 */
 }
 
+
+/**
+ * Handle syntax errors for the rexxc command
+ */
+void syntaxError()
+{
+    displayError(Error_REXXC_wrongNrArg);
+    displayError(Error_REXXC_SynCheckInfo);
+    exit(-1);
+}
+
+
 int SysCall main(int argc, char **argv)
 {
-  int  silent = 0;
-  int  j = 0;
+    bool  silent = false;
+    bool  encode = false;
 
-  for (j = 1; j < argc; j++)
-  {
-      if (((argv[j][0] == '/') || (argv[j][0] == '-'))
-      && ((argv[j][1] == 's') || (argv[j][1] == 'S'))) silent = j;
-  }
-  if (!silent)
-  {
-      char *ptr = RexxGetVersionInformation();
-      printf("%s\n", ptr);
-      RexxFreeMemory(ptr);
-  }
+    const char *input;
+    const char *output = NULL;
 
-  /* check arguments: at least 1 argument, max. 2, /s must be last */
-  if ((argc < 2) || (argc > 4) ||           /* invalid no. of args */
-      (silent && (argc == 2)) ||            /* only /s             */
-      (silent && (silent+1 != argc)) ||     /* /s not last arg     */
-      (!silent && (argc == 4)))             /* 3 args, no /s       */
-  {
-      if (argc > 2)
-      {
-         DisplayError(Error_REXXC_cmd_parm_incorrect);
-      }
-      DisplayError(Error_REXXC_wrongNrArg);
-      DisplayError(Error_REXXC_SynCheckInfo);
-      exit(-1);
-  }
+    // first possible flag argument
+    int firstFlag = 2;
 
-  if ( ((argc>3) || ((argc==3) && !silent)) &&
-       (stricmp(argv[1], argv[2]) == 0))
-  {
-      DisplayError(Error_REXXC_outDifferent);
-      exit(-2);
-  }
+    // the source file name is required
+    if (argc < 2)
+    {
+        syntaxError();
+    }
 
-  if ((argc == 2) || ((argc==3) && silent) )
-  {
-                                       /* go perform the translation        */
-      return RexxTranslateProgram(argv[1], NULL, NULL);
-  }
-  else                                 /* translate and save the output     */
-  {
-      return RexxTranslateProgram(argv[1], argv[2], NULL);
-  }
+    input = argv[1];
+
+    // the output file is optional, but it cannot be a possible flag
+    if (argc > 2)
+    {
+        // if not a possible flag, this is the output file
+        if ((argv[2][0] != '/') && (argv[2][0] != '-'))
+        {
+            output = argv[2];
+            // first possible flage is the third argument
+            firstFlag = 3;
+        }
+    }
+
+    // process any remaining arguments as flags.
+    for (int j = firstFlag; j < argc; j++)
+    {
+        if ((argv[j][0] == '/') || (argv[j][0] == '-'))
+        {
+            if ((argv[j][1] == 's') || (argv[j][1] == 'S'))
+            {
+                silent = j;
+            }
+            else if ((argv[j][1] == 'e') || (argv[j][1] == 'E'))
+            {
+                encode = j;
+            }
+            // unknown flag
+            else
+            {
+                displayError(Error_REXXC_cmd_parm_incorrect);
+                syntaxError();
+            }
+        }
+        else
+        {
+            displayError(Error_REXXC_cmd_parm_incorrect);
+            syntaxError();
+        }
+    }
+
+    // if not silent, output the banner
+    if (!silent)
+    {
+        char *ptr = RexxGetVersionInformation();
+        printf("%s\n", ptr);
+        RexxFreeMemory(ptr);
+    }
+
+
+    // if we have an output file, it must be different than the input file
+    if (output != NULL && stricmp(input, output) == 0)
+    {
+        displayError(Error_REXXC_outDifferent);
+        exit(-2);
+    }
+
+    RexxCompileProgram(input, output, NULL, encode);
 }

@@ -70,6 +70,7 @@ RexxReturnCode REXXENTRY RexxStemSort(RexxStemObject stem, const char *tailExten
     wholenumber_t start, wholenumber_t end, wholenumber_t firstcol, wholenumber_t lastcol);
 const char* REXXENTRY RexxGetErrorMessage(int number);
 const char* REXXENTRY RexxGetErrorMessageByNumber(int number);
+RexxReturnCode REXXENTRY RexxCompileProgram(const char *input, const char *output, PRXSYSEXIT, bool encode);
 
 #ifdef __cplusplus
 }

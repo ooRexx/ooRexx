@@ -54,6 +54,7 @@ RexxTerminate                  @16
 RexxTranslateProgram           @24
 RexxTranslateInstoreProgram    @25
 RexxGetErrorMessage            @26
+RexxCompileProgram             @27
 ;
 ;
 RexxCreateInterpreterImage     @94

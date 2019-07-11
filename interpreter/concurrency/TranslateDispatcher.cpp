@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -52,48 +52,47 @@
  */
 void TranslateDispatcher::run()
 {
-    ProtectedSet savedObjects;
+    Protected<RoutineClass> program;
 
-    RoutineClass *program;
+    // default name is a null string if one not given
+    Protected<RexxString> name = GlobalNames::NULLSTRING;
 
-    RexxString *name = GlobalNames::NULLSTRING;     // name of the invoked program
-    if (programName != NULL)       /* have an actual name?              */
+    // have an actual name?
+    if (programName != NULL)
     {
-        /* get string version of the name    */
+        // get string version of the name
         name = new_string(programName);
     }
 
-    savedObjects.add(name);              /* protect from garbage collect      */
-
-    if (instore == NULL)                     /* no instore request?               */
+    // if not an instore request, then this must be a resolvable name
+    if (instore == NULL)
     {
-        /* go resolve the name               */
-        RexxString *fullname = activity->resolveProgramName(name, OREF_NULL, OREF_NULL);
-        if (fullname == OREF_NULL)         /* not found?                        */
+        Protected<RexxString> fullname = activity->resolveProgramName(name, OREF_NULL, OREF_NULL);
+        if (fullname == OREF_NULL)
         {
-            /* got an error here                 */
             reportException(Error_Program_unreadable_notfound, name);
         }
-        savedObjects.add(fullname);
-        /* go translate the image            */
+
+        // go translate the image            */
         program = LanguageParser::createProgram(fullname);
-        savedObjects.add(program);
     }
-    else                                 /* have an instore program           */
+    // this is an instore program, so it needs to be translated as is
+    else
     {
-        /* go handle instore parms           */
+        // this is handled by the language parser
         program = LanguageParser::processInstore(instore, name);
-        if (program == OREF_NULL)           /* couldn't get it?                  */
+        // not valid, so give the unreadable error
+        if (program == OREF_NULL)
         {
-            /* got an error here                 */
             reportException(Error_Program_unreadable_name, name);
         }
-        savedObjects.add(program);
     }
-    if (outputName != NULL)              /* want to save this to a file?      */
+
+    // is this a request to save to a file?
+    if (outputName != NULL)
     {
-        /* go save this method               */
-        program->save(outputName);
+        // go save this program using the indicated format
+        program->save(outputName, encode);
     }
 }
 
@@ -120,28 +119,25 @@ void TranslateDispatcher::handleError(wholenumber_t r, DirectoryClass *c)
  */
 void TranslateInstoreDispatcher::run()
 {
-    ProtectedSet savedObjects;
-    RexxString *name = GlobalNames::NULLSTRING;     // name of the invoked program
-    if (programName != NULL)       /* have an actual name?              */
+    Protected<RexxString> name = GlobalNames::NULLSTRING;     // name of the invoked program
+    // have a name given, then use that instead
+    if (programName != NULL)
     {
-        /* get string version of the name    */
         name = new_string(programName);
     }
-
-    savedObjects.add(name);              /* protect from garbage collect      */
 
     RXSTRING instore[2];
 
     MAKERXSTRING(instore[0], const_cast<char *>(source->strptr), source->strlength);
     MAKERXSTRING(instore[1], NULL, 0);
 
-    /* go handle instore parms           */
-    RoutineClass *program = LanguageParser::processInstore(instore, name);
-    if (program == OREF_NULL)           /* couldn't get it?                  */
+    // do the translation
+    Protected<RoutineClass> program = LanguageParser::processInstore(instore, name);
+    if (program == OREF_NULL)
     {
-        /* got an error here                 */
         reportException(Error_Program_unreadable_name, name);
     }
+
     // copy the image information back
     image->strptr = instore[1].strptr;
     image->strlength = instore[1].strlength;

@@ -89,6 +89,7 @@ public:
     static size_t caselessWordPos(const char *data, size_t length, RexxString  *phrase, RexxInteger *pstart);
     static ArrayClass   *words(const char *data, size_t length);
     static const char  *locateSeparator(const char *start, const char *end, const char *sepData, size_t sepLength);
+    static bool decodeBase64(const char *source, size_t inputLength, char *destination, size_t &outputLength);
 
     static inline bool matchCharacter(char ch, const char *charSet, size_t len)
     {

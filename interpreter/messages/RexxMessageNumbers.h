@@ -493,6 +493,7 @@
 #define Error_Invalid_expression_forward_class_msg                   558
 #define Error_Execution_forward_msg                                  559
 #define Error_Program_unreadable_version_msg                         560
+#define Error_Program_unreadable_invalid_encoding_msg                560
 #define Error_Translation_reply_interpret_msg                        561
 #define Error_Translation_forward_interpret_msg                      562
 #define Error_Logical_value_authorization_msg                        563

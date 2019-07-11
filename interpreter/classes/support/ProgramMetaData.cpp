@@ -44,12 +44,16 @@
 #include "ActivityManager.hpp"
 #include "LanguageParser.hpp"
 #include "ProtectedObject.hpp"
+#include "SysFile.hpp"
+#include "RoutineClass.hpp"
+#include "PackageClass.hpp"
+#include "StringUtil.hpp"
 
 #include <stdio.h>
-#include <fcntl.h>
 
 
 const char *compiledHeader = "/**/@REXX";
+const char *encodedHeader = "/**/@REXX@\n";
 const char *standardShebang = "#!/usr/bin/env rexx\n";
 
 
@@ -145,17 +149,6 @@ size_t ProgramMetaData::getHeaderSize()
 
 
 /**
- * Extract the following data as a BufferClass object.
- *
- * @return The extracted buffer object.
- */
-BufferClass *ProgramMetaData::extractBufferData()
-{
-    return new_buffer(imageData, imageSize);
-}
-
-
-/**
  * Return a pointer to the inline image data.
  *
  * @return The pointer to the image data following the metadata header.
@@ -167,28 +160,60 @@ char *ProgramMetaData::getImageData()
 
 
 /**
+ * Restore a saved program from the metadata.
+ *
+ * @param name   The program name being restored
+ * @param buffer A buffer object that contains the image data
+ *
+ * @return The restored Routine object, or NULL if this was not a saved program image.
+ */
+RoutineClass *ProgramMetaData::restore(RexxString *name, BufferClass *buffer)
+{
+    ProgramMetaData *metaData;
+
+    // check to see if this is already translated
+    if (!processRestoreData(name, buffer, metaData))
+    {
+        // nope, can't restore this
+        return OREF_NULL;
+    }
+
+    // make sure this is valid for interpreter
+    if (!metaData->validate(name))
+    {
+        return OREF_NULL;
+    }
+
+    // this should be valid...try to restore.
+    Protected<RoutineClass> routine = RoutineClass::restore(buffer, metaData->getImageData(), metaData->getImageSize());
+    // change the program name to match the file this was restored from
+    routine->getPackageObject()->setProgramName(name);
+    return routine;
+}
+
+
+/**
  * Validate that this saved program image is valid for this
  * interpreter.
  *
- * @param badVersion Indicates whether this is a version
- *                   failure.
+ * @param fileName The filename this metadata belongs to. Used for errors.
  *
  * @return true if this is good data, false otherwise.
  */
-bool ProgramMetaData::validate(bool &badVersion)
+bool ProgramMetaData::validate(RexxString *fileName)
 {
-    badVersion = false;
     // we always add the compiled program tag to the front
     if (strcmp(fileTag, compiledHeader) != 0)
     {
         return false;
     }
+
     // check all of the version specifics
     if (magicNumber != MAGICNUMBER || imageVersion != METAVERSION || wordSize != Interpreter::getWordSize() ||
         (bigEndian != 0) != Interpreter::isBigEndian() || !LanguageParser::canExecute(requiredLevel))
     {
         // this is a version failure, mark it as such
-        badVersion = true;
+        reportException(Error_Program_unreadable_version, fileName);
         return false;
     }
     // good to go.
@@ -202,91 +227,108 @@ bool ProgramMetaData::validate(bool &badVersion)
  * @param handle  The handle of the output file.
  * @param program The program buffer data (also written out).
  */
-void ProgramMetaData::write(FILE *handle, BufferClass *program)
+void ProgramMetaData::write(SysFile &target, BufferClass *program, bool encode)
 {
-    // add a standard shebang line as a courtesy for the unix-based systems.
-    fwrite(standardShebang, 1, strlen(standardShebang), handle);
-    fwrite(this, 1, getHeaderSize(), handle);
-    /* and finally the flattened method  */
-    fwrite(program->getData(), 1, program->getDataLength(), handle);
+    size_t written = 0;
+
+    // non-encoded is the easy way. We can just write the data directly to the file
+    if (!encode)
+    {
+        UnsafeBlock releaser;
+
+        // add a standard shebang line as a courtesy for the unix-based systems.
+        target.write(standardShebang, strlen(standardShebang), written);
+        target.write((const char *)this, getHeaderSize(), written);
+        /* and finally the flattened method  */
+        target.write(program->getData(), program->getDataLength(), written);
+    }
+    // encoding is a pain, we need to copy everything into a single string, base64-encode
+    // the whole lot, then write it out with a special header that says it is encoded.
+    else
+    {
+        Protected<RexxString> fullBuffer = raw_string(getHeaderSize() + program->getDataLength());
+
+        // copy in the stem name and the tail piece.
+        char *bufferData = fullBuffer->getWritableData();
+        // copy the metadata structure to the string
+        memcpy(bufferData, (const char *)this, getHeaderSize());
+        // append the program data
+        memcpy(bufferData + getHeaderSize(), program->getData(), program->getDataLength());
+
+        // now encode this data. we're done with the original copy
+        fullBuffer = fullBuffer->encodeBase64();
+
+        {
+            UnsafeBlock releaser;
+
+            // add a standard shebang line as a courtesy for the unix-based systems.
+            target.write(standardShebang, strlen(standardShebang), written);
+            target.write(encodedHeader, strlen(encodedHeader), written);
+            // and finally the encoded metadata and method
+            target.write(fullBuffer->getStringData(), fullBuffer->getLength(), written);
+        }
+    }
 }
 
 
 /**
- * Read the program meta data and the image data from a file, with
- * image validation.
+ * If restore data was base64 encoded, decode and copy the decoded data to the appropriate place in the received buffer
  *
- * @param handle The input file handle.
+ * @param fileName The name of the file being checked
+ * @param buffer   The buffer object containing the program data. If this is a compiled program that has been string encoded, the data will be decoded in place.
+ * @param metaData The pointer to the start of the saved metadata.
  *
- * @return A BufferClass instance containing the program data, or OREF_NULL
- *         if the file is not a valid image.
+ * @return true if this is a compiled program, false if this needs to be translated.
  */
-BufferClass *ProgramMetaData::read(RexxString *fileName, FILE *handle)
+bool ProgramMetaData::processRestoreData(RexxString *fileName, BufferClass *buffer, ProgramMetaData *&metaData)
 {
-    bool badVersion = false;
-    size_t headerSize = getHeaderSize();
-    size_t readSize;
+    char *data = buffer->getData();
+    size_t length = buffer->getDataLength();
 
-    // now read the control info
-    readSize = fread((char *)this, 1, headerSize, handle);
-    // if we could read the header, validate all of the meta information
-    if (readSize < headerSize || !validate(badVersion))
+    metaData = NULL;
+
+    // does this start with a hash-bang?  Need to scan forward to the first
+    // newline character
+    if (data[0] == '#' && data[1] == '!')
     {
-        // if this failed because we couldn't read in the required header, or
-        // because of the version signature, we need to raise an error now.
-        if (readSize < headerSize || badVersion)
+        data = (char *)Utilities::strnchr(data, length, '\n');
+        if (data == OREF_NULL)
         {
-            fclose(handle);
-            reportException(Error_Program_unreadable_version, fileName);
+            return false;
         }
-
-        // if it didn't validate, it might be because we have a unix-style "hash bang" line at the
-        // beginning of the file.  The first read in bit has a "#!", then we need to read
-        // beyond the first linend and try again.
-        if (fileTag[0] == '#' && fileTag[1] == '!')
-        {
-            // back to the start (ok, just past the hash bang)
-            fseek(handle, 2, SEEK_SET);
-
-            while (true)
-            {
-                if (fread(fileTag, 1, 1, handle) <= 0)
-                {
-                    fclose(handle);
-                    return OREF_NULL;
-                }
-                // if we hit a newline, this is our stopping point.
-                // NB:  this works with both \n and \r\n sequences.
-                if (fileTag[0] == '\n')
-                {
-                    break;
-                }
-                // ok, try to read the control information one more time.
-                // if this doesn't work, no point in being pushy about it.
-                readSize = fread((char *)this, 1, headerSize, handle);
-                // if we could read the header, validate all of the meta information
-                if (readSize < headerSize || !validate(badVersion))
-                {
-                    fclose(handle);                    /* close the file                    */
-                    // if because we couldn't read in the required header, or
-                    // because of a bad version sig, we can close now
-                    if (readSize < headerSize || badVersion)
-                    {
-                        reportException(Error_Program_unreadable_version, fileName);
-                    }
-                    return OREF_NULL;
-                }
-            }
-        }
+        // step over the linend
+        data++;
     }
-    BufferClass *buffer = new_buffer(imageSize);
-    ProtectedObject p(buffer);
-    readSize = fread(buffer->getData(), 1, imageSize, handle);
-    if (readSize < imageSize)
+
+    // pass back the pointer to the metadata location, assuming for now that
+    // here is metadata.
+    metaData = (ProgramMetaData *)data;
+
+    // adjust the length for everything after the shebang
+    length -= data - buffer->getData();
+
+    // Now check in binary form of the compiled version
+    if (length > strlen(compiledHeader) && strcmp(data, compiledHeader) == 0)
     {
-        fclose(handle);
-        reportException(Error_Program_unreadable_version, fileName);
-        return OREF_NULL;
+        return true;
     }
-    return buffer;
+
+    size_t encodedHeaderLength = strlen(encodedHeader);
+
+    // if this is an encoded header, we need to decode this first
+    if (length > encodedHeaderLength && memcmp(data, encodedHeader, encodedHeaderLength) == 0)
+    {
+        char *beginEncodedData = data + encodedHeaderLength;
+        size_t encodedLength   = length - encodedHeaderLength;
+
+        size_t decodedLength;
+
+        // we now have the encoded data, decode it in place, overwriting the compiled header
+        if (!StringUtil::decodeBase64(beginEncodedData, encodedLength, data, decodedLength))
+        {
+            reportException(Error_Program_unreadable_invalid_encoding, fileName);
+        }
+        return true;
+    }
+    return false;
 }
