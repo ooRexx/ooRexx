@@ -1234,6 +1234,12 @@ bool SysFile::hasData()
         return true;
     }
 
+    // have we already determined we've hit an eof?
+    if (fileeof)
+    {
+        return false;
+    }
+
     // if this is a transient stream, we need to use the direct io
     // functions to see if there is something there.
     if (isTTY || isStdIn())
@@ -1245,6 +1251,20 @@ bool SysFile::hasData()
     }
 
     // we've already checked for buffered input, now check to see if the .
-    // stream is readable.
-    return !atEof();
+    // stream is readable. There's no version of feof() if you are working with a stream
+    // handle, so we will read one character, and move the seek pointer back if we got something.
+
+    char c;
+    int count = ::read(fileHandle, &c, (unsigned int)1);
+    if (count == 0)
+    {
+        // remember that we've seen this
+        fileeof = true;
+        return false;
+    }
+    // back the position up
+    ::lseek(fileHandle, SEEK_CUR, -1);
+    // we have data
+    return true;
 }
+

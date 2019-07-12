@@ -1322,6 +1322,14 @@ RexxStringObject StreamInfo::readVariableLine()
         size_t bytesRead = 0;
         if (!fileInfo.gets(readPosition, bufferSize - currentLength, bytesRead))
         {
+            // we could have hit the eof after the last read because we were right on
+            // boundary. If we have data already read, then return that line as a result.
+            if (currentLength > 0)
+            {
+                lineReadIncrement();
+                return context->NewString(buffer, currentLength);
+            }
+
             checkEof();
         }
         // update the size of the line now
@@ -1373,6 +1381,15 @@ void StreamInfo::appendVariableLine(RexxArrayObject result)
         size_t bytesRead = 0;
         if (!fileInfo.gets(readPosition, bufferSize - currentLength, bytesRead))
         {
+            // this could be a read that is at an EOF boundary. If we have any data, then
+            // we need to process that line and return it.
+            if (currentLength > 0)
+            {
+                lineReadIncrement();
+                context->ArrayAppendString(result, buffer, currentLength - 1);
+                return;
+            }
+
             // this will raise a NOTREADY condition and throw an exception,
             // so it will not return.
             checkEof();
@@ -1403,6 +1420,7 @@ void StreamInfo::appendVariableLine(RexxArrayObject result)
             context->ArrayAppendString(result, buffer, currentLength);
             return;
         }
+
         buffer = extendBuffer(bufferSize);
     }
 }

@@ -71,89 +71,90 @@
 
 class SysFile
 {
-public:
-    SysFile();
+ public:
+     SysFile();
 
-    static const int stdinHandle;
-    static const int stdoutHandle;
-    static const int stderrHandle;
+     static const int stdinHandle;
+     static const int stdoutHandle;
+     static const int stderrHandle;
 
-    enum
-    {
-        DEFAULT_BUFFER_SIZE = 4096,   // default size for buffering
-        LINE_POSITIONING_BUFFER = 512 // buffer size for line movement
-    };
+     enum
+     {
+         DEFAULT_BUFFER_SIZE = 4096,   // default size for buffering
+         LINE_POSITIONING_BUFFER = 512 // buffer size for line movement
+     };
 
 #define LINE_TERMINATOR "\n"
 
-    bool open(const char *name, int openFlags, int openMode, int shareMode);
-    bool open(int handle);
-    void reset();
-    void setStdIn();
-    void setStdOut();
-    void setStdErr();
-    void setBuffering(bool buffer, size_t length);
-    bool close();
-    bool flush();
-    bool read(char *buf, size_t len, size_t &bytesRead);
-    bool write(const char *data, size_t len, size_t &bytesWritten);
-    bool putChar(char ch);
-    bool ungetc(char ch);
-    inline bool getChar(char &ch) { size_t len; return read(&ch, 1, len); }
-    bool puts(const char *data, size_t &bytesWritten);
-    bool gets(char *buffer, size_t len, size_t &bytesRead);
-    bool setPosition(int64_t location, int64_t &position);
-    bool seek(int64_t offset, int direction, int64_t &position);
-    bool getPosition(int64_t &position);
-    bool getSize(int64_t &size);
-    bool getSize(const char *name, int64_t &size);
-    bool getTimeStamp(const char *&time);
-    bool getTimeStamp(const char *name, const char *&time);
-    bool putLine(const char *buffer, size_t len, size_t &bytesWritten);
-    bool hasData();
-    bool countLines(int64_t &count);
-    bool countLines(int64_t start, int64_t end, int64_t &lastLine, int64_t &count);
-    bool nextLine(size_t &bytesRead);
-    bool seekForwardLines(int64_t startPosition, int64_t &lineCount, int64_t &endPosition);
-    inline bool isTransient() { return transient; }
-    inline bool isDevice() { return device; }
-    inline bool isReadable() { return readable; }
-    inline bool isWriteable() { return writeable; }
-    inline bool isOpen() { return fileHandle != -1; }
-    inline bool isStdIn() { return fileHandle == stdinHandle; }
+     bool open(const char *name, int openFlags, int openMode, int shareMode);
+     bool open(int handle);
+     void reset();
+     void setStdIn();
+     void setStdOut();
+     void setStdErr();
+     void setBuffering(bool buffer, size_t length);
+     bool close();
+     bool flush();
+     bool read(char *buf, size_t len, size_t &bytesRead);
+     bool write(const char *data, size_t len, size_t &bytesWritten);
+     bool putChar(char ch);
+     bool ungetc(char ch);
+     inline bool getChar(char &ch) { size_t len; return read(&ch, 1, len); }
+     bool puts(const char *data, size_t &bytesWritten);
+     bool gets(char *buffer, size_t len, size_t &bytesRead);
+     bool setPosition(int64_t location, int64_t &position);
+     bool seek(int64_t offset, int direction, int64_t &position);
+     bool getPosition(int64_t &position);
+     bool getSize(int64_t &size);
+     bool getSize(const char *name, int64_t &size);
+     bool getTimeStamp(const char *&time);
+     bool getTimeStamp(const char *name, const char *&time);
+     bool putLine(const char *buffer, size_t len, size_t &bytesWritten);
+     bool hasData();
+     bool countLines(int64_t &count);
+     bool countLines(int64_t start, int64_t end, int64_t &lastLine, int64_t &count);
+     bool nextLine(size_t &bytesRead);
+     bool seekForwardLines(int64_t startPosition, int64_t &lineCount, int64_t &endPosition);
 
-    inline bool error() { return errInfo != 0; }
-    inline int  errorInfo() { return errInfo; }
-    inline void clearErrors() { errInfo = 0; }
-    inline bool atEof() { return !hasBufferedInput() && fileeof; }
-    inline bool hasBufferedInput() { return buffered && (bufferedInput > bufferPosition); }
-    inline uintptr_t getHandle() { return (uintptr_t)fileHandle; }
+     inline bool isTransient() { return transient; }
+     inline bool isDevice() { return device; }
+     inline bool isReadable() { return readable; }
+     inline bool isWriteable() { return writeable; }
+     inline bool isOpen() { return fileHandle != -1; }
+     inline bool isStdIn() { return fileHandle == stdinHandle; }
 
-protected:
-    void   getStreamTypeInfo();
+     inline bool error() { return errInfo != 0; }
+     inline int  errorInfo() { return errInfo; }
+     inline void clearErrors() { errInfo = 0; }
+     inline bool atEof() { return !hasData(); }
+     inline bool hasBufferedInput() { return buffered && (bufferedInput > bufferPosition); }
+     inline uintptr_t getHandle() { return (uintptr_t)fileHandle; }
 
-    int    fileHandle;      // separate file handle
-    int    errInfo;         // last error info
-    bool   openedHandle;    // true if we opened the handle.
-    int    flags;           // open flag information
-    int    mode;            // mode flags
-    int    share;           // sharing mode flags
-    const char  *filename;  // the input file name
-    bool   buffered;        // the buffering indicator
-    bool   transient;       // this is a transient stream
-    bool   device;          // this stream is a device.
-    bool   writeable;       // stream is capable of output
-    bool   readable;        // stream is capable in input
-    bool   isTTY;           // a keyboard based stream.
-    char  *buffer;          // our read/write buffer.
-    size_t bufferSize;      // the size of the buffer
-    size_t bufferPosition; // current read/write position in buffer
-    size_t bufferedInput;   // amount of data in the buffer
-    bool   writeBuffered;   // false == read, true == write
-    bool   append;          // opened in append mode
-    int64_t filePointer;    // current file pointer location
-    int    ungetchar;       // a pushed back character value
-    bool   fileeof;         // have we reached eof?
+ protected:
+     void   getStreamTypeInfo();
+
+     int    fileHandle;      // separate file handle
+     int    errInfo;         // last error info
+     bool   openedHandle;    // true if we opened the handle.
+     int    flags;           // open flag information
+     int    mode;            // mode flags
+     int    share;           // sharing mode flags
+     const char  *filename;  // the input file name
+     bool   buffered;        // the buffering indicator
+     bool   transient;       // this is a transient stream
+     bool   device;          // this stream is a device.
+     bool   writeable;       // stream is capable of output
+     bool   readable;        // stream is capable in input
+     bool   isTTY;           // a keyboard based stream.
+     char  *buffer;          // our read/write buffer.
+     size_t bufferSize;      // the size of the buffer
+     size_t bufferPosition; // current read/write position in buffer
+     size_t bufferedInput;   // amount of data in the buffer
+     bool   writeBuffered;   // false == read, true == write
+     bool   append;          // opened in append mode
+     int64_t filePointer;    // current file pointer location
+     int    ungetchar;       // a pushed back character value
+     bool   fileeof;         // have we reached eof?
 };
 
 #endif
