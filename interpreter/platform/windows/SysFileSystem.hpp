@@ -125,22 +125,40 @@ class SysFileSystem
 
 class SysFileIterator
 {
-public:
-    SysFileIterator(const char *path, const char *pattern, FileNameBuffer &buffer, bool c = false);
-    ~SysFileIterator();
-    void close();
-    bool hasNext();
-    void next(FileNameBuffer &buffer);
+ public:
+     /**
+      * A platform-specific class for passing file attribute data around
+      * for the file iterations.
+      */
+     class FileAttributes
+     {
+      public:
+          FileAttributes() {}
 
-protected:
+          WIN32_FIND_DATA findFileData;
 
-    void findNextEntry();
-    void filterShortNames();
+          bool isDirectory()
+          {
+              return (findFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
+          }
+     };
 
-    const char *fileSpec; // the spec we're searching against
-    bool completed;       // the iteration completed flag
-    HANDLE handle;        // The handle for the FindFirst operation
-    WIN32_FIND_DATA findFileData;
+     SysFileIterator(const char *path, const char *pattern, FileNameBuffer &buffer, bool c = false);
+     ~SysFileIterator();
+     void close();
+     bool hasNext();
+     void next(FileNameBuffer &buffer, FileAttributes &attributes);
+
+ protected:
+
+     void findNextEntry();
+     void filterShortNames();
+
+     const char *fileSpec; // the spec we're searching against
+     bool completed;       // the iteration completed flag
+     HANDLE handle;        // The handle for the FindFirst operation
+                           // the full file data available for the next file
+     WIN32_FIND_DATA findFileData;
 };
 
 

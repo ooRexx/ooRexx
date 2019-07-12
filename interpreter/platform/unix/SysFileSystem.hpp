@@ -50,6 +50,16 @@
 #include <stdio.h>
 #include <dirent.h>
 #include <errno.h>
+#include <sys/stat.h>
+
+
+#if defined __APPLE__
+// avoid warning: '(f)stat64' is deprecated: first deprecated in macOS 10.6
+#define stat64 stat
+#define fstat64 fstat
+#define open64 open
+#define lstat64 lstat
+#endif
 
 #if defined(PATH_MAX)
 #define MAXIMUM_PATH_LENGTH PATH_MAX + 1
@@ -146,17 +156,36 @@ class SysFileSystem
 class SysFileIterator
 {
 public:
+    /*
+     * A platform-specific class for passing file attribute data around
+     * for the file iterations.
+     */
+     class FileAttributes
+     {
+      public:
+         FileAttributes()
+         {}
+
+         struct stat64 findFileData;
+
+         bool isDirectory()
+         {
+             return S_ISDIR(findFileData.st_mode);
+         }
+     };
+
     SysFileIterator(const char *path, const char *pattern, FileNameBuffer &buffer, bool c = false);
     ~SysFileIterator();
     void close();
     bool hasNext();
-    void next(FileNameBuffer &name);
+    void next(FileNameBuffer &buffer, FileAttributes &attributes);
 
 protected:
     void findNextEntry();
 
     bool completed;       // the iteration completed flag
-    struct dirent *entry;
+    struct dirent *entry;        // contains the name of the file
+    struct stat64 findFileData;  // contains the file attributes
     DIR    *handle;
     bool    caseLess;     // indicates we do caseless searches
     const char *patternSpec;   // the spec we test against

@@ -357,7 +357,7 @@ class TreeFinder
      void expandNonPath2fullPath();
      void expandPath2fullPath(size_t lastSlashPos);
      void adjustFileSpec();
-     void checkFile();
+     void checkFile(SysFileIterator::FileAttributes &attributes);
      void recursiveFindFile(FileNameBuffer &path);
      void addResult(const char *v);
      int findDirectoryEnd();

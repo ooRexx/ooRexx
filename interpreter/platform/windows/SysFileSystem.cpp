@@ -1323,9 +1323,10 @@ bool SysFileIterator::hasNext()
 /**
  * Retrieve the next iteration value.
  *
- * @param buffer The buffer used to return the value.
+ * @param buffer     The buffer used to return the value.
+ * @param attributes The returned system-dependent attributes of the next file.
  */
-void SysFileIterator::next(FileNameBuffer &buffer)
+void SysFileIterator::next(FileNameBuffer &buffer, SysFileIterator::FileAttributes &attributes)
 {
     if (completed)
     {
@@ -1335,6 +1336,8 @@ void SysFileIterator::next(FileNameBuffer &buffer)
     {
         // copy our current result over
         buffer = findFileData.cFileName;
+        // and also copy the file attribute data
+        attributes.findFileData = findFileData;
     }
 
     // find the next entry (with filtering)

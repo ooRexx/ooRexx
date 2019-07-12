@@ -405,15 +405,15 @@ bool TreeFinder::checkNonPathDrive()
  *
  * @param fileName The name of the file.
  */
-void formatFileAttributes(TreeFinder *finder, FileNameBuffer &foundFileLine, struct stat64 &finfo)
+void formatFileAttributes(TreeFinder *finder, FileNameBuffer &foundFileLine, SysFileIterator::FileAttributes &attributes)
 {
     char fileAttr[256];                 // File attribute string of found file
 
 #ifdef AIX
     struct tm stTimestamp;
-    struct tm *timestamp = localtime_r(&(finfo.st_mtime), &stTimestamp);
+    struct tm *timestamp = localtime_r(&(attributes.findFileData.st_mtime), &stTimestamp);
 #else
-    struct tm *timestamp = localtime(&(finfo.st_mtime));
+    struct tm *timestamp = localtime(&(attributes.findFileData.st_mtime));
 #endif
     if (finder->longTime())
     {
@@ -443,33 +443,33 @@ void formatFileAttributes(TreeFinder *finder, FileNameBuffer &foundFileLine, str
     // now the size information
     if (finder->longSize())
     {
-        snprintf(fileAttr, sizeof(fileAttr), "%20jd  ", (intmax_t)finfo.st_size);
+        snprintf(fileAttr, sizeof(fileAttr), "%20jd  ", (intmax_t)attributes.findFileData.st_size);
     }
     else
     {
-        if (finfo.st_size > 9999999999)
+        if (attributes.findFileData.st_size > 9999999999)
         {
-            finfo.st_size = 9999999999;
+            attributes.findFileData.st_size = 9999999999;
         }
-        snprintf(fileAttr, sizeof(fileAttr), "%10jd  ", (intmax_t)finfo.st_size);
+        snprintf(fileAttr, sizeof(fileAttr), "%10jd  ", (intmax_t)attributes.findFileData.st_size);
     }
 
     // the order is time, size, attributes
     foundFileLine += fileAttr;
 
-    char tp = typeOfEntry(finfo.st_mode);
+    char tp = typeOfEntry(attributes.findFileData.st_mode);
 
     snprintf(fileAttr, sizeof(fileAttr), "%c%c%c%c%c%c%c%c%c%c  ",
              tp,
-             (finfo.st_mode & S_IREAD) ? 'r' : '-',
-             (finfo.st_mode & S_IWRITE) ? 'w' : '-',
-             (finfo.st_mode & S_IEXEC) ? 'x' : '-',
-             (finfo.st_mode & S_IRGRP) ? 'r' : '-',
-             (finfo.st_mode & S_IWGRP) ? 'w' : '-',
-             (finfo.st_mode & S_IXGRP) ? 'x' : '-',
-             (finfo.st_mode & S_IROTH) ? 'r' : '-',
-             (finfo.st_mode & S_IWOTH) ? 'w' : '-',
-             (finfo.st_mode & S_IXOTH) ? 'x' : '-');
+             (attributes.findFileData.st_mode & S_IREAD) ? 'r' : '-',
+             (attributes.findFileData.st_mode & S_IWRITE) ? 'w' : '-',
+             (attributes.findFileData.st_mode & S_IEXEC) ? 'x' : '-',
+             (attributes.findFileData.st_mode & S_IRGRP) ? 'r' : '-',
+             (attributes.findFileData.st_mode & S_IWGRP) ? 'w' : '-',
+             (attributes.findFileData.st_mode & S_IXGRP) ? 'x' : '-',
+             (attributes.findFileData.st_mode & S_IROTH) ? 'r' : '-',
+             (attributes.findFileData.st_mode & S_IWOTH) ? 'w' : '-',
+             (attributes.findFileData.st_mode & S_IXOTH) ? 'x' : '-');
 
     // add on this section
     foundFileLine += fileAttr;
@@ -479,17 +479,15 @@ void formatFileAttributes(TreeFinder *finder, FileNameBuffer &foundFileLine, str
 /**
  * Checks if this file should be part of the included result and adds it to the result set
  * if it should be returned.
+ *
+ * @param attributes The file attributes for the file we're checking.
  */
-void TreeFinder::checkFile()
+void TreeFinder::checkFile(SysFileIterator::FileAttributes &attributes)
 {
-    // the filename we are passed is just the filename to check. The fully
-    // qualified name of the file is in foundFile already.
-    struct stat64 finfo;                   // return buf for the finfo
-    int rc = stat64(foundFile, &finfo);     // read the info about it
 
     // we have a directory, if we're not returning directories, we're done.
     // otherwise, we need to perform additional name checks
-    if (S_ISDIR(finfo.st_mode))
+    if (S_ISDIR(attributes.findFileData.st_mode))
     {
         if (!options[DO_DIRS])
         {
@@ -514,7 +512,7 @@ void TreeFinder::checkFile()
     }
 
     // format all of the attributes and add them to the foundFile result
-    formatFileAttributes(this, foundFileLine, finfo);
+    formatFileAttributes(this, foundFileLine, attributes);
 
     // and finally add on the file name
     foundFileLine += foundFile;

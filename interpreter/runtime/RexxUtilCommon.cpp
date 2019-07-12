@@ -674,11 +674,13 @@ void TreeFinder::recursiveFindFile(FileNameBuffer &path)
 
     // get a file iterator to search through the names
     SysFileIterator finder(path, nameSpec, tempFileName, options[CASELESS]);
+    // the attributes returned for each located file
+    SysFileIterator::FileAttributes attributes;
 
     while (finder.hasNext())
     {
         // we can just use the temp name buffer now
-        finder.next(tempFileName);
+        finder.next(tempFileName, attributes);
         // we skip the dot directories. We're already searching the first, and
         // the second would send us backwards
         if (tempFileName == "." || tempFileName == "..")
@@ -692,7 +694,7 @@ void TreeFinder::recursiveFindFile(FileNameBuffer &path)
 
         // go check this file to see if it is a good match. If it is, it will be
         // directly added to the results.
-        checkFile();
+        checkFile(attributes);
     }
 
     finder.close();
@@ -711,7 +713,13 @@ void TreeFinder::recursiveFindFile(FileNameBuffer &path)
         while (dirFinder.hasNext())
         {
             // we can use the temp name buffer now
-            dirFinder.next(tempFileName);
+            dirFinder.next(tempFileName, attributes);
+
+            // skip non directories
+            if (!attributes.isDirectory())
+            {
+                continue;
+            }
 
             // we skip the dot directories. We're already searching the first, and
             // the second would send us backwards
@@ -723,12 +731,6 @@ void TreeFinder::recursiveFindFile(FileNameBuffer &path)
             // build a new search path
             directoryName = path;
             directoryName += tempFileName;
-
-            // skip non directories
-            if (!SysFileSystem::isDirectory(directoryName))
-            {
-                continue;
-            }
 
             // add a path delimiter to the end for the search
             directoryName += SysFileSystem::PathDelimiter;

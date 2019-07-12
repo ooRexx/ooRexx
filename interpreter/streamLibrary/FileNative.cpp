@@ -272,9 +272,11 @@ RexxMethod1(RexxObjectPtr, file_list, CSTRING, name)
     MethodFileNameBuffer nextFile(context);
 
     SysFileIterator iterator(name, NULL, buffer);
+    SysFileIterator::FileAttributes attributes;
+
     while (iterator.hasNext())
     {
-        iterator.next(nextFile);
+        iterator.next(nextFile, attributes);
         // don't include the "." and ".." directories in this list
         if (nextFile != "." && nextFile != "..")
         {

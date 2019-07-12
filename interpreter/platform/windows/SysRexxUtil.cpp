@@ -701,12 +701,12 @@ void setFileAttributes(const char *fileName, TreeFinder::AttributeMask &newAttri
  * @param foundFile The buffer the result is formatted into
  * @param finfo     The system information about the file.
  */
-void formatFileAttributes(TreeFinder *finder, FileNameBuffer &foundFile, WIN32_FILE_ATTRIBUTE_DATA &finfo)
+void formatFileAttributes(TreeFinder *finder, FileNameBuffer &foundFile, SysFileIterator::FileAttributes &attributes)
 {
     char fileAttr[256];                 // File attribute string of found file
 
     FILETIME lastWriteTime;
-    FileTimeToLocalFileTime(&finfo.ftLastWriteTime, &lastWriteTime);
+    FileTimeToLocalFileTime(&attributes.findFileData.ftLastWriteTime, &lastWriteTime);
 
     // Convert UTC to local file time, and then to system format.
     SYSTEMTIME systime;
@@ -741,9 +741,9 @@ void formatFileAttributes(TreeFinder *finder, FileNameBuffer &foundFile, WIN32_F
     // reuse the buffer
     foundFile = fileAttr;
 
-    uint64_t longFileSize = finfo.nFileSizeHigh;
+    uint64_t longFileSize = attributes.findFileData.nFileSizeHigh;
     longFileSize <<= 32;
-    longFileSize |= finfo.nFileSizeLow;
+    longFileSize |= attributes.findFileData.nFileSizeLow;
 
     // now the size information
     if (finder->longSize())
@@ -763,11 +763,11 @@ void formatFileAttributes(TreeFinder *finder, FileNameBuffer &foundFile, WIN32_F
     foundFile += fileAttr;
 
     snprintf(fileAttr, sizeof(fileAttr), "%c%c%c%c%c  ",
-             (finfo.dwFileAttributes & FILE_ATTRIBUTE_ARCHIVE) ? 'A' : '-',
-             (finfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ? 'D' : '-',
-             (finfo.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) ? 'H' : '-',
-             (finfo.dwFileAttributes & FILE_ATTRIBUTE_READONLY) ? 'R' : '-',
-             (finfo.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM) ? 'S' : '-');
+             (attributes.findFileData.dwFileAttributes & FILE_ATTRIBUTE_ARCHIVE) ? 'A' : '-',
+             (attributes.findFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ? 'D' : '-',
+             (attributes.findFileData.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) ? 'H' : '-',
+             (attributes.findFileData.dwFileAttributes & FILE_ATTRIBUTE_READONLY) ? 'R' : '-',
+             (attributes.findFileData.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM) ? 'S' : '-');
 
     // add on this section
     foundFile += fileAttr;
@@ -834,17 +834,10 @@ bool checkInclusion(TreeFinder *finder, uint32_t attr)
  * Checks if this file should be part of the included result and adds it to the result set
  * if it should be returned.
  */
-void TreeFinder::checkFile()
+void TreeFinder::checkFile(SysFileIterator::FileAttributes &attributes)
 {
-    // the filename we are passed is just the filename to check. The fully
-    // qualified name of the file is in foundFile already.
-
-    WIN32_FILE_ATTRIBUTE_DATA finfo;
-    // get the information for the file
-    GetFileAttributesEx(foundFile, GetFileExInfoStandard, &finfo);
-
     // check to see if this one should be included. If not, we just return without doing anythign
-    if (!checkInclusion(this, finfo.dwFileAttributes))
+    if (!checkInclusion(this, attributes.findFileData.dwFileAttributes))
     {
         return;
     }
@@ -861,7 +854,7 @@ void TreeFinder::checkFile()
     }
 
     // format all of the attributes and add them to the foundFile result
-    formatFileAttributes(this, foundFileLine, finfo);
+    formatFileAttributes(this, foundFileLine, attributes);
 
     // and finally add on the file name
     foundFileLine += foundFile;

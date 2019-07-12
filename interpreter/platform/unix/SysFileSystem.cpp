@@ -65,13 +65,6 @@
 #include "ActivityManager.hpp"
 #include "FileNameBuffer.hpp"
 
-#if defined __APPLE__
-// avoid warning: '(f)stat64' is deprecated: first deprecated in macOS 10.6
-#define stat64 stat
-#define fstat64 fstat
-#define open64 open
-#define lstat64 lstat
-#endif
 
 const char SysFileSystem::EOF_Marker = 0x1A;
 const char *SysFileSystem::EOL_Marker = "\n";
@@ -1232,7 +1225,7 @@ bool SysFileSystem::isCaseSensitive(const char *name)
     {
         size_t len = strlen(tmp);
         // scan backwards to find the previous directory delimiter
-        for (; len > 0; len --)
+        for (; len > 0; len--)
         {
             // is this the directory delimiter?
             if (tmp[len] == '/')
@@ -1244,7 +1237,7 @@ bool SysFileSystem::isCaseSensitive(const char *name)
         // ugly hack . . . to preserve the "/"
         if (len == 0)
         {
-            tmp[len+1] = '\0';
+            tmp[len + 1] = '\0';
             break;
         }
     }
@@ -1876,9 +1869,10 @@ bool SysFileIterator::hasNext()
 /**
  * Retrieve the next iteration value.
  *
- * @param buffer The buffer used to return the value.
+ * @param buffer     The buffer used to return the value.
+ * @param attributes The returned system-dependent attributes of the next file.
  */
-void SysFileIterator::next(FileNameBuffer &buffer)
+void SysFileIterator::next(FileNameBuffer &buffer, SysFileIterator::FileAttributes &attributes)
 {
     if (completed)
     {
@@ -1887,6 +1881,7 @@ void SysFileIterator::next(FileNameBuffer &buffer)
     else
     {
         buffer = entry->d_name;
+        attributes.findFileData = findFileData;
     }
 
     findNextEntry();
@@ -1908,9 +1903,12 @@ void SysFileIterator::findNextEntry()
         close();
         return;
     }
+
     // requesting everything? we've got what we want
     if (patternSpec == NULL)
     {
+        // save the attribute information for this file
+        stat64(entry->d_name, &findFileData);
         return;
     }
 
@@ -1959,6 +1957,8 @@ void SysFileIterator::findNextEntry()
     // free the uppercase copy of the last test
     free((void *)testName);
 #endif
+    // get the attribute information for the file *
+    stat64(entry->d_name, &findFileData);
 }
 
 
