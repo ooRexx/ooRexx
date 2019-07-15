@@ -201,7 +201,7 @@ RexxString *RexxString::decodeBase64()
                 // if this is '=' and we're looking at
                 // one of the last two digits, we've hit the
                 // end
-                if (ch == '=' && inputLength <= 4 && i >= 2)
+                if (ch == '=' && inputLength <= 4 && (i == 3 || (i == 2 && *source == '=')))
                 {
                     break;
                 }
