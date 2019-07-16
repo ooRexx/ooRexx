@@ -392,6 +392,22 @@ void MutableBuffer::append(const char *d, size_t l)
 
 
 /**
+ * Append a character to this buffer.
+ *
+ * @param c      The character to append.
+ */
+void MutableBuffer::append(char c)
+{
+    // make sure we have enough room
+    ensureCapacity(1);
+
+    copyData(dataLength, &c, 1);
+    dataLength += 1;
+}
+
+
+
+/**
  * insert string at given position
  *
  * @param str    The string to insert.

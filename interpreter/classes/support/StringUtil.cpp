@@ -49,6 +49,7 @@
 #include "QueueClass.hpp"
 #include "MethodArguments.hpp"
 #include "NumberStringClass.hpp"
+#include "MutableBufferClass.hpp"
 
 /**
  * Extract a substring from a data buffer.
@@ -1744,93 +1745,230 @@ bool StringUtil::decodeBase64(const char *source, size_t inputLength, char *dest
     // default this to a null string
     outputLength = 0;
 
+    // remember where we start for calculating the final returned length
+    char *destinationStart = destination;
+
     // a null string remains a null string.
     if (inputLength == 0)
     {
         return true;
     }
 
-    // to be a valid base64 encoding, the digits must be
-    // a encoded in 4-character units.
-    if (inputLength % 4 > 0)
-    {
-        return false;
-    }
-
-    // figure out the string length.  The last one or two characters
-    // might be the '=' placeholders, so we reduce the output
-    // length if we have those.
-    outputLength = (inputLength / 4) * 3;
-    if (*(source + inputLength - 1) == '=')
-    {
-        outputLength--;
-    }
-    if (*(source + inputLength - 2) == '=')
-    {
-        outputLength--;
-    }
-
-    // now loop through the input string 4 digits at a time.
+    // the digit we're working on
+    int digit = 0;
+    // now loop through the input string, processing the informtion in 4 digit units
     while (inputLength > 0)
     {
-        for (int i = 0; i < 4; i++)
-        {
-            unsigned char ch = *source++;
+        unsigned char ch = *source++;
+        // consume the character now
+        inputLength--;
 
-            // first, find the matching character
-            unsigned char digitValue = RexxString::DIGITS_BASE64_LOOKUP[ch];
-            // if we did not find a match, this could be
-            // an end of buffer filler characters
-            if (digitValue == (unsigned char)'\xff')
+        // first, find the matching character
+        unsigned char digitValue = RexxString::DIGITS_BASE64_LOOKUP[ch];
+        // if we did not find a match, this could be
+        // an end of buffer filler characters
+        if (digitValue == (unsigned char)'\xff')
+        {
+            // if this is '=' and we're looking at
+            // one of the last two digits, we've hit the
+            // end
+            if (ch == '=')
             {
-                // if this is '=' and we're looking at
-                // one of the last two digits, we've hit the
-                // end
-                if (ch == '=' && inputLength <= 4 && i >= 2)
+                // if we're looking for the first digit, then the next character
+                // muust also be an '='
+                if (digit == 2)
                 {
+                    if (inputLength < 2 || *source != '=')
+                    {
+                        return false;
+                    }
+                    // we consume two characters here
+                    inputLength--;
+                    // stop processing the data from here
                     break;
                 }
-
-                // found an invalid character
-                return false;
+                // single equal in the last position
+                else if (digit == 3)
+                {
+                    // just one character consumed
+                    inputLength--;
+                    // stop processing the data from here
+                    break;
+                }
             }
-
-            // digit value is the binary value of this digit.  Now, based
-            // on which digit of the input set we're working on, we update
-            // the values in the output buffer.  We only have 6 bits of
-            // character data at this point.
-            switch (i)
+            // line breaks are allowed, but only on four character boundars (i.e., digit is zero)
+            else if ((ch == '\n' || ch == '\r') && digit == 0)
             {
-                // first digit, all 6 bits go into the current position, shifted
-                case 0:
-                    *destination = digitValue << 2;
-                    break;
-                    // second digit.  2 bits are used to complete the current
-                    // character, 4 bits are inserted into the next character
-                case 1:
-                    *destination |= digitValue >> 4;
-                    destination++;
-                    *destination = digitValue << 4;
-                    break;
-                    // third digit.  4 bits are used to complete the
-                    // current character, the remaining 2 bits go into the next one.
-                case 2:
-                    *destination |= digitValue >> 2;
-                    destination++;
-                    *destination = digitValue << 6;
-                    break;
-                    // last character of the set.  All 6 bits are inserted into
-                    // the current output position.
-                case 3:
-                    *destination |= digitValue;
-                    destination++;
-                    break;
+                // just ignore this line break
+                continue;
             }
+
+
+            // found an invalid character
+            return false;
         }
-        // reduce the length by the quartet we just processed
-        inputLength -= 4;
+
+        // digit value is the binary value of this digit.  Now, based
+        // on which digit of the input set we're working on, we update
+        // the values in the output buffer.  We only have 6 bits of
+        // character data at this point.
+        switch (digit)
+        {
+            // first digit, all 6 bits go into the current position, shifted
+            case 0:
+                *destination = digitValue << 2;
+                // step to the next digit in the encoding unit
+                digit++;
+                break;
+
+            // second digit.  2 bits are used to complete the current
+            // character, 4 bits are inserted into the next character
+            case 1:
+                *destination |= digitValue >> 4;
+                destination++;
+                *destination = digitValue << 4;
+                // step to the next digit in the encoding unit
+                digit++;
+                break;
+
+            // third digit.  4 bits are used to complete the
+            // current character, the remaining 2 bits go into the next one.
+            case 2:
+                *destination |= digitValue >> 2;
+                destination++;
+                *destination = digitValue << 6;
+                // step to the next digit in the encoding unit
+                digit++;
+                break;
+
+            // last character of the set.  All 6 bits are inserted into
+            // the current output position.
+            case 3:
+                *destination |= digitValue;
+                destination++;
+                // complete the four-character set, on the next one
+                digit = 0;
+                break;
+        }
+
+    }
+
+    // calculate the final length
+    outputLength = destination - destinationStart;
+
+    // if we have any thing left here, then it must be line break characters
+    while (inputLength > 0)
+    {
+        unsigned char ch = *source++;
+        // consume the character now
+        inputLength--;
+
+        if (ch != '\n' && ch != '\r')
+        {
+            return false;
+        }
     }
 
     // all processed without error, this is good.
     return true;
+}
+
+
+/**
+ * Convert the character string into the same string with the
+ * characters converted into a Base64 encoding.
+ *
+ * @param data       Pointer to the data to encode.
+ * @param dataLength The length of the source data
+ * @param output     A mutable buffer into which the data are written
+ * @param chunkSize  The size of chunks to be used in the encoding. A line break is added after
+ *                   each chunk at 4-byte boundaries.
+ */
+void StringUtil::encodeBase64(const char *source, size_t inputLength, MutableBuffer *destination, size_t chunkSize)
+{
+    // if we're encoding a null string, the result is a
+    // null string, but we still add a linebreak at the end.
+    if (inputLength == 0)
+    {
+        destination->append('\n');
+        return;
+    }
+
+    // figure out the output string length (this will be roughly
+    // 4/3 the length of the input string (3 characters will encode
+    // into 4 digits)
+    size_t outputLength = (inputLength / 3) * 4;
+
+    // The encoding will always use 4-digit sequences, so if this
+    // was not evenly divisible by 3, add a complete 4-digit piece
+    // at the end.
+    if (inputLength % 3 > 0)
+    {
+        outputLength += 4;
+    }
+
+    size_t currentChunk = 0;
+
+    // loop through the entire string
+    while (inputLength > 0)
+    {
+        size_t inc[3];    // digit accumulator
+        int buflen = 0;
+        // the encoding is done 3 characters at a time.
+        for (int i = 0; i < 3; i++)
+        {
+            // we always do 3 characters, even at the end
+            // of the string.  If we still have characters
+            // left, grab that characters into our accumulator
+            // buffer
+            if (inputLength > 0)
+            {
+                // make sure we just get 8 bits
+                inc[i] = *source & 0xff;
+                inputLength--;
+                source++;
+                buflen++;
+            }
+            // this piece is just zero.  We also
+            // do not add this to the buffer length
+            else
+            {
+                inc[i] = '\0';
+            }
+        }
+        if (buflen > 0)
+        {
+            // now perform the base64 conversion to the next 4 output string chars.
+            // we are picking up 6 bits at a time from the 24 bits of input characters
+            // and converting those bits to a single base-64 digit.
+
+            // 6 bits from first character
+            destination->append(RexxString::DIGITS_BASE64[inc[0] >> 2]);
+
+            // remaining 2 bits from first character, plus 4 bits from the second character
+            destination->append(RexxString::DIGITS_BASE64[((inc[0] & 0x03) << 4) | ((inc[1] & 0xf0) >> 4)]);
+
+            // remaining bits from second char, plus 2 bits from the last character.  If we don't have
+            // a character here, use "="
+            destination->append((char)(buflen > 1 ? RexxString::DIGITS_BASE64[((inc[1] & 0x0f) << 2) | ((inc[2] & 0xc0) >> 6)] : '='));
+
+            // the final 6 bits...again, using "=" if we did not have a character here at the end.
+            destination->append((char)(buflen > 2 ? RexxString::DIGITS_BASE64[inc[2] & 0x3f] : '='));
+
+            // now handle the chunking. If we've grown longer than the designated chunck size,
+            // we add a line break;
+            currentChunk += 4;
+            if (currentChunk > chunkSize)
+            {
+                currentChunk = 0;
+                destination->append('\n');
+            }
+        }
+    }
+
+    // if we did not end on a chunk boundary, add a newline to to end of the buffer
+    if (currentChunk > 0)
+    {
+        destination->append('\n');
+    }
 }

@@ -48,6 +48,7 @@
 #include "RoutineClass.hpp"
 #include "PackageClass.hpp"
 #include "StringUtil.hpp"
+#include "MutableBufferClass.hpp"
 
 #include <stdio.h>
 
@@ -255,8 +256,11 @@ void ProgramMetaData::write(SysFile &target, BufferClass *program, bool encode)
         // append the program data
         memcpy(bufferData + getHeaderSize(), program->getData(), program->getDataLength());
 
-        // now encode this data. we're done with the original copy
-        fullBuffer = fullBuffer->encodeBase64();
+        size_t estimatedSize = ((program->getDataLength() / 3) * 4 + 1) + (program->getDataLength() / encodingChunkLength) + 1;
+
+        Protected<MutableBuffer> encodedBuffer = new MutableBuffer(estimatedSize, estimatedSize);
+
+        StringUtil::encodeBase64(bufferData, fullBuffer->getLength(), encodedBuffer, encodingChunkLength);
 
         {
             UnsafeBlock releaser;
@@ -265,7 +269,7 @@ void ProgramMetaData::write(SysFile &target, BufferClass *program, bool encode)
             target.write(standardShebang, strlen(standardShebang), written);
             target.write(encodedHeader, strlen(encodedHeader), written);
             // and finally the encoded metadata and method
-            target.write(fullBuffer->getStringData(), fullBuffer->getLength(), written);
+            target.write(encodedBuffer->getData(), encodedBuffer->getLength(), written);
         }
     }
 }

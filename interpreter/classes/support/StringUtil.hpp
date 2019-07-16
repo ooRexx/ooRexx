@@ -48,6 +48,7 @@
 
 class RexxInteger;
 class ArrayClass;
+class MutableBuffer;
 
 class StringUtil
 {
@@ -90,6 +91,7 @@ public:
     static ArrayClass   *words(const char *data, size_t length);
     static const char  *locateSeparator(const char *start, const char *end, const char *sepData, size_t sepLength);
     static bool decodeBase64(const char *source, size_t inputLength, char *destination, size_t &outputLength);
+    static void encodeBase64(const char *source, size_t inputLength, MutableBuffer *destination, size_t chunkSize);
 
     static inline bool matchCharacter(char ch, const char *charSet, size_t len)
     {

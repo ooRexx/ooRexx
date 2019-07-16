@@ -65,6 +65,8 @@ public:
     static RoutineClass* restore(RexxString *fileName, BufferClass *buffer);
     static bool processRestoreData(RexxString *fileName, BufferClass *data, ProgramMetaData *&metaData);
 
+    static const size_t encodingChunkLength = 72;    // the chunking to use with encoded data
+
 protected:
     enum
     {
