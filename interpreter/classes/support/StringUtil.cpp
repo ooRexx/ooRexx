@@ -1958,7 +1958,7 @@ void StringUtil::encodeBase64(const char *source, size_t inputLength, MutableBuf
             // now handle the chunking. If we've grown longer than the designated chunck size,
             // we add a line break;
             currentChunk += 4;
-            if (currentChunk > chunkSize)
+            if (currentChunk >= chunkSize)
             {
                 currentChunk = 0;
                 destination->append('\n');
