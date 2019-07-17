@@ -1783,6 +1783,7 @@ bool StringUtil::decodeBase64(const char *source, size_t inputLength, char *dest
                         return false;
                     }
                     // we consume two characters here
+                    source++;
                     inputLength--;
                     // stop processing the data from here
                     break;
@@ -1790,8 +1791,6 @@ bool StringUtil::decodeBase64(const char *source, size_t inputLength, char *dest
                 // single equal in the last position
                 else if (digit == 3)
                 {
-                    // just one character consumed
-                    inputLength--;
                     // stop processing the data from here
                     break;
                 }
