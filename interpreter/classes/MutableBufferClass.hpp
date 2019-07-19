@@ -95,6 +95,7 @@ class MutableBuffer : public RexxObject
     ArrayClass *makeArray() override;
     RexxString *makeString() override;
     RexxString *primitiveMakeString() override;
+    RexxString *stringValue()override;
 
     RexxInteger   *countStrRexx(RexxString *needle);
     RexxInteger   *caselessCountStrRexx(RexxString *needle);

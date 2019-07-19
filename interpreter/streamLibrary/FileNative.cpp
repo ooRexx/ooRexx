@@ -312,8 +312,26 @@ RexxMethod2(logical_t, file_rename, CSTRING, fromName, CSTRING, toName)
 RexxMethod0(RexxStringObject, file_temporary_path)
 {
     MethodFileNameBuffer temporary(context);
+
     SysFileSystem::getTemporaryPath(temporary);
     return context->String(temporary);
 }
+
+
+/**
+ * Return the file system case sensitivity section
+ */
+RexxMethod2(RexxObjectPtr, file_search_path_impl, CSTRING, file, CSTRING, path)
+{
+    MethodFileNameBuffer found(context);
+
+    if (SysFileSystem::searchPath(file, path, found))
+    {
+        return context->String(found);
+    }
+    return context->Nil();
+
+}
+
 
 

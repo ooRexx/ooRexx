@@ -147,6 +147,13 @@ bool SysFileSystem::getFullPathName(const char *name, FileNameBuffer &fullName)
         rc = GetFullPathName(name, (DWORD)fullName.capacity(), (LPTSTR)fullName, NULL);
     }
 
+    // sadly, this might differ from the real file name case, so we need to take one more step
+    // to get a matching name
+    if (rc > 0)
+    {
+        getLongName(fullName);
+    }
+
     return rc > 0;
 }
 

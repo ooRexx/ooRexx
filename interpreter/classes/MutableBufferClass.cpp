@@ -731,6 +731,18 @@ ArrayClass  *MutableBuffer::makeArray()
     return makeArrayRexx(OREF_NULL);
 }
 
+
+/**
+ * Return the primitive string value of this object
+ *
+ * @return this always just forwards to makeString
+ */
+RexxString* MutableBuffer::stringValue()
+{
+    return makeString();
+}
+
+
 /**
  * Handle the primitive class makeString optimization.  This
  * is required because MutableBuffer implements a

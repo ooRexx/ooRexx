@@ -108,4 +108,5 @@ INTERNAL_METHOD(file_get_last_accessed)
 INTERNAL_METHOD(file_set_last_accessed)
 INTERNAL_METHOD(file_set_writable)
 INTERNAL_METHOD(file_temporary_path)
+INTERNAL_METHOD(file_search_path_impl)
 

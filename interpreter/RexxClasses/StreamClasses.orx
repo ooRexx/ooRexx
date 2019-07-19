@@ -544,6 +544,32 @@ return position
 ::METHOD pathSeparator CLASS EXTERNAL 'LIBRARY REXX file_path_separator'
 ::METHOD isCaseSensitive CLASS EXTERNAL 'LIBRARY REXX file_case_sensitive'
 ::METHOD listRoots CLASS EXTERNAL 'LIBRARY REXX file_list_roots'
+::METHOD searchPathImpl CLASS PRIVATE EXTERNAL 'LIBRARY REXX file_search_path_impl'
+::method searchPath CLASS
+  use strict arg file, pathList
+
+  path = .mutableBuffer~new
+
+  -- the loop will issue the appropriate error message if this cannot be converted to an array
+  loop dir over pathList
+     if path~length > 0 & \path~endsWith(self~pathSeparator) then do
+        path~append(self~pathSeparator)
+     end
+
+     if dir~isA(.file) then do
+        path~append(dir~absolutePath)
+     end
+     else do
+        path~append(dir)
+     end
+  end
+
+  file = self~searchPathImpl(file, path)
+  if file \= .nil then do
+     file = .file~new(file)
+  end
+
+  return file
 
 ::METHOD separator EXTERNAL 'LIBRARY REXX file_separator'
 ::METHOD pathSeparator EXTERNAL 'LIBRARY REXX file_path_separator'
