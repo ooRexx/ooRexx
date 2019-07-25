@@ -35,27 +35,72 @@
 #/* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 #/*                                                                            */
 #/*----------------------------------------------------------------------------*/
-orx_current=@ORX_SUBST_CURRENT@
-orx_revision=@ORX_SUBST_REVISION@
-orx_age=@ORX_SUBST_AGE@
+version=@ORX_VERSION@
+prefix=@CMAKE_INSTALL_PREFIX@
+includedir=@CMAKE_INSTALL_FULL_INCLUDEDIR@
+libdir=@CMAKE_INSTALL_FULL_LIBDIR@
 
-# Set up the library version suffix.
-orx_libversion=${orx_current}.${orx_age}.${orx_revision}
+usage()
+{
+    echo "Usage: oorexx-config [OPTION]"
+    echo ""
+    echo "Available values for OPTION include:"
+    echo ""
+    echo "  --help         display this help and exit"
+    echo "  --cflags       pre-processor and compiler flags"
+    echo "                 [-I$includedir]"
+    echo "  --libs         library linking information"
+#    echo "                 [-L$libdir -l@SHLFILE@ @BOTHLIBS@ @SHLIBS@ @DLFCNLIBDIR@ @THREADING_LINK@ @MH_FUNC_LIBS@ @REGINA_CONFIG_LIBS@]"
+    echo "                 [-L$libdir -lrexx -lrexxapi"
+    echo "  --prefix       oorexx install prefix"
+    echo "                 [$prefix]"
+    echo "  --version      output version information"
+    echo "                 [$version]"
+    exit $1
+}
 
-orx_prefix=@prefix@
+if test $# -eq 0; then
+    usage 1
+fi
 
-# Debian doesn't use lib64, so this is the same for 32-bit or 64-bit
-lib_dir=${orx_prefix}/lib
-bin_dir=${orx_prefix}/bin
-data_dir=${orx_prefix}/share/ooRexx
+while test $# -gt 0; do
+    case "$1" in
+    # this deals with options in the style
+    # --option=value and extracts the value part
+    # [not currently used]
+       -*=*) value=`echo "$1" | sed 's/[-_a-zA-Z0-9]*=//'` ;;
+       *) value= ;;
+    esac
 
-prefix=@prefix@
-datarootdir=@datarootdir@
-exec_prefix=@exec_prefix@
-includedir=@includedir@
-libdir=@libdir@
+    case "$1" in
+       --prefix)
+          echo $prefix
+          ;;
 
-update-alternatives --install /usr/bin/rexx rexx /usr/bin/rexx-oorexx 25 \
-        --slave /usr/bin/rxqueue rxqueue /usr/bin/rxqueue-oorexx \
-        --slave /usr/share/man/man1/rexx.1.gz rexx.1.gz /usr/share/man/man1/rexx-oorexx.1.gz \
-        --slave /usr/share/man/man1/rxqueue.1.gz rxqueue.1.gz /usr/share/man/man1/rxqueue-oorexx.1.gz
+       --version)
+          echo $version
+          exit 0
+          ;;
+
+       --help)
+          usage 0
+          ;;
+
+       --cflags)
+          echo -I$includedir
+          ;;
+
+       --libs)
+#          echo -L$libdir -l@SHLFILE@ @BOTHLIBS@ @SHLIBS@ @DLFCNLIBDIR@ @THREADING_LINK@ @MH_FUNC_LIBS@ @REGINA_CONFIG_LIBS@
+          echo -L$libdir -lrexx -lrexxapi
+          ;;
+
+       *)
+          usage
+          exit 1
+          ;;
+    esac
+    shift
+done
+
+exit 0
