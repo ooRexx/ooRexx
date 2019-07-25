@@ -2581,6 +2581,44 @@ nomethod:
   raise syntax 88.918 array("date", time)
 
 
+-- parse a week number date in the form
+-- "yyyy-Www-d" into a date object
+::METHOD fromWeekNumberDate class
+   use strict arg _date, offset=(time('O')/60000000)
+   parse var _date year '-W' weekNumber '-' dayNumber
+
+   signal on syntax
+
+   -- January 4th of the same year is used to calculate the correction value
+   pivot = .datetime~new(year, 1, 4)
+   -- this will calculate the ordinal value for the day, which may need adjusting
+   ordinal = weekNumber * 7 + dayNumber - (pivot~weekDay + 3)
+
+   -- if the ordinal goes less than one, then this belongs to the previous
+   -- year and we can use value plus the number of days in the previous year
+   -- to get the ordinal value in that year. Note that due to good fortune,
+   -- the week number date for January 1, 0001 is 0001-W-01-1, so we will never
+   -- have to deal with the year 0000.
+   if ordinal < 1 then do
+       previousYear = .dateTime~new(year - 1, 12, 31)
+       year = previousYear~year
+       ordinal = ordinal + previousYear~daysInYear
+   end
+   -- the very last day of the range we support, December 31, 9999, has
+   -- a weekNumberDate of 9999-W52-5, so we never have to deal with a valid
+   -- date requiring 5 digits for the year.
+   else if ordinal > pivot~daysInYear then do
+       year = year + 1
+       ordinal -= pivot~daysInYear
+   end
+
+   -- the easiest way to calculate this is
+   return self~new(year, 1, 1, offset)~addDays(ordinal - 1)
+
+   syntax:
+   raise syntax 88.918 array("date", _date)
+
+
 -- Create a DateTime object from Unix Ticks value
 ::METHOD fromTicks class
   use strict arg date, offset=(time('O')/60000000)
@@ -3049,6 +3087,26 @@ nomethod:
   use strict arg sep = ("/")
   return date("U", timestamp, "F", sep);
 
+-- Format the date time into the ISO week number format, yyyy-Www-d
+::METHOD weekNumberDate
+  use strict arg
+
+  year = self~year
+  month = self~month
+  weekNumber = self~weekNumber
+
+  -- if the week number is 1 but we're in December, then this actually is part of next year
+  if weekNumber == 1 & month == 12 then do
+      year += 1
+  end
+  -- if the week number is at the end of the year but the date in in January, then
+  -- this belongs to the previous year
+  else if weekNumber >= 52 & month == 1 then do
+      year -= 1
+  end
+
+  return right(year, 4, '0')"-W"right(weekNumber, 2, '0')"-"self~weekDayNumber
+
 -- Return the day of the week as an integer.  1 = Monday,
 -- 2 = Tuesday, etc.  These are the ISO definitions for the
 -- day numbers.
@@ -3183,6 +3241,100 @@ nomethod:
   else do
       return 365
   end
+
+-- calculate the correction factor for determining the weekNumber and the
+-- day of the week
+::METHOD correction PRIVATE
+
+  -- we can calculate this from a single formula, but it is much more complicated
+  -- when we're dealing with the beginning or end of the year
+  -- the details of the formula can be found here:
+  -- https://en.wikipedia.org/wiki/ISO_week_date#Calculation
+
+  year = self~year
+
+  -- this is a correction based on the century the year is in
+  c = year~left(2) // 4
+  y = year~right(2) // 28
+
+  -- this is a correction factor that handles the beginning or ends of the year.
+  -- c = (y + floor ((y - 1)/4) + 5 C - 1) mod 7 - 7 if the result > 3
+  correction = (y + ((y - 1) / 4)~floor + (5 * c - 1)) // 7
+
+  -- this needs adjusting if greater than 3
+  if correction > 3 then do
+      correction -= 7
+  end
+  return correction
+
+
+-- Returns the ISO week number for a given date
+::METHOD weekNumber
+  use strict arg
+
+  -- the calculation is fairly straightforward except for the beginning or end of the year.
+  -- do that now
+  weekNumber = (self~yearDay - self~weekDay + 10) % 7
+
+  -- if not on the edges, then we are done
+  if weekNumber >= 1 & weekNumber < 52 then do
+      return weekNumber
+  end
+
+  -- ceil ((od + c)/7) = week number
+  weekNumber = ((self~yearDay + self~correction) / 7)~ceiling
+
+  -- if this is less than one, then the day belongs to the last week of the previous year
+  if weekNumber < 1 then do
+      weekNumber = self~addYears(-1)~weeksInYear
+  end
+  -- if greater than 52, see if it falls first week of next year
+  else if weekNumber > 52, weekNumber > self~weeksInYear then do
+      weekNumber = 1
+  end
+
+  return weekNumber
+
+-- Returns the ISO week day number for a given date. This is the number of the day within
+-- the current week, with 1 == Monday, etc.
+::METHOD weekDayNumber
+  use strict arg
+
+  -- (od + c) mod 7 = weekday number
+  weekDayNumber = (self~yearDay + self~correction) // 7
+
+  -- the above gives Sunday as zero, and if it falls into a previous or
+  -- or following year, this is a negative number. Adding 7 yields the correct
+  -- result
+  if weekDayNumber < 1 then do
+      weekDayNumber += 7
+  end
+
+  return weekDayNumber
+
+-- return the number of weeks contained in a year according to the ISO
+-- week number rules
+::method weeksInYear
+  use strict arg
+
+  date = .datetime~new(self~year, 1, 1)
+
+  -- any year starting on a thursday has 53 weeks
+  if date~weekDay == 4 then return 53
+  -- any leap year starting on a wednesday also has 53 weeks
+  if date~isLeapYear & date~weekDay == 3 then return 53
+
+  lastDay = .datetime~new(self~year, 12, 31)
+  -- any year ending on a thursday has 53 weeks
+
+  if lastDay~weekDay == 4 then return 53
+
+  -- any leap year ending in a friday also has 53 weeks
+  if lastDay~isLeapYear & lastDay~weekDay == 5 then return 53
+
+  -- all others have 52
+  return 52
+
 
 -- Returns a string form for this date time.  The string value
 -- is the ISO date.
