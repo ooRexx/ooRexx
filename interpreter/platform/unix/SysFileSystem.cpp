@@ -1790,6 +1790,9 @@ SysFileIterator::SysFileIterator(const char *path, const char *pattern, FileName
 {
     // save the pattern spec to check agains each path entry
     patternSpec = pattern;
+    // and also save the directory we are searching in
+    directory = path;
+
     // caseLess can be explicit or implicit, based on the characteristics of the path.
     // Mac file systems are generally case insensitive, but other unix variants are
     // usually case sensitive.
@@ -1907,8 +1910,21 @@ void SysFileIterator::findNextEntry()
     // requesting everything? we've got what we want
     if (patternSpec == NULL)
     {
+        // we need to perform the stat64() using the fully resolved name.
+        // if there is an allocation error here, we have limited ability to raise
+        // an error here so we will just fail silently and return incorrect information.
+        // There is very low probability anybody will ever see this error.
+        size_t bufferLength = strlen(directory) + strlen(entry->d_name) + 8;
+
+        AutoFree fullName = (char *)malloc(bufferLength);
+        if (fullName == (char *)NULL)
+        {
+            return;
+        }
+        snprintf(fullName, bufferLength, "%s/%s", directory, entry->d_name);
+
         // save the attribute information for this file
-        stat64(entry->d_name, &findFileData);
+        stat64(fullName, &findFileData);
         return;
     }
 
@@ -1957,8 +1973,22 @@ void SysFileIterator::findNextEntry()
     // free the uppercase copy of the last test
     free((void *)testName);
 #endif
-    // get the attribute information for the file *
-    stat64(entry->d_name, &findFileData);
+    // we need to perform the stat64() using the fully resolved name.
+    // if there is an allocation error here, we have limited ability to raise
+    // an error here so we will just fail silently and return incorrect information.
+    // There is very low probability anybody will ever see this error.
+    size_t bufferLength = strlen(directory) + strlen(entry->d_name) + 8;
+
+    AutoFree fullName = (char *)malloc(bufferLength);
+    if (fullName == (char *)NULL)
+    {
+        return;
+    }
+    snprintf(fullName, bufferLength, "%s/%s", directory, entry->d_name);
+
+    // save the attribute information for this file
+    stat64(fullName, &findFileData);
+    return;
 }
 
 

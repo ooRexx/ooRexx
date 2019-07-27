@@ -183,12 +183,13 @@ public:
 protected:
     void findNextEntry();
 
-    bool completed;       // the iteration completed flag
+    bool completed;              // the iteration completed flag
+    const char *directory;       // the directory we're searching through
     struct dirent *entry;        // contains the name of the file
     struct stat64 findFileData;  // contains the file attributes
-    DIR    *handle;
-    bool    caseLess;     // indicates we do caseless searches
-    const char *patternSpec;   // the spec we test against
+    DIR    *handle;              // the directory handle we're iterating over
+    bool    caseLess;            // indicates we do caseless searches
+    const char *patternSpec;     // the spec we test against
 };
 
 
