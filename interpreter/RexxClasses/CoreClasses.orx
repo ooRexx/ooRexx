@@ -2584,8 +2584,8 @@ nomethod:
 -- parse a week number date in the form
 -- "yyyy-Www-d" into a date object
 ::METHOD fromWeekNumberDate class
-   use strict arg _date, offset=(time('O')/60000000)
-   parse var _date year '-W' weekNumber '-' dayNumber
+   use strict arg _date, sep = ("-"), offset=(time('O')/60000000), offset=(time('O')/60000000)
+   parse var _date year (sep||'W') weekNumber (sep) dayNumber
 
    signal on syntax
 
@@ -2614,6 +2614,29 @@ nomethod:
 
    -- the easiest way to calculate this is
    return self~new(year, 1, 1, offset)~addDays(ordinal - 1)
+
+   syntax:
+   raise syntax 88.918 array("date", _date)
+
+-- create a DateTime instance from an ordinal date in the form
+-- YYYY-DDD
+::METHOD fromOrdinalDate class
+   use strict arg _date, sep = ("-"), offset=(time('O')/60000000), offset=(time('O')/60000000)
+   parse var _date year (sep) ordinal
+
+   signal on syntax
+
+   -- we get a datetime object based on the first of the year. We need this so we
+   -- can determine if the ordinal value is within the range for this year
+   base = .datetime~new(year, 1, 1, offset)
+
+   -- make sure this is in the correct range
+   if ordinal < 1 | ordinal > base~daysInYear then do
+       raise syntax 88.918 array("date", _date)
+   end
+
+   -- the easiest way to calculate this is to add an offset from the first of the year
+   return base~addDays(ordinal - 1)
 
    syntax:
    raise syntax 88.918 array("date", _date)
@@ -3091,21 +3114,14 @@ nomethod:
 ::METHOD weekNumberDate
   use strict arg
 
-  year = self~year
-  month = self~month
-  weekNumber = self~weekNumber
+  return right(self~weekNumberYear, 4, '0')"-W"right(self~weekNumber, 2, '0')"-"self~weekDayNumber
 
-  -- if the week number is 1 but we're in December, then this actually is part of next year
-  if weekNumber == 1 & month == 12 then do
-      year += 1
-  end
-  -- if the week number is at the end of the year but the date in in January, then
-  -- this belongs to the previous year
-  else if weekNumber >= 52 & month == 1 then do
-      year -= 1
-  end
+-- return the date as a year/ordinal pair in the formay YYYY-DDD
+::METHOD ordinalDate
+  use strict arg
 
-  return right(year, 4, '0')"-W"right(weekNumber, 2, '0')"-"self~weekDayNumber
+  return right(self~year, 4, '0')"-"right(self~yearDay, 3, '0')
+
 
 -- Return the day of the week as an integer.  1 = Monday,
 -- 2 = Tuesday, etc.  These are the ISO definitions for the
@@ -3311,6 +3327,28 @@ nomethod:
   end
 
   return weekDayNumber
+
+
+-- return the year associated with this dates week number. This may be
+-- different that the year for dates at the beginning or end of the year
+::METHOD weekNumberYear
+  use strict arg
+
+  year = self~year
+  weekNumber = self~weekNumber
+  month = self~month
+
+  -- if the week number is 1 but we're in December, then this actually is part of next year
+  if weekNumber == 1 & month == 12 then do
+      year += 1
+  end
+  -- if the week number is at the end of the year but the date in in January, then
+  -- this belongs to the previous year
+  else if weekNumber >= 52 & month == 1 then do
+      year -= 1
+  end
+
+  return year
 
 -- return the number of weeks contained in a year according to the ISO
 -- week number rules
