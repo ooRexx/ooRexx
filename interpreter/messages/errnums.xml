@@ -2979,6 +2979,18 @@ special character (such as a parenthesis).
 <para>Argument <emphasis role="italic">argument</emphasis> was omitted. A VariableReference argument is required.</para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>932</term>
+<listitem>
+<para>Date template <emphasis role="italic">template</emphasis> contains an invalid pattern; found "<emphasis role="italic">value</emphasis>".</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>933</term>
+<listitem>
+<para>Unable to parse date "<emphasis role="italic">date</emphasis>" with template "<emphasis role="italic">template</emphasis>".</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 <section id="ERR89">
@@ -2998,7 +3010,7 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>002</term>
 <listitem>
-<para>The PARSE was expecting a variable or a message term.</para>
+<para>The PARSE instruction was expecting a variable or a message term.</para>
 </listitem>
 </varlistentry>
 </variablelist>
@@ -3587,6 +3599,12 @@ special character (such as a parenthesis).
 <term>977</term>
 <listitem>
 <para>Binary strings must be grouped in units that are multiples of four characters.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>978</term>
+<listitem>
+<para>Method argument <emphasis role="italic">argument</emphasis> could not be converted to type <emphasis role="italic">type</emphasis>; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 </variablelist>

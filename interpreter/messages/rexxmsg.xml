@@ -4183,6 +4183,24 @@ special character (such as a parenthesis).
           <SymbolicName>Error_Invalid_argument_no_reference</SymbolicName>
           <Text>Argument <Sub position="1" name="argument"/> was omitted. A VariableReference argument is required.</Text>
         </SubMessage>
+        <SubMessage>
+          <Code>88</Code>
+          <Subcode>932</Subcode>
+          <MessageNumber>835</MessageNumber>
+          <Component>Rexx</Component>
+          <Severity>Warning</Severity>
+          <SymbolicName>Error_Invalid_argument_date_template</SymbolicName>
+          <Text>Date template <Sub position="1" name="template"/> contains an invalid pattern; found <q><Sub position="2" name="value"/></q>.</Text>
+        </SubMessage>
+        <SubMessage>
+          <Code>88</Code>
+          <Subcode>933</Subcode>
+          <MessageNumber>836</MessageNumber>
+          <Component>Rexx</Component>
+          <Severity>Warning</Severity>
+          <SymbolicName>Error_Invalid_argument_bad_date</SymbolicName>
+          <Text>Unable to parse date <q><Sub position="1" name="date"/></q> with template <q><Sub position="2" name="template"/></q>.</Text>
+        </SubMessage>
     </Subcodes>
   </Message>
   <Message>
@@ -4211,7 +4229,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Variable_expected_PARSE</SymbolicName>
-        <Text>The PARSE was expecting a variable or a message term.</Text>
+        <Text>The PARSE instruction was expecting a variable or a message term.</Text>
       </SubMessage>
     </Subcodes>
   </Message>
@@ -5081,6 +5099,15 @@ special character (such as a parenthesis).
         <Severity>Warning</Severity>
         <SymbolicName>Error_Incorrect_method_invbin_group</SymbolicName>
         <Text>Binary strings must be grouped in units that are multiples of four characters.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>93</Code>
+        <Subcode>978</Subcode>
+        <MessageNumber>837</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Incorrect_method_request_type</SymbolicName>
+        <Text>Method argument <Sub position="1" name="argument"/> could not be converted to type <Sub position="2" name="type"/>; found <q><Sub position="3" name="value"/></q>.</Text>
       </SubMessage>
     </Subcodes>
   </Message>

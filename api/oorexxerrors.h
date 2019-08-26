@@ -486,6 +486,8 @@
 #define Rexx_Error_Invalid_argument_variable_reference_stem               88929
 #define Rexx_Error_Invalid_argument_variable_reference_simple             88930
 #define Rexx_Error_Invalid_argument_no_reference                          88931
+#define Rexx_Error_Invalid_argument_date_template                         88932
+#define Rexx_Error_Invalid_argument_bad_date                              88933
 #define Rexx_Error_Variable_expected                                      89000
 #define Rexx_Error_Variable_expected_USE                                  89001
 #define Rexx_Error_Variable_expected_PARSE                                89002
@@ -584,6 +586,7 @@
 #define Rexx_Error_Incorrect_method_invalid_value_for                     93975
 #define Rexx_Error_Incorrect_method_invhex_group                          93976
 #define Rexx_Error_Incorrect_method_invbin_group                          93977
+#define Rexx_Error_Incorrect_method_request_type                          93978
 #define Rexx_Error_No_method                                              97000
 #define Rexx_Error_No_method_name                                         97001
 #define Rexx_Error_No_method_private                                      97002

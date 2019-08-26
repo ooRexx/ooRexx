@@ -749,6 +749,9 @@
 #define Error_Incorrect_method_invbin_group_msg                      832
 #define Error_Invalid_hex_invhex_group_msg                           833
 #define Error_Invalid_hex_invbin_group_msg                           834
+#define Error_Invalid_argument_date_template_msg                     835
+#define Error_Invalid_argument_bad_date_msg                          836
+#define Error_Incorrect_method_request_type_msg                      837
 
 
 #endif
