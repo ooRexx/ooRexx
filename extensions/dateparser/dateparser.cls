@@ -40,7 +40,7 @@
 ::CLASS 'DateFormats' PUBLIC
 ::CONSTANT NormalDate "d MMM yyyy"
 ::CONSTANT ISODate    "yyyy'-'MM'-'dd'T'HH':'mm':'ss.ffffff"
-::CONSTANT UTCISODate "yyyy'-'MM'-'dd'T'HH':'mm':'ss.ffffffzzz"
+::CONSTANT UTCISODate "yyyy'-'MM'-'dd'T'HH':'mm':'ss.ffffffzzzz"
 ::CONSTANT EuropeanDate "dd/MM/yy"
 ::CONSTANT LongEuropeanDate "dd/MM/yyyy"
 ::CONSTANT OrderedDate "yy/MM/dd"
@@ -63,6 +63,7 @@
 ::CONSTANT DefaultMonthAbbreviations ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
 ::CONSTANT DefaultCivilLabels ("am", "pm")
 ::CONSTANT DefaultCivilShortLabels ("a", "p")
+::CONSTANT DefaultOrdinalSuffixes ("st", "nd", "rd", "th", "th", "th", "th", "th", "th", "th", "th", "th", "th", "th", "th", "th", "th", "th", "th", "th", "st", "nd", "rd", "th", "th", "th", "th", "th", "th", "th", "st")
 ::CONSTANT DefaultDateProperties (.DateFormats~new)
 
 ::METHOD init
@@ -77,6 +78,7 @@
   monthAbbreviations = self~DefaultMonthAbbreviations
   civilLabels = self~defaultCivilLabels
   civilShortLabels = self~defaultCivilShortLabels
+  ordinalSuffixes = self~defaultOrdinalSuffixes
 
 -- settable parser/formatter attributes
 ::ATTRIBUTE dateSeparator
@@ -90,6 +92,8 @@
 
 ::ATTRIBUTE civilShortLabels
 ::ATTRIBUTE civilLabels
+
+::ATTRIBUTE ordinalSuffixes
 
 -- a class for parsing dates and times using a template
 ::CLASS 'DateParser' PUBLIC
@@ -633,6 +637,15 @@
       haveDate = .true
       self~ordinal = self~getFixedNumber(3, 1, 366)
     end
+    -- day of the month from 1 to 31, without leading zeros and an ordinal suffix
+    when "ddddd" then do
+      haveDate = .true
+      day = self~getVariableNumber(2, 1, 31)
+      self~day = day
+      if \self~checkMatch(self~formats~ordinalSuffixes[day]) then do
+        self~parsingError
+      end
+    end
     -- day of the week as a number
     when "D" then do
       self~weekDay = self~getFixedNumber(1, 1, 7)
@@ -1120,19 +1133,13 @@
   -- needed because of the size of the values involved
   numeric digits 18
 
-  timeAdjustment = 0
-
   -- get the timezone offset now too
   if offset == .nil then do
     offset = today~offset~totalMicroseconds
   end
-  else do
-    timeAdjustment = offset
-  end
 
-  -- we need to add in the timeAdjustment offset now, which converts it to a local time stamp,
-  -- then specify the offset when creating the .DateTime object
-  resultDate = .DateTime~new(date('F', date, 'S') + time("F", time, "L") + timeAdjustment, offset % 60000000)
+  -- get this as a basedate value using the local time then create the date object using the offset
+  resultDate = .DateTime~new(date('F', date, 'S') + time("F", time, "L"), offset % 60000000)
 
   -- now that we have this, see if there are and dangling elements to process
   if weekDay \= .nil, weekDay \= resultDate~weekDay then do
@@ -1205,6 +1212,11 @@
     -- day of the year from 1 to 366, with leading zeros
     when "dddd" then do
       self~append(date~yearDay~right(3, '0'))
+    end
+    -- day of the month with an ordinal suffix
+    when "ddddd" then do
+      self~append(date~day)
+      self~append(self~formats~ordinalSuffixes[date~day])
     end
     -- day of the week as a number
     when "D" then do
