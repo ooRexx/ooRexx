@@ -120,20 +120,18 @@ else ()
     message(STATUS "OOREXX_SHEBANG_PROGRAM: \"${OOREXX_SHEBANG_PROGRAM}\" (default)")
 endif()
 
-if( EXISTS ${CMAKE_SOURCE_DIR}/.svn )
-    find_package(Subversion)
-    if(SUBVERSION_FOUND)
-      set(ORX_WC_REVISION 0)
-      Subversion_WC_INFO(${PROJECT_SOURCE_DIR} ORX)
-      set(ORX_BLD_LVL ${ORX_WC_REVISION})
-    endif()
-    message(STATUS "SVN Revision Number is ${ORX_BLD_LVL}")
+find_package(Subversion)
+if(SUBVERSION_FOUND)
+  set(ORX_WC_REVISION 0)
+  Subversion_WC_INFO(${PROJECT_SOURCE_DIR} ORX IGNORE_SVN_FAILURE)
+  set(ORX_BLD_LVL ${ORX_WC_REVISION})
+endif()
+message(STATUS "SVN Revision Number is ${ORX_BLD_LVL}")
 
-    if (WIN32)
-    # find a xalan executable, but only on windows for now.
-        FIND_PROGRAM(XALAN_EXECUTABLE xalan
-           DOC "xalan command line xslt converter")
-    endif()
+if (WIN32)
+# find a xalan executable, but only on windows for now.
+    FIND_PROGRAM(XALAN_EXECUTABLE xalan
+       DOC "xalan command line xslt converter")
 endif()
 
 # The following supports the versioning of the rexx shared libraries
