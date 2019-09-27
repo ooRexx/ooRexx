@@ -1442,7 +1442,7 @@ if (WIN32)
    set (OOD_MOD_LVL 4)
    set (OOD_BLD_LVL 11506)
    set (OOD_VER_STR "4.2.4.11506")
-   set (OOD_COPY_YEAR "2005-2018")
+   set (OOD_COPY_YEAR "2005-2019")
    set (OOD_SVN_REVSION 11506)
 
    #################### ooshapes.dll ################

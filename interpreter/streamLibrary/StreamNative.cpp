@@ -1348,13 +1348,7 @@ RexxStringObject StreamInfo::readVariableLine()
             return context->NewString(buffer, currentLength - 1);
         }
 
-        // No new line but we hit end of file reading this?  This will be the
-        // entire line then.
-        if (fileInfo.atEof())
-        {
-            lineReadIncrement();
-            return context->NewString(buffer, currentLength);
-        }
+        // extend the buffer and try reading again
         buffer = extendBuffer(bufferSize);
     }
 }

@@ -1202,7 +1202,7 @@ bool SysFile::hasData()
     }
 
     // if there is buffered input, we can always return true
-    if (hasBufferedInput())
+    if (ungetchar != -1 || hasBufferedInput())
     {
         return true;
     }

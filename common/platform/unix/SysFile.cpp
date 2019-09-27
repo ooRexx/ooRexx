@@ -428,7 +428,7 @@ bool SysFile::read(char *buf, size_t len, size_t &bytesRead)
             int blockRead = ::read(fileHandle, buf + bytesRead, (unsigned int)len);
             if (blockRead <= 0)
             {
-                // not get anything?
+                /// not get anything?
                 if (blockRead == 0)
                 {
                     fileeof = true;
@@ -1229,7 +1229,7 @@ bool SysFile::hasData()
     }
 
     // if there is buffered input, we can always return true
-    if (hasBufferedInput())
+    if (ungetchar != -1 || hasBufferedInput())
     {
         return true;
     }
@@ -1256,7 +1256,7 @@ bool SysFile::hasData()
 
     char c;
     int count = ::read(fileHandle, &c, (unsigned int)1);
-    if (count == 0)
+    if (count <= 0)
     {
         // remember that we've seen this
         fileeof = true;
