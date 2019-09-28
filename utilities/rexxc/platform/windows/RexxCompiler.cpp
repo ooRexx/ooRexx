@@ -143,5 +143,5 @@ int SysCall main(int argc, char **argv)
         exit(-2);
     }
 
-    RexxCompileProgram(input, output, NULL, encode);
+    return RexxCompileProgram(input, output, NULL, encode);
 }
