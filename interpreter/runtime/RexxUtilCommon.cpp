@@ -112,7 +112,8 @@ class LineReader
              size_t bytesRead = 0;
              if (!file.gets(buffer + size, bufferSize - size, bytesRead))
              {
-                 return false;
+                 // we might have data from a previous iteration of the loop
+                 return size == 0 ? false : true;
              }
              // update the size of the line now
              size += bytesRead;
@@ -130,12 +131,6 @@ class LineReader
                  return true;
              }
 
-             // No new line but we hit end of file reading this?  This will be the
-             // entire line then.
-             if (file.atEof())
-             {
-                 return true;
-             }
              bufferSize += BufferExpansionSize;
              if (!buffer.realloc(bufferSize))
              {
