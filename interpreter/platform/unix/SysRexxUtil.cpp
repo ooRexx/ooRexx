@@ -1134,13 +1134,18 @@ RexxRoutine2(int, SysSetPriority, int32_t, pclass, int32_t, level)
  *
  * @return The error message text or NULL if not found.
  */
-const char* getErrorMessage(const char *repository, int setnum, int msgnum)
+char* getErrorMessage(const char *repository, int setnum, int msgnum)
 {
     // if this is the default or explicitly "rexx.cat", then we retrieve this
     // directly from the interpreter
-    if (repository == NULL || strcmp(repository, REXXMESSAGEFILE))
+    if (repository == NULL || strcmp(repository, REXXMESSAGEFILE) == 0)
     {
-        return RexxGetErrorMessageByNumber(msgnum);
+        const char *msg = RexxGetErrorMessageByNumber(msgnum);
+        if (msg == NULL)
+        {
+            msg = "Error: Message not found";
+        }
+        return strdup(msg);
     }
 #if defined( HAVE_CATOPEN )
 
@@ -1151,16 +1156,19 @@ const char* getErrorMessage(const char *repository, int setnum, int msgnum)
 /* open the catalog           */
     if ((catalog = catopen(repository, NL_CAT_LOCALE)) == (nl_catd)-1)
     {
-        return "Error: Message catalog not found";
+        return strdup("Error: Message catalog not found");
     }
 
     char *msg = catgets(catalog, setnum, (int)msgnum, "Error: Message catalog not open");
-    catclose(catalog);                   /* close the catalog          */
+    if (*msg == '\0')
+    {
+    }
+    catclose(catalog);                   // close the catalog
 
-    return *msg == '\0' ? "Error: Message not found" : msg;      // return the message or our error
+    return strdup(msg);                  // return the message or our error
 #else
     // if no catalog support, we just return an error message
-    return "Error: Message catalog (catopen) not supported";
+    return strdup("Error: Message catalog (catopen) not supported");
 #endif
 }
 
@@ -1183,7 +1191,7 @@ const char* getErrorMessage(const char *repository, int setnum, int msgnum)
 RexxRoutine3(RexxStringObject, SysGetMessage, positive_wholenumber_t, msgnum, OPTIONAL_CSTRING, msgfile, ARGLIST, args)
 {
     // this always uses one for the set number
-    const char *message = getErrorMessage(msgfile, 1, msgnum);
+    AutoFree message = getErrorMessage(msgfile, 1, msgnum);
 
     // go format the message with the substitutions.
     return formatMessage(context, message, args, 3);
@@ -1212,7 +1220,7 @@ RexxRoutine3(RexxStringObject, SysGetMessage, positive_wholenumber_t, msgnum, OP
 RexxRoutine4(RexxStringObject, SysGetMessageX, positive_wholenumber_t, setnum, positive_wholenumber_t, msgnum, OPTIONAL_CSTRING, msgfile, ARGLIST, args)
 {
     // this always uses one for the set number
-    const char *message = getErrorMessage(msgfile, (int)setnum, (int)msgnum);
+    AutoFree message = getErrorMessage(msgfile, (int)setnum, (int)msgnum);
 
     // go format the message with the substitutions.
     return formatMessage(context, message, args, 4);
