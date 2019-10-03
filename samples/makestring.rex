@@ -1,13 +1,13 @@
-#!@OOREXX_SHEBANG_PROGRAM@
+#!/usr/bin/env rexx
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -38,7 +38,7 @@
 /*----------------------------------------------------------------------------*/
 /***************************************************************************/
 /*                                                                         */
-/*  makestring.rexx     Open Object Rexx samples                           */
+/*  makestring.rex      Open Object Rexx samples                           */
 /*                                                                         */
 /* ----------------------------------------------------------------------- */
 /*                                                                         */
@@ -67,13 +67,13 @@ file_in = .stream~new(file_name_in)
 file_out = .stream~new(file_name_out)
 
 if file_in~open \= "READY:" then do
-	say "Unable to create test file : " file_name_in
-	exit
+   say "Unable to create test file : " file_name_in
+   exit
 end
 
 if file_out~open \= "READY:" then do
-	say "Unable to create test file : " file_name_out
-	exit
+   say "Unable to create test file : " file_name_out
+   exit
 end
 
 --write data containing comments into the input file
@@ -217,29 +217,10 @@ return
 ::requires "rxregexp.cls"
 
 /**
- * On Windows Vista, the user can not write to the directory the samples are
- * installed in.  So, for Windows, this function returns the name of a temporary
- * file in the temp directory.  The function is designed so that the same logic
- * could be applied to other operating systems if need be.
+ * Typically, the user can not write to the directory the samples are installed
+ * in.  So this function returns the name of a writeable temporary file.
  */
 ::routine getTempFileName
   use strict arg template
 
-  fileName = SysTempFileName(template)
-  parse upper source os .
-
-  -- Add code for other operating systems here if needed.
-  select
-    when os~abbrev(WIN) then do
-      tempDir = value("TEMP", , "ENVIRONMENT")
-      if tempDir == "" then tempDir = value("TMP", , "ENVIRONMENT")
-      if tempDir == "" then leave  -- Give up.
-
-      if tempDir~right(1) \== '\' then tempDir = tempDir'\'
-      fileName = tempDir || fileName
-    end
-    otherwise
-      nop
-  end
-
-return fileName
+  return SysTempFileName(.File~new(template, .File~temporaryPath)~string)
