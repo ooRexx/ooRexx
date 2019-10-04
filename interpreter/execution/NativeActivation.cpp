@@ -462,14 +462,14 @@ void NativeActivation::processArguments(size_t _argcount, RexxObject **_arglist,
 
                         case REXX_VALUE_CSTRING:
                         {
-                            descriptors[outputIndex].value.value_CSTRING = cstring(argument);
+                            descriptors[outputIndex].value.value_CSTRING = cstring(argument, inputIndex + 1);
                             break;
                         }
 
                         case REXX_VALUE_RexxStringObject:
                         {
                             // force to a string value
-                            RexxString *temp = stringArgument(argument, inputIndex + 1) ;
+                            RexxString *temp = stringArgument(argument, inputIndex + 1);
                             // if this forced a string object to be created,
                             // we need to protect it here.
                             if (temp != argument)
@@ -483,7 +483,7 @@ void NativeActivation::processArguments(size_t _argcount, RexxObject **_arglist,
 
                         case REXX_VALUE_RexxArrayObject:
                         {
-                            ArrayClass *temp = arrayArgument(argument, inputIndex + 1) ;
+                            ArrayClass *temp = arrayArgument(argument, inputIndex + 1);
                             // if this forced a string object to be created,
                             // we need to protect it here.
                             if (temp != argument)
@@ -1069,13 +1069,13 @@ bool NativeActivation::objectToValue(RexxObject *o, ValueDescriptor *value)
 
         case REXX_VALUE_CSTRING:
         {
-            value->value.value_CSTRING = cstring(o);
+            value->value.value_CSTRING = cstring(o, 1);
             return true;
         }
 
         case REXX_VALUE_RexxStringObject:
         {
-            RexxString *temp = stringArgument(o, 1) ;
+            RexxString *temp = stringArgument(o, 1);
             // if this forced a string object to be created,
             // we need to protect it here.
             if (temp != o)
@@ -1089,7 +1089,7 @@ bool NativeActivation::objectToValue(RexxObject *o, ValueDescriptor *value)
 
         case REXX_VALUE_RexxArrayObject:
         {
-            ArrayClass *temp = arrayArgument(o, 1) ;
+            ArrayClass *temp = arrayArgument(o, 1);
             // if this forced a new object to be created,
             // we need to protect it here.
             if (temp != o)
@@ -1124,7 +1124,7 @@ bool NativeActivation::objectToValue(RexxObject *o, ValueDescriptor *value)
                 return false;
             }
 
-            RexxString *temp = stringArgument(o, 1) ;
+            RexxString *temp = stringArgument(o, 1);
             // if this forced a string object to be created,
             // we need to protect it here.
             if (temp != o)
@@ -2011,11 +2011,11 @@ uint64_t NativeActivation::unsignedInt64Value(RexxObject *o, size_t position)
  *
  * @return The CSTRING version of the object.
  */
-const char *NativeActivation::cstring(RexxObject *object)
+const char *NativeActivation::cstring(RexxObject *object, size_t position)
 {
     // force to a string value, making sure to protect the string
     // if a different object is returned.
-    RexxString *string = stringArgument(object, 1);
+    RexxString *string = stringArgument(object, position);
     if (string != object)
     {
         createLocalReference(string);
