@@ -307,6 +307,32 @@ RexxRoutine1(CSTRING,                   // Return type
     return arg1;
 }
 
+RexxRoutine1(CSTRING, TestOptionalCstringArg,
+             OPTIONAL_CSTRING, arg1)
+{
+    if (argumentOmitted(1))
+    {
+        return "OMITTED";
+    }
+    return arg1;
+}
+
+RexxRoutine1(RexxStringObject, TestStringArg,
+            RexxStringObject, arg1)
+{
+    return arg1;
+}
+
+RexxRoutine1(RexxStringObject, TestOptionalStringArg,
+             OPTIONAL_RexxStringObject, arg1)
+{
+    if (argumentOmitted(1))
+    {
+        return context->String("OMITTED");
+    }
+    return arg1;
+}
+
 RexxRoutine0(POINTER,                   // Return type
            TestPointerValue)            // Function routine name
 {
@@ -779,6 +805,9 @@ RexxRoutineEntry orxtest_funcs[] = {
     REXX_TYPED_ROUTINE(TestFloatArg,          TestFloatArg),
     REXX_TYPED_ROUTINE(TestDoubleArg,         TestDoubleArg),
     REXX_TYPED_ROUTINE(TestCstringArg,        TestCstringArg),
+    REXX_TYPED_ROUTINE(TestOptionalCstringArg, TestOptionalCstringArg),
+    REXX_TYPED_ROUTINE(TestStringArg,         TestStringArg),
+    REXX_TYPED_ROUTINE(TestOptionalStringArg, TestOptionalStringArg),
     REXX_TYPED_ROUTINE(TestPointerValue,      TestPointerValue),
     REXX_TYPED_ROUTINE(TestPointerArg,        TestPointerArg),
     REXX_TYPED_ROUTINE(TestNullPointerValue,  TestNullPointerValue),

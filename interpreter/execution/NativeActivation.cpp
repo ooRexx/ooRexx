@@ -2015,7 +2015,7 @@ const char *NativeActivation::cstring(RexxObject *object)
 {
     // force to a string value, making sure to protect the string
     // if a different object is returned.
-    RexxString *string = (RexxString *)object->stringValue();
+    RexxString *string = stringArgument(object, 1);
     if (string != object)
     {
         createLocalReference(string);
