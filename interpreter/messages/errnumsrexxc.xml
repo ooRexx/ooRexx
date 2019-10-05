@@ -13,7 +13,7 @@ returns the negated ooRexx error code. In addition, RexxC issues the following e
 <para>To check the syntax of a REXX program: REXXC Program_name [-s]</para>
 </listitem>
         <listitem>
-<para>To convert a REXX program into a sourceless executable file: REXXC Program_name Output_file_name [-s]</para>
+<para>To convert a REXX program into a sourceless executable file: REXXC Program_name Output_file_name [-s] [-e]</para>
 </listitem>
         <listitem>
 <para>The -s option will suppress the copyright banner.</para>
@@ -26,7 +26,7 @@ returns the negated ooRexx error code. In addition, RexxC issues the following e
 <para> </para>
 </section>
 <section id="ERR129">
-<title>Error 129 - SYNTAX: REXXC InProgramName [OutProgramName] [/S].</title>
+<title>Error 129 - SYNTAX: REXXC InProgramName [OutProgramName] [-s] [-e].</title>
 <para> </para>
 </section>
 <section id="ERR130">

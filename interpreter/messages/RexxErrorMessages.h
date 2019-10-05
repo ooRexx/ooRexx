@@ -751,7 +751,7 @@ ERROR_MESSAGE Message_table[] = {      /* table of major and minor errors   */
     MESSAGE(Error_RXSUBC_query, "The RXSUBCOM parameter QUERY is incorrect.")
     MESSAGE(Error_REXXC_cmd_parm_incorrect, "The REXXC command parameters are incorrect.")
     MESSAGE(Error_REXXC_outDifferent, "Output file name must be different from input file name.")
-    MESSAGE(Error_REXXC_wrongNrArg, "SYNTAX: REXXC InProgramName [OutProgramName] [/S].")
+    MESSAGE(Error_REXXC_wrongNrArg, "SYNTAX: REXXC InProgramName [OutProgramName] [-s] [-e].")
     MESSAGE(Error_REXXC_SynCheckInfo, "Without OutProgramName REXXC only performs a syntax check.")
     MESSAGE(Error_RXQUE_syntax, "The syntax of the command is incorrect.")
     MESSAGE(Error_RXQUE_memfail, "System error occurred while processing the command.")

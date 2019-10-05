@@ -6705,7 +6705,7 @@ special character (such as a parenthesis).
         <Explanation><para>The REXXC utility was invoked with zero or more than three parameters.  REXXC accepts the following parameters:
         <itemizedlist>
         <listitem><para>To check the syntax of a REXX program: REXXC Program_name [-s]</para></listitem>
-        <listitem><para>To convert a REXX program into a sourceless executable file: REXXC Program_name Output_file_name [-s]</para></listitem>
+        <listitem><para>To convert a REXX program into a sourceless executable file: REXXC Program_name Output_file_name [-s] [-e]</para></listitem>
         <listitem><para>The -s option will suppress the copyright banner.</para></listitem>
         </itemizedlist>
         </para></Explanation>
@@ -6727,7 +6727,7 @@ special character (such as a parenthesis).
         <Component>REXXC</Component>
         <Severity>Error</Severity>
         <SymbolicName>Error_REXXC_wrongNrArg</SymbolicName>
-        <Text>SYNTAX: REXXC InProgramName [OutProgramName] [/S].</Text>
+        <Text>SYNTAX: REXXC InProgramName [OutProgramName] [-s] [-e].</Text>
       </SubMessage>
       <SubMessage>
         <Code>999</Code>
