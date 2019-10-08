@@ -100,8 +100,10 @@
 #define Error_System_service_msg                                     48
 #define Error_Interpretation_msg                                     49
 #define Error_Invalid_argument_msg                                   88
+#define Error_Variable_expected_msg                                  89
 #define Error_External_name_not_found_msg                            90
 #define Error_No_result_object_msg                                   91
+#define Error_OLE_Error_msg                                          92
 #define Error_Incorrect_method_msg                                   93
 #define Error_No_method_msg                                          97
 #define Error_Execution_msg                                          98
@@ -138,7 +140,6 @@
 #define Error_REXXC_SynCheckInfo_msg                                 130
 #define Error_RXQUE_syntax_msg                                       131
 #define Error_RXQUE_memfail_msg                                      132
-#define Error_REXXC_wrongNrArg_unix_msg                              133
 #define Error_Program_unreadable_name_msg                            200
 #define Error_Program_interrupted_condition_msg                      201
 #define Error_Unmatched_quote_comment_msg                            202
@@ -415,6 +416,7 @@
 #define Error_Incorrect_method_noclass_msg                           474
 #define Error_Incorrect_method_nomatch_msg                           475
 #define Error_No_method_name_msg                                     476
+#define Error_Program_unreadable_invalid_encoding_msg                477
 #define Error_Execution_nodouble_msg                                 478
 #define Error_Execution_library_msg                                  479
 #define Error_Execution_terminate_msg                                480
@@ -493,7 +495,6 @@
 #define Error_Invalid_expression_forward_class_msg                   558
 #define Error_Execution_forward_msg                                  559
 #define Error_Program_unreadable_version_msg                         560
-#define Error_Program_unreadable_invalid_encoding_msg                560
 #define Error_Translation_reply_interpret_msg                        561
 #define Error_Translation_forward_interpret_msg                      562
 #define Error_Logical_value_authorization_msg                        563
@@ -509,7 +510,6 @@
 #define Error_Incorrect_call_parm_wrong_sep_msg                      586
 #define Error_Incorrect_call_format_incomp_sep_msg                   587
 #define Error_Incorrect_call_queue_no_char_msg                       588
-#define Error_OLE_Error_msg                                          589
 #define Error_Unknown_OLE_Error_msg                                  590
 #define Error_Variant2Rexx_msg                                       591
 #define Error_Rexx2Variant_msg                                       592
@@ -566,7 +566,6 @@
 #define Error_Unmatched_quote_user_defined_msg                       649
 #define Error_Invalid_whole_number_method_msg                        650
 #define Error_Logical_value_property_msg                             651
-#define Error_Variable_expected_msg                                  652
 #define Error_Variable_expected_USE_msg                              653
 #define Error_Variable_expected_PARSE_msg                            654
 #define Error_Symbol_expected_LABEL_msg                              655

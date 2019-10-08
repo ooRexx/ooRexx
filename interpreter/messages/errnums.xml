@@ -42,13 +42,13 @@
 <varlistentry>
 <term>904</term>
 <listitem>
-<para>Encoded compiled program "<emphasis role="italic">program_name</emphasis>" cannot be decoded.</para>
+<para>Failure during initialization: Program "<emphasis role="italic">program</emphasis>" needs to be tokenized. To run untokenized scripts you need a full version of Object REXX.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
-<term>904</term>
+<term>905</term>
 <listitem>
-<para>Failure during initialization: Program "<emphasis role="italic">program</emphasis>" needs to be tokenized. To run untokenized scripts you need a full version of Object REXX.</para>
+<para>Encoded compiled program "<emphasis role="italic">program_name</emphasis>" cannot be decoded.</para>
 </listitem>
 </varlistentry>
 </variablelist>
@@ -441,7 +441,7 @@ Say NOT EQUALS
 <varlistentry>
 <term>005</term>
 <listitem>
-<para>Hexidecimal strings must be grouped in units that are multiples of two characters.</para>
+<para>Hexadecimal strings must be grouped in units that are multiples of two characters.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
@@ -3592,7 +3592,7 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>976</term>
 <listitem>
-<para>Hexidecimal strings must be grouped in units that are multiples of two characters.</para>
+<para>Hexadecimal strings must be grouped in units that are multiples of two characters.</para>
 </listitem>
 </varlistentry>
 <varlistentry>

@@ -97,20 +97,20 @@ optional for the subcodes.
       <SubMessage>
         <Code>3</Code>
         <Subcode>904</Subcode>
-        <MessageNumber>560</MessageNumber>
-        <Component>Rexx</Component>
-        <Severity>Warning</Severity>
-        <SymbolicName>Error_Program_unreadable_invalid_encoding</SymbolicName>
-        <Text>Encoded compiled program <q><Sub position="1" name="program_name"/></q> cannot be decoded.</Text>
-      </SubMessage>
-      <SubMessage>
-        <Code>3</Code>
-        <Subcode>904</Subcode>
         <MessageNumber>602</MessageNumber>
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Program_not_tokenized</SymbolicName>
         <Text>Failure during initialization: Program <q><Sub position="1" name="program"/></q> needs to be tokenized. To run untokenized scripts you need a full version of Object REXX.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>3</Code>
+        <Subcode>905</Subcode>
+        <MessageNumber>477</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Program_unreadable_invalid_encoding</SymbolicName>
+        <Text>Encoded compiled program <q><Sub position="1" name="program_name"/></q> cannot be decoded.</Text>
       </SubMessage>
     </Subcodes>
   </Message>
@@ -393,6 +393,15 @@ Say NOT EQUALS
       </SubMessage>
       <SubMessage>
         <Code>10</Code>
+        <Subcode>004</Subcode>
+        <MessageNumber>217</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Unexpected_end_select</SymbolicName>
+        <Text>Symbol following END (<q><Sub position="1" name="symbol"/></q>) must match LABEL of SELECT specification (<q><Sub position="2" name="control_variable"/></q>) on line <Sub position="3" name="line_number"/> or be omitted.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>10</Code>
         <Subcode>005</Subcode>
         <MessageNumber>215</MessageNumber>
         <Component>Rexx</Component>
@@ -408,15 +417,6 @@ Say NOT EQUALS
         <Severity>Warning</Severity>
         <SymbolicName>Error_Unexpected_end_else</SymbolicName>
         <Text>END must not immediately follow ELSE.</Text>
-      </SubMessage>
-      <SubMessage>
-        <Code>10</Code>
-        <Subcode>004</Subcode>
-        <MessageNumber>217</MessageNumber>
-        <Component>Rexx</Component>
-        <Severity>Warning</Severity>
-        <SymbolicName>Error_Unexpected_end_select</SymbolicName>
-        <Text>Symbol following END (<q><Sub position="1" name="symbol"/></q>) must match LABEL of SELECT specification (<q><Sub position="2" name="control_variable"/></q>) on line <Sub position="3" name="line_number"/> or be omitted.</Text>
       </SubMessage>
       <SubMessage>
         <Code>10</Code>
@@ -632,7 +632,7 @@ Say NOT EQUALS
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Invalid_hex_invhex_group</SymbolicName>
-        <Text>Hexidecimal strings must be grouped in units that are multiples of two characters.</Text>
+        <Text>Hexadecimal strings must be grouped in units that are multiples of two characters.</Text>
       </SubMessage>
       <SubMessage>
         <Code>15</Code>
@@ -1497,21 +1497,21 @@ special character (such as a parenthesis).
       </SubMessage>
       <SubMessage>
         <Code>22</Code>
-        <Subcode>901</Subcode>
-        <MessageNumber>279</MessageNumber>
-        <Component>Rexx</Component>
-        <Severity>Warning</Severity>
-        <SymbolicName>Error_Invalid_character_string_DBCS</SymbolicName>
-        <Text>Incorrect double-byte character.</Text>
-      </SubMessage>
-      <SubMessage>
-        <Code>22</Code>
         <Subcode>900</Subcode>
         <MessageNumber>622</MessageNumber>
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Invalid_character_string_user_defined</SymbolicName>
         <Text><Sub position="1" name="message"/>.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>22</Code>
+        <Subcode>901</Subcode>
+        <MessageNumber>279</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Invalid_character_string_DBCS</SymbolicName>
+        <Text>Incorrect double-byte character.</Text>
       </SubMessage>
     </Subcodes>
   </Message>
@@ -1718,24 +1718,6 @@ special character (such as a parenthesis).
       </SubMessage>
       <SubMessage>
         <Code>25</Code>
-        <Subcode>914</Subcode>
-        <MessageNumber>294</MessageNumber>
-        <Component>Rexx</Component>
-        <Severity>Warning</Severity>
-        <SymbolicName>Error_Invalid_subkeyword_callonname</SymbolicName>
-        <Text>CALL ON condition must be followed by the keyword NAME; found <q><Sub position="1" name="word"/></q>.</Text>
-      </SubMessage>
-      <SubMessage>
-        <Code>25</Code>
-        <Subcode>915</Subcode>
-        <MessageNumber>295</MessageNumber>
-        <Component>Rexx</Component>
-        <Severity>Warning</Severity>
-        <SymbolicName>Error_Invalid_subkeyword_signalonname</SymbolicName>
-        <Text>SIGNAL ON condition must be followed by the keyword NAME; found <q><Sub position="1" name="word"/></q>.</Text>
-      </SubMessage>
-      <SubMessage>
-        <Code>25</Code>
         <Subcode>906</Subcode>
         <MessageNumber>298</MessageNumber>
         <Component>Rexx</Component>
@@ -1796,6 +1778,24 @@ special character (such as a parenthesis).
         <Severity>Warning</Severity>
         <SymbolicName>Error_Invalid_subkeyword_guard</SymbolicName>
         <Text>GUARD must be followed by the keyword ON or OFF; found <q><Sub position="1" name="word"/></q>.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>25</Code>
+        <Subcode>914</Subcode>
+        <MessageNumber>294</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Invalid_subkeyword_callonname</SymbolicName>
+        <Text>CALL ON condition must be followed by the keyword NAME; found <q><Sub position="1" name="word"/></q>.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>25</Code>
+        <Subcode>915</Subcode>
+        <MessageNumber>295</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Invalid_subkeyword_signalonname</SymbolicName>
+        <Text>SIGNAL ON condition must be followed by the keyword NAME; found <q><Sub position="1" name="word"/></q>.</Text>
       </SubMessage>
       <SubMessage>
         <Code>25</Code>
@@ -2064,21 +2064,21 @@ special character (such as a parenthesis).
       </SubMessage>
       <SubMessage>
         <Code>26</Code>
-        <Subcode>901</Subcode>
-        <MessageNumber>650</MessageNumber>
-        <Component>Rexx</Component>
-        <Severity>Warning</Severity>
-        <SymbolicName>Error_Invalid_whole_number_method</SymbolicName>
-        <Text>Result of a method call did not result in a whole number; found <q><Sub position="1" name="value"/></q>.</Text>
-      </SubMessage>
-      <SubMessage>
-        <Code>26</Code>
         <Subcode>900</Subcode>
         <MessageNumber>625</MessageNumber>
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Invalid_whole_number_user_defined</SymbolicName>
         <Text><Sub position="1" name="message"/>.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>26</Code>
+        <Subcode>901</Subcode>
+        <MessageNumber>650</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Invalid_whole_number_method</SymbolicName>
+        <Text>Result of a method call did not result in a whole number; found <q><Sub position="1" name="value"/></q>.</Text>
       </SubMessage>
       <SubMessage>
         <Code>26</Code>
@@ -3664,21 +3664,21 @@ special character (such as a parenthesis).
       </SubMessage>
       <SubMessage>
         <Code>43</Code>
-        <Subcode>901</Subcode>
-        <MessageNumber>418</MessageNumber>
-        <Component>Rexx</Component>
-        <Severity>Warning</Severity>
-        <SymbolicName>Error_Routine_not_found_requires</SymbolicName>
-        <Text>Could not find file <q><Sub position="1" name="file"/></q> for ::REQUIRES.</Text>
-      </SubMessage>
-      <SubMessage>
-        <Code>43</Code>
         <Subcode>900</Subcode>
         <MessageNumber>637</MessageNumber>
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Routine_not_found_user_defined</SymbolicName>
         <Text><Sub position="1" name="message"/>.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>43</Code>
+        <Subcode>901</Subcode>
+        <MessageNumber>418</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Routine_not_found_requires</SymbolicName>
+        <Text>Could not find file <q><Sub position="1" name="file"/></q> for ::REQUIRES.</Text>
       </SubMessage>
       <SubMessage>
         <Code>43</Code>
@@ -4206,7 +4206,7 @@ special character (such as a parenthesis).
   <Message>
     <Code>89</Code>
     <Subcode>000</Subcode>
-    <MessageNumber>652</MessageNumber>
+    <MessageNumber>89</MessageNumber>
     <Component>Rexx</Component>
     <Severity>Warning</Severity>
     <SymbolicName>Error_Variable_expected</SymbolicName>
@@ -4314,7 +4314,7 @@ special character (such as a parenthesis).
   <Message>
     <Code>92</Code>
     <Subcode>000</Subcode>
-    <MessageNumber>589</MessageNumber>
+    <MessageNumber>92</MessageNumber>
     <Component>OLE</Component>
     <Severity>Error</Severity>
     <SymbolicName>Error_OLE_Error</SymbolicName>
@@ -5089,7 +5089,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Incorrect_method_invhex_group</SymbolicName>
-        <Text>Hexidecimal strings must be grouped in units that are multiples of two characters.</Text>
+        <Text>Hexadecimal strings must be grouped in units that are multiples of two characters.</Text>
       </SubMessage>
       <SubMessage>
         <Code>93</Code>
@@ -5948,21 +5948,21 @@ special character (such as a parenthesis).
       </SubMessage>
       <SubMessage>
         <Code>99</Code>
-        <Subcode>924</Subcode>
-        <MessageNumber>561</MessageNumber>
-        <Component>Rexx</Component>
-        <Severity>Warning</Severity>
-        <SymbolicName>Error_Translation_reply_interpret</SymbolicName>
-        <Text>INTERPRET data must not contain REPLY.</Text>
-      </SubMessage>
-      <SubMessage>
-        <Code>99</Code>
         <Subcode>923</Subcode>
         <MessageNumber>562</MessageNumber>
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Translation_forward_interpret</SymbolicName>
         <Text>INTERPRET data must not contain FORWARD.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>99</Code>
+        <Subcode>924</Subcode>
+        <MessageNumber>561</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Translation_reply_interpret</SymbolicName>
+        <Text>INTERPRET data must not contain REPLY.</Text>
       </SubMessage>
       <SubMessage>
         <Code>99</Code>
@@ -6727,7 +6727,7 @@ special character (such as a parenthesis).
         <Component>REXXC</Component>
         <Severity>Error</Severity>
         <SymbolicName>Error_REXXC_wrongNrArg</SymbolicName>
-        <Text>SYNTAX: REXXC InProgramName [OutProgramName] [-s] [-e].</Text>
+        <Text>SYNTAX: rexxc InProgramName [OutProgramName] [-s] [-e]</Text>
       </SubMessage>
       <SubMessage>
         <Code>999</Code>
@@ -6755,15 +6755,6 @@ special character (such as a parenthesis).
         <Severity>Error</Severity>
         <SymbolicName>Error_RXQUE_memfail</SymbolicName>
         <Text>System error occurred while processing the command.</Text>
-      </SubMessage>
-      <SubMessage>
-        <Code>999</Code>
-        <Subcode>018</Subcode>
-        <MessageNumber>133</MessageNumber>
-        <Component>REXXC</Component>
-        <Severity>Error</Severity>
-        <SymbolicName>Error_REXXC_wrongNrArg_unix</SymbolicName>
-        <Text>SYNTAX: REXXC InProgramName [OutProgramName] [-s].</Text>
       </SubMessage>
     </Subcodes>
   </Message>
