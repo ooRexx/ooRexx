@@ -1140,7 +1140,7 @@ char* getErrorMessage(const char *repository, int setnum, int msgnum)
     // directly from the interpreter
     if (repository == NULL || strcmp(repository, REXXMESSAGEFILE) == 0)
     {
-        const char *msg = RexxGetErrorMessageByNumber(msgnum);
+        const char *msg = (setnum == 1) ? RexxGetErrorMessageByNumber(msgnum): NULL;
         if (msg == NULL)
         {
             msg = "Error: Message not found";
@@ -1159,13 +1159,20 @@ char* getErrorMessage(const char *repository, int setnum, int msgnum)
         return strdup("Error: Message catalog not found");
     }
 
-    char *msg = catgets(catalog, setnum, (int)msgnum, "Error: Message catalog not open");
+    char *msg = catgets(catalog, setnum, (int)msgnum, "");
     if (*msg == '\0')
     {
+        msg = strdup(errno == EBADF ? "Error: Invalid message catalog" : "Error: Message not found");
     }
-    catclose(catalog);                   // close the catalog
+    else
+    {
+        // catgets returns the message in an internal buffer
+        // we need to copy it before closing the catalog
+        msg = strdup(msg);
+    }
 
-    return strdup(msg);                  // return the message or our error
+    catclose(catalog);                   // close the catalog
+    return msg;                          // return the message or our error
 #else
     // if no catalog support, we just return an error message
     return strdup("Error: Message catalog (catopen) not supported");
