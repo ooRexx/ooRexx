@@ -1150,12 +1150,22 @@ char* getErrorMessage(const char *repository, int setnum, int msgnum)
 #if defined( HAVE_CATOPEN )
 
 #if defined( HAVE_SETLOCALE )
+    // catopen() will search along NLSPATH
+    // NLSPATH may contain both %N, which is replaced by the specified
+    // catalog name, and %L, which is replaced by the language.
+    // We also remember the current setlocale which we will restore later
+    // as it otherwise interferes with e. g. rxregexp's use of islower()
+    char *locale = setlocale(LC_ALL, NULL);
     setlocale(LC_ALL, "en_US");
 #endif
-    nl_catd catalog;                     /* catalog handle             */
-/* open the catalog           */
+
+    nl_catd catalog;                     // catalog handle
+
     if ((catalog = catopen(repository, NL_CAT_LOCALE)) == (nl_catd)-1)
     {
+#if defined( HAVE_SETLOCALE )
+        setlocale(LC_ALL, locale);       // restore setlocale
+#endif
         return strdup("Error: Message catalog not found");
     }
 
@@ -1172,7 +1182,12 @@ char* getErrorMessage(const char *repository, int setnum, int msgnum)
     }
 
     catclose(catalog);                   // close the catalog
+
+#if defined( HAVE_SETLOCALE )
+    setlocale(LC_ALL, locale);           // restore setlocale
+#endif
     return msg;                          // return the message or our error
+
 #else
     // if no catalog support, we just return an error message
     return strdup("Error: Message catalog (catopen) not supported");
