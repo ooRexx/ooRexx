@@ -577,6 +577,13 @@ bool SysFileSystem::searchPath(const char *name, const char *path, FileNameBuffe
  */
 void SysFileSystem::getLongName(FileNameBuffer &fullName)
 {
+    // GetLongPathName() and friends do not give a consistent case for the
+    // drive letter, so uppercase it if this path does have one.
+    if (fullName.length() >= 2 && fullName.at(1) == ':')
+    {
+        fullName.at(0) = toupper(fullName.at(0));
+    }
+
     DWORD length = GetLongPathName(fullName, fullName, (DWORD)fullName.capacity());
     if (length > (DWORD)fullName.capacity())
     {
@@ -602,8 +609,82 @@ void SysFileSystem::getLongName(FileNameBuffer &fullName)
             FindClose(hFind);
         }
     }
+    // we're processing a path that does not exist. Try to resolve as much of this as we can
+    else
+    {
+        getProperPathCase(fullName);
+    }
     return;
 }
+
+
+/**
+ * Resolve as much of the path as we can to obtain the path in the correct case.
+ * This is generally only called when we have a file that does not exist yet, so
+ * we cannot directly generate the path in the correct case. This requires
+ * moving back through the path until we find portions that exist. None
+ * existing portions of the path are left in the original case.
+ *
+ * @param fullName The source path name. This will be overwritten with the correct
+ *                 path on return.
+ */
+void SysFileSystem::getProperPathCase(FileNameBuffer &fullName)
+{
+    AutoFileNameBuffer buffer(fullName);
+
+    buffer = (const char *)fullName;
+
+    // we are only called because GetLongPathName() has already failed on the full path,
+    // so we need to back down one path element at a time until we find something that exists
+
+    while (true)
+    {
+        // scan back for the last backslash
+        const char *p = strrchr((const char *)buffer, '\\');
+        // if we can't find a back slash, then there's nothing we can fix up
+        if (p == NULL)
+        {
+            return;
+        }
+        size_t prefixLength = p - buffer;
+        // chop off the last path section
+        buffer.truncate(prefixLength);
+
+        // now try to see if we can resolve the full name for this section. If
+        // we can, then do the FindFirstFile trick to ensure the last bit is in the
+        // correct case
+        DWORD length = GetLongPathName(buffer, buffer, (DWORD)buffer.capacity());
+        if (length > (DWORD)buffer.capacity())
+        {
+            buffer.ensureCapacity(length);
+            length = GetLongPathName(buffer, buffer, length);
+        }
+
+        // if we got a result, then do a search for the file and
+        // truncate this to just the file name.
+        if (length != 0)
+        {
+            WIN32_FIND_DATA findData;
+            HANDLE hFind = FindFirstFile(buffer, &findData);
+            if (hFind != INVALID_HANDLE_VALUE)
+            {
+                p = strrchr((const char *)buffer, '\\');
+                if (p != NULL)
+                {
+                    buffer.truncate((p - buffer) + 1);
+                    buffer += findData.cFileName;
+                }
+                FindClose(hFind);
+                // add the sections we skipped to the part we we able to resolve
+                buffer += (const char *)fullName + prefixLength;
+                // and return this full name
+                fullName = buffer;
+                return;
+            }
+        }
+    }
+}
+
 
 
 /**

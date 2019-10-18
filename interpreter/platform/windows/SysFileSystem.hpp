@@ -86,6 +86,7 @@ class SysFileSystem
      static bool  primitiveSearchName(const char *name, const char *path, const char *extension, FileNameBuffer &resolvedName);
      static bool  checkCurrentFile(const char *name, FileNameBuffer &resolvedName);
      static void  getLongName(FileNameBuffer &name);
+     static void  getProperPathCase(FileNameBuffer &name);
      static bool  findFirstFile(const char *name);
      static int   deleteFile(const char *name);
      static int   deleteDirectory(const char *name);
