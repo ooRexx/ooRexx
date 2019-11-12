@@ -113,7 +113,7 @@ public:
 
 protected:
 
-    size_t firstLine;               // the first line of the for parsing
+    size_t firstLine;               // the first line of the source for parsing
     size_t lineCount;               // count of lines in the source file.
 };
 
