@@ -1453,9 +1453,35 @@ void RexxActivation::trapOn(RexxString *condition, RexxInstructionTrapBase *hand
         settings.localVariables.setNovalueOn();
         // we also need to disable the novalue error setting from ::OPTIONS in order for the
         // events to be raised.
-        disableNovalueError();
+        disableNovalueSyntax();
     }
-
+    // we also disable an OPTIONS condition SYNTAX that we may have
+    bool conditionIsAny = condition->strCompare(GlobalNames::ANY);
+    if (isErrorSyntaxEnabled() &&
+       (conditionIsAny || condition->strCompare(GlobalNames::ERRORNAME)))
+    {
+        disableErrorSyntax();
+    }
+    if (isFailureSyntaxEnabled() &&
+       (conditionIsAny || condition->strCompare(GlobalNames::FAILURE)))
+    {
+        disableFailureSyntax();
+    }
+    if (signal && isLostdigitsSyntaxEnabled() &&
+       (conditionIsAny || condition->strCompare(GlobalNames::LOSTDIGITS)))
+    {
+        disableLostdigitsSyntax();
+    }
+    if (signal && isNostringSyntaxEnabled() &&
+       (conditionIsAny || condition->strCompare(GlobalNames::NOSTRING)))
+    {
+        disableNostringSyntax();
+    }
+    if (isNotreadySyntaxEnabled() &&
+       (conditionIsAny || condition->strCompare(GlobalNames::NOTREADY)))
+    {
+        disableNotreadySyntax();
+    }
 }
 
 
@@ -1467,6 +1493,7 @@ void RexxActivation::trapOn(RexxString *condition, RexxInstructionTrapBase *hand
 void RexxActivation::trapOff(RexxString *condition, bool signal)
 {
     checkTrapTable();
+
     // remove our existing trap.
     settings.traps->remove(condition);
     // if we no longer have NOVALUE or ANY enabled, then we can turn
@@ -1477,7 +1504,35 @@ void RexxActivation::trapOff(RexxString *condition, bool signal)
         settings.localVariables.setNovalueOff();
         // we also need to disable the novalue error setting from ::OPTIONS in order to restore
         // the real default behavior.
-        disableNovalueError();
+        disableNovalueSyntax();
+    }
+
+    // we also disable an OPTIONS condition SYNTAX that we may have
+    bool conditionIsAny = condition->strCompare(GlobalNames::ANY);
+    if (isErrorSyntaxEnabled() &&
+       (conditionIsAny || condition->strCompare(GlobalNames::ERRORNAME)))
+    {
+        disableErrorSyntax();
+    }
+    if (isFailureSyntaxEnabled() &&
+       (conditionIsAny || condition->strCompare(GlobalNames::FAILURE)))
+    {
+        disableFailureSyntax();
+    }
+    if (signal && isLostdigitsSyntaxEnabled() &&
+       (conditionIsAny || condition->strCompare(GlobalNames::LOSTDIGITS)))
+    {
+        disableLostdigitsSyntax();
+    }
+    if (signal && isNostringSyntaxEnabled() &&
+       (conditionIsAny || condition->strCompare(GlobalNames::NOSTRING)))
+    {
+        disableNostringSyntax();
+    }
+    if (isNotreadySyntaxEnabled() &&
+       (conditionIsAny || condition->strCompare(GlobalNames::NOTREADY)))
+    {
+        disableNotreadySyntax();
     }
 }
 
@@ -2437,7 +2492,7 @@ bool RexxActivation::willTrap(RexxString *condition)
 RexxObject* RexxActivation::handleNovalueEvent(RexxString *name, RexxObject *defaultValue, RexxVariable *variable)
 {
     // have we specified via ::options that errors should be raised?
-    if (isNovalueErrorEnabled())
+    if (isNovalueSyntaxEnabled())
     {
         reportException(Error_Execution_unassigned_variable, name);
     }
@@ -4201,6 +4256,24 @@ void RexxActivation::command(RexxString *address, RexxString *commandString, Com
         // these are also not raised if it's a debug pause.
         if (conditionObj != OREF_NULL)
         {
+            // first check for an ::OPTIONS FAILURE SYNTAX override
+            if (failureCondition && isFailureSyntaxEnabled())
+            {
+                // we could rework our condition object, but it's easier
+                // to just raise a SYNTAX exception
+                reportException(Error_Execution_failure_syntax,
+                   (RexxString *)conditionObj->get(GlobalNames::DESCRIPTION),
+                   (RexxString *)conditionObj->get(GlobalNames::RC));
+            }
+            // next we check for an ::OPTIONS ERROR SYNTAX override
+            if (!failureCondition && isErrorSyntaxEnabled())
+            {
+                // just raise a SYNTAX exception
+                reportException(Error_Execution_error_syntax,
+                   (RexxString *)conditionObj->get(GlobalNames::DESCRIPTION),
+                   (RexxString *)conditionObj->get(GlobalNames::RC));
+            }
+
             // try to raise the condition, and if it isn't handled, we might
             // munge this into an ERROR condition
             if (!activity->raiseCondition(conditionObj))
@@ -4209,6 +4282,15 @@ void RexxActivation::command(RexxString *address, RexxString *commandString, Com
                 // reraise
                 if (failureCondition)
                 {
+                    // again, first check for an ::OPTIONS ERROR SYNTAX override
+                    if (isErrorSyntaxEnabled())
+                    {
+                        // if so, just raise a SYNTAX exception
+                        reportException(Error_Execution_error_syntax,
+                           (RexxString *)conditionObj->get(GlobalNames::DESCRIPTION),
+                           (RexxString *)conditionObj->get(GlobalNames::RC));
+                    }
+
                     // just change the condition name
                     conditionObj->put(GlobalNames::ERRORNAME, GlobalNames::CONDITION);
                     activity->raiseCondition(conditionObj);

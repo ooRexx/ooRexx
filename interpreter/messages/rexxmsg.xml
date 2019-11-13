@@ -293,12 +293,12 @@ construction. For example:</para>
 <programlisting>
 WRONG                     RIGHT
 
-If a=c then do;           If a=c then do;
-Say EQUALS                Say EQUALS
-exit                      exit
-else                        end
-Say NOT EQUALS            else
-Say NOT EQUALS
+if a = b then do          if a = b then do
+  say "equals"              say "equals"
+  exit                      exit
+else                      end
+  say "not equals"        else
+                            say "not equals"
 </programlisting>
     </Explanation>
     <UserAction><para>Look for a missing END or DO...END in the THEN part of a complex IF...THEN...ELSE construction.</para></UserAction>
@@ -5519,6 +5519,56 @@ special character (such as a parenthesis).
         <Severity>Warning</Severity>
         <SymbolicName>Error_Execution_no_concurrency</SymbolicName>
         <Text>Concurrency not supported.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>98</Code>
+        <Subcode>970</Subcode>
+        <MessageNumber>495</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Error</Severity>
+        <SymbolicName>Error_Execution_error_syntax</SymbolicName>
+        <Text>External command <q><Sub position="1" name="command"/></q> ended with return code <Sub position="2" name="rc"/>.</Text>
+        <Explanation><para>An ERROR condition was raised and the package has ::OPTIONS ERROR SYNTAX specified.</para></Explanation>
+      </SubMessage>
+      <SubMessage>
+        <Code>98</Code>
+        <Subcode>971</Subcode>
+        <MessageNumber>496</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Error</Severity>
+        <SymbolicName>Error_Execution_failure_syntax</SymbolicName>
+        <Text>External command <q><Sub position="1" name="command"/></q> failed with return code <Sub position="2" name="rc"/>.</Text>
+        <Explanation><para>A FAILURE condition was raised and the package has ::OPTIONS FAILURE SYNTAX specified.</para></Explanation>
+      </SubMessage>
+      <SubMessage>
+        <Code>98</Code>
+        <Subcode>972</Subcode>
+        <MessageNumber>497</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Error</Severity>
+        <SymbolicName>Error_Execution_lostdigits_syntax</SymbolicName>
+        <Text>Number <Sub position="1" name="number"/> has more digits than the current precision.</Text>
+        <Explanation><para>A LOSTDIGITS condition was raised and the package has ::OPTIONS LOSTDIGITS SYNTAX specified.</para></Explanation>
+      </SubMessage>
+      <SubMessage>
+        <Code>98</Code>
+        <Subcode>973</Subcode>
+        <MessageNumber>498</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Error</Severity>
+        <SymbolicName>Error_Execution_nostring_syntax</SymbolicName>
+        <Text>Object <q><Sub position="1" name="object"/></q> does not have a string representation.</Text>
+        <Explanation><para>A NOSTRING condition was raised and the package has ::OPTIONS NOSTRING SYNTAX specified.</para></Explanation>
+      </SubMessage>
+      <SubMessage>
+        <Code>98</Code>
+        <Subcode>974</Subcode>
+        <MessageNumber>499</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Error</Severity>
+        <SymbolicName>Error_Execution_notready_syntax</SymbolicName>
+        <Text>Stream <q><Sub position="1" name="object"/></q> is not ready.</Text>
+        <Explanation><para>A NOTREADY condition was raised and the package has ::OPTIONS NOTREADY SYNTAX specified.</para></Explanation>
       </SubMessage>
       <SubMessage>
         <Code>98</Code>

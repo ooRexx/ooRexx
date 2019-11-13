@@ -434,6 +434,11 @@
 #define Error_Execution_raise_object_msg                             492
 #define Error_Execution_propagate_msg                                493
 #define Error_Execution_nomethod_msg                                 494
+#define Error_Execution_error_syntax_msg                             495
+#define Error_Execution_failure_syntax_msg                           496
+#define Error_Execution_lostdigits_syntax_msg                        497
+#define Error_Execution_nostring_syntax_msg                          498
+#define Error_Execution_notready_syntax_msg                          499
 #define Error_Execution_reply_msg                                    500
 #define Error_Execution_reply_return_msg                             501
 #define Error_Execution_reply_exit_msg                               502

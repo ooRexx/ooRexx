@@ -983,7 +983,6 @@ RexxInstruction* LanguageParser::callOnNew(InstructionSubKeyword type)
         condType == CONDITION_PROPAGATE ||
         condType == CONDITION_SYNTAX ||
         condType == CONDITION_NOVALUE ||
-        condType == CONDITION_PROPAGATE ||
         condType == CONDITION_LOSTDIGITS ||
         condType == CONDITION_NOMETHOD ||
         condType == CONDITION_NOSTRING)

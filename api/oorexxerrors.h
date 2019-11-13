@@ -632,6 +632,11 @@
 #define Rexx_Error_Execution_forward                                      98947
 #define Rexx_Error_Execution_authorization                                98948
 #define Rexx_Error_Execution_no_concurrency                               98951
+#define Rexx_Error_Execution_error_syntax                                 98970
+#define Rexx_Error_Execution_failure_syntax                               98971
+#define Rexx_Error_Execution_lostdigits_syntax                            98972
+#define Rexx_Error_Execution_nostring_syntax                              98973
+#define Rexx_Error_Execution_notready_syntax                              98974
 #define Rexx_Error_Execution_sparse_array                                 98975
 #define Rexx_Error_Execution_nostem                                       98976
 #define Rexx_Error_Execution_library_method                               98978

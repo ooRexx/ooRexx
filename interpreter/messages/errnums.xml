@@ -193,12 +193,12 @@ construction. For example:</para>
 <programlisting>
 WRONG                     RIGHT
 
-If a=c then do;           If a=c then do;
-Say EQUALS                Say EQUALS
-exit                      exit
-else                        end
-Say NOT EQUALS            else
-Say NOT EQUALS
+if a = b then do          if a = b then do
+  say "equals"              say "equals"
+  exit                      exit
+else                      end
+  say "not equals"        else
+                            say "not equals"
 </programlisting>
 <para>The associated subcodes are: </para>
 <variablelist>
@@ -3885,6 +3885,36 @@ special character (such as a parenthesis).
 <term>951</term>
 <listitem>
 <para>Concurrency not supported.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>970</term>
+<listitem>
+<para>External command "<emphasis role="italic">command</emphasis>" ended with return code <emphasis role="italic">rc</emphasis>.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>971</term>
+<listitem>
+<para>External command "<emphasis role="italic">command</emphasis>" failed with return code <emphasis role="italic">rc</emphasis>.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>972</term>
+<listitem>
+<para>Number <emphasis role="italic">number</emphasis> has more digits than current precision.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>973</term>
+<listitem>
+<para>Object "<emphasis role="italic">object</emphasis>" does not have a string representation.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>974</term>
+<listitem>
+<para>Stream "<emphasis role="italic">object</emphasis>" is not ready.</para>
 </listitem>
 </varlistentry>
 <varlistentry>

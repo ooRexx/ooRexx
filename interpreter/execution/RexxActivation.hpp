@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -379,8 +379,18 @@ class RexxActivation : public ActivationBase
        settings.packageSettings.traceSettings.resetDebug();
        settings.setDebugBypass(true);
    }
-   inline bool              isNovalueErrorEnabled() { return settings.packageSettings.isNovalueErrorEnabled(); }
-   inline void              disableNovalueError() { return settings.packageSettings.disableNovalueError(); }
+   inline bool              isErrorSyntaxEnabled() { return settings.packageSettings.isErrorSyntaxEnabled(); }
+   inline void              disableErrorSyntax() { return settings.packageSettings.disableErrorSyntax(); }
+   inline bool              isFailureSyntaxEnabled() { return settings.packageSettings.isFailureSyntaxEnabled(); }
+   inline void              disableFailureSyntax() { return settings.packageSettings.disableFailureSyntax(); }
+   inline bool              isLostdigitsSyntaxEnabled() { return settings.packageSettings.isLostdigitsSyntaxEnabled(); }
+   inline void              disableLostdigitsSyntax() { return settings.packageSettings.disableLostdigitsSyntax(); }
+   inline bool              isNostringSyntaxEnabled() { return settings.packageSettings.isNostringSyntaxEnabled(); }
+   inline void              disableNostringSyntax() { return settings.packageSettings.disableNostringSyntax(); }
+   inline bool              isNotreadySyntaxEnabled() { return settings.packageSettings.isNotreadySyntaxEnabled(); }
+   inline void              disableNotreadySyntax() { return settings.packageSettings.disableNotreadySyntax(); }
+   inline bool              isNovalueSyntaxEnabled() { return settings.packageSettings.isNovalueSyntaxEnabled(); }
+   inline void              disableNovalueSyntax() { return settings.packageSettings.disableNovalueSyntax(); }
 
 
    inline void              stopExecution(ExecutionState state)

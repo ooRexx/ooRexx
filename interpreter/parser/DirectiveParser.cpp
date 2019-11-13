@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -947,7 +947,7 @@ void LanguageParser::methodDirective()
  */
 void LanguageParser::optionsDirective()
 {
-    // all options are of a keyword/value pattern
+    // except for (NO)PROLOG all options are of a keyword/value pattern
     for (;;)
     {
 
@@ -1078,25 +1078,216 @@ void LanguageParser::optionsDirective()
                     token = nextReal();
                     if (!token->isSymbol())
                     {
-                        syntaxError(Error_Symbol_or_string_keyword, new_string("NOVALUE"));
+                        syntaxError(Error_Symbol_or_string_keyword, GlobalNames::NOVALUE);
                     }
 
                     switch (token->subDirective())
                     {
-                        case SUBDIRECTIVE_ERROR:
+                        case SUBDIRECTIVE_ERROR: // backwards compatibility for NOVALUE
+                        case SUBDIRECTIVE_SYNTAX:
                         {
-                            package->enableNovalueError();
+                            package->enableNovalueSyntax();
                             break;
                         }
 
                         case SUBDIRECTIVE_CONDITION:
                         {
-                            package->disableNovalueError();
+                            package->disableNovalueSyntax();
                             break;
                         }
 
                         default:
-                            syntaxError(Error_Invalid_subkeyword_following, new_string("NOVALUE"), token->value());
+                            syntaxError(Error_Invalid_subkeyword_following, GlobalNames::NOVALUE, token->value());
+                    }
+                    break;
+                }
+
+                // ::OPTIONS ERROR
+                case SUBDIRECTIVE_ERROR:
+                {
+                    token = nextReal();
+                    if (!token->isSymbol())
+                    {
+                        syntaxError(Error_Symbol_or_string_keyword, GlobalNames::ERRORNAME);
+                    }
+
+                    switch (token->subDirective())
+                    {
+                        case SUBDIRECTIVE_SYNTAX:
+                        {
+
+                            package->enableErrorSyntax();
+                            break;
+                        }
+
+                        case SUBDIRECTIVE_CONDITION:
+                        {
+                            package->disableErrorSyntax();
+                            break;
+                        }
+
+                        default:
+                            syntaxError(Error_Invalid_subkeyword_following, GlobalNames::ERRORNAME, token->value());
+                    }
+                    break;
+                }
+
+                // ::OPTIONS FAILURE
+                case SUBDIRECTIVE_FAILURE:
+                {
+                    token = nextReal();
+                    if (!token->isSymbol())
+                    {
+                        syntaxError(Error_Symbol_or_string_keyword, GlobalNames::FAILURE);
+                    }
+
+                    switch (token->subDirective())
+                    {
+                        case SUBDIRECTIVE_SYNTAX:
+                        {
+
+                            package->enableFailureSyntax();
+                            break;
+                        }
+
+                        case SUBDIRECTIVE_CONDITION:
+                        {
+                            package->disableFailureSyntax();
+                            break;
+                        }
+
+                        default:
+                            syntaxError(Error_Invalid_subkeyword_following, GlobalNames::FAILURE, token->value());
+                    }
+                    break;
+                }
+
+                // ::OPTIONS LOSTDIGITS
+                case SUBDIRECTIVE_LOSTDIGITS:
+                {
+                    token = nextReal();
+                    if (!token->isSymbol())
+                    {
+                        syntaxError(Error_Symbol_or_string_keyword, GlobalNames::LOSTDIGITS);
+                    }
+
+                    switch (token->subDirective())
+                    {
+                        case SUBDIRECTIVE_SYNTAX:
+                        {
+
+                            package->enableLostdigitsSyntax();
+                            break;
+                        }
+
+                        case SUBDIRECTIVE_CONDITION:
+                        {
+                            package->disableLostdigitsSyntax();
+                            break;
+                        }
+
+                        default:
+                            syntaxError(Error_Invalid_subkeyword_following, GlobalNames::LOSTDIGITS, token->value());
+                    }
+                    break;
+                }
+
+                // ::OPTIONS NOSTRING
+                case SUBDIRECTIVE_NOSTRING:
+                {
+                    token = nextReal();
+                    if (!token->isSymbol())
+                    {
+                        syntaxError(Error_Symbol_or_string_keyword, GlobalNames::NOSTRING);
+                    }
+
+                    switch (token->subDirective())
+                    {
+                        case SUBDIRECTIVE_SYNTAX:
+                        {
+
+                            package->enableNostringSyntax();
+                            break;
+                        }
+
+                        case SUBDIRECTIVE_CONDITION:
+                        {
+                            package->disableNostringSyntax();
+                            break;
+                        }
+
+                        default:
+                            syntaxError(Error_Invalid_subkeyword_following, GlobalNames::NOSTRING, token->value());
+                    }
+                    break;
+                }
+
+                // ::OPTIONS NOTREADY
+                case SUBDIRECTIVE_NOTREADY:
+                {
+                    token = nextReal();
+                    if (!token->isSymbol())
+                    {
+                        syntaxError(Error_Symbol_or_string_keyword, GlobalNames::NOTREADY);
+                    }
+
+                    switch (token->subDirective())
+                    {
+                        case SUBDIRECTIVE_SYNTAX:
+                        {
+
+                            package->enableNotreadySyntax();
+                            break;
+                        }
+
+                        case SUBDIRECTIVE_CONDITION:
+                        {
+                            package->disableNotreadySyntax();
+                            break;
+                        }
+
+                        default:
+                            syntaxError(Error_Invalid_subkeyword_following, GlobalNames::NOTREADY, token->value());
+                    }
+                    break;
+                }
+
+                // ::OPTIONS ANY
+                case SUBDIRECTIVE_ANY:
+                {
+                    token = nextReal();
+                    if (!token->isSymbol())
+                    {
+                        syntaxError(Error_Symbol_or_string_keyword, GlobalNames::ANY);
+                    }
+
+                    switch (token->subDirective())
+                    {
+                        case SUBDIRECTIVE_SYNTAX:
+                        {
+
+                            package->enableErrorSyntax();
+                            package->enableFailureSyntax();
+                            package->enableLostdigitsSyntax();
+                            package->enableNostringSyntax();
+                            package->enableNotreadySyntax();
+                            package->enableNovalueSyntax();
+                            break;
+                        }
+
+                        case SUBDIRECTIVE_CONDITION:
+                        {
+                            package->disableErrorSyntax();
+                            package->disableFailureSyntax();
+                            package->disableLostdigitsSyntax();
+                            package->disableNostringSyntax();
+                            package->disableNotreadySyntax();
+                            package->disableNovalueSyntax();
+                            break;
+                        }
+
+                        default:
+                            syntaxError(Error_Invalid_subkeyword_following, GlobalNames::ANY, token->value());
                     }
                     break;
                 }

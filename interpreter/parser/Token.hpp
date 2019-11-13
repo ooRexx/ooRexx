@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -394,6 +394,12 @@ typedef enum
     SUBDIRECTIVE_ROUTINE,
     SUBDIRECTIVE_CONSTANT,
     SUBDIRECTIVE_DELEGATE,
+    SUBDIRECTIVE_SYNTAX,
+    SUBDIRECTIVE_ANY,
+    SUBDIRECTIVE_FAILURE,
+    SUBDIRECTIVE_LOSTDIGITS,
+    SUBDIRECTIVE_NOSTRING,
+    SUBDIRECTIVE_NOTREADY,
 } DirectiveSubKeyword;
 
 

@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -165,8 +165,18 @@ public:
     inline bool  isRexxPackage() { return this == TheRexxPackage; }
     inline void  setLanguageLevel(LanguageLevel l) { requiredLanguageLevel = l; }
     inline LanguageLevel getLanguageLevel() { return requiredLanguageLevel; }
-    inline void enableNovalueError() { packageSettings.enableNovalueError(); }
-    inline void disableNovalueError() { packageSettings.disableNovalueError(); }
+    inline void enableErrorSyntax() { packageSettings.enableErrorSyntax(); }
+    inline void disableErrorSyntax() { packageSettings.disableErrorSyntax(); }
+    inline void enableFailureSyntax() { packageSettings.enableFailureSyntax(); }
+    inline void disableFailureSyntax() { packageSettings.disableFailureSyntax(); }
+    inline void enableLostdigitsSyntax() { packageSettings.enableLostdigitsSyntax(); }
+    inline void disableLostdigitsSyntax() { packageSettings.disableLostdigitsSyntax(); }
+    inline void enableNotreadySyntax() { packageSettings.enableNotreadySyntax(); }
+    inline void disableNotreadySyntax() { packageSettings.disableNotreadySyntax(); }
+    inline void enableNostringSyntax() { packageSettings.enableNostringSyntax(); }
+    inline void disableNostringSyntax() { packageSettings.disableNostringSyntax(); }
+    inline void enableNovalueSyntax() { packageSettings.enableNovalueSyntax(); }
+    inline void disableNovalueSyntax() { packageSettings.disableNovalueSyntax(); }
     inline void enableProlog() { packageSettings.enableProlog(); }
     inline void disableProlog() { packageSettings.disableProlog(); }
     inline bool isPrologEnabled() { return packageSettings.isPrologEnabled() && initCode != OREF_NULL; }

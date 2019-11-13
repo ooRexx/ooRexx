@@ -543,6 +543,7 @@ wholenumber_t Activity::errorNumber(DirectoryClass *conditionObject)
 
 /**
  * Raise a condition, with potential trapping.
+ * Also checks for potential ::OPTIONS condition overrides.
  *
  * @param condition  The condition name.
  * @param rc         The rc value
@@ -556,6 +557,33 @@ wholenumber_t Activity::errorNumber(DirectoryClass *conditionObject)
  */
 bool Activity::raiseCondition(RexxString *condition, RexxObject *rc, RexxObject *description, RexxObject *additional, RexxObject *result)
 {
+    // if we have ::OPTIONS condition SYNTAX set on the package, we
+    // raise a SYNTAX error instead of raising the condition
+    RexxActivation *activation = getCurrentRexxFrame();
+    if (activation != OREF_NULL)
+    {
+        if (activation->isErrorSyntaxEnabled() && condition->strCompare(ERRORNAME))
+        {
+           reportException(Error_Execution_error_syntax, description, result);
+        }
+        else if (activation->isFailureSyntaxEnabled() && condition->strCompare(FAILURE))
+        {
+           reportException(Error_Execution_failure_syntax, description, result);
+        }
+        else if (activation->isLostdigitsSyntaxEnabled() && condition->strCompare(LOSTDIGITS))
+        {
+           reportException(Error_Execution_lostdigits_syntax, description);
+        }
+        else if (activation->isNostringSyntaxEnabled() && condition->strCompare(NOSTRING))
+        {
+           reportException(Error_Execution_nostring_syntax, description);
+        }
+        else if (activation->isNotreadySyntaxEnabled() && condition->strCompare(NOTREADY))
+        {
+           reportException(Error_Execution_notready_syntax, description);
+        }
+    }
+
     // check the context first to see if this will be trapped.  Creating
     // the condition object is pretty expensive, so we want to avoid
     // creating this if we'll just end up throwing it away.
