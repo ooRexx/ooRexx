@@ -638,7 +638,7 @@ ERROR_MESSAGE Message_table[] = {      /* table of major and minor errors   */
     MESSAGE(Error_Execution_no_concurrency, "Concurrency not supported.")
     MESSAGE(Error_Execution_error_syntax, "External command \"&1\" ended with return code &2.")
     MESSAGE(Error_Execution_failure_syntax, "External command \"&1\" failed with return code &2.")
-    MESSAGE(Error_Execution_lostdigits_syntax, "Number &1 has more digits than current precision.")
+    MESSAGE(Error_Execution_lostdigits_syntax, "Number &1 has more digits than the current precision.")
     MESSAGE(Error_Execution_nostring_syntax, "Object \"&1\" does not have a string representation.")
     MESSAGE(Error_Execution_notready_syntax, "Stream \"&1\" is not ready.")
     MESSAGE(Error_Execution_sparse_array, "Missing array element at position &1.")

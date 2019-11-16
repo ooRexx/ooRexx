@@ -3902,7 +3902,7 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>972</term>
 <listitem>
-<para>Number <emphasis role="italic">number</emphasis> has more digits than current precision.</para>
+<para>Number <emphasis role="italic">number</emphasis> has more digits than the current precision.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
