@@ -2174,7 +2174,7 @@ if (BUILD_RPM)
 
    set(CPACK_RPM_PACKAGE_VERSION ${ORX_VERSION})
    set(CPACK_RPM_PACKAGE_RELEASE ${CPACK_PACKAGE_RELEASE})
-   set(CPACK_RPM_PACKAGE_LICENSE "CPL 1.0")
+   set(CPACK_RPM_PACKAGE_LICENSE "CPL")
    set(CPACK_RPM_PACKAGE_URL "http://www.oorexx.org/")
    set(CPACK_PACKAGE_CONTACT "sahananda@users.sf.net")
    set(CPACK_RPM_PACKAGE_GROUP "Development/Languages")

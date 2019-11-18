@@ -98,6 +98,7 @@ fi
 %{_bindir}/rxftp.cls
 %{_bindir}/csvStream.cls
 %{_bindir}/json.cls
+%{_bindir}/dateparser.cls
 %{_bindir}/socket.cls
 %{_bindir}/streamsocket.cls
 %{_bindir}/mime.cls
