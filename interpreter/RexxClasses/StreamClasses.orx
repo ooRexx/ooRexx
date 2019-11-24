@@ -546,7 +546,7 @@ return position
 ::METHOD listRoots CLASS EXTERNAL 'LIBRARY REXX file_list_roots'
 ::METHOD searchPathImpl CLASS PRIVATE EXTERNAL 'LIBRARY REXX file_search_path_impl'
 ::method searchPath CLASS
-  use strict arg file, pathList
+  use strict arg file, pathList = (value("PATH", , "ENVIRONMENT"))
 
   path = .mutableBuffer~new
 
