@@ -353,7 +353,7 @@ void AttributeSetterCode::run(Activity *activity, MethodClass *method, RexxObjec
  */
 void *ConstantGetterCode::operator new(size_t size)
 {
-    return new_object(size, T_AttributeGetterCode);
+    return new_object(size, T_ConstantGetterCode);
 }
 
 
