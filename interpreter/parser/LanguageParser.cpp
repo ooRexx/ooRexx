@@ -4115,6 +4115,12 @@ void LanguageParser::blockError(RexxInstruction *instruction)
         case KEYWORD_LOOP_COUNT_WHILE:
         case KEYWORD_LOOP_WHILE:
         case KEYWORD_LOOP_UNTIL:
+        case KEYWORD_LOOP_WITH:
+        case KEYWORD_LOOP_WITH_UNTIL:
+        case KEYWORD_LOOP_WITH_WHILE:
+        case KEYWORD_LOOP_WITH_FOR:
+        case KEYWORD_LOOP_WITH_FOR_UNTIL:
+        case KEYWORD_LOOP_WITH_FOR_WHILE:
             syntaxError(Error_Incomplete_do_loop, instruction);
             break;
 
