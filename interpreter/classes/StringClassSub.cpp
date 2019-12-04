@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -511,24 +511,23 @@ RexxString *RexxString::right(RexxInteger *_length, RexxString  *pad)
 
 
 /**
- * Strip a set of leading and/or trailing characters from
- * a string, returning a new string value.
+ * Strip a set of leading and/or trailing characters from a string,
+ * returning a new string value, or if unchanged, the original string.
  *
- * @param option    The option indicating which characters to strip.
- * @param stripchar The set of characters to strip.
+ * @param optionString The option indicating where to strip characters.
+ * @param stripchar    The set of characters to strip.
  *
- * @return A new string instance, with the target characters removed.
+ * @return A string instance with the target characters removed.
  */
 RexxString *RexxString::strip(RexxString *optionString, RexxString *stripchar)
 {
     // get the option character
     char option = optionalOptionArgument(optionString, "BLT", STRIP_BOTH, ARG_ONE);
 
-    // get the strip character set.  The default is to remove spaces and
-    // horizontal tabs
+    // get the strip character set
     stripchar = optionalStringArgument(stripchar, OREF_NULL, ARG_TWO);
 
-    // the default is to strip whitespace characters
+    // the default is to remove spaces and horizontal tabs
     const char *chars = stripchar == OREF_NULL ? " \t" : stripchar->getStringData();
     size_t charsLen = stripchar == OREF_NULL ? strlen(" \t") : stripchar->getLength();
 
@@ -568,7 +567,9 @@ RexxString *RexxString::strip(RexxString *optionString, RexxString *stripchar)
     // if there is anything left, extract the remaining part
     if (length > 0)
     {
-        return new_string(front, length);
+        // it's quite common that nothing was stripped, in which case we can
+        // just return the original string instead of creating a new one
+        return length == getLength() ? this : new_string(front, length);
     }
     else
     {
