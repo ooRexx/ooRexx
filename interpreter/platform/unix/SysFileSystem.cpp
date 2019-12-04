@@ -607,6 +607,12 @@ bool SysFileSystem::resolveTilde(FileNameBuffer &name)
  */
 bool SysFileSystem::canonicalizeName(FileNameBuffer &name)
 {
+    // the nullstring is an invalid filename; nothing we can do here
+    if (name == "")
+    {
+        return false;
+    }
+
     // does it start with the user home marker?
     if (name.startsWith('~'))
     {

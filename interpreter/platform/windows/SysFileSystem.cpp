@@ -138,6 +138,18 @@ bool SysFileSystem::getFullPathName(const char *name, FileNameBuffer &fullName)
     // now try for original name
     AutoErrorMode errorMode(SEM_FAILCRITICALERRORS);
 
+    if (name[0] == '\\' && name[1] == '\\' && name[2] == '?' && name[3] == '\\')
+    {
+       // if name starts with the Win32 namespace prefix \\?\ this may
+       // be a request for a long (or otherwise subtle) path which
+       // GetFullPathName() doesn't support, so we just pass through
+       // see also
+       // Naming Files, Paths, and Namespaces: https://docs.microsoft.com/en-us/windows/win32/fileio/naming-a-file
+       // File path formats on Windows systems: https://docs.microsoft.com/en-us/dotnet/standard/io/file-path-formats
+       fullName = name;
+       return true;
+    }
+
     DWORD rc = GetFullPathName(name, (DWORD)fullName.capacity(), (LPTSTR)fullName, NULL);
     // it is possible that the filename is good, but the buffer was too small to hold the result
     if (rc > fullName.capacity())
@@ -209,9 +221,7 @@ void SysFileSystem::qualifyStreamName(const char *unqualifiedName, FileNameBuffe
         return;
     }
 
-    // similar to the Unix behaviour, we return the current directory
-    // if 'unqualifiedName' is the null string
-    if (getFullPathName((unqualifiedName[0] == '\0') ? "." : unqualifiedName, qualifiedName))
+    if (getFullPathName(unqualifiedName, qualifiedName))
     {
         // qualifying a Windows device like "aux", "con" or "nul" (even when written in
         // the form "xxx:" or /dir/xxx" etc.) will return the device name with a leading
@@ -294,7 +304,7 @@ bool SysFileSystem::fileExists(const char *name)
 bool SysFileSystem::isLink(const char *name)
 {
     DWORD dwAttrs = GetFileAttributes(name);
-    return (dwAttrs != 0xffffffff) && (dwAttrs & FILE_ATTRIBUTE_REPARSE_POINT);
+    return (dwAttrs != INVALID_FILE_ATTRIBUTES) && (dwAttrs & FILE_ATTRIBUTE_REPARSE_POINT);
 }
 
 
@@ -723,7 +733,7 @@ int SysFileSystem::deleteDirectory(const char *name)
 bool SysFileSystem::isDirectory(const char *name)
 {
     DWORD dwAttrs = GetFileAttributes(name);
-    return (dwAttrs != 0xffffffff) && (dwAttrs & FILE_ATTRIBUTE_DIRECTORY);
+    return (dwAttrs != INVALID_FILE_ATTRIBUTES) && (dwAttrs & FILE_ATTRIBUTE_DIRECTORY);
 }
 
 
@@ -737,7 +747,7 @@ bool SysFileSystem::isDirectory(const char *name)
 bool SysFileSystem::isReadOnly(const char *name)
 {
     DWORD dwAttrs = GetFileAttributes(name);
-    return (dwAttrs != 0xffffffff) && (dwAttrs & FILE_ATTRIBUTE_READONLY);
+    return (dwAttrs != INVALID_FILE_ATTRIBUTES) && (dwAttrs & FILE_ATTRIBUTE_READONLY);
 }
 
 
@@ -827,7 +837,7 @@ bool SysFileSystem::canWrite(const char *name)
 bool SysFileSystem::isFile(const char *name)
 {
     DWORD dwAttrs = GetFileAttributes(name);
-    return (dwAttrs != 0xffffffff) && (dwAttrs & (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT)) == 0;
+    return (dwAttrs != INVALID_FILE_ATTRIBUTES) && (dwAttrs & (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT)) == 0;
 }
 
 
@@ -841,7 +851,7 @@ bool SysFileSystem::isFile(const char *name)
 bool SysFileSystem::exists(const char *name)
 {
     DWORD dwAttrs = GetFileAttributes(name);
-    return (dwAttrs != 0xffffffff);
+    return (dwAttrs != INVALID_FILE_ATTRIBUTES);
 }
 
 
@@ -954,7 +964,7 @@ bool SysFileSystem::makeDirectory(const char *name)
 bool SysFileSystem::isHidden(const char *name)
 {
     DWORD dwAttrs = GetFileAttributes(name);
-    return (dwAttrs != 0xffffffff) && (dwAttrs & FILE_ATTRIBUTE_HIDDEN);
+    return (dwAttrs != INVALID_FILE_ATTRIBUTES) && (dwAttrs & FILE_ATTRIBUTE_HIDDEN);
 }
 
 
@@ -976,7 +986,7 @@ bool SysFileSystem::setLastModifiedDate(const char *name, int64_t time)
      */
     DWORD flags = FILE_ATTRIBUTE_NORMAL;
     int result = GetFileAttributes(name);
-    if ( result == 0xFFFFFFFF )
+    if (result == INVALID_FILE_ATTRIBUTES)
     {
         return false;
     }
@@ -1027,7 +1037,7 @@ bool SysFileSystem::setLastAccessDate(const char *name, int64_t time)
      */
     DWORD flags = FILE_ATTRIBUTE_NORMAL;
     int result = GetFileAttributes(name);
-    if (result == 0xFFFFFFFF)
+    if (result == INVALID_FILE_ATTRIBUTES)
     {
         return false;
     }
@@ -1070,7 +1080,7 @@ bool SysFileSystem::setLastAccessDate(const char *name, int64_t time)
 bool SysFileSystem::setFileReadOnly(const char *name)
 {
     DWORD attrs = GetFileAttributes(name);
-    if (attrs == 0xFFFFFFFF)
+    if (attrs == INVALID_FILE_ATTRIBUTES)
     {
         return false;
     }
@@ -1090,7 +1100,7 @@ bool SysFileSystem::setFileReadOnly(const char *name)
 bool SysFileSystem::setFileWritable(const char *name)
 {
     DWORD attrs = GetFileAttributes(name);
-    if (attrs == 0xFFFFFFFF)
+    if (attrs == INVALID_FILE_ATTRIBUTES)
     {
         return false;
     }
