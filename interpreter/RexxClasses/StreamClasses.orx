@@ -160,7 +160,7 @@ notready:
 
                                      /* get as a string                   */
   stream_name = stream_name~request('STRING')
-  if stream_name~isNil then          /* not a real string value?          */
+  if stream_name == .nil then        /* not a real string value?          */
     raise syntax 93.938 array (1)    /* this is an error                  */
   self~!c_stream_init(stream_name)   /* initialize the stream block       */
                                      /* upper case the name               */
@@ -481,7 +481,7 @@ return position
   arr = .array~new(qItems)
   do i = 1 to qItems
      line = self~pull
-     if line~isNil /* items have been removed by another thread or process */
+     if line == .nil /* items have been removed by another thread or process */
      then do
         arr = arr~section(1, i - 1)
         leave
@@ -515,7 +515,7 @@ return position
   use strict arg path, dir = .nil
   qualifiedPath = .nil
 
-  if dir~isNil then do
+  if dir == .nil then do
       -- if we don't have a path, then we can't do a lazy
       -- qualification because the current directory might
       -- change.  We need to process everything
@@ -539,9 +539,11 @@ return position
       end
   end
 
--- support the query methods as both instance and class methods
-::METHOD separator CLASS EXTERNAL 'LIBRARY REXX file_separator'
-::METHOD pathSeparator CLASS EXTERNAL 'LIBRARY REXX file_path_separator'
+::method getSeparator private class external "LIBRARY REXX file_separator"
+::method getPathSeparator private class external "LIBRARY REXX file_path_separator"
+::constant separator (.File~getSeparator)
+::constant pathSeparator (.File~getPathSeparator)
+
 ::METHOD isCaseSensitive CLASS EXTERNAL 'LIBRARY REXX file_case_sensitive'
 ::METHOD listRoots CLASS EXTERNAL 'LIBRARY REXX file_list_roots'
 ::METHOD searchPathImpl CLASS PRIVATE EXTERNAL 'LIBRARY REXX file_search_path_impl'
@@ -571,9 +573,6 @@ return position
 
   return file
 
-::METHOD separator EXTERNAL 'LIBRARY REXX file_separator'
-::METHOD pathSeparator EXTERNAL 'LIBRARY REXX file_path_separator'
-
 -- Normalize the path separator syntax for a new File instance
 ::METHOD normalizePathSyntax PRIVATE
   use strict arg path
@@ -591,11 +590,14 @@ return position
   end
 
   -- the last name element should not end with a separator
-  -- remove it if one is there, but keep "d:\" or a single "/" as-is
-  if buffer[2] == ":" then
-      minimum = 3
-  else
-      minimum = 1
+  -- remove it if one is there, but keep d:\ or \\?\ or \\.\
+  -- or a single "/" as-is
+  if separator == "\", buffer[2] == ":"
+      then minimum = 3
+  else if separator == "\", buffer~startsWith("\\")
+      then minimum = 4
+  else minimum = 1
+
   do while buffer~length > minimum, buffer~endsWith(separator)
       buffer~delstr(buffer~length, 1)
   end
@@ -612,27 +614,20 @@ return position
   separator = self~separator
 
   -- remove leading separators from the name, if there are any
-  firstNonSep = name~verify(separator)
-
-  if firstNonSep > 1 then do
-      name = name~substr(firstNonSep)
-  end
+  name = name~strip("L", separator)
 
   -- the normalization process has removed trailing separators, except for
-  -- the case where the dir is a root specification, / or d:/
-
-  if dir~endsWith(separator) then do
+  -- the case where dir is a root specification
+  if dir~endsWith(separator) then
       return dir || name
-  end
-  else do
+  else
       return dir || separator || name
-  end
 
 -- get the qualified path for this File instance
 ::METHOD qualifiedPath PRIVATE
   expose path qualifiedPath
 
-  if qualifiedPath~isNil then do
+  if qualifiedPath == .nil then do
       qualifiedPath = self~qualifyImpl(path)
   end
 
@@ -723,24 +718,60 @@ return position
   end
 
 -- extract the parent directory portion of this file
+-- expected parent processing results are:
+--   /dir/file -> /dir -> / -> .nil
+--   d:\dir\file -> d:\dir -> d:\ -> .nil
+--   \\server\share\dir\file -> \\server\share\dir -> \\server\share -> .nil
+--   \\?\d:\dir\file -> \\?\d:\dir -> \\?\d: -> \\?\ -> .nil
+--   \\.\nul -> \\.\ -> .nil
 ::METHOD parent
   use strict arg
   path = self~qualifiedPath
+  separator = self~separator
 
-  sep = path~lastPos(self~separator)
-  -- if no separator is found or the qualified name ends with a
-  -- separator (which means this is a root element), then return
-  -- .nil
-  if sep == 0 | path~match(path~length, self~separator) then do
-      return .nil
+  -- all roots have a trailing separator, except \\server\share
+  rootSeparator = .true -- assume our root has a trailing separator
+
+  if path~startsWith("\\"), separator == "\" then do
+    -- on Windows paths starting with \\ get special treatment
+    if path~matchChar(3, "?.") then do
+      -- This is either the Win32 file namespace (\\?\) or the Win32
+      -- device namespace (\\.\)
+      root = 4
+    end
+    else do
+      -- this is the Windows \\server\share\dir form
+      -- the root part is everything up to the 4th backslash
+      root = path~pos("\", 3)
+      if root > 0
+        then root = path~pos("\", root + 1)
+      if root = 0 then
+        -- we don't have two more backslashes, so this is already root
+        return .nil
+      rootSeparator = .false -- special case: no trailing separator
+    end
+  end
+  else do
+    -- this is the standard Unix /dir/file or Windows NT namespace d:\dir form
+    -- the root part is either 1 character (/) or 3 characters (d:\)
+    root = (separator == "/")~?(1, 3)
   end
 
-  return path~substr(1, sep - 1)
+  sep = path~lastPos(separator)
+  if sep > root then
+    -- if a separator is found beyond the root part, return the part up
+    -- to this separator
+    return path~left(sep - 1)
+  else
+    -- if there is no such separator but the qualified path is longer
+    -- than the root part, return the root part only
+    -- otherwise return .nil
+    return (path~length > root)~?(path~left(root- rootSeparator~?(0, 1)), .nil)
 
 ::METHOD parentFile
   use strict arg
   parent = self~parent
-  if parent~isNil then
+  if parent == .nil then
       return .nil
 
   return self~class~new(parent)
@@ -828,7 +859,7 @@ return position
   use strict arg
 
   names = self~list
-  if names~isNil then
+  if names == .nil then
       return .nil
 
   files = .array~new(names~items)
@@ -860,7 +891,7 @@ return position
 
   -- we might be at the top level already
   parent = self~parentFile
-  if parent~isNil then
+  if parent == .nil then
       return .false
   -- try to create the parent directories first
   if \parent~makeDirs then
