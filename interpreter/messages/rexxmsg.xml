@@ -2171,7 +2171,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Invalid_do_simple_do_counter</SymbolicName>
-        <Text>COUNTER keyword not allowd on a simple DO instruction.</Text>
+        <Text>COUNTER keyword not allowed on a simple DO instruction.</Text>
       </SubMessage>
     </Subcodes>
   </Message>

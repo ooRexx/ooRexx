@@ -1520,7 +1520,7 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>905</term>
 <listitem>
-<para>COUNTER keyword not allowd on a simple DO instruction.</para>
+<para>COUNTER keyword not allowed on a simple DO instruction.</para>
 </listitem>
 </varlistentry>
 </variablelist>
