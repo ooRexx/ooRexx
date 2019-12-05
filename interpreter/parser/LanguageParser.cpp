@@ -1552,7 +1552,7 @@ RexxCode *LanguageParser::translateBlock()
         // we can just set the end to the beginning of the pending clause
         else
         {
-            blockLocation.setEnd(nextLocation);
+            blockLocation.setEnd(nextLocation.getLineNumber(), nextLocation.getOffset());
         }
     }
     // no active clause, so we set this to the very end of the file
