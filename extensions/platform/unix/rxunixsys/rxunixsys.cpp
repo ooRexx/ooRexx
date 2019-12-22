@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2009-2017 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2009-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -41,25 +41,6 @@
 
 #include "rxunixsys.h"
 
-
-/*----------------------------------------------------------------------------*/
-/* Global variables                                                           */
-/*----------------------------------------------------------------------------*/
-
-
-/*----------------------------------------------------------------------------*/
-/* Local Definitions                                                          */
-/*----------------------------------------------------------------------------*/
-
-
-/*============================================================================*/
-/* Private Functions                                                          */
-/*============================================================================*/
-
-
-/*============================================================================*/
-/* Public Functions                                                           */
-/*============================================================================*/
 
 /**
  * Function:      SysSignal
@@ -797,163 +778,101 @@ RexxRoutine2(RexxObjectPtr,
              CSTRING, ichar)
 {
     struct tm *ftime;
-    struct stat64 mystat;
+    struct stat64 st;
     char buf[32];  // used for both the file times and the permissions
 
     if (strlen(fname) == 0 || strlen(ichar) == 0) {
         context->InvalidRoutine();
         return context->NullString();
     }
-    int retc = stat64(fname, &mystat);
+    int retc = stat64(fname, &st);
     if (retc != 0) {
         return context->NullString();
     }
     else if (*ichar == 'D' || *ichar == 'd') {
-        return (RexxObjectPtr)context->WholeNumberToObject((wholenumber_t)mystat.st_dev);
+        return (RexxObjectPtr)context->WholeNumberToObject((wholenumber_t)st.st_dev);
     }
     else if (*ichar == 'I' || *ichar == 'i') {
-        return (RexxObjectPtr)context->WholeNumberToObject((wholenumber_t)mystat.st_ino);
+        return (RexxObjectPtr)context->WholeNumberToObject((wholenumber_t)st.st_ino);
     }
     else if (*ichar == 'P' || *ichar == 'p') {
         // 1- file type
-        if ((S_IFDIR & mystat.st_mode) == S_IFDIR) {
-            strcpy(buf, "d");
-        }
-        else if ((S_IFCHR & mystat.st_mode) == S_IFCHR) {
-            strcpy(buf, "c");
-        }
-        else if ((S_IFBLK & mystat.st_mode) == S_IFBLK) {
-            strcpy(buf, "b");
-        }
-        else if ((S_IFIFO & mystat.st_mode) == S_IFIFO) {
-            strcpy(buf, "p");
-        }
-        else if ((S_IFREG & mystat.st_mode) == S_IFREG) {
-            strcpy(buf, "-");
-        }
-        else if ((S_IFLNK & mystat.st_mode) == S_IFLNK) {
-            strcpy(buf, "l");
-        }
-        else if ((S_IFSOCK & mystat.st_mode) == S_IFSOCK) {
-            strcpy(buf, "s");
-        }
-        else strcpy(buf, "-");
+        if      (S_ISREG(st.st_mode))  strcpy(buf, "-");
+        else if (S_ISDIR(st.st_mode))  strcpy(buf, "d");
+        else if (S_ISLNK(st.st_mode))  strcpy(buf, "l");
+        else if (S_ISSOCK(st.st_mode)) strcpy(buf, "s");
+        else if (S_ISCHR(st.st_mode))  strcpy(buf, "c");
+        else if (S_ISBLK(st.st_mode))  strcpy(buf, "b");
+        else if (S_ISFIFO(st.st_mode)) strcpy(buf, "p");
+
         // 2 - user read
-        if (S_IRUSR & mystat.st_mode) {
-            strcat(buf, "r");
-        }
-        else strcat(buf, "-");
+        strcat(buf, S_IRUSR & st.st_mode ? "r" : "-");
+
         // 3 - user write
-        if (S_IWUSR & mystat.st_mode) {
-            strcat(buf, "w");
-        }
-        else strcat(buf, "-");
+        strcat(buf, S_IWUSR & st.st_mode ? "w" : "-");
+
         // 4 - user execute
-        if ((S_IXUSR & mystat.st_mode) && (S_ISUID & mystat.st_mode) &&
-            (S_ISGID & mystat.st_mode)) {
-            strcat(buf, "s");
-        }
-        else if (!(S_IXUSR & mystat.st_mode) && (S_ISUID & mystat.st_mode) &&
-                 (S_ISGID & mystat.st_mode)) {
-            strcat(buf, "S");
-        }
-        else if ((S_IXUSR & mystat.st_mode) && (S_ISVTX & mystat.st_mode)) {
-            strcat(buf, "t");
-        }
-        else if (!(S_IXUSR & mystat.st_mode) && (S_ISVTX & mystat.st_mode)) {
-            strcat(buf, "T");
-        }
-        else if (S_IXUSR & mystat.st_mode) {
-            strcat(buf, "x");
-        }
-        else strcat(buf, "-");
+        // SUID       If set, then replaces "x" in the owner permissions to "s",
+        // if owner has execute permissions, or to "S" otherwise. Examples:
+        // -rws------ both owner execute and SUID are set
+        // -r-S------ SUID is set, but owner execute is not set
+        strcat(buf, S_ISUID & st.st_mode ? (S_IXUSR & st.st_mode ? "s" : "S") : (S_IXUSR & st.st_mode ? "x" : "-"));
+
         // 5 -group read
-        if (S_IRGRP & mystat.st_mode) {
-            strcat(buf, "r");
-        }
-        else strcat(buf, "-");
+        strcat(buf, S_IRGRP & st.st_mode ? "r" : "-");
+
         // 6 - group write
-        if (S_IWGRP & mystat.st_mode) {
-            strcat(buf, "w");
-        }
-        else strcat(buf, "-");
+        strcat(buf, S_IWGRP & st.st_mode ? "w" : "-");
+
         // 7 - group execute
-        if ((S_IXGRP & mystat.st_mode) && (S_ISUID & mystat.st_mode) &&
-            (S_ISGID & mystat.st_mode)) {
-            strcat(buf, "s");
-        }
-        else if (!(S_IXGRP & mystat.st_mode) && (S_ISUID & mystat.st_mode) &&
-                 (S_ISGID & mystat.st_mode)) {
-            strcat(buf, "S");
-        }
-        else if ((S_IXGRP & mystat.st_mode) && (S_ISVTX & mystat.st_mode)) {
-            strcat(buf, "t");
-        }
-        else if (!(S_IXGRP & mystat.st_mode) && (S_ISVTX & mystat.st_mode)) {
-            strcat(buf, "T");
-        }
-        else if (S_IXGRP & mystat.st_mode) {
-            strcat(buf, "x");
-        }
-        else strcat(buf, "-");
+        // SGID       If set, then replaces "x" in the group permissions to "s",
+        // if group has execute permissions, or to "S" otherwise. Examples:
+        // -rwxrws--- both group execute and SGID are set
+        // -rwxr-S--- SGID is set, but group execute is not set
+        strcat(buf, S_ISGID & st.st_mode ? (S_IXGRP & st.st_mode ? "s" : "S") : (S_IXGRP & st.st_mode ? "x" : "-"));
+
         // 8 - other read
-        if (S_IROTH & mystat.st_mode) {
-            strcat(buf, "r");
-        }
-        else strcat(buf, "-");
+        strcat(buf, S_IROTH & st.st_mode ? "r" : "-");
+
         // 9 - other write
-        if (S_IWOTH & mystat.st_mode) {
-            strcat(buf, "w");
-        }
-        else strcat(buf, "-");
+        strcat(buf, S_IWOTH & st.st_mode ? "w" : "-");
+
         // 10 - other execute
-        if ((S_IXOTH & mystat.st_mode) && (S_ISUID & mystat.st_mode) &&
-            (S_ISGID & mystat.st_mode)) {
-            strcat(buf, "s");
-        }
-        else if (!(S_IXOTH & mystat.st_mode) && (S_ISUID & mystat.st_mode) &&
-                 (S_ISGID & mystat.st_mode)) {
-            strcat(buf, "S");
-        }
-        else if ((S_IXOTH & mystat.st_mode) && (S_ISVTX & mystat.st_mode)) {
-            strcat(buf, "t");
-        }
-        else if (!(S_IXOTH & mystat.st_mode) && (S_ISVTX & mystat.st_mode)) {
-            strcat(buf, "T");
-        }
-        else if (S_IXOTH & mystat.st_mode) {
-            strcat(buf, "x");
-        }
-        else strcat(buf, "-");
+        // Sticky  If set, then replaces "x" in the others permissions to "t",
+        // if others have execute permissions, or to "T" otherwise. Examples:
+        // -rwxrwxrwt both others execute and sticky bit are set
+        // -rwxrwxr-T sticky bit is set, but others execute is not set
+        strcat(buf, S_ISVTX & st.st_mode ? (S_IXOTH & st.st_mode ? "t" : "T") : (S_IXOTH & st.st_mode ? "x" : "-"));
+
         return (RexxObjectPtr)context->NewStringFromAsciiz(buf);
     }
     else if (*ichar == 'N' || *ichar == 'n') {
-        return (RexxObjectPtr)context->WholeNumberToObject((wholenumber_t)mystat.st_nlink);
+        return (RexxObjectPtr)context->WholeNumberToObject((wholenumber_t)st.st_nlink);
     }
     else if (*ichar == 'U' || *ichar == 'u') {
-        return (RexxObjectPtr)context->WholeNumberToObject((wholenumber_t)mystat.st_uid);
+        return (RexxObjectPtr)context->WholeNumberToObject((wholenumber_t)st.st_uid);
     }
     else if (*ichar == 'G' || *ichar == 'g') {
-        return (RexxObjectPtr)context->WholeNumberToObject((wholenumber_t)mystat.st_gid);
+        return (RexxObjectPtr)context->WholeNumberToObject((wholenumber_t)st.st_gid);
     }
     else if (*ichar == 'R' || *ichar == 'r') {
-        return (RexxObjectPtr)context->WholeNumberToObject((wholenumber_t)mystat.st_rdev);
+        return (RexxObjectPtr)context->WholeNumberToObject((wholenumber_t)st.st_rdev);
     }
     else if (*ichar == 'S' || *ichar == 's') {
-        return (RexxObjectPtr)context->WholeNumberToObject((wholenumber_t)mystat.st_size);
+        return (RexxObjectPtr)context->WholeNumberToObject((wholenumber_t)st.st_size);
     }
     else if (*ichar == 'A' || *ichar == 'a') {
-        ftime = localtime(&mystat.st_atime);
+        ftime = localtime(&st.st_atime);
         strftime(buf, sizeof(buf), "%F %T", ftime);
         return (RexxObjectPtr)context->NewStringFromAsciiz(buf);
     }
     else if (*ichar == 'M' || *ichar == 'm') {
-        ftime = localtime(&mystat.st_mtime);
+        ftime = localtime(&st.st_mtime);
         strftime(buf, sizeof(buf), "%F %T", ftime);
         return (RexxObjectPtr)context->NewStringFromAsciiz(buf);
     }
     else if (*ichar == 'C' || *ichar == 'c') {
-        ftime = localtime(&mystat.st_ctime);
+        ftime = localtime(&st.st_ctime);
         strftime(buf, sizeof(buf), "%F %T", ftime);
         return (RexxObjectPtr)context->NewStringFromAsciiz(buf);
     }
@@ -1594,7 +1513,7 @@ RexxRoutine1(RexxObjectPtr,
  *
  * @param salt    The salt: two characters for the default DES encryption,
  *                other salt lengths may be available depending on the Unix platform
- *                for other encryption algorithms (MD5, Blowfish, SHA-256, SHA-512) 
+ *                for other encryption algorithms (MD5, Blowfish, SHA-256, SHA-512)
  *
  * @return        Encrypted string.
  */
@@ -1771,9 +1690,9 @@ RexxRoutineEntry orxnixclib_routines[] = {
 #endif
     REXX_TYPED_ROUTINE(SysGetservbyname, SysGetservbyname),
     REXX_TYPED_ROUTINE(SysGetservbyport, SysGetservbyport),
-#if !defined(OPENBSD)    
+#if !defined(OPENBSD)
     REXX_TYPED_ROUTINE(SysWordexp, SysWordexp),
-#endif    
+#endif
 #ifdef HAVE_XATTR_H
     REXX_TYPED_ROUTINE(SysSetxattr, SysSetxattr),
     REXX_TYPED_ROUTINE(SysGetxattr, SysGetxattr),

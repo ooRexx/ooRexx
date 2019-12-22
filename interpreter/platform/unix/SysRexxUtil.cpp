@@ -356,7 +356,7 @@ void TreeFinder::adjustDirectory()
         fileSpec += "*";
     }
     // if the end section is either /. or /.., we also add the wildcard
-    else if (fileSpec.endsWith("/.") || fileSpec.endsWith(".."))
+    else if (fileSpec.endsWith("/.") || fileSpec.endsWith("/.."))
     {
         fileSpec += "/*";
     }
@@ -415,9 +415,10 @@ void formatFileAttributes(TreeFinder *finder, FileNameBuffer &foundFileLine, Sys
 #else
     struct tm *timestamp = localtime(&(attributes.findFileData.st_mtime));
 #endif
+
+    // tm_year is relative to 1900, with full year coverage of 0001 through 9999
     if (finder->longTime())
     {
-
         snprintf(fileAttr, sizeof(fileAttr), "%4d-%02d-%02d %02d:%02d:%02d  ",
                  timestamp->tm_year + 1900, timestamp->tm_mon + 1, timestamp->tm_mday,
                  timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec);
@@ -425,14 +426,15 @@ void formatFileAttributes(TreeFinder *finder, FileNameBuffer &foundFileLine, Sys
     else if (finder->editableTime())
     {
         snprintf(fileAttr, sizeof(fileAttr), "%02d/%02d/%02d/%02d/%02d  ",
-                 (timestamp->tm_year) % 100, timestamp->tm_mon + 1, timestamp->tm_mday,
+                 (timestamp->tm_year + 10000) % 100, timestamp->tm_mon + 1, timestamp->tm_mday,
                  timestamp->tm_hour, timestamp->tm_min);
     }
     else
     {
         snprintf(fileAttr, sizeof(fileAttr), "%2d/%02d/%02d  %2d:%02d%c  ",
-                 timestamp->tm_mon + 1, timestamp->tm_mday, timestamp->tm_year % 100,
-                 timestamp->tm_hour < 13 ? timestamp->tm_hour : timestamp->tm_hour - 12,
+                 timestamp->tm_mon + 1, timestamp->tm_mday, (timestamp->tm_year  + 10000) % 100,
+                 timestamp->tm_hour < 13 && timestamp->tm_hour != 0 ?
+                  timestamp->tm_hour : abs(timestamp->tm_hour - 12),
                  timestamp->tm_min, (timestamp->tm_hour < 12 || timestamp->tm_hour == 24) ? 'a' : 'p');
     }
 
@@ -459,17 +461,33 @@ void formatFileAttributes(TreeFinder *finder, FileNameBuffer &foundFileLine, Sys
 
     char tp = typeOfEntry(attributes.findFileData.st_mode);
 
+    mode_t st_mode = attributes.findFileData.st_mode;
+
+    // SUID       If set, then replaces "x" in the owner permissions to "s",
+    // if owner has execute permissions, or to "S" otherwise. Examples:
+    // -rws------ both owner execute and SUID are set
+    // -r-S------ SUID is set, but owner execute is not set
+
+    // SGID       If set, then replaces "x" in the group permissions to "s",
+    // if group has execute permissions, or to "S" otherwise. Examples:
+    // -rwxrws--- both group execute and SGID are set
+    // -rwxr-S--- SGID is set, but group execute is not set
+
+    // Sticky  If set, then replaces "x" in the others permissions to "t",
+    // if others have execute permissions, or to "T" otherwise. Examples:
+    // -rwxrwxrwt both others execute and sticky bit are set
+    // -rwxrwxr-T sticky bit is set, but others execute is not set
     snprintf(fileAttr, sizeof(fileAttr), "%c%c%c%c%c%c%c%c%c%c  ",
              tp,
-             (attributes.findFileData.st_mode & S_IREAD) ? 'r' : '-',
-             (attributes.findFileData.st_mode & S_IWRITE) ? 'w' : '-',
-             (attributes.findFileData.st_mode & S_IEXEC) ? 'x' : '-',
-             (attributes.findFileData.st_mode & S_IRGRP) ? 'r' : '-',
-             (attributes.findFileData.st_mode & S_IWGRP) ? 'w' : '-',
-             (attributes.findFileData.st_mode & S_IXGRP) ? 'x' : '-',
-             (attributes.findFileData.st_mode & S_IROTH) ? 'r' : '-',
-             (attributes.findFileData.st_mode & S_IWOTH) ? 'w' : '-',
-             (attributes.findFileData.st_mode & S_IXOTH) ? 'x' : '-');
+             (S_IRUSR & st_mode) ? 'r' : '-',
+             (S_IWUSR & st_mode) ? 'w' : '-',
+             (S_ISUID & st_mode) ? (S_IXUSR & st_mode ? 's' : 'S') : (S_IXUSR & st_mode ? 'x' : '-'),
+             (S_IRGRP & st_mode) ? 'r' : '-',
+             (S_IWGRP & st_mode) ? 'w' : '-',
+             (S_ISGID & st_mode) ? (S_IXGRP & st_mode ? 's' : 'S') : (S_IXGRP & st_mode ? 'x' : '-'),
+             (S_IROTH & st_mode) ? 'r' : '-',
+             (S_IWOTH & st_mode) ? 'w' : '-',
+             (S_ISVTX & st_mode) ? (S_IXOTH & st_mode ? 't' : 'T') : (S_IXOTH & st_mode ? 'x' : '-'));
 
     // add on this section
     foundFileLine += fileAttr;

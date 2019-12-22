@@ -475,24 +475,24 @@ RexxRoutine2(RexxStringObject, SysDriveMap, OPTIONAL_CSTRING, drive, OPTIONAL_CS
 
 /**
  *
- * if this ends in a directory separator, add a *.* wildcard to the end
+ * if this ends in a directory separator, add a * wildcard to the end
  */
 void TreeFinder::adjustDirectory()
 {
-    // if this ends in a directory separator, add a *.* wildcard to the end
-    if (fileSpec.endsWith('\\'))
+    // if this ends in a directory separator, add a * wildcard to the end
+    if (fileSpec.endsWith('\\') || fileSpec.endsWith('/'))
     {
-        fileSpec += "*.*";
+        fileSpec += "*";
     }
-    // just a ' or .. is wildcarded also
+    // just a . or .. is wildcarded also
     else if (fileSpec == "." || fileSpec == "..")
     {
-        fileSpec += "\\*.*";
+        fileSpec += "\\*";
     }
-    // if the end section is either \. or .., we also add the wildcard
-    else if (fileSpec.endsWith("\\.") || fileSpec.endsWith("\\.."))
+    // if the end section is either \. or \.., we also add the wildcard
+    else if (fileSpec.endsWith("\\.") || fileSpec.endsWith("\\..")  || fileSpec.endsWith("/.") || fileSpec.endsWith("/.."))
     {
-        fileSpec += "\\*.*";
+        fileSpec += "\\*";
     }
 }
 
@@ -552,18 +552,6 @@ void TreeFinder::adjustFileSpec()
             // perform a left shift on the buffer
             fileSpec.shiftLeft(i);
         }
-    }
-
-    // is the spec exactly equal to the current directory?
-    if (fileSpec == ".")
-    {
-        // make this a wildcard
-        fileSpec = "*.*";
-    }
-    // exclusively the previous directory, this also becomes a wildcard
-    else if (fileSpec == "..")
-    {
-        fileSpec = "..\\*,*";
     }
 }
 
@@ -716,6 +704,7 @@ void formatFileAttributes(TreeFinder *finder, FileNameBuffer &foundFile, SysFile
     // Since we can count the characters put into the buffer here, there is
     // no need to check for buffer overflow.
 
+    // wYear range is 1601 through 30827
     if (finder->longTime())
     {
         snprintf(fileAttr, sizeof(fileAttr), "%4d-%02d-%02d %02d:%02d:%02d  ",
@@ -725,13 +714,14 @@ void formatFileAttributes(TreeFinder *finder, FileNameBuffer &foundFile, SysFile
     else if (finder->editableTime())
     {
         snprintf(fileAttr, sizeof(fileAttr), "%02d/%02d/%02d/%02d/%02d  ",
-                 (systime.wYear + 100) % 100, systime.wMonth, systime.wDay,
+                 systime.wYear % 100, systime.wMonth, systime.wDay,
                  systime.wHour, systime.wMinute);
+
     }
     else
     {
         snprintf(fileAttr, sizeof(fileAttr), "%2d/%02d/%02d  %2d:%02d%c  ",
-                 systime.wMonth, systime.wDay, (systime.wYear + 100) % 100,
+                 systime.wMonth, systime.wDay, systime.wYear % 100,
                  (systime.wHour < 13 && systime.wHour != 0 ?
                   systime.wHour : (abs(systime.wHour - (SHORT)12))),
                  systime.wMinute, (systime.wHour < 12 || systime.wHour == 24) ? 'a' : 'p');
