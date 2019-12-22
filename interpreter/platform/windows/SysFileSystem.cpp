@@ -930,7 +930,10 @@ int64_t SysFileSystem::getFileLength(const char *name)
 {
     WIN32_FILE_ATTRIBUTE_DATA stat;
 
-    if ( GetFileAttributesEx(name, GetFileExInfoStandard, &stat) == 0 )
+    // if we fail or this is a directory we return zero
+    // the file size fields do not have a meaning for directories
+    if (GetFileAttributesEx(name, GetFileExInfoStandard, &stat) == 0 ||
+        stat.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
     {
         return 0;
     }
