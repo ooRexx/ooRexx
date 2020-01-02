@@ -1476,57 +1476,58 @@ EndClassDefinition(MutableBuffer);
 
 StartClassDefinition(Integer)
 
-    // NOTE that we are pointing the new method at the String version...part of the
-    // fakeout that the Integer class does.
-        AddClassMethod("New", RexxString::newRexx, A_COUNT);
+// NOTE that we are pointing the new method at the String version...part of the
+// fakeout that the Integer class does.
+AddClassMethod("New", RexxString::newRexx, A_COUNT);
 
-    CompleteClassMethodDefinitions();
+CompleteClassMethodDefinitions();
 
-        AddMethod("+", RexxInteger::plus, 1);
-        AddMethod("-", RexxInteger::minus, 1);
-        AddMethod("*", RexxInteger::multiply, 1);
-        AddMethod("**", RexxInteger::power, 1);
-        AddMethod("/", RexxInteger::divide, 1);
-        AddMethod("%", RexxInteger::integerDivide, 1);
-        AddMethod("//", RexxInteger::remainder, 1);
-        AddMethod("\\", RexxInteger::notOp, 0);
-        AddMethod("&", RexxInteger::andOp, 1);
-        AddMethod("|", RexxInteger::orOp, 1);
-        AddMethod("&&", RexxInteger::xorOp, 1);
-        AddMethod("?", RexxInteger::choiceRexx, 2);
-        AddMethod("D2C", RexxInteger::d2c, 1);
-        AddMethod("D2X", RexxInteger::d2x, 1);
-        AddMethod("Abs", RexxInteger::abs, 0);
-        AddMethod("Max", RexxInteger::Max, A_COUNT);
-        AddMethod("Min", RexxInteger::Min, A_COUNT);
-        AddMethod("Sign", RexxInteger::sign, 0);
-        AddMethod("Equal", RexxInteger::equal, 1);
-        AddMethod("\\=", RexxInteger::notEqual, 1);
-        AddMethod("<>", RexxInteger::notEqual, 1);
-        AddMethod("><", RexxInteger::notEqual, 1);
-        AddMethod(">", RexxInteger::isGreaterThan, 1);
-        AddMethod("<", RexxInteger::isLessThan, 1);
-        AddMethod(">=", RexxInteger::isGreaterOrEqual, 1);
-        AddMethod("\\<", RexxInteger::isGreaterOrEqual, 1);
-        AddMethod("<=", RexxInteger::isLessOrEqual, 1);
-        AddMethod("\\>", RexxInteger::isLessOrEqual, 1);
-        AddMethod("==", RexxInteger::strictEqual, 1);
-        AddMethod("HashCode", RexxInteger::hashCode, 0);
-        AddMethod("\\==", RexxInteger::strictNotEqual, 1);
-        AddMethod(">>", RexxInteger::strictGreaterThan, 1);
-        AddMethod("<<", RexxInteger::strictLessThan, 1);
-        AddMethod(">>=", RexxInteger::strictGreaterOrEqual, 1);
-        AddMethod("\\<<", RexxInteger::strictGreaterOrEqual, 1);
-        AddMethod("<<=", RexxInteger::strictLessOrEqual, 1);
-        AddMethod("\\>>", RexxInteger::strictLessOrEqual, 1);
-        AddMethod("MakeString", RexxObject::makeStringRexx, 0);
-        AddMethod("Format", RexxInteger::format, 4);
-        AddMethod("Trunc", RexxInteger::trunc, 1);
-        AddMethod("modulo", RexxInteger::modulo, 1);
-        AddMethod("Floor", RexxInteger::floor, 0);
-        AddMethod("Ceiling", RexxInteger::ceiling, 0);
-        AddMethod("Round", RexxInteger::round, 0);
-        AddMethod("Class", RexxInteger::classObject, 0);
+AddMethod("+", RexxInteger::plus, 1);
+AddMethod("-", RexxInteger::minus, 1);
+AddMethod("*", RexxInteger::multiply, 1);
+AddMethod("**", RexxInteger::power, 1);
+AddMethod("/", RexxInteger::divide, 1);
+AddMethod("%", RexxInteger::integerDivide, 1);
+AddMethod("//", RexxInteger::remainder, 1);
+AddMethod("\\", RexxInteger::notOp, 0);
+AddMethod("&", RexxInteger::andOp, 1);
+AddMethod("|", RexxInteger::orOp, 1);
+AddMethod("&&", RexxInteger::xorOp, 1);
+AddMethod("?", RexxInteger::choiceRexx, 2);
+AddMethod("D2C", RexxInteger::d2c, 1);
+AddMethod("D2X", RexxInteger::d2x, 1);
+AddMethod("Abs", RexxInteger::abs, 0);
+AddMethod("Max", RexxInteger::Max, A_COUNT);
+AddMethod("Min", RexxInteger::Min, A_COUNT);
+AddMethod("Sign", RexxInteger::sign, 0);
+AddMethod("Equal", RexxInteger::equal, 1);
+AddMethod("=", RexxInteger::equal, 1);
+AddMethod("\\=", RexxInteger::notEqual, 1);
+AddMethod("<>", RexxInteger::notEqual, 1);
+AddMethod("><", RexxInteger::notEqual, 1);
+AddMethod(">", RexxInteger::isGreaterThan, 1);
+AddMethod("<", RexxInteger::isLessThan, 1);
+AddMethod(">=", RexxInteger::isGreaterOrEqual, 1);
+AddMethod("\\<", RexxInteger::isGreaterOrEqual, 1);
+AddMethod("<=", RexxInteger::isLessOrEqual, 1);
+AddMethod("\\>", RexxInteger::isLessOrEqual, 1);
+AddMethod("==", RexxInteger::strictEqual, 1);
+AddMethod("HashCode", RexxInteger::hashCode, 0);
+AddMethod("\\==", RexxInteger::strictNotEqual, 1);
+AddMethod(">>", RexxInteger::strictGreaterThan, 1);
+AddMethod("<<", RexxInteger::strictLessThan, 1);
+AddMethod(">>=", RexxInteger::strictGreaterOrEqual, 1);
+AddMethod("\\<<", RexxInteger::strictGreaterOrEqual, 1);
+AddMethod("<<=", RexxInteger::strictLessOrEqual, 1);
+AddMethod("\\>>", RexxInteger::strictLessOrEqual, 1);
+AddMethod("MakeString", RexxObject::makeStringRexx, 0);
+AddMethod("Format", RexxInteger::format, 4);
+AddMethod("Trunc", RexxInteger::trunc, 1);
+AddMethod("modulo", RexxInteger::modulo, 1);
+AddMethod("Floor", RexxInteger::floor, 0);
+AddMethod("Ceiling", RexxInteger::ceiling, 0);
+AddMethod("Round", RexxInteger::round, 0);
+AddMethod("Class", RexxInteger::classObject, 0);
 
     CompleteMethodDefinitions();
 
