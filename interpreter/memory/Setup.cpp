@@ -1529,69 +1529,70 @@ AddMethod("Ceiling", RexxInteger::ceiling, 0);
 AddMethod("Round", RexxInteger::round, 0);
 AddMethod("Class", RexxInteger::classObject, 0);
 
-    CompleteMethodDefinitions();
+CompleteMethodDefinitions();
 
-    CompleteClassDefinition(Integer);
+CompleteClassDefinition(Integer);
 
 EndSpecialClassDefinition(Integer);
 
 
-    /***************************************************************************/
-    /*             NUMBERSTRING                                                */
-    /***************************************************************************/
+/***************************************************************************/
+/*             NUMBERSTRING                                                */
+/***************************************************************************/
 
 StartClassDefinition(NumberString)
 
-    // NOTE that we are pointing the new method at the String version...part of the
-    // fakeout that the NumberString class does.
-        AddClassMethod("New", RexxString::newRexx, A_COUNT);
+// NOTE that we are pointing the new method at the String version...part of the
+// fakeout that the NumberString class does.
+AddClassMethod("New", RexxString::newRexx, A_COUNT);
 
-    CompleteClassMethodDefinitions();
+CompleteClassMethodDefinitions();
 
-        AddMethod("Abs", NumberString::abs, 0);
-        AddMethod("Max", NumberString::Max, A_COUNT);
-        AddMethod("Min", NumberString::Min, A_COUNT);
-        AddMethod("Sign", NumberString::Sign, 0);
-        AddMethod("D2C", NumberString::d2c, 1);
-        AddMethod("D2X", NumberString::d2x, 1);
-        AddMethod("=", NumberString::equal, 1);
-        AddMethod("\\=", NumberString::notEqual, 1);
-        AddMethod("<>", NumberString::notEqual, 1);
-        AddMethod("><", NumberString::notEqual, 1);
-        AddMethod(">", NumberString::isGreaterThan, 1);
-        AddMethod("<", NumberString::isLessThan, 1);
-        AddMethod(">=", NumberString::isGreaterOrEqual, 1);
-        AddMethod("\\<", NumberString::isGreaterOrEqual, 1);
-        AddMethod("<=", NumberString::isLessOrEqual, 1);
-        AddMethod("\\>", NumberString::isLessOrEqual, 1);
-        AddMethod("==", NumberString::strictEqual, 1);
-        AddMethod("HashCode", NumberString::hashCode, 0);
-        AddMethod("\\==", NumberString::strictNotEqual, 1);
-        AddMethod(">>", NumberString::strictGreaterThan, 1);
-        AddMethod("<<", NumberString::strictLessThan, 1);
-        AddMethod(">>=", NumberString::strictGreaterOrEqual, 1);
-        AddMethod("\\<<", NumberString::strictGreaterOrEqual, 1);
-        AddMethod("<<=", NumberString::strictLessOrEqual, 1);
-        AddMethod("\\>>", NumberString::strictLessOrEqual, 1);
-        AddMethod("+", NumberString::plus, 1);
-        AddMethod("-", NumberString::minus, 1);
-        AddMethod("*", NumberString::multiply, 1);
-        AddMethod("**", NumberString::power, 1);
-        AddMethod("/", NumberString::divide, 1);
-        AddMethod("%", NumberString::integerDivide, 1);
-        AddMethod("//", NumberString::remainder, 1);
-        AddMethod("\\", NumberString::notOp, 0);
-        AddMethod("&", NumberString::andOp, 1);
-        AddMethod("|", NumberString::orOp, 1);
-        AddMethod("&&", NumberString::xorOp, 1);
-        AddMethod("MakeString", RexxObject::makeStringRexx, 0);
-        AddMethod("Format", NumberString::formatRexx, 4);
-        AddMethod("Trunc", NumberString::trunc, 1);
-        AddMethod("modulo", NumberString::modulo, 1);
-        AddMethod("Floor", NumberString::floor, 0);
-        AddMethod("Ceiling", NumberString::ceiling, 0);
-        AddMethod("Round", NumberString::round, 0);
-        AddMethod("Class", NumberString::classObject, 0);
+AddMethod("Abs", NumberString::abs, 0);
+AddMethod("Max", NumberString::Max, A_COUNT);
+AddMethod("Min", NumberString::Min, A_COUNT);
+AddMethod("Sign", NumberString::Sign, 0);
+AddMethod("D2C", NumberString::d2c, 1);
+AddMethod("D2X", NumberString::d2x, 1);
+AddMethod("Equal", NumberString::equal, 1);
+AddMethod("=", NumberString::equal, 1);
+AddMethod("\\=", NumberString::notEqual, 1);
+AddMethod("<>", NumberString::notEqual, 1);
+AddMethod("><", NumberString::notEqual, 1);
+AddMethod(">", NumberString::isGreaterThan, 1);
+AddMethod("<", NumberString::isLessThan, 1);
+AddMethod(">=", NumberString::isGreaterOrEqual, 1);
+AddMethod("\\<", NumberString::isGreaterOrEqual, 1);
+AddMethod("<=", NumberString::isLessOrEqual, 1);
+AddMethod("\\>", NumberString::isLessOrEqual, 1);
+AddMethod("==", NumberString::strictEqual, 1);
+AddMethod("HashCode", NumberString::hashCode, 0);
+AddMethod("\\==", NumberString::strictNotEqual, 1);
+AddMethod(">>", NumberString::strictGreaterThan, 1);
+AddMethod("<<", NumberString::strictLessThan, 1);
+AddMethod(">>=", NumberString::strictGreaterOrEqual, 1);
+AddMethod("\\<<", NumberString::strictGreaterOrEqual, 1);
+AddMethod("<<=", NumberString::strictLessOrEqual, 1);
+AddMethod("\\>>", NumberString::strictLessOrEqual, 1);
+AddMethod("+", NumberString::plus, 1);
+AddMethod("-", NumberString::minus, 1);
+AddMethod("*", NumberString::multiply, 1);
+AddMethod("**", NumberString::power, 1);
+AddMethod("/", NumberString::divide, 1);
+AddMethod("%", NumberString::integerDivide, 1);
+AddMethod("//", NumberString::remainder, 1);
+AddMethod("\\", NumberString::notOp, 0);
+AddMethod("&", NumberString::andOp, 1);
+AddMethod("|", NumberString::orOp, 1);
+AddMethod("&&", NumberString::xorOp, 1);
+AddMethod("MakeString", RexxObject::makeStringRexx, 0);
+AddMethod("Format", NumberString::formatRexx, 4);
+AddMethod("Trunc", NumberString::trunc, 1);
+AddMethod("modulo", NumberString::modulo, 1);
+AddMethod("Floor", NumberString::floor, 0);
+AddMethod("Ceiling", NumberString::ceiling, 0);
+AddMethod("Round", NumberString::round, 0);
+AddMethod("Class", NumberString::classObject, 0);
 
     CompleteMethodDefinitions();
 
