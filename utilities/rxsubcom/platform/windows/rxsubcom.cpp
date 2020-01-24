@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -37,95 +37,82 @@
 /*----------------------------------------------------------------------------*/
 /*********************************************************************/
 /*                                                                   */
-/*     Program Name:   WINRXCMD.C                                    */
-/*                                                                   */
 /* Descriptive Name:   Windows Command Line Program for Subcommand   */
 /*                     Interface.                                    */
 /*                                                                   */
 /*********************************************************************/
-#include <string.h>                    /* Include string functions   */
+#include <string.h>
 #include <stdio.h>
-#include "rexx.h"                      /* for REXX functionality     */
-#include "RexxInternalApis.h"          /* Get private REXXAPI API's         */
-#include "RexxErrorCodes.h"            /* error constants            */
 
-#define BUFFERLEN         256          /* Length of message bufs used*/
-#define DLLNAME   "rexx.dll"
-                                       /* Macro for argv[1] compares */
-#define CASE(x) if(!_stricmp(x,argv[1]))
+#include "rexx.h"
+#include "RexxInternalApis.h"
+#include "RexxErrorCodes.h"
 
+#define CASE(x) if(!_stricmp(x, argv[1]))
 
 void parmerr(int);
 
-int __cdecl main( int argc, char *argv[ ], char *envp[ ] )
-{                                      /*                            */
-    /* Must be at lease 1 argument*/
-    if (argc<2)
+int __cdecl main(int argc, char *argv[], char *envp[])
+{
+    int args = argc - 2;               // number of RXSUBCOM [ACTION] args
+
+    if (args < 0)                      // no RXSUBCOM argument specified
     {
+        // The RXSUBCOM parameters are incorrect
         parmerr(Error_RXSUBC_general);
     }
 
     CASE("REGISTER")
-    {                   /* Registration check         */
-        /* requires 4 parameters */
-        if (argc<5)
+    {
+        if (args != 3)                 // REGISTER envname dllname procname
         {
+            // The RXSUBCOM REGISTER parameters are incorrect
             parmerr(Error_RXSUBC_register);
         }
-                                          /* Go register the environment*/
         return RexxRegisterSubcomDll(argv[2], argv[3], argv[4], NULL, RXSUBCOM_DROPPABLE);
-    }                                 /*                            */
+    }
+
     CASE("QUERY")
-    {                      /* Query Check                */
-        /* requires 3 parameters */
-        if (argc<3)
+    {
+        if (args < 1 || args > 2)      // QUERY envname [dllname]
         {
+            // The RXSUBCOM QUERY parameters are incorrect
             parmerr(Error_RXSUBC_query);
         }
-        /* if only 3 passed, dummy 4  */
-        if (argc<4)
-        {
-            argv[3]="";
-        }
         unsigned short flags;
-        return RexxQuerySubcom(argv[2], argv[3], &flags, NULL);
-    }                                 /*                            */
+        return RexxQuerySubcom(argv[2], args == 1 ? NULL : argv[3], &flags, NULL);
+    }
+
     CASE("DROP")
-    {                       /* Drop Check                 */
-        /* Must pass at least 3 args*/
-        if (argc<3)
+    {
+        if (args < 1 || args > 2)      // DROP envname [dllname]
         {
+            // The RXSUBCOM DROP parameters are incorrect
             parmerr(Error_RXSUBC_drop);
         }
-        /* if only 3 passed, dummy 4  */
-        if (argc<4)
-        {
-            argv[3]="";
-        }
-        return RexxDeregisterSubcom(argv[2], argv[3]);
+        return RexxDeregisterSubcom(argv[2], args == 1 ? NULL : argv[3]);
     }
+
     CASE("LOAD")
     {
-        if (argc<3)
+        if (args < 1 || args > 2)      // LOAD envname [dllname]
         {
+            // The RXSUBCOM LOAD parameters are incorrect
             parmerr(Error_RXSUBC_load);
         }
-        if (argc<4)
-        {
-            argv[3]="";             /* if only 3 passed, dummy 4  */
-        }
-        return RexxLoadSubcom(argv[2], argv[3]);
+        return RexxLoadSubcom(argv[2], args == 1 ? NULL : argv[3]);
     }
-    parmerr(Error_RXSUBC_general);      /* Otherwise, must be a error */
-    return 0;                           /* dummy return               */
+
+    // The RXSUBCOM parameters are incorrect
+    parmerr(Error_RXSUBC_general);
+    return 0;                          // this will never be reached
 }
 
-void parmerr(int   msgid)            /* removed useless code       */
+void parmerr(int msgid )
 {
-    // retrieve the message from the central catalog
+    // retrieve the message from the central catalog and print it
     const char *message = RexxGetErrorMessage(msgid);
-
-    printf("\n%s\n", message);    /* print the message                 */
+    printf("%s\n", message);
 
     exit(-1);
 }

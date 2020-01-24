@@ -6505,10 +6505,10 @@ special character (such as a parenthesis).
     <Text>The RXSUBCOM parameters are incorrect.</Text>
     <Explanation><para>RXSUBCOM accepts the following parameters:
     <itemizedlist>
-    <listitem><para>To register a subcommand handler: RXSUBCOM REGISTER Environment_Name Dll_Name Procedure_Name</para></listitem>
-    <listitem><para>To query the existence of a specific subcommand handler: RXSUBCOM QUERY [Environment_Name [Dll_Name]]</para></listitem>
-    <listitem><para>To drop a subcommand handler: RXSUBCOM DROP Environment_Name [Dll_Name]</para></listitem>
-    <listitem><para>To load a subcommand handler from disk: RXSUBCOM LOAD Environment_Name [Dll_Name]</para></listitem>
+    <listitem><para>To register a subcommand handler: RXSUBCOM REGISTER envname dllname procname</para></listitem>
+    <listitem><para>To query the existence of a specific subcommand handler: RXSUBCOM QUERY envname [dllname]</para></listitem>
+    <listitem><para>To drop a subcommand handler: RXSUBCOM DROP envname [dllname]</para></listitem>
+    <listitem><para>To load a subcommand handler from disk: RXSUBCOM LOAD envname [dllname]</para></listitem>
     </itemizedlist>
     </para></Explanation>
     <UserAction><para>Check the RXSUBCOM parameters and retry the command.</para></UserAction>
@@ -6520,14 +6520,14 @@ special character (such as a parenthesis).
         <Component>RXSUBCOM</Component>
         <Severity>Error</Severity>
         <SymbolicName>Error_RXSUBC_register</SymbolicName>
-        <Text>The RXSUBCOM parameter REGISTER is incorrect.</Text>
+        <Text>The RXSUBCOM REGISTER parameters are incorrect.</Text>
         <Explanation>
         <para>RXSUBCOM REGISTER requires the following parameters:
             <variablelist>
-                <title>RXSUBCOM REGISTER Environment_Name Dll_Name Procedure_Name</title>
+                <title>RXSUBCOM REGISTER envname dllname procname</title>
                 <varlistentry>
                     <term>
-                        Environment_Name
+                        envname
                     </term>
                     <listitem>
                         <para>
@@ -6537,7 +6537,7 @@ special character (such as a parenthesis).
                 </varlistentry>
                 <varlistentry>
                     <term>
-            .           Dll_Name
+            .           dllname
                     </term>
                     <listitem>
                         <para>
@@ -6547,7 +6547,7 @@ special character (such as a parenthesis).
                 </varlistentry>
                 <varlistentry>
                     <term>
-            .           Procedure_Name
+            .           procname
                     </term>
                     <listitem>
                         <para>
@@ -6567,14 +6567,14 @@ special character (such as a parenthesis).
         <Component>RXSUBCOM</Component>
         <Severity>Error</Severity>
         <SymbolicName>Error_RXSUBC_drop</SymbolicName>
-        <Text>The RXSUBCOM parameter DROP is incorrect.</Text>
+        <Text>The RXSUBCOM DROP parameters are incorrect.</Text>
         <Explanation>
-        <para>RXSUBCOM DROP requires that the subcommand handler name be specified.
+        <para>RXSUBCOM DROP requires the environment name be specified.
            <variablelist>
-               <title>RXSUBCOM DROP Environment_Name [Dll_Name]</title>
+               <title>RXSUBCOM DROP envname [dllname]</title>
                <varlistentry>
                    <term>
-                       Environment_Name
+                       envname
                    </term>
                    <listitem>
                        <para>
@@ -6584,7 +6584,7 @@ special character (such as a parenthesis).
                </varlistentry>
                <varlistentry>
                    <term>
-           .           Dll_Name
+           .           dllname
                    </term>
                    <listitem>
                        <para>
@@ -6605,14 +6605,14 @@ special character (such as a parenthesis).
         <Component>RXSUBCOM</Component>
         <Severity>Error</Severity>
         <SymbolicName>Error_RXSUBC_load</SymbolicName>
-        <Text>The RXSUBCOM parameter LOAD is incorrect.</Text>
+        <Text>The RXSUBCOM LOAD parameters are incorrect.</Text>
         <Explanation>
-        <para>RXSUBCOM LOAD requires that the subcommand handler name be specified.
+        <para>RXSUBCOM LOAD requires the environment name be specified.
             <variablelist>
-                <title>RXSUBCOM LOAD Environment_Name [Dll_Name]</title>
+                <title>RXSUBCOM LOAD envname [dllname]</title>
                 <varlistentry>
                     <term>
-                        Environment_Name
+                        envname
                     </term>
                     <listitem>
                         <para>
@@ -6622,7 +6622,7 @@ special character (such as a parenthesis).
                 </varlistentry>
                 <varlistentry>
                     <term>
-            .           Dll_Name
+            .           dllname
                     </term>
                     <listitem>
                         <para>
@@ -6713,14 +6713,14 @@ special character (such as a parenthesis).
         <Component>RXSUBCOM</Component>
         <Severity>Error</Severity>
         <SymbolicName>Error_RXSUBC_query</SymbolicName>
-        <Text>The RXSUBCOM parameter QUERY is incorrect.</Text>
+        <Text>The RXSUBCOM QUERY parameters are incorrect.</Text>
         <Explanation>
         <para>RXSUBCOM QUERY requires the environment name be specified.
             <variablelist>
-                <title>RXSUBCOM QUERY Environment_Name [Dll_Name]</title>
+                <title>RXSUBCOM QUERY envname [dllname]</title>
                 <varlistentry>
                     <term>
-                        Environment_Name
+                        envname
                     </term>
                     <listitem>
                         <para>
@@ -6730,7 +6730,7 @@ special character (such as a parenthesis).
                 </varlistentry>
                 <varlistentry>
                     <term>
-            .           Dll_Name
+            .           dllname
                     </term>
                     <listitem>
                         <para>

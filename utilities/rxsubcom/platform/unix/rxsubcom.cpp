@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -37,7 +37,7 @@
 /*----------------------------------------------------------------------------*/
 /*********************************************************************/
 /*                                                                   */
-/* Descriptive Name:   unix Command Line Program for Subcommand      */
+/* Descriptive Name:   Unix Command Line Program for Subcommand      */
 /*                     Interface.                                    */
 /*                                                                   */
 /*********************************************************************/
@@ -46,108 +46,78 @@
 #endif
 
 #include <limits.h>
-#include <string.h>                    /* Include string functions   */
+#include <string.h>
 #include <stdio.h>
 
-#include "rexx.h"                      /* for REXXSAA functionality  */
-                                       /* old msg constants replaced!*/
-#include "RexxInternalApis.h"          /* Get private REXXAPI API's         */
+#include "rexx.h"
+#include "RexxInternalApis.h"
 #include "RexxErrorCodes.h"
 
-#define BUFFERLEN         256          /* Length of message bufs used*/
-                                       /* Macro for argv[1] compares */
-#define CASE(x) if(!strcasecmp(x,argv[1]))
+#define CASE(x) if(!strcasecmp(x, argv[1]))
 
-void parmerr(int );
+void parmerr(int);
 
-int main( int argc, char *argv[ ], char *envp[ ] )
-{                                      /*                            */
-    const char * scbname;               /* registration name          */
-    const char * scbdll_name;           /* DLL file name              */
-    const char * scbdll_proc;           /* DLL procedure name         */
+int main(int argc, char *argv[], char *envp[])
+{
+    int args = argc - 2;               // number of RXSUBCOM [ACTION] args
 
-    /* Must be at lease 1 argument*/
-    if (argc<2)
+    if (args < 0)                      // no RXSUBCOM argument specified
     {
+        // The RXSUBCOM parameters are incorrect
         parmerr(Error_RXSUBC_general);
     }
 
     CASE("REGISTER")
-    {                   /* Registration check         */
-        /* requires 4 parameters */
-        if (argc<5)
+    {
+        if (args != 3)                 // REGISTER envname dllname procname
         {
+            // The RXSUBCOM REGISTER parameters are incorrect
             parmerr(Error_RXSUBC_register);
         }
-        scbname=argv[2];                  /* Should be Environment Name */
-        scbdll_name=argv[3];              /* Should be Dll Name         */
-        scbdll_proc=argv[4];              /* Should be Function Name    */
-                                          /* Go register the environment*/
         return RexxRegisterSubcomDll(argv[2], argv[3], argv[4], NULL, RXSUBCOM_DROPPABLE);
-    }                                 /*                            */
+    }
+
     CASE("QUERY")
-    {                      /* Query Check                */
-        /* requires 3 parameters */
-        if (argc<3)
+    {
+        if (args < 1 || args > 2)      // QUERY envname [dllname]
         {
+            // The RXSUBCOM QUERY parameters are incorrect
             parmerr(Error_RXSUBC_query);
         }
-        /* if only 3 passed, dummy 4  */
-        if (argc<4)
-        {
-            scbdll_name = "";
-        }
-        else
-        {
-            scbdll_name = argv[3];
-        }
         unsigned short flags;
-        return RexxQuerySubcom(argv[2], scbdll_name, &flags, NULL);
-    }                                 /*                            */
+        return RexxQuerySubcom(argv[2], args == 1 ? NULL : argv[3], &flags, NULL);
+    }
+
     CASE("DROP")
-    {                       /* Drop Check                 */
-        /* Must pass at least 3 args*/
-        if (argc<3)
+    {
+        if (args < 1 || args > 2)      // DROP envname [dllname]
         {
+            // The RXSUBCOM DROP parameters are incorrect
             parmerr(Error_RXSUBC_drop);
         }
-        /* if only 3 passed, dummy 4  */
-        if (argc<4)
-        {
-            scbdll_name = "";
-        }
-        else
-        {
-            scbdll_name = argv[3];
-        }
-        return RexxDeregisterSubcom(argv[2], scbdll_name);
+        return RexxDeregisterSubcom(argv[2], args == 1 ? NULL : argv[3]);
     }
+
     CASE("LOAD")
     {
-        if (argc<3)
+        if (args < 1 || args > 2)      // LOAD envname [dllname]
         {
+            // The RXSUBCOM LOAD parameters are incorrect
             parmerr(Error_RXSUBC_load);
         }
-        if (argc<4)
-        {
-            scbdll_name = "";
-        }
-        else
-        {
-            scbdll_name = argv[3];
-        }
-        return RexxLoadSubcom(argv[2], argv[3]);
+        return RexxLoadSubcom(argv[2], args == 1 ? NULL : argv[3]);
     }
-    parmerr(Error_RXSUBC_general);      /* Otherwise, must be a error */
-    return 0;                           /* dummy return               */
+
+    // The RXSUBCOM parameters are incorrect
+    parmerr(Error_RXSUBC_general);
+    return 0;                          // this will never be reached
 }
 
-void parmerr( int   msgid )            /* removed useless code       */
+void parmerr(int msgid )
 {
-    // retrieve the message from the central catalog
+    // retrieve the message from the central catalog and print it
     const char *message = RexxGetErrorMessage(msgid);
-
-    printf("\n%s\n", message);    /* print the message                 */
+    printf("%s\n", message);
 
     exit(-1);
 }

@@ -112,7 +112,7 @@ RexxReturnCode REXXENTRY MyTestSubcomHandler(CONSTRXSTRING *Cmd, unsigned short 
 
     if (Cmd->strlength > RXAUTOBUFLEN - 1) {
         *flags = RXSUBCOM_ERROR;
-        return 0;
+        return 30;
     }
     *flags = RXSUBCOM_OK;
     strcpy(Retstr->strptr, Cmd->strptr);

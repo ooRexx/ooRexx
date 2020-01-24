@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -57,7 +57,7 @@ RegistrationData::RegistrationData(const char *n, const char *m, SessionID s, Se
     userData[0] = regData->userData[0];
     userData[1] = regData->userData[1];
     entryPoint = 0;
-    references = NULL;
+    references = new SessionCookie(s);
 }
 
 /**
@@ -78,7 +78,7 @@ RegistrationData::RegistrationData(const char *n, SessionID s, ServiceRegistrati
     userData[0] = regData->userData[0];
     userData[1] = regData->userData[1];
     entryPoint = regData->entryPoint;
-    references = NULL;
+    references = new SessionCookie(s);
 }
 
 /**
@@ -160,7 +160,6 @@ void RegistrationData::addSessionReference(SessionID s)
 void RegistrationData::removeSessionReference(SessionID s)
 {
     SessionCookie *cookie = findSessionReference(s);
-    // already there?  just add a reference.
     if (cookie != NULL)
     {
         if (cookie->removeReference() == 0)
@@ -195,7 +194,7 @@ SessionCookie *RegistrationData::findSessionReference(SessionID s)
 /**
  * Remove a session reference cookie from the chain.
  *
- * @param s      The cookit to remove.
+ * @param s      The cookie to remove.
  */
 void RegistrationData::removeSessionReference(SessionCookie *s)
 {
@@ -232,24 +231,31 @@ void RegistrationTable::registerLibraryCallback(ServiceMessage &message)
     // get the argument names
     const char *name = message.nameArg;
     const char *module = regData->moduleName;
+    // We don't know whether we're being called through RXSUBCOM or not,
+    // but if we are, there's a certain complication: registering and
+    // dropping will be called with a different session ID as each
+    // subcommand runs in a separate process.  But as RXSUBCOM REGISTER
+    // will always call us with DROP_ANY, we can fix this by setting the
+    // session ID to zero upon registration, and later when dropping.
+    SessionID session = regData->dropAuthority == DROP_ANY ? 0 : message.session;
 
     RegistrationData *callback = locate(name, module);
     // update the reference counts to make sure drops don't
     // clear things out for other processes.
     if (callback != NULL)
     {
-        callback->addSessionReference(message.session);
-        message.setResult(REGISTRATION_COMPLETED);
+        callback->addSessionReference(session);
+        message.setResult(DUPLICATE_REGISTRATION);
     }
     else
     {
-        callback = new RegistrationData(name, module, message.session, regData);
+        callback = new RegistrationData(name, module, session, regData);
 
         // add to the chain
         callback->next = firstLibrary;
         firstLibrary = callback;
 
-        if (locate(name, message.session) != NULL)
+        if (locate(name, session) != NULL)
         {
             message.setResult(DUPLICATE_REGISTRATION);
         }
@@ -275,9 +281,12 @@ void RegistrationTable::registerCallback(ServiceMessage &message)
     ServiceRegistrationData *regData = (ServiceRegistrationData *)message.getMessageData();
     // get the argument name
     const char *name = message.nameArg;
+    // If we're registering with DROP_ANY, we set the session ID to zero
+    // here and when dropping the registration.
+    SessionID session = regData->dropAuthority == DROP_ANY ? 0 : message.session;
 
     // now locate an exe registration.
-    RegistrationData *callback = locate(name, message.session);
+    RegistrationData *callback = locate(name, session);
     // update the reference counts to make sure drops don't
     // clear things out for other processes.
     if (callback != NULL)
@@ -286,7 +295,7 @@ void RegistrationTable::registerCallback(ServiceMessage &message)
     }
     else
     {
-        callback = new RegistrationData(name, message.session, regData);
+        callback = new RegistrationData(name, session, regData);
 
         // add to the chain
         callback->next = firstEntryPoint;
@@ -338,7 +347,7 @@ void RegistrationTable::queryCallback(ServiceMessage &message)
 }
 
 
-// General query by name and qualified module name.  Can return only the EXE version
+// General query by name and qualified module name.
 // Message arguments have the following meanings:
 //
 // parameter1 -- registration type
@@ -359,7 +368,7 @@ void RegistrationTable::queryLibraryCallback(ServiceMessage &message)
         return;
     }
 
-    // now check a library version first.
+    // check for a library version
     RegistrationData *callback = locate(name, module);
     // copy the data if we found this
     if (callback != NULL)
@@ -435,13 +444,14 @@ void RegistrationTable::dropCallback(ServiceMessage &message)
         }
         else
         {
-
             // remove this session reference.
-            callback->removeSessionReference(message.session);
+            callback->removeSessionReference(callback->dropAuthority == DROP_ANY ? 0 : message.session);
             // still referenced by other processes?
             if (callback->hasReferences())
             {
-                message.setResult(DROP_NOT_AUTHORIZED);
+                // the callback has more references, but docs say we
+                // don't return DUPLICATE_REGISTRATION here
+                message.setResult(CALLBACK_DROPPED);
             }
             else
             {
@@ -477,7 +487,7 @@ void RegistrationTable::dropLibraryCallback(ServiceMessage &message)
     // if not requesting by module name, handle like a normal request
     if (strlen(module) == 0)
     {
-        queryCallback(message);
+        dropCallback(message);
         return;
     }
 
@@ -494,13 +504,12 @@ void RegistrationTable::dropLibraryCallback(ServiceMessage &message)
         }
         else
         {
-
             // remove this session reference.
-            callback->removeSessionReference(message.session);
+            callback->removeSessionReference(callback->dropAuthority == DROP_ANY ? 0 : message.session);
             // still referenced by other processes?
             if (callback->hasReferences())
             {
-                message.setResult(DROP_NOT_AUTHORIZED);
+                message.setResult(DUPLICATE_REGISTRATION);
             }
             else
             {
@@ -538,7 +547,7 @@ RegistrationData *RegistrationTable::locate(RegistrationData *anchor, const char
     RegistrationData *current = anchor;
     RegistrationData *previous = NULL;
 
-    while (current != NULL)              /* while more queues          */
+    while (current != NULL)              /* while more registrations   */
     {
         // find the one we want?
         if (current->matches(name))
@@ -563,7 +572,7 @@ void RegistrationTable::remove(RegistrationData **anchor, RegistrationData *bloc
     RegistrationData *current = *anchor;
     RegistrationData *previous = NULL;
 
-    while (current != NULL)              /* while more queues          */
+    while (current != NULL)              /* while more registrations   */
     {
         // find the one we want?
         if (current == block)
@@ -600,7 +609,7 @@ RegistrationData *RegistrationTable::locate(const char *name, const char *module
     RegistrationData *current = firstLibrary;
     RegistrationData *previous = NULL;
 
-    while (current != NULL)              /* while more queues          */
+    while (current != NULL)              /* while more registrations   */
     {
         // find the one we want?
         if (current->matches(name, module))
@@ -616,7 +625,8 @@ RegistrationData *RegistrationTable::locate(const char *name, const char *module
 }
 
 /**
- * search for a library-type registration
+ * search for a library-type registration, qualified by name, and
+ * if not found, search for an exe registration.
  *
  * @param name   The target name.
  *
@@ -647,7 +657,7 @@ RegistrationData *RegistrationTable::locate(const char *name, SessionID session)
     RegistrationData *current = firstEntryPoint;
     RegistrationData *previous = NULL;
 
-    while (current != NULL)              /* while more queues          */
+    while (current != NULL)              /* while more registrations   */
     {
         // find the one we want?
         if (current->matches(name, session))

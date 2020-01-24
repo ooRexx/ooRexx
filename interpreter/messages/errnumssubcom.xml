@@ -3,16 +3,16 @@
 <para>RXSUBCOM issues the following errors:</para>
 
 <section id="ERR116">
-<title>Error 116 - The RXSUBCOM parameter REGISTER is incorrect.</title>
+<title>Error 116 - The RXSUBCOM REGISTER parameters are incorrect.</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
 <para>RXSUBCOM REGISTER requires the following parameters:
             <variablelist>
-                <title>RXSUBCOM REGISTER Environment_Name Dll_Name Procedure_Name</title>
+                <title>RXSUBCOM REGISTER envname dllname procname</title>
                 <varlistentry>
                     <term>
-                        Environment_Name
+                        envname
                     </term>
                     <listitem>
                         <para>
@@ -22,7 +22,7 @@
                 </varlistentry>
                 <varlistentry>
                     <term>
-            .           Dll_Name
+            .           dllname
                     </term>
                     <listitem>
                         <para>
@@ -32,7 +32,7 @@
                 </varlistentry>
                 <varlistentry>
                     <term>
-            .           Procedure_Name
+            .           procname
                     </term>
                     <listitem>
                         <para>
@@ -44,16 +44,16 @@
         </para>
 </section>
 <section id="ERR117">
-<title>Error 117 - The RXSUBCOM parameter DROP is incorrect.</title>
+<title>Error 117 - The RXSUBCOM DROP parameters are incorrect.</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
-<para>RXSUBCOM DROP requires that the subcommand handler name be specified.
+<para>RXSUBCOM DROP requires the environment name be specified.
            <variablelist>
-               <title>RXSUBCOM DROP Environment_Name [Dll_Name]</title>
+               <title>RXSUBCOM DROP envname [dllname]</title>
                <varlistentry>
                    <term>
-                       Environment_Name
+                       envname
                    </term>
                    <listitem>
                        <para>
@@ -63,7 +63,7 @@
                </varlistentry>
                <varlistentry>
                    <term>
-           .           Dll_Name
+           .           dllname
                    </term>
                    <listitem>
                        <para>
@@ -76,16 +76,16 @@
         </para>
 </section>
 <section id="ERR118">
-<title>Error 118 - The RXSUBCOM parameter LOAD is incorrect.</title>
+<title>Error 118 - The RXSUBCOM LOAD parameters are incorrect.</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
-<para>RXSUBCOM LOAD requires that the subcommand handler name be specified.
+<para>RXSUBCOM LOAD requires the environment name be specified.
             <variablelist>
-                <title>RXSUBCOM LOAD Environment_Name [Dll_Name]</title>
+                <title>RXSUBCOM LOAD envname [dllname]</title>
                 <varlistentry>
                     <term>
-                        Environment_Name
+                        envname
                     </term>
                     <listitem>
                         <para>
@@ -95,7 +95,7 @@
                 </varlistentry>
                 <varlistentry>
                     <term>
-            .           Dll_Name
+            .           dllname
                     </term>
                     <listitem>
                         <para>
@@ -108,16 +108,16 @@
         </para>
 </section>
 <section id="ERR125">
-<title>Error 125 - The RXSUBCOM parameter QUERY is incorrect.</title>
+<title>Error 125 - The RXSUBCOM QUERY parameters are incorrect.</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
 <para>RXSUBCOM QUERY requires the environment name be specified.
             <variablelist>
-                <title>RXSUBCOM QUERY Environment_Name [Dll_Name]</title>
+                <title>RXSUBCOM QUERY envname [dllname]</title>
                 <varlistentry>
                     <term>
-                        Environment_Name
+                        envname
                     </term>
                     <listitem>
                         <para>
@@ -127,7 +127,7 @@
                 </varlistentry>
                 <varlistentry>
                     <term>
-            .           Dll_Name
+            .           dllname
                     </term>
                     <listitem>
                         <para>
