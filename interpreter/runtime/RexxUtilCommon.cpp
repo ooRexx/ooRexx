@@ -1791,7 +1791,7 @@ RexxRoutine4(CSTRING, SysFileSearch, RexxStringObject, needle, CSTRING, file, Re
         {
             if (linenums)
             {
-                char lineNumber[16];
+                char lineNumber[32];
                 snprintf(lineNumber, sizeof(lineNumber), "%zu ", currentLine);
 
                 size_t totalLineSize = strlen(lineNumber) + lineLength;
@@ -1805,7 +1805,7 @@ RexxRoutine4(CSTRING, SysFileSearch, RexxStringObject, needle, CSTRING, file, Re
                 }
 
                 // now build the return value
-                strncpy((char *)lineBuffer, lineNumber, sizeof(totalLineSize));
+                strncpy((char *)lineBuffer, lineNumber, totalLineSize);
                 memcpy((char *)lineBuffer + strlen(lineNumber), line, lineLength);
 
                 RexxStringObject returnValue = context->NewString(lineBuffer, totalLineSize);
