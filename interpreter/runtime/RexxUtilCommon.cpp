@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -1768,6 +1768,8 @@ RexxRoutine4(CSTRING, SysFileSearch, RexxStringObject, needle, CSTRING, file, Re
     // if we can't open, return the error indicator
     if (!fileSource.open(qualifiedName))
     {
+        // no items are returned
+        context->SetStemArrayElement(stem, 0, context->WholeNumber(0));
         return ERROR_FILEOPEN;
     }
 
@@ -1791,15 +1793,15 @@ RexxRoutine4(CSTRING, SysFileSearch, RexxStringObject, needle, CSTRING, file, Re
         {
             if (linenums)
             {
-                char lineNumber[32];
+                char lineNumber[32]; // 64-bit numbers require 20 chars + blank + NUL
                 snprintf(lineNumber, sizeof(lineNumber), "%zu ", currentLine);
 
                 size_t totalLineSize = strlen(lineNumber) + lineLength;
 
-                AutoFree lineBuffer = (char *)malloc(totalLineSize + 8);
+                AutoFree lineBuffer = (char *)malloc(totalLineSize);
                 if (lineBuffer == NULL)
                 {
-                    // make sure we update the count with the number of return items
+                    // we still return the items we've collected so far
                     context->SetStemArrayElement(stem, 0, context->StringSizeToObject(currentStemIndex));
                     return ERROR_NOMEM;
                 }
