@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -2571,59 +2571,66 @@ nomethod:
   raise syntax 88.918 array("date", basetime)
 
 
--- parse a week number date in the form
--- "yyyy-Www-d" into a date object
+-- parse a week number date in either basic ISO format yyyyWwwd
+-- or extended ISO format yyyy-Www-d into a date object
 ::METHOD fromWeekNumberDate class
-   use strict arg _date, sep = ("-"), offset=(time('O')/60000000), offset=(time('O')/60000000)
-   parse var _date year (sep||'W') weekNumber (sep) dayNumber
+   use strict arg _date, offset=(time('O')/60000000)
+   if _date~contains("-") then
+       parse var _date year "-W" weekNumber "-" dayNumber
+   else
+       parse var _date year "W" +1 weekNumber +2 dayNumber
 
    signal on syntax
 
-   -- January 4th of the same year is used to calculate the correction value
-   pivot = .datetime~new(year, 1, 4)
-   -- this will calculate the ordinal value for the day, which may need adjusting
-   ordinal = weekNumber * 7 + dayNumber - (pivot~weekDay + 3)
+   -- to calculate the start of W01 we use January 4th which is always
+   -- a day within W01. Then the start of W01 is -pivot~weekDay
+   pivot = self~new(year, 1, 4)
 
-   -- if the ordinal goes less than one, then this belongs to the previous
-   -- year and we can use value plus the number of days in the previous year
-   -- to get the ordinal value in that year. Note that due to good fortune,
-   -- the week number date for January 1, 0001 is 0001-W-01-1, so we will never
-   -- have to deal with the year 0000.
-   if ordinal < 1 then do
-       previousYear = .dateTime~new(year - 1, 12, 31)
-       year = previousYear~year
-       ordinal = ordinal + previousYear~daysInYear
-   end
-   -- the very last day of the range we support, December 31, 9999, has
-   -- a weekNumberDate of 9999-W52-5, so we never have to deal with a valid
-   -- date requiring 5 digits for the year.
-   else if ordinal > pivot~daysInYear then do
-       year = year + 1
-       ordinal -= pivot~daysInYear
-   end
+   -- now we need to validate all date components
+   -- WholeNumber validation isn't enough here, we don't accept e. g. 1e03
+   -- we also require fixed lengths with leading zeros
+   if year~verify("0123456789") \= 0 | year~length \= 4 |,
+      weekNumber~verify("0123456789") \= 0 | weekNumber~length \= 2 |,
+      weekNumber < 1 | weekNumber > pivot~weeksInYear |,
+      dayNumber~verify("0123456789") \= 0 | dayNumber~length \= 1 |,
+      dayNumber < 1 | dayNumber > 7 then
+       signal syntax
 
-   -- the easiest way to calculate this is
-   return self~new(year, 1, 1, offset)~addDays(ordinal - 1)
+   -- we calculate the offset in days relative to pivot day
+   offset = (weekNumber - 1) * 7 + dayNumber - pivot~weekDay
+   -- even if the offset is negative or larger than 365, addDays will handle
+   -- Note that due to good fortune, the week number date for Jan 1, 0001
+   -- is 0001-W01-1, so we will never have to deal with the year 0000.
+   -- Also, December 31, 9999 has a weekNumberDate of 9999-W52-5, so we
+   -- never have to deal with a valid date requiring 5 digits for the year.
+   -- We will still raise syntax if we get a request for 9999-W52-6 or -7
+   return pivot~addDays(offset)
 
    syntax:
    raise syntax 88.918 array("date", _date)
 
--- create a DateTime instance from an ordinal date in the form
--- YYYY-DDD
+-- create a DateTime instance from an ISO ordinal date either in
+-- extended format yyyy-ddd or in basic format yyyyddd
 ::METHOD fromOrdinalDate class
-   use strict arg _date, sep = ("-"), offset=(time('O')/60000000), offset=(time('O')/60000000)
-   parse var _date year (sep) ordinal
+   use strict arg _date, offset=(time('O')/60000000)
+   if _date~contains("-") then
+       parse var _date year "-" ordinal
+   else
+       parse var _date year +4 ordinal
 
    signal on syntax
 
-   -- we get a datetime object based on the first of the year. We need this so we
+   -- we get a datetime object based on the first day of the year. We need this so we
    -- can determine if the ordinal value is within the range for this year
    base = .datetime~new(year, 1, 1, offset)
 
-   -- make sure this is in the correct range
-   if ordinal < 1 | ordinal > base~daysInYear then do
-       raise syntax 88.918 array("date", _date)
-   end
+   -- now we need to validate all date components
+   -- WholeNumber validation isn't enough here, we don't accept e. g. 1e03
+   -- we also require fixed lengths with leading zeros
+   if year~verify("0123456789") \= 0 | year~length \= 4 |,
+      ordinal~verify("0123456789") \= 0 | ordinal~length \= 3 |,
+      ordinal < 1 | ordinal > base~daysInYear then
+       signal syntax
 
    -- the easiest way to calculate this is to add an offset from the first of the year
    return base~addDays(ordinal - 1)
@@ -2666,29 +2673,27 @@ nomethod:
   numeric digits 18    -- need higher digits for time calculations
 
   argCount = arg()
-
   select
       when argCount == 0 then do
           -- no arguments, use current time and local timezone offset
           self~setTimeStamp(date('Full'), time('O')/60000000)
       end
-      when arg() <= 2 then do    -- just create from a microseconds value
+      when argCount <= 2 then do    -- just create from a microseconds value
           use strict arg timestamp, offset=(time('O')/60000000)
           -- seems silly, but this validates the time
           self~setTimeStamp(date('f', timestamp, 'f'), offset)
       end
-      when arg() <= 4 then do
+      when argCount <= 4 then do
           -- year month day to microseconds value
           use strict arg year, month, day, offset=(time('O')/60000000)
 
           -- format into a convertable date
-          timestamp = self~convertDate(year, month, day)
           self~setTimeStamp(self~convertDate(year, month, day), offset)
       end
-      -- only other format is everything, and only the microseconds are optional.
+      -- only other format is everything, except for optional seconds and microseconds.
       otherwise
           -- starting with year, month, day, hours, minutes, seconds
-          use strict arg year, month, day, hours, minutes, seconds, usecs = 0, offset=(time('O')/60000000)
+          use strict arg year, month, day, hours, minutes, seconds = 0, usecs = 0, offset=(time('O')/60000000)
 
           timestamp = self~convertDate(year, month, day) + self~convertTime(hours, minutes, seconds, usecs)
           self~setTimeStamp(timestamp, offset)
@@ -2700,16 +2705,16 @@ nomethod:
   use arg timestamp, offset
 
   numeric digits 18
-  -- if this is a timespan, then grab the number of microseconds in the
+  -- if offset is a timespan, then grab the number of microseconds in the
   -- span, retaining the sign
   if offset~isa(.TimeSpan) then
-      offset = offset~totalMicroseconds
-  else do
-     -- must be a whole number
-     .Validate~wholeNumber("offset", offset)
-     -- we need to convert from minutes to microseconds
-     offset = offset * 60000000
-  end
+      offset = offset~totalMicroseconds / 60000000
+  -- as of today, world time zone offsets range from -12:00 to +14:00
+  -- for good measure we allow offsets between -15:00 and +15:00
+  .Validate~wholeNumberRange("offset", offset, -900, 900)
+  -- we need to convert from minutes to microseconds
+  offset = offset * 60000000
+
   -- adjust the internal timestamp back to UTC
   utctimestamp = timestamp - offset
 
@@ -2723,7 +2728,7 @@ nomethod:
   date = year~right(4, '0')month~right(2, '0')day~right(2, '0')
   return date('F', date, 'S')
 
--- private utility method to get a full date value from an hour/minute/second/microseconds set.
+-- private utility method to get a full time value from an hour/minute/second/microseconds set.
 ::METHOD convertTime private
   use arg hours, minutes, seconds, usecs = 0
 
@@ -2872,9 +2877,7 @@ nomethod:
   -- 2 dates is pretty meaningless
   use strict arg other
 
-  -- "+" can do the addition to either a timespan or a datetime.
-  -- When addition occurs between two timespaces, the result is a timespan.
-  -- When adding to a datatime, the result is a datetime.
+  -- When adding a timespan, the result is a datetime.
   if other~isa(.timespan) then do
       -- combine the two intervals, using the same timezone value
       return self~class~new(timestamp + other~totalMicroseconds, self~offset)
@@ -3011,7 +3014,7 @@ nomethod:
   use strict arg
   return date("S",timestamp,"F","-")"T"time("L", timestamp, "F")
 
--- Format the datetime into full ISO format, yyyy-mm-ddT00:00:00.000000+hhmm
+-- Format the datetime into full ISO format, yyyy-mm-ddT00:00:00.000000+hh:mm
 ::METHOD utcIsoDate
   expose timeStamp offset
   use strict arg
@@ -3100,11 +3103,11 @@ nomethod:
   use strict arg sep = ("/")
   return date("U", timestamp, "F", sep);
 
--- Format the date time into the ISO week number format, yyyy-Www-d
+-- Format the date into the ISO week number format, yyyy-Www-d
 ::METHOD weekNumberDate
   use strict arg
 
-  return right(self~weekNumberYear, 4, '0')"-W"right(self~weekNumber, 2, '0')"-"self~weekDayNumber
+  return right(self~weekNumberYear, 4, '0')"-W"right(self~weekNumber, 2, '0')"-"self~weekDay
 
 -- return the date as a year/ordinal pair in the formay YYYY-DDD
 ::METHOD ordinalDate
@@ -3159,17 +3162,21 @@ nomethod:
   use strict arg offset=0
 
   numeric digits 18
-  -- if this is a timespan, then grab the number of microseconds in the
+  -- if offset is a timespan, then grab the number of microseconds in the
   -- span, retaining the sign
   if offset~isa(.TimeSpan) then do
       adjustment = offset~totalMicroseconds
       offset = adjustment/60000000
   end
   else do
-     -- offset in minutes, must be a whole number
-     .Validate~wholeNumber("offset", offset)
-     adjustment = offset * 60000000
+      -- we need to convert from minutes to microseconds
+      adjustment = offset * 60000000
   end
+
+  -- as of today, world time zone offsets range from -12:00 to +14:00
+  -- for good measure we allow offsets between -15:00 and +15:00
+  .Validate~wholeNumberRange("offset", offset, -900, 900)
+
   -- we create a new DateTime by converting the UTC time to
   -- the target timezone, then create a new object using that offset
   return self~class~new(utcTimeStamp + adjustment, offset)
@@ -3221,7 +3228,9 @@ nomethod:
   use strict arg
   year = self~year
 
-  return year // 4 == 0 & ((year // 100 \= 0) | (year // 400 == 0))
+  if year // 4 == 0, year // 100 \== 0 | year // 400 == 0
+      then return .true
+      else return .false
 
 -- Returns the number of days in the current month.  This accounts
 -- for leap years.
@@ -3229,98 +3238,41 @@ nomethod:
   use strict arg
   month = self~month
 
-  if self~isLeapYear then do
-      return "31 29 31 30 31 30 31 31 30 31 30 31"~word(month)
-  end
-  else do
-      return "31 28 31 30 31 30 31 31 30 31 30 31"~word(month)
-  end
+  if month == 2 then
+      return 28 + self~isLeapYear
+  else
+      return "31 . 31 30 31 30 31 31 30 31 30 31"~word(month)
 
 -- Returns the number of days in the current year.  This accounts
 -- for leap years.
 ::METHOD daysInYear
   use strict arg
 
-  if self~isLeapYear then do
-      return 366
-  end
-  else do
-      return 365
-  end
-
--- calculate the correction factor for determining the weekNumber and the
--- day of the week
-::METHOD correction PRIVATE
-
-  -- we can calculate this from a single formula, but it is much more complicated
-  -- when we're dealing with the beginning or end of the year
-  -- the details of the formula can be found here:
-  -- https://en.wikipedia.org/wiki/ISO_week_date#Calculation
-
-  year = self~year
-
-  -- this is a correction based on the century the year is in
-  c = year~left(2) // 4
-  y = year~right(2) // 28
-
-  -- this is a correction factor that handles the beginning or ends of the year.
-  -- c = (y + floor ((y - 1)/4) + 5 C - 1) mod 7 - 7 if the result > 3
-  correction = (y + ((y - 1) / 4)~floor + (5 * c - 1)) // 7
-
-  -- this needs adjusting if greater than 3
-  if correction > 3 then do
-      correction -= 7
-  end
-  return correction
+  return 365 + self~isLeapYear
 
 
 -- Returns the ISO week number for a given date
 ::METHOD weekNumber
   use strict arg
 
-  -- the calculation is fairly straightforward except for the beginning or end of the year.
-  -- do that now
+  -- we calculate the ISO week number according to
+  -- https://en.wikipedia.org/wiki/ISO_week_date#Calculation
+  -- week(date) = ( ordinal(date) - weekday(date) + 10 ) % 7
+  -- week = ( lastWeek(year-1), week < 1
+  --        ( 1,                week > lastWeek(year)
   weekNumber = (self~yearDay - self~weekDay + 10) % 7
 
   -- if not on the edges, then we are done
-  if weekNumber >= 1 & weekNumber < 52 then do
+  if weekNumber >= 1, weekNumber <= 52 then
       return weekNumber
-  end
-
-  -- ceil ((od + c)/7) = week number
-  weekNumber = ((self~yearDay + self~correction) / 7)~ceiling
-
   -- if this is less than one, then the day belongs to the last week of the previous year
-  if weekNumber < 1 then do
-      weekNumber = self~addYears(-1)~weeksInYear
-  end
-  -- if greater than 52, see if it falls first week of next year
-  else if weekNumber > 52, weekNumber > self~weeksInYear then do
-      weekNumber = 1
-  end
+  else if weekNumber < 1 then
+      return self~addYears(-1)~weeksInYear
+  -- if greater than 52, see if it falls into first week of next year
+  else return (weekNumber > self~weeksInYear)~?(1, weekNumber)
 
-  return weekNumber
-
--- Returns the ISO week day number for a given date. This is the number of the day within
--- the current week, with 1 == Monday, etc.
-::METHOD weekDayNumber
-  use strict arg
-
-  -- (od + c) mod 7 = weekday number
-  weekDayNumber = (self~yearDay + self~correction) // 7
-
-  -- the above gives Sunday as zero, and if it falls into a previous or
-  -- or following year, this is a negative number. Adding 7 yields the correct
-  -- result
-  if weekDayNumber < 1 then do
-      weekDayNumber += 7
-  end
-
-  return weekDayNumber
-
-
--- return the year associated with this dates week number. This may be
--- different that the year for dates at the beginning or end of the year
+-- return the year associated with this date's week number. This may be
+-- different than the year for dates at the beginning or end of the year
 ::METHOD weekNumberYear
   use strict arg
 
@@ -3329,12 +3281,12 @@ nomethod:
   month = self~month
 
   -- if the week number is 1 but we're in December, then this actually is part of next year
-  if weekNumber == 1 & month == 12 then do
+  if weekNumber == 1, month == 12 then do
       year += 1
   end
-  -- if the week number is at the end of the year but the date in in January, then
+  -- if the week number is at the end of the year but the date is in January, then
   -- this belongs to the previous year
-  else if weekNumber >= 52 & month == 1 then do
+  else if weekNumber >= 52, month == 1 then do
       year -= 1
   end
 
@@ -3345,23 +3297,21 @@ nomethod:
 ::method weeksInYear
   use strict arg
 
-  date = .datetime~new(self~year, 1, 1)
+  -- we calculate the number of ISO weeks according to
+  -- https://en.wikipedia.org/wiki/ISO_week_date#Weeks_per_year
+  -- weeks(year) = 52 + ( 1   if p(year) = 4 or p(year-1) = 3
+  --                    ( 0   otherwise
+  -- p(year) = (year + year % 4 - year % 100 + year % 400 ) mod 7
 
-  -- any year starting on a thursday has 53 weeks
-  if date~weekDay == 4 then return 53
-  -- any leap year starting on a wednesday also has 53 weeks
-  if date~isLeapYear & date~weekDay == 3 then return 53
+  year = self~year
+  if p(year) \= 4, p(year - 1) \= 3 then
+      return 52
+  else
+      return 53
 
-  lastDay = .datetime~new(self~year, 12, 31)
-  -- any year ending on a thursday has 53 weeks
-
-  if lastDay~weekDay == 4 then return 53
-
-  -- any leap year ending in a friday also has 53 weeks
-  if lastDay~isLeapYear & lastDay~weekDay == 5 then return 53
-
-  -- all others have 52
-  return 52
+  p: procedure
+      parse arg year
+      return (year + year % 4 - year % 100 + year % 400 ) // 7
 
 
 -- Returns a string form for this date time.  The string value
@@ -3486,16 +3436,25 @@ nomethod:
   select
       when arg() <= 1 then do    -- just create from a microseconds value
           use strict arg timestamp
+          .Validate~wholeNumber("timestamp", timestamp, 18)
       end
       when arg() <= 3 then do
           -- convert hours, minutes, seconds to microseconds value
-          use strict arg hours, minutes, seconds
-          timestamp = ((hours * 3600) + (minutes * 60) + seconds) * 1000000
+          use strict arg hours, minutes, seconds = 0
+          .Validate~wholeNumberRange("hours", hours, 0, 23)
+          .Validate~wholeNumberRange("minutes", minutes, 0, 59)
+          .Validate~wholeNumberRange("seconds", seconds, 0, 59)
+          timestamp = (hours * 3600 + minutes * 60 + seconds) * 1000000
       end
       otherwise
           -- starting with days, hours, minutes, seconds, and microseconds
           use strict arg days, hours, minutes, seconds, microseconds = 0
-          timestamp = (((days * 24 * 3600) + (hours * 3600) + (minutes * 60) + seconds) * 1000000) + microseconds
+          .Validate~nonNegativeWholeNumber("days", days)
+          .Validate~wholeNumberRange("hours", hours, 0, 23)
+          .Validate~wholeNumberRange("minutes", minutes, 0, 59)
+          .Validate~wholeNumberRange("seconds", seconds, 0, 59)
+          .Validate~wholeNumberRange("microseconds", microseconds, 0, 999999)
+          timestamp = ((days * 24 + hours) * 3600 + minutes * 60 + seconds) * 1000000 + microseconds
   end
 
   -- this will validate the timestamp value
@@ -3675,12 +3634,12 @@ nomethod:
       return self~class~new(timestamp)
   end
 
-  -- ok, actually addition.  We require
+  -- ok, actually addition.  We require a timespan or a datetime.
   use strict arg other
 
   -- "+" can do the addition to either a timespan or a datetime.
-  -- When addition occurs between two timespaces, the result is a timespan.
-  -- When adding to a datatime, the result is a datetime.
+  -- When addition occurs between two timespans, the result is a timespan.
+  -- When adding a datetime, the result is a datetime.
   if other~isa(.timespan) then do
       -- combine the two intervals
       return self~class~new(timestamp + other~totalMicroseconds)
@@ -3857,7 +3816,7 @@ nomethod:
 
 
 -- NOTE: undocumented ArgUtil class has been superseded by documented Validate class
--- ArgUtil is deprected, use of it is discouraged, as it may be removed in the future
+-- ArgUtil is deprecated, use of it is discouraged, as it may be removed in the future
 ::CLASS 'ArgUtil' public
 ::METHOD validateNumber class
   use strict arg name, number
