@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -136,8 +136,6 @@ bool SysFileSystem::searchFileName(const char *name, FileNameBuffer &fullName)
 bool SysFileSystem::getFullPathName(const char *name, FileNameBuffer &fullName)
 {
     // now try for original name
-    AutoErrorMode errorMode(SEM_FAILCRITICALERRORS);
-
     if (name[0] == '\\' && name[1] == '\\' && name[2] == '?' && name[3] == '\\')
     {
        // if name starts with the Win32 namespace prefix \\?\ this may
@@ -182,7 +180,6 @@ bool SysFileSystem::getFullPathName(const char *name, FileNameBuffer &fullName)
 bool SysFileSystem::searchOnPath(const char *name, const char *path, const char *extension, FileNameBuffer &fullName)
 {
     // now try for original name
-    AutoErrorMode errorMode(SEM_FAILCRITICALERRORS);
     LPSTR filePart;
 
     DWORD rc = SearchPath(path, name, extension, (DWORD)fullName.capacity(), fullName, &filePart);
@@ -201,7 +198,6 @@ bool SysFileSystem::searchOnPath(const char *name, const char *path, const char 
     }
 
     return rc > 0;
-
 }
 
 
@@ -252,7 +248,6 @@ bool SysFileSystem::findFirstFile(const char *name)
     HANDLE FindHandle;
     WIN32_FIND_DATA FindData;
 
-    AutoErrorMode errorMode(SEM_FAILCRITICALERRORS);
     FindHandle = FindFirstFile(name, &FindData);
 
     if (FindHandle != INVALID_HANDLE_VALUE)

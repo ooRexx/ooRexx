@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -129,6 +129,12 @@ void SysInterpreterInstance::initialize(InterpreterInstance *i, RexxOption *opti
     // enable trapping for CTRL_C exceptions
     SetConsoleCtrlHandler(&WinConsoleCtrlHandler, true);
     instance = i;
+
+    // we never want to see a critical-error-handler message box.
+    // according to MS docs: "Best practice is that all applications call
+    // the process-wide SetErrorMode function with a parameter of
+    // SEM_FAILCRITICALERRORS at startup
+    SetErrorMode(SEM_FAILCRITICALERRORS);
 
     // add our default search extension
     addSearchExtension(".REX");

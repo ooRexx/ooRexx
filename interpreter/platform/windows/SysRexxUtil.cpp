@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -283,7 +283,6 @@ RexxRoutine1(RexxStringObject, SysDriveInfo, CSTRING, drive)
     char driveLetter[8];
     snprintf(driveLetter, sizeof(driveLetter), "%c:\\", toupper(drive[0]));
 
-    AutoErrorMode errorMode(SEM_FAILCRITICALERRORS);
     char volumeName[MAX_PATH];
     char fileSystemType[MAX_PATH];
 
@@ -448,7 +447,6 @@ RexxRoutine2(RexxStringObject, SysDriveMap, OPTIONAL_CSTRING, drive, OPTIONAL_CS
                 char deviceName[8];
                 snprintf(deviceName, sizeof(deviceName), "%c:\\", dnum + 'A' - 1);
 
-                AutoErrorMode errorMode(SEM_FAILCRITICALERRORS);
                 // if this matches what we're looking for, add it to the list
                 if (driveType == GetDriveType(deviceName))
                 {
@@ -1748,23 +1746,23 @@ RexxRoutine0(RexxStringObject, SysSystemDirectory)
 
 RexxRoutine1(RexxStringObject, SysFileSystemType, OPTIONAL_CSTRING, drive)
 {
-    CHAR chDriveLetter[4];
-
     if (drive != NULL)
     {
         size_t driveLen = strlen(drive);
-
-        if (driveLen == 0 || driveLen > 2 || (driveLen == 2 && drive[1] != ':'))
+        char driveChar = toupper(drive[0]);
+        char chDriveLetter[4];
+        // GetVolumeInformation requires a trailing backslash
+        // if we have just a-z or a: - z: we add a backslash
+        if (driveLen >= 1 && driveLen <= 2 &&
+            driveChar >= 'A' && driveChar <= 'Z' &&
+           (drive[1] == '\0' || drive[1] == ':'))
         {
-            context->ThrowException1(Rexx_Error_Incorrect_call_user_defined, context->String("Invalid drive specification"));
+            snprintf(chDriveLetter, sizeof(chDriveLetter), "%c:\\", drive[0]);
+            drive = chDriveLetter;
         }
-        snprintf(chDriveLetter, sizeof(chDriveLetter), "%c:\\", drive[0]);
-        drive = chDriveLetter;
     }
-
-
-    AutoErrorMode errorMode(SEM_FAILCRITICALERRORS);
-
+    // in addition to the special case above, all of these should work:
+    // \, C:\, \\localhost\C$\, \\?\C:\, \\.\C:\, NULL
     char fileSystemName[MAX_PATH];
 
     RexxStringObject result = context->NullString();
