@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -3428,13 +3428,14 @@ void Activity::createRedirectorContext(RedirectorContext &context, NativeActivat
  * @param name   The name we're interested in.
  * @param dir    A parent directory to use as part of the search.
  * @param ext    Any parent extension name.
+ * @param type   The resolve type, RESOLVE_DEFAULT or RESOLVE_REQUIRES.
  *
  * @return The fully resolved file name, if it exists.  Returns OREF_NULL for
  *         non-located files.
  */
-RexxString *Activity::resolveProgramName(RexxString *name, RexxString *dir, RexxString *ext)
+RexxString *Activity::resolveProgramName(RexxString *name, RexxString *dir, RexxString *ext, ResolveType type)
 {
-    return instance->resolveProgramName(name, dir, ext);
+    return instance->resolveProgramName(name, dir, ext, type);
 }
 
 

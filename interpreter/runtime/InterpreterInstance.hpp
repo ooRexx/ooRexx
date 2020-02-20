@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -54,6 +54,12 @@ class CommandHandler;
 class PackageClass;
 class RoutineClass;
 
+typedef enum
+{
+    RESOLVE_DEFAULT,
+    RESOLVE_REQUIRES,
+} ResolveType;
+
 class InterpreterInstance : public RexxInternalObject
 {
 // the SysInterpreterInstance is essentially an extension of this class,
@@ -104,7 +110,7 @@ public:
     void removeInactiveActivities();
     bool haltAllActivities(RexxString *);
     void traceAllActivities(bool on);
-    RexxString *resolveProgramName(RexxString *name, RexxString *dir, RexxString *ext);
+    RexxString *resolveProgramName(RexxString *name, RexxString *dir, RexxString *ext, ResolveType type);
     inline SecurityManager *getSecurityManager() { return securityManager; }
     void setSecurityManager(RexxObject *m);
     RexxInstance *getInstanceContext() { return &context.instanceContext; }

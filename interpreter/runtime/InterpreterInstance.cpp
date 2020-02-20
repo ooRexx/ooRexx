@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -893,7 +893,6 @@ void InterpreterInstance::addRequiresFile(RexxString *shortName, RexxString *ful
  */
 PackageClass *InterpreterInstance::loadRequires(Activity *activity, RexxString *shortName, RexxString *fullName)
 {
-
     // if we've already loaded this in this instance, just return it.
     Protected<PackageClass> package = getRequiresFile(activity, shortName);
     if (!package.isNull())
@@ -1028,11 +1027,13 @@ PackageClass *InterpreterInstance::loadRequires(Activity *activity, RexxString *
  *                   The extension our calling program has.  If there is an extension,
  *                   we'll use that version first before trying any of the default
  *                   extensions.
+ * @param type       Either RESOLVE_REQUIRES, which requests an additional extension
+ *                   to be tried before the standard search order, or RESOLVE_DEFAULT.
  *
  * @return A string version of the file name, if found.  Returns OREF_NULL if
  *         the program cannot be found.
  */
-RexxString* InterpreterInstance::resolveProgramName(RexxString *_name, RexxString *_parentDir, RexxString *_parentExtension)
+RexxString* InterpreterInstance::resolveProgramName(RexxString *_name, RexxString *_parentDir, RexxString *_parentExtension, ResolveType type)
 {
     FileNameBuffer resolvedName;
 
@@ -1054,6 +1055,15 @@ RexxString* InterpreterInstance::resolveProgramName(RexxString *_name, RexxStrin
         return OREF_NULL;
     }
 
+    // if we are resolving a REQUIRES file, we first try extension .cls
+    if (type == RESOLVE_REQUIRES)
+    {
+        if (SysFileSystem::searchName(name, searchPath.path, ".cls", resolvedName))
+        {
+            return new_string(resolvedName);
+        }
+    }
+
     // if we have a parent extension provided, use that in preference to any default searches
     if (parentExtension != NULL)
     {
@@ -1061,7 +1071,6 @@ RexxString* InterpreterInstance::resolveProgramName(RexxString *_name, RexxStrin
         {
             return new_string(resolvedName);
         }
-
     }
 
     // ok, now time to try each of the individual extensions along the way.

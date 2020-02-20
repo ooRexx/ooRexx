@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -67,7 +67,7 @@ void TranslateDispatcher::run()
     // if not an instore request, then this must be a resolvable name
     if (instore == NULL)
     {
-        Protected<RexxString> fullname = activity->resolveProgramName(name, OREF_NULL, OREF_NULL);
+        Protected<RexxString> fullname = activity->resolveProgramName(name, OREF_NULL, OREF_NULL, RESOLVE_DEFAULT);
         if (fullname == OREF_NULL)
         {
             reportException(Error_Program_unreadable_notfound, name);

@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -144,7 +144,7 @@ PackageClass *PackageClass::newRexx(RexxObject **init_args, size_t argCount)
     {
         // if no directly provided source, resolve the name in the global context and have the instance
         // load the file.
-        Protected<RexxString> resolvedName = instance->resolveProgramName(nameString, OREF_NULL, OREF_NULL);
+        Protected<RexxString> resolvedName = instance->resolveProgramName(nameString, OREF_NULL, OREF_NULL, RESOLVE_REQUIRES);
         package = instance->loadRequires(activity, nameString, resolvedName);
     }
     // we're creating an in-memory package.  We allow a parent context object to be specified
@@ -887,7 +887,7 @@ RoutineClass *PackageClass::findRoutine(RexxString *routineName)
  */
 RexxString *PackageClass::resolveProgramName(Activity *activity, RexxString *name)
 {
-    RexxString *fullName = activity->resolveProgramName(name, programDirectory, programExtension);
+    RexxString *fullName = activity->resolveProgramName(name, programDirectory, programExtension, RESOLVE_REQUIRES);
     // if we can't resolve this directly and we have a parent context, then
     // try the parent context.
     if (fullName == OREF_NULL && parentPackage != OREF_NULL)
@@ -915,7 +915,7 @@ RexxObject *PackageClass::findProgramRexx(RexxObject *name)
 
     // get a fully resolved name for this....we might locate this under either name, but the
     // fully resolved name is generated from this source file context.
-    Protected<RexxString> programName = instance->resolveProgramName(target, programDirectory, programExtension);
+    Protected<RexxString> programName = instance->resolveProgramName(target, programDirectory, programExtension, RESOLVE_REQUIRES);
     if (programName != (RexxString *)OREF_NULL)
     {
         return programName;

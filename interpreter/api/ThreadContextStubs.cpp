@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -323,7 +323,7 @@ RexxPackageObject RexxEntry LoadPackage(RexxThreadContext *c, CSTRING n)
     try
     {
         Protected<RexxString> name = new_string(n);
-        RexxString *resolvedName = context.activity->resolveProgramName(name, OREF_NULL, OREF_NULL);
+        RexxString *resolvedName = context.activity->resolveProgramName(name, OREF_NULL, OREF_NULL, RESOLVE_DEFAULT);
 
         // convert the name to a string instance, and check the environments.
         return (RexxPackageObject)context.ret(context.activity->getInstance()->loadRequires(context.activity, name, resolvedName));

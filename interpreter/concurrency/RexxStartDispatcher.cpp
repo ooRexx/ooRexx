@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -123,7 +123,7 @@ void RexxStartDispatcher::run()
     // if not an instore request, we load this from a file.
     if (instore == NULL)
     {
-        fullname = activity->resolveProgramName(name, OREF_NULL, OREF_NULL);
+        fullname = activity->resolveProgramName(name, OREF_NULL, OREF_NULL, RESOLVE_DEFAULT);
         if (fullname == OREF_NULL)
         {
             reportException(Error_Program_unreadable_notfound, name);
@@ -225,7 +225,7 @@ void CallProgramDispatcher::run()
 {
     RexxString *targetName = new_string(program);
     //we are resolving from a program name
-    RexxString *name = activity->resolveProgramName(targetName, OREF_NULL, OREF_NULL);
+    RexxString *name = activity->resolveProgramName(targetName, OREF_NULL, OREF_NULL, RESOLVE_DEFAULT);
     if (name == OREF_NULL)
     {
         reportException(Error_Program_unreadable_notfound, targetName);

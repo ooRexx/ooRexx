@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -1773,7 +1773,7 @@ EndClassDefinition(StackFrame);
             // CoreClasses contains additional classes written in Rexx and enhances some of the
             // base classes with methods written in Rexx.
             RexxString *symb = getGlobalName(BASEIMAGELOAD);
-            RexxString *programName = ActivityManager::currentActivity->resolveProgramName(symb, OREF_NULL, OREF_NULL);
+            RexxString *programName = ActivityManager::currentActivity->resolveProgramName(symb, OREF_NULL, OREF_NULL, RESOLVE_DEFAULT);
             // create a new stack frame to run under
             ActivityManager::currentActivity->createNewActivationStack();
             try
