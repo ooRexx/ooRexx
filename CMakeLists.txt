@@ -1014,7 +1014,7 @@ set (core_classes ${build_rexx_classes_dir}/CoreClasses.orx
 # additional source files required by specific platforms
 if (WIN32)
    set (platform_rexximage_sources
-            ${build_platform_dir}/rexx.rc)
+            ${build_platform_dir}/verinfo.rc)
 endif ()
 # Sources for rexximg
 add_executable(rexximage ${build_utilities_rexximage_dir}/rexximage.cpp
@@ -1194,7 +1194,7 @@ endif()
 # additional source files required by specific platforms
 if (WIN32)
    set (platform_rexxc_sources
-            ${build_platform_dir}/rexx.rc)
+            ${build_platform_dir}/verinfo.rc)
 else ()
    set (platform_rexxc_libs ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
 endif ()
@@ -1440,10 +1440,9 @@ if (WIN32)
    set (OOD_MAJOR 4)
    set (OOD_MINOR 2)
    set (OOD_MOD_LVL 4)
-   set (OOD_BLD_LVL 11506)
-   set (OOD_VER_STR "4.2.4.11506")
+   set (OOD_BLD_LVL 11861)
+   set (OOD_VER_STR "4.2.4.11861")
    set (OOD_COPY_YEAR "2005-2019")
-   set (OOD_SVN_REVSION 11506)
 
    #################### ooshapes.dll ################
    # Sources for ooshapes.dll
@@ -1650,7 +1649,7 @@ endif ()
 if (WIN32)
    # Sources for rexxhide.
    add_executable(rexxhide WIN32 ${build_utilities_rexxhide_dir}/rexxhide.cpp
-                           ${build_platform_dir}/rexx.rc)
+                           ${build_platform_dir}/verinfo.rc)
    # Include file definition
    target_include_directories(rexxhide PUBLIC
                ${build_lib_dir}
@@ -1669,7 +1668,7 @@ endif ()
 if (WIN32)
    # Sources for rexxpaws.
    add_executable(rexxpaws ${build_utilities_rexxpaws_dir}/rexxpaws.cpp
-                           ${build_platform_dir}/rexx.rc)
+                           ${build_platform_dir}/verinfo.rc)
    # Include file definition
    target_include_directories(rexxhide PUBLIC
                ${build_lib_dir}

@@ -1,6 +1,6 @@
 //----------------------------------------------------------------------------*/
 //                                                                            */
-// Copyright (c) 2013-2014 Rexx Language Association. All rights reserved.    */
+// Copyright (c) 2013-2020 Rexx Language Association. All rights reserved.    */
 //                                                                            */
 // This program and the accompanying materials are made available under       */
 // the terms of the Common Public License v1.0 which accompanies this         */
@@ -168,32 +168,33 @@ IDI_DELETE_XX      ICON           ".\\_deleteXX.ico"
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 IDI_UP_ARROW       ICON           ".\\_upArrowBlue.ico"
 
+#define OOD_COPYRIGHT "Copyright (c) " OOREXX_COPY_YEAR " RexxLA\0"
 
 1 VERSIONINFO
  FILEVERSION OOD_VER,OOD_REL,OOD_MOD,OOD_BLD
  PRODUCTVERSION OOD_VER,OOD_REL,OOD_MOD,OOD_BLD
  FILEFLAGSMASK VS_FFI_FILEFLAGSMASK
 #ifdef _DEBUG
- FILEFLAGS VS_FF_DEBUG
+ FILEFLAGS VS_FF_DEBUG              // File contains debugging information
 #else
- FILEFLAGS 0x0L
+ FILEFLAGS 0x0L                     // none of the VS_FF_* values
 #endif
- FILEOS VOS__WINDOWS32
- FILETYPE VFT_APP
- FILESUBTYPE VFT2_UNKNOWN
+ FILEOS VOS__WINDOWS32              // File was designed for 32-bit Windows
+ FILETYPE VFT_APP                   // File contains an application
+ FILESUBTYPE VFT2_UNKNOWN           // does not apply
 BEGIN
     BLOCK "StringFileInfo"
     BEGIN
-        BLOCK "040904b0"
+        BLOCK "040904b0"            // 0x0409 = U.S. English, 1200 = Unicode
         BEGIN
             VALUE "CompanyName", "Rexx Language Association\0"
-            VALUE "FileDescription", "ooDialog Program Launcher\0"
+            VALUE "FileDescription", "Open Object Rexx, ooDialog\0"
             VALUE "FileVersion", OOD_VER_STR "\0"
-            VALUE "InternalName", "ooDialog\0"
-            VALUE "LegalCopyright", "Copyright © RexxLA " OOD_COPY_YEAR ".\0"
+            VALUE "InternalName", "ooDialog executable\0"
+            VALUE "LegalCopyright", "Copyright (c) " OOREXX_COPY_YEAR " RexxLA\0"
             VALUE "OriginalFilename", OOD_BIN_NAME "\0"
-            VALUE "ProductName", "ooDialog, a Windows Extension to Open Object Rexx\0"
-            VALUE "ProductVersion",  OOD_VER_STR "\0"
+            VALUE "ProductName", "Open Object Rexx for Windows\0"
+            VALUE "ProductVersion", OOD_VER_STR "\0"
         END
     END
     BLOCK "VarFileInfo"
@@ -201,4 +202,3 @@ BEGIN
         VALUE "Translation", 0x409, 1200
     END
 END
-

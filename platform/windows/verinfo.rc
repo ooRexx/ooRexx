@@ -1,7 +1,7 @@
 //----------------------------------------------------------------------------
 //
 // Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.
-// Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.
+// Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.
 //
 // This program and the accompanying materials are made available under
 // the terms of the Common Public License v1.0 which accompanies this
@@ -36,31 +36,40 @@
 //
 //----------------------------------------------------------------------------
 
+#include "windows.h"
+
+// The "LegalCopyright" inline concatenation suprisingly works, but for
+// the "Version" statments we must use these BOOST_PP_STRINGIZE macros
+// THe RC compiler will autoamtically add \0 to the string
+#define STRINGIZE(text) STRINGIZE_A((text))
+#define STRINGIZE_A(arg) STRINGIZE_I arg
+#define STRINGIZE_I(text) #text
+
 1 VERSIONINFO
  FILEVERSION ORX_VER,ORX_REL,ORX_MOD,ORX_BLD
  PRODUCTVERSION ORX_VER,ORX_REL,ORX_MOD,ORX_BLD
- FILEFLAGSMASK 0x3fL
+ FILEFLAGSMASK VS_FFI_FILEFLAGSMASK // A combination of all VS_FF_* values
 #ifdef _DEBUG
- FILEFLAGS 0x1L
+ FILEFLAGS VS_FF_DEBUG              // File contains debugging information
 #else
- FILEFLAGS 0x0L
+ FILEFLAGS 0x0L                     // none of the VS_FF_* values
 #endif
- FILEOS 0x4L
- FILETYPE 0x0L
- FILESUBTYPE 0x0L
+ FILEOS VOS__WINDOWS32              // File was designed for 32-bit Windows
+ FILETYPE VFT_UNKNOWN               // File type is unknown
+ FILESUBTYPE VFT2_UNKNOWN           // does not apply
 BEGIN
     BLOCK "StringFileInfo"
     BEGIN
-        BLOCK "040904b0"
+        BLOCK "040904b0"            // 0x0409 = U.S. English, 1200 = Unicode
         BEGIN
             VALUE "CompanyName", "Rexx Language Association\0"
-            VALUE "FileDescription", "Open Object Rexx Component\0"
-            VALUE "FileVersion", ORX_VER_STR "\0"
+            VALUE "FileDescription", "Open Object Rexx component\0"
+            VALUE "FileVersion", STRINGIZE(ORX_VER.ORX_REL.ORX_MOD.ORX_BLD)
             VALUE "InternalName", "\0"
-            VALUE "LegalCopyright", "Copyright © RexxLA " OOREXX_COPY_YEAR ".\0"
+            VALUE "LegalCopyright", "Copyright (c) " OOREXX_COPY_YEAR " RexxLA\0"
             VALUE "OriginalFilename", "\0"
             VALUE "ProductName", "Open Object Rexx for Windows\0"
-            VALUE "ProductVersion",  ORX_VER_STR "\0"
+            VALUE "ProductVersion", STRINGIZE(ORX_VER.ORX_REL.ORX_MOD)
         END
     END
     BLOCK "VarFileInfo"
@@ -68,4 +77,3 @@ BEGIN
         VALUE "Translation", 0x409, 1200
     END
 END
-

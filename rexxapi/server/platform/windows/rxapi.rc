@@ -1,67 +1,77 @@
-//----------------------------------------------------------------------------*/
-//                                                                            */
-// Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-// Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
-//                                                                            */
-// This program and the accompanying materials are made available under       */
-// the terms of the Common Public License v1.0 which accompanies this         */
-// distribution. A copy is also available at the following address:           */
-// http://www.oorexx.org/license.html                          */
-//                                                                            */
-// Redistribution and use in source and binary forms, with or                 */
-// without modification, are permitted provided that the following            */
-// conditions are met:                                                        */
-//                                                                            */
-// Redistributions of source code must retain the above copyright             */
-// notice, this list of conditions and the following disclaimer.              */
-// Redistributions in binary form must reproduce the above copyright          */
-// notice, this list of conditions and the following disclaimer in            */
-// the documentation and/or other materials provided with the distribution.   */
-//                                                                            */
-// Neither the name of Rexx Language Association nor the names                */
-// of its contributors may be used to endorse or promote products             */
-// derived from this software without specific prior written permission.      */
-//                                                                            */
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS        */
-// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT          */
-// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS          */
-// FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT   */
-// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,      */
-// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED   */
-// TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,        */
-// OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY     */
-// OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING    */
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS         */
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
-//                                                                            */
-//----------------------------------------------------------------------------*/
+//----------------------------------------------------------------------------
+//
+// Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.
+// Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.
+//
+// This program and the accompanying materials are made available under
+// the terms of the Common Public License v1.0 which accompanies this
+// distribution. A copy is also available at the following address:
+// http://www.oorexx.org/license.html
+//
+// Redistribution and use in source and binary forms, with or
+// without modification, are permitted provided that the following
+// conditions are met:
+//
+// Redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer.
+// Redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in
+// the documentation and/or other materials provided with the distribution.
+//
+// Neither the name of Rexx Language Association nor the names
+// of its contributors may be used to endorse or promote products
+// derived from this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+// FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+// TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+// OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+// OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+//----------------------------------------------------------------------------
+
 RXAPICO ICON "rxapi.ico"
+
+#include "windows.h"
+
+// The "LegalCopyright" inline concatenation suprisingly works, but for
+// the "Version" statments we must use these BOOST_PP_STRINGIZE macros
+// THe RC compiler will autoamtically add \0 to the string
+#define STRINGIZE(text) STRINGIZE_A((text))
+#define STRINGIZE_A(arg) STRINGIZE_I arg
+#define STRINGIZE_I(text) #text
 
 1 VERSIONINFO
  FILEVERSION ORX_VER,ORX_REL,ORX_MOD,ORX_BLD
  PRODUCTVERSION ORX_VER,ORX_REL,ORX_MOD,ORX_BLD
- FILEFLAGSMASK 0x3fL
+ FILEFLAGSMASK VS_FFI_FILEFLAGSMASK // A combination of all VS_FF_* values
 #ifdef _DEBUG
- FILEFLAGS 0x1L
+ FILEFLAGS VS_FF_DEBUG              // File contains debugging information
 #else
- FILEFLAGS 0x0L
+ FILEFLAGS 0x0L                     // none of the VS_FF_* values
 #endif
- FILEOS 0x4L
- FILETYPE 0x1L
- FILESUBTYPE 0x0L
+ FILEOS VOS__WINDOWS32              // File was designed for 32-bit Windows
+ FILETYPE VFT_APP                   // File contains an application
+ FILESUBTYPE VFT2_UNKNOWN           // does not apply
 BEGIN
     BLOCK "StringFileInfo"
     BEGIN
-        BLOCK "040904b0"
+        BLOCK "040904b0"            // 0x0409 = U.S. English, 1200 = Unicode
         BEGIN
             VALUE "CompanyName", "Rexx Language Association\0"
-            VALUE "FileDescription", "Open Object Rexx API manager\0"
-            VALUE "FileVersion", ORX_VER_STR "\0"
-            VALUE "InternalName", "API manager\0"
-            VALUE "LegalCopyright", "Copyright © RexxLA " OOREXX_COPY_YEAR ".\0"
-            VALUE "OriginalFilename", "RXAPI.EXE\0"
+            VALUE "FileDescription", "Open Object Rexx executable\0"
+            VALUE "FileVersion", STRINGIZE(ORX_VER.ORX_REL.ORX_MOD.ORX_BLD)
+            VALUE "InternalName", "ooRexx executable\0"
+            VALUE "LegalCopyright", "Copyright (c) " OOREXX_COPY_YEAR " RexxLA\0"
+            VALUE "OriginalFilename", "rxapi.exe\0"
             VALUE "ProductName", "Open Object Rexx for Windows\0"
-            VALUE "ProductVersion",  ORX_VER_STR "\0"
+            VALUE "ProductVersion", STRINGIZE(ORX_VER.ORX_REL.ORX_MOD)
         END
     END
     BLOCK "VarFileInfo"
