@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -47,6 +47,7 @@
 #include "PackageSetting.hpp"
 #include "SourceLocation.hpp"
 #include "LanguageParser.hpp"
+#include "InterpreterInstance.hpp"
 
 class ProgramSource;
 class RexxCode;
@@ -89,7 +90,7 @@ public:
     ArrayClass   *extractSource();
     void          mergeRequired(PackageClass *);
     void          mergeLibrary(LibraryPackage *);
-    PackageClass *loadRequires(Activity *activity, RexxString *target);
+    PackageClass *loadRequires(Activity *activity, RexxString *target, ResolveType type);
     PackageClass *loadRequires(Activity *activity, RexxString *target, ArrayClass *s);
     void          addPackage(PackageClass *package);
     void          inheritPackageContext(PackageClass *parent);
@@ -108,7 +109,7 @@ public:
     RexxClass    *findClass(RexxString *, RexxString *);
     RexxClass    *findInstalledClass(RexxString *name);
     RexxClass    *findPublicClass(RexxString *name);
-    RexxString   *resolveProgramName(Activity *activity, RexxString *name);
+    RexxString   *resolveProgramName(Activity *activity, RexxString *name, ResolveType type);
     void          processInstall(RexxActivation *);
     void          install();
     bool          isTraceable();

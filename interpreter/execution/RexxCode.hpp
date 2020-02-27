@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -95,7 +95,7 @@ class RexxCode : public BaseCode
    inline StringTable *getMethods() { return package->getMethods(); };
    inline StringTable *getRoutines() { return package->getRoutines(); };
    inline RoutineClass *findRoutine(RexxString *n) { return package->findRoutine(n); }
-   inline RexxString *resolveProgramName(Activity *activity, RexxString *name) { return package->resolveProgramName(activity, name); }
+   inline RexxString *resolveProgramName(Activity *activity, RexxString *name, ResolveType type) { return package->resolveProgramName(activity, name, type); }
    inline void        mergeRequired(PackageClass *s) { package->mergeRequired(s); }
           RexxCode *interpret(RexxString *source, size_t lineNumber);
           void addInstruction(RexxInstruction *i, size_t m, size_t v);

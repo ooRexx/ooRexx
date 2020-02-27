@@ -881,18 +881,19 @@ RoutineClass *PackageClass::findRoutine(RexxString *routineName)
  *
  * @param activity The current activity
  * @param name     The target name
+ * @param type     The resolve type, RESOLVE_DEFAULT or RESOLVE_REQUIRES
  *
  * @return The fully resolved string name of the target program, if one is
  *         located.
  */
-RexxString *PackageClass::resolveProgramName(Activity *activity, RexxString *name)
+RexxString *PackageClass::resolveProgramName(Activity *activity, RexxString *name, ResolveType type)
 {
-    RexxString *fullName = activity->resolveProgramName(name, programDirectory, programExtension, RESOLVE_REQUIRES);
+    RexxString *fullName = activity->resolveProgramName(name, programDirectory, programExtension, type);
     // if we can't resolve this directly and we have a parent context, then
     // try the parent context.
     if (fullName == OREF_NULL && parentPackage != OREF_NULL)
     {
-        fullName = parentPackage->resolveProgramName(activity, name);
+        fullName = parentPackage->resolveProgramName(activity, name, type);
     }
     return fullName;
 }
@@ -915,7 +916,7 @@ RexxObject *PackageClass::findProgramRexx(RexxObject *name)
 
     // get a fully resolved name for this....we might locate this under either name, but the
     // fully resolved name is generated from this source file context.
-    Protected<RexxString> programName = instance->resolveProgramName(target, programDirectory, programExtension, RESOLVE_REQUIRES);
+    Protected<RexxString> programName = instance->resolveProgramName(target, programDirectory, programExtension, RESOLVE_DEFAULT);
     if (programName != (RexxString *)OREF_NULL)
     {
         return programName;
@@ -1263,20 +1264,19 @@ void PackageClass::processInstall(RexxActivation *activation)
 
 /**
  * Load a ::REQUIRES directive when the source file is first
- * invoked.
+ * invoked.  This is also called from method loadPackage.
  *
  * @param target The name of the ::REQUIRES
- * @param instruction
- *               The directive instruction being processed.
+ * @param type   The resolve type, RESOLVE_DEFAULT or RESOLVE_REQUIRES
  */
-PackageClass *PackageClass::loadRequires(Activity *activity, RexxString *target)
+PackageClass *PackageClass::loadRequires(Activity *activity, RexxString *target, ResolveType type)
 {
     // we need the instance this is associated with
     InterpreterInstance *instance = activity->getInstance();
 
     // get a fully resolved name for this....we might locate this under either name, but the
     // fully resolved name is generated from this source file context.
-    RexxString *fullName = resolveProgramName(activity, target);
+    RexxString *fullName = resolveProgramName(activity, target, type);
     ProtectedObject p(fullName);
 
     // if we've already loaded this in this instance, just return it.
@@ -1294,9 +1294,10 @@ PackageClass *PackageClass::loadRequires(Activity *activity, RexxString *target)
 
 
 /**
- * Load a ::REQUIRES directive from an provided source target
+ * Load a ::REQUIRES directive from a provided source target
  *
  * @param target The name of the ::REQUIRES
+ * @param s      An array of source lines
  */
 PackageClass *PackageClass::loadRequires(Activity *activity, RexxString *target, ArrayClass *s)
 {
@@ -1807,7 +1808,7 @@ PackageClass *PackageClass::loadPackageRexx(RexxString *name, ArrayClass *s)
     // if no source provided, this comes from a file
     if (s == OREF_NULL)
     {
-        return loadRequires(ActivityManager::currentActivity, packageName);
+        return loadRequires(ActivityManager::currentActivity, packageName, RESOLVE_REQUIRES);
     }
     else
     {

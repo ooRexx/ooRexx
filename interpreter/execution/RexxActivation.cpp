@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -2962,7 +2962,7 @@ bool RexxActivation::callExternalRexx(RexxString *target, RexxObject **arguments
     }
 
     // Get full name including path
-    Protected<RexxString> filename = resolveProgramName(target);
+    Protected<RexxString> filename = resolveProgramName(target, RESOLVE_DEFAULT);
     if (!filename.isNull())
     {
         // try for a saved program or translate a anew
@@ -3028,13 +3028,14 @@ RoutineClass *RexxActivation::getMacroCode(RexxString *macroName)
  * This is resolved in the context of the calling program.
  *
  * @param name   The name to resolve.
+ * @param type   The resolve type, RESOLVE_DEFAULT or RESOLVE_REQUIRES.
  *
  * @return The fully resolved program name, or OREF_NULL if this can't be
  *         located.
  */
-RexxString *RexxActivation::resolveProgramName(RexxString *name)
+RexxString *RexxActivation::resolveProgramName(RexxString *name, ResolveType type)
 {
-    return code->resolveProgramName(activity, name);
+    return code->resolveProgramName(activity, name, type);
 }
 
 

@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -212,7 +212,7 @@ class RexxActivation : public ActivationBase
    RexxObject      * internalCallTrap(RexxString *, RexxInstruction *, DirectoryClass *, ProtectedObject &);
    bool              callMacroSpaceFunction(RexxString *, RexxObject **, size_t, RexxString *, int, ProtectedObject &);
    static RoutineClass* getMacroCode(RexxString *macroName);
-   RexxString       *resolveProgramName(RexxString *name);
+   RexxString       *resolveProgramName(RexxString *name, ResolveType type);
    RexxClass        *findClass(RexxString *name);
    RexxObject       *resolveDotVariable(RexxString *name, RexxObject *&);
    void              command(RexxString *, RexxString *, CommandIOConfiguration *config);
