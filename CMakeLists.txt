@@ -1989,6 +1989,7 @@ if (WIN32 AND DOC_SOURCE_DIR)
    install(FILES ${DOC_SOURCE_DIR}/readme.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/CHANGES COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR} RENAME CHANGES.txt)
    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/ReleaseNotes COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR} RENAME ReleaseNotes.txt)
+   install(FILES ${DOC_SOURCE_DIR}/rexxapi.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
    install(FILES ${DOC_SOURCE_DIR}/rexxpg.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
    install(FILES ${DOC_SOURCE_DIR}/rexxref.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
    install(FILES ${DOC_SOURCE_DIR}/rxmath.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
@@ -2005,6 +2006,7 @@ if (WIN32 AND DOC_SOURCE_DIR)
    install_doc_shortcut("ooRexx CHANGES" "CHANGES.txt")
    install_doc_shortcut("ooRexx Release Notes" "ReleaseNotes.txt")
    install_doc_shortcut("ooRexx Reference" "rexxref.pdf")
+   install_doc_shortcut("ooRexx APIs (Application Programming Interfaces)" "rexxapi.pdf")
    install_doc_shortcut("ooRexx Programming Guide" "rexxpg.pdf")
    install_doc_shortcut("ooRexx Mathematical Functions Reference" "rxmath.pdf")
    install_doc_shortcut("ooRexx rxFTP Class Reference" "rxftp.pdf")
@@ -2051,6 +2053,7 @@ if (WIN32 AND DOC_SOURCE_DIR)
 
       add_custom_target(nsis_installer
          DEPENDS ${DOC_SOURCE_DIR}/readme.pdf
+                 ${DOC_SOURCE_DIR}/rexxapi.pdf
                  ${DOC_SOURCE_DIR}/rexxpg.pdf
                  ${DOC_SOURCE_DIR}/rexxref.pdf
                  ${DOC_SOURCE_DIR}/rxmath.pdf
