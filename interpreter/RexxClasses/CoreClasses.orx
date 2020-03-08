@@ -37,6 +37,12 @@
 /*----------------------------------------------------------------------------*/
 
 use arg rexxPackage
+-- IMPORTANT NOTE: All classes contained in this package must be added to the
+-- rexxPackage using either addClass or addPublicClass. In general, all that is
+-- needed is to ensure the PUBLIC keyword is specified on the ::CLASS directive
+-- for any classes intended to be visible at the user level.
+
+
 -- add the local server class to the Rexx package as a non public class
 rexxPackage~addClass('LOCALSERVER', .LocalServer)
 
@@ -157,7 +163,7 @@ exit
 /*    Additional S U P P L I E R methods                                      */
 /*============================================================================*/
 
-::class "SupplierMixin"
+::class "SupplierMixin" Public
 -- retrieve all items from the supplier from the current
 -- iteration point
 ::method allItems
@@ -203,7 +209,7 @@ exit
 /*============================================================================*/
 /*    M A N Y I T E M       M I X I N         (for Relation and Bag)          */
 /*============================================================================*/
-::class "ManyItemMixin"
+::class "ManyItemMixin" Public
 /*****************************************/
 /* UNION         method                  */
 /*****************************************/
@@ -396,7 +402,7 @@ nomethod:
 
 
 -- a mixin for SET methods written in Rexx code
-::CLASS 'SetMixin'
+::CLASS 'SetMixin' public
 
 /*****************************************/
 /* XOR        method                     */
@@ -542,7 +548,7 @@ nomethod:                              -- unknown method sent
 /*    B A G                   C L A S S    */
 /* *************************************** */
 
-::CLASS 'BagMixin'
+::CLASS 'BagMixin' public
 
 /*****************************************/
 /* UNION         method                  */
