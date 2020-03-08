@@ -1300,65 +1300,35 @@ RexxRoutine1(uint32_t, SysWinDecryptFile, CSTRING, fileName)
 
 RexxRoutine0(RexxStringObject, SysWinVer)
 {
-    char windowsDir[256];
-    char kernel32[256];
+    // MS has deprecated GetVersionEx().  Also, since 10.0.18363, querying
+    // the version information from one of the system DLLs won't give the
+    // correct version number any longer.  The only remaining option seems
+    // to be this:
+    // https://stackoverflow.com/questions/36543301/detecting-windows-10-version
 
-    // get the value of the WINDOWS environment variable
-    DWORD windowsDirLength = GetEnvironmentVariable("windir", windowsDir, sizeof(windowsDir));
+    #define STATUS_SUCCESS (0x00000000)
+    typedef LONG NTSTATUS;
+    typedef NTSTATUS (WINAPI* RtlGetVersionPtr)(PRTL_OSVERSIONINFOW);
 
-    // this should be there, but use the likely default if it isn't.
-    if (windowsDirLength == 0)
+    HMODULE hMod = ::GetModuleHandleW(L"ntdll.dll");
+    if (hMod != NULL)
     {
-        strncpy(windowsDir, "C:\\Windows", sizeof(windowsDir));
-    }
-
-    // get the full path name of the kernel32.dll
-    snprintf(kernel32, sizeof(kernel32), "%s\\System32\\kernel32.dll", windowsDir);
-
-    // MS has deprecated GetVersionEx(). The only way to get the real version
-    // information now is by querying the version information of one of the system dlls.
-    DWORD  verHandle = 0;
-    UINT   size      = 0;
-    LPBYTE lpBuffer  = NULL;
-    // get the size of the version information for this dll.
-    DWORD  verSize   = GetFileVersionInfoSize(kernel32, &verHandle);
-
-    if (verSize != NULL)
-    {
-        LPSTR verData = new char[verSize];
-
-        // get the version information
-        if (GetFileVersionInfo(kernel32, verHandle, verSize, verData))
+        RtlGetVersionPtr fxPtr = (RtlGetVersionPtr)::GetProcAddress(hMod, "RtlGetVersion");
+        if (fxPtr != NULL)
         {
-            // the query the specific version information
-            if (VerQueryValue(verData, "\\", (void **)&lpBuffer, &size))
+            RTL_OSVERSIONINFOW rovi;
+            rovi.dwOSVersionInfoSize = sizeof(rovi);
+            if (fxPtr(&rovi) == STATUS_SUCCESS)
             {
-                if (size > 0)
-                {
-                    VS_FIXEDFILEINFO *verInfo = (VS_FIXEDFILEINFO *)lpBuffer;
-                    if (verInfo->dwSignature == 0xfeef04bd)
-                    {
-                        char retstr[256];
+                char retstr[256];
 
-                        // Doesn't matter if you are on 32 bit or 64 bit,
-                        // DWORD is always 32 bits, so first two revision numbers
-                        // come from dwFileVersionMS, last two come from dwFileVersionLS
-                        snprintf(retstr, sizeof(retstr), "Windows %d.%d.%d",
-                                 (verInfo->dwFileVersionMS >> 16) & 0xffff,
-                                 (verInfo->dwFileVersionMS >>  0) & 0xffff,
-                                 (verInfo->dwFileVersionLS >> 16) & 0xffff);
-
-                        delete[] verData;
-
-                        return context->NewStringFromAsciiz(retstr);
-                    }
-                }
+                snprintf(retstr, sizeof(retstr), "Windows %d.%d.%d",
+                 rovi.dwMajorVersion, rovi.dwMinorVersion, rovi.dwBuildNumber);
+                return context->String(retstr);
             }
         }
-        delete[] verData;
     }
-
-    // just return a NULL if not able to get this
+    // just return the nullstring if we fail
     return context->NullString();
 }
 
