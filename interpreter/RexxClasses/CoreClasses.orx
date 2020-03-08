@@ -45,6 +45,12 @@ use arg rexxPackage
 
 -- add the local server class to the Rexx package as a non public class
 rexxPackage~addClass('LOCALSERVER', .LocalServer)
+-- these only exist as internal classes, but they need to be protected
+rexxPackage~addClass('SUPPLIERMIXIN', .SupplierMixin)
+rexxPackage~addClass('ManyItemMixin', .ManyItemMixin)
+rexxPackage~addClass('SetMixin', .SetMixin)
+rexxPackage~addClass('BagMixin', .BagMixin)
+
 
 .environment~objectname = "The Environment Directory"
 rexxPackage~objectname = "The REXX Package"
@@ -163,7 +169,7 @@ exit
 /*    Additional S U P P L I E R methods                                      */
 /*============================================================================*/
 
-::class "SupplierMixin" Public
+::class "SupplierMixin"
 -- retrieve all items from the supplier from the current
 -- iteration point
 ::method allItems
@@ -209,7 +215,7 @@ exit
 /*============================================================================*/
 /*    M A N Y I T E M       M I X I N         (for Relation and Bag)          */
 /*============================================================================*/
-::class "ManyItemMixin" Public
+::class "ManyItemMixin"
 /*****************************************/
 /* UNION         method                  */
 /*****************************************/
@@ -402,7 +408,7 @@ nomethod:
 
 
 -- a mixin for SET methods written in Rexx code
-::CLASS 'SetMixin' public
+::CLASS 'SetMixin'
 
 /*****************************************/
 /* XOR        method                     */
@@ -548,7 +554,7 @@ nomethod:                              -- unknown method sent
 /*    B A G                   C L A S S    */
 /* *************************************** */
 
-::CLASS 'BagMixin' public
+::CLASS 'BagMixin'
 
 /*****************************************/
 /* UNION         method                  */

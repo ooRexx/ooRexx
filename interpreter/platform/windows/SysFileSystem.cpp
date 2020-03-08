@@ -624,11 +624,11 @@ void SysFileSystem::getLongName(FileNameBuffer &fullName)
 
 
 /**
- * Resolve as much of the path as we can to obtain the path in the correct case.
- * This is generally only called when we have a file that does not exist yet, so
- * we cannot directly generate the path in the correct case. This requires
- * moving back through the path until we find portions that exist. None
- * existing portions of the path are left in the original case.
+ * Resolve as much of the path as we can to obtain the path in
+ * Unfortunately, GetLongPathName() will preserve original case
+ * for both the file names and portions of the the path, so we
+ * need to step back through all of the elements of the path and
+ * resolve the actual case name of the element.
  *
  * @param fullName The source path name. This will be overwritten with the correct
  *                 path on return.
