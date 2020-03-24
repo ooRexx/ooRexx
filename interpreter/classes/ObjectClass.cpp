@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -1663,6 +1663,27 @@ ArrayClass *RexxInternalObject::requestArray()
         ProtectedObject result;
         return(ArrayClass *)resultOrNil(((RexxObject *)this)->sendMessage(GlobalNames::REQUEST, GlobalNames::ARRAY, result));
     }
+}
+
+
+/**
+ * Request a double floating point number value from an object in a
+ * situation where a value is required.
+ *
+ * @param position  The position of the argument used for error reporting.
+ * @param precision The conversion precision.
+ *
+ * @return The double floating point number.
+ */
+double RexxInternalObject::requiredFloat(const char *position)
+{
+    double result;
+
+    if (!doubleValue(result))
+    {
+        reportException(Error_Invalid_argument_number, position, (RexxObject *)this);
+    }
+    return result;
 }
 
 

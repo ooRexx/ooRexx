@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -68,9 +68,10 @@ SysSemaphore::SysSemaphore(bool createSem)
 /* ********************************************************************** */
 void SysSemaphore::create()
 {
-   if (sem == 0 )
+   if (sem == 0)
    {
-       sem = CreateEvent(NULL, true, true, NULL);
+       // create a semaphore in manual-reset mode, and non-signaled state
+       sem = CreateEvent(NULL, true, false, NULL);
    }
 }
 

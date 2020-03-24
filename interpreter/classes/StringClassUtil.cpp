@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -49,7 +49,7 @@
 #include <ctype.h>
 
 /**
- * Take in an agument passed to a method, convert it to a length
+ * Take in an argument passed to a method, convert it to a length
  * object, verifying that the number is a non-negative value.
  * If the argument is omitted, an error is raised.
  *
@@ -75,7 +75,7 @@ size_t lengthArgument(RexxObject *argument, size_t position)
 
 
 /**
- * Take in an agument passed to a method, convert it to a length
+ * Take in an argument passed to a method, convert it to a length
  * object, verifying that the number is a non-negative value.
  * If the argument is omitted, an error is raised.
  *
@@ -101,7 +101,7 @@ size_t lengthArgument(RexxObject *argument, const char *position)
 
 
 /**
- * Take in an agument passed to a method, convert it to a
+ * Take in an argument passed to a method, convert it to a
  * numeric object. If the argument is omitted, an error is
  * raised.
  *
@@ -128,7 +128,7 @@ wholenumber_t numberArgument(RexxObject *argument, size_t position)
 
 
 /**
- * Take in an agument passed to a method, convert it to a
+ * Take in an argument passed to a method, convert it to a
  * numeric object. If the argument is omitted, an error is
  * raised.
  *
@@ -155,7 +155,7 @@ wholenumber_t numberArgument(RexxObject *argument, const char *position)
 
 
 /**
- * Take in an agument passed to a method, convert it to a length
+ * Take in an argument passed to a method, convert it to a length
  * object, verifying that the number is a non-negative value.
  * If the argument is omitted, an error is raised.
  *
@@ -176,7 +176,7 @@ size_t nonNegativeArgument(RexxObject *argument, size_t position )
 
 
 /**
- * Take in an agument passed to a method, convert it to a length
+ * Take in an argument passed to a method, convert it to a length
  * object, verifying that the number is a non-negative value.
  * If the argument is omitted, an error is raised.
  *
@@ -197,7 +197,7 @@ size_t nonNegativeArgument(RexxObject *argument, const char *position )
 
 
 /**
- * Take in an agument passed to a method, convert it to a position
+ * Take in an argument passed to a method, convert it to a position
  * value, verifying that the number is a positive value.
  * If the argument is omitted, an error is raised.
  *
@@ -223,7 +223,7 @@ size_t positionArgument(RexxObject *argument, size_t position )
 
 
 /**
- * Take in an agument passed to a method, convert it to a position
+ * Take in an argument passed to a method, convert it to a position
  * value, verifying that the number is a positive value.
  * If the argument is omitted, an error is raised.
  *
@@ -379,6 +379,31 @@ char optionArgument(RexxObject *argument, const char *validOptions, const char *
         reportException(Error_Incorrect_method_option, validOptions, parameter);
     }
     return option;
+}
+
+
+/**
+ * Take in an argument passed to a method, convert it to a
+ * floating point number. If the argument is omitted, an error is
+ * raised.
+ *
+ * @param argument The argument reference to test.
+ * @param position The name of the argument (used for error reporting.)
+ *
+ * @return The argument converted to a double floating point value.
+ */
+double floatingPointArgument(RexxObject *argument, const char *name)
+{
+    if (argument == OREF_NULL)
+    {
+        missingArgument(name);
+    }
+    double value;
+    if (!argument->doubleValue(value))
+    {
+        reportException(Error_Invalid_argument_number, name, argument);
+    }
+    return value;
 }
 
 

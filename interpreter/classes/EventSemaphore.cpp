@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -45,6 +45,7 @@
 #include "MethodArguments.hpp"
 #include "ProtectedObject.hpp"
 #include "ActivityManager.hpp"
+#include "PackageClass.hpp"
 
 
 RexxClass *EventSemaphoreClass::classInstance = OREF_NULL;   // singleton class instance
@@ -73,7 +74,7 @@ void* EventSemaphoreClass::operator new(size_t size)
 
 
 /**
- * Default constructor for the MutexSemaphore
+ * Default constructor for the EventSemaphore
  */
 EventSemaphoreClass::EventSemaphoreClass()
 {
@@ -147,15 +148,53 @@ RexxObject* EventSemaphoreClass::reset()
 }
 
 
-
 /**
- * release the mutext.
+ * wait for the semaphore to be posted.
  *
- * @return Always returns NULL.
+ * @param t  An optional timeout in seconds, either String or TimeSpan.
+ *           Returns immediately if the timeout is zero,
+ *           waits indefinitely if it's negative.
+ *           Default is -1.
+ *
+ * @return   true if the semaphore was posted,
+ *           false if there was a timeout.
  */
 RexxObject* EventSemaphoreClass::wait(RexxObject *t)
 {
-    wholenumber_t timeout = optionalNumberArgument(t, -1, "timeout");
+    wholenumber_t timeout;
+
+    if (t == OREF_NULL)
+    {
+        timeout = -1;
+    }
+    else
+    {
+        RexxObject *seconds;
+
+        // we allow timeout to be a TimeSpan or a String object
+        RexxClass *TimeSpan = TheRexxPackage->findClass(GlobalNames::TIMESPAN);
+        if (t->isInstanceOf(TimeSpan))
+        {
+            ProtectedObject p;
+            seconds = t->sendMessage(GlobalNames::TOTALSECONDS, p);
+        }
+        else
+        {
+            seconds = t;
+        }
+        double secs = floatingPointArgument(seconds, "timeout");
+        // wait() is uint32, so we can wait for 4294967 seconds at most
+        if (secs >= 0 && secs <= 4294967)
+        {
+            // we need milliseconds (the product will always fit a unint32)
+            timeout = (wholenumber_t)(secs * 1000.0);
+        }
+        else
+        {
+            // negative or too large, we just wait forever
+            timeout = -1;
+        }
+    }
 
     if (timeout < 0)
     {
@@ -181,14 +220,11 @@ RexxObject* EventSemaphoreClass::wait(RexxObject *t)
 /**
  * return the posted status of the semaphore
  *
- * @return Always returns NULL.
+ * @return true if the semaphore is currently posted, false otherwise.
  */
 RexxObject* EventSemaphoreClass::posted()
 {
     return booleanObject(semaphore.posted());
 }
-
-
-
 
 

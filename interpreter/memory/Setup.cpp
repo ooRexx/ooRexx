@@ -1318,7 +1318,6 @@ AddClassMethod("New", EventSemaphoreClass::newRexx, A_COUNT);
 
 CompleteClassMethodDefinitions();
 
-AddUnguardedMethod("Close", EventSemaphoreClass::close, 0);
 AddMethod("Uninit", EventSemaphoreClass::close, 0);
 AddUnguardedMethod("Post", EventSemaphoreClass::post, 0);
 AddUnguardedMethod("Reset", EventSemaphoreClass::reset, 0);
@@ -1342,7 +1341,6 @@ AddClassMethod("New", MutexSemaphoreClass::newRexx, A_COUNT);
 
 CompleteClassMethodDefinitions();
 
-AddUnguardedMethod("Close", MutexSemaphoreClass::close, 0);
 AddMethod("Uninit", MutexSemaphoreClass::close, 0);
 AddUnguardedMethod("Release", MutexSemaphoreClass::release, 0);
 AddUnguardedMethod("Acquire", MutexSemaphoreClass::request, 1);

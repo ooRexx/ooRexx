@@ -3515,7 +3515,7 @@ void Activity::removeMutex(MutexSemaphoreClass *sem)
     // if we don't have a mutex table or this semaphore does not appear
     // in our table, then it is probably owned by a a nested activity. Pass
     // this request along to the pushed down activity
-    if (heldMutexes == OREF_NULL || !heldMutexes->hasIndex(sem))
+    if (heldMutexes != OREF_NULL && heldMutexes->hasIndex(sem))
     {
         heldMutexes->remove(sem);
     }

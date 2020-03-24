@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -197,7 +197,7 @@ inline RexxString* optionalStringArgument(RexxObject *o, RexxString *d, const ch
 
 
 /**
- * Take in an agument passed to a method, convert it to a
+ * Take in an argument passed to a method, convert it to a
  * numeric object. If the argument is omitted, an error is
  * raised.
  *
@@ -210,7 +210,7 @@ wholenumber_t numberArgument(RexxObject *argument, size_t position);
 
 
 /**
- * Take in an agument passed to a method, convert it to a
+ * Take in an argument passed to a method, convert it to a
  * numeric object. If the argument is omitted, an error is
  * raised.
  *
@@ -642,6 +642,19 @@ inline size_t optionalPositive(RexxObject *o, size_t d, const char *p)
 {
     return (o == OREF_NULL ? d : o->requiredPositive(p));
 }
+
+
+/**
+ * Take in an argument passed to a method, convert it to a
+ * floating point number. If the argument is omitted, an error is
+ * raised.
+ *
+ * @param argument The argument reference to test.
+ * @param position The name of the argument (used for error reporting.)
+ *
+ * @return The argument converted to a double floating point value.
+ */
+double floatingPointArgument(RexxObject *argument, const char *name);
 
 
 /**

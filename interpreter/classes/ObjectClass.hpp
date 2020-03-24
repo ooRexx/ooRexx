@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -368,6 +368,7 @@ class RexxInternalObject : public RexxVirtualBase
     size_t requiredPositive(const char *position, wholenumber_t precision = Numerics::ARGUMENT_DIGITS);
     size_t requiredNonNegative(size_t position, wholenumber_t precision = Numerics::ARGUMENT_DIGITS);
     size_t requiredNonNegative(const char *position, wholenumber_t precision = Numerics::ARGUMENT_DIGITS);
+    double requiredFloat(const char *position);
 
     RexxString  *requestString();
     RexxString  *requestStringNoNOSTRING();
