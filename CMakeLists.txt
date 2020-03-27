@@ -1732,6 +1732,7 @@ configure_build_file(sortComposite.rex ${build_samples_dir})
 configure_build_file(synchronousConcurrency.rex ${build_samples_dir})
 configure_build_file(treeTraversal.rex ${build_samples_dir})
 configure_build_file(usetree.rex ${build_samples_dir})
+configure_build_file(usesingleton.rex ${build_samples_dir})
 
 add_custom_target(class_files ALL DEPENDS
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rxregexp.cls
@@ -1801,11 +1802,14 @@ install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/sortComposite.rex COMPONENT S
 install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/synchronousConcurrency.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/treeTraversal.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/usetree.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/usesingleton.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 
 install(PROGRAMS ${SAMPLES_SOURCE}/complex.cls COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 install(PROGRAMS ${SAMPLES_SOURCE}/pipe.cls COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 install(PROGRAMS ${SAMPLES_SOURCE}/semcls.cls COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 install(PROGRAMS ${SAMPLES_SOURCE}/treeDirectory.cls COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${SAMPLES_SOURCE}/singleton.cls COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+
 install(FILES ${SAMPLES_SOURCE}/jabberwocky.txt COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 
 if (NOT WIN32)
