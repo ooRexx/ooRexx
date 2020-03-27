@@ -1,6 +1,6 @@
 #/*----------------------------------------------------------------------------*/
 #/*                                                                            */
-#/* Copyright (c) 2014-2019 Rexx Language Association. All rights reserved.    */
+#/* Copyright (c) 2014-2020 Rexx Language Association. All rights reserved.    */
 #/*                                                                            */
 #/* This program and the accompanying materials are made available under       */
 #/* the terms of the Common Public License v1.0 which accompanies this         */
@@ -1849,7 +1849,7 @@ if (NOT WIN32)
 
    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rexx.sh DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME} PERMISSIONS OWNER_EXECUTE GROUP_EXECUTE WORLD_EXECUTE OWNER_READ GROUP_READ WORLD_READ)
    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rexx.csh DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME} PERMISSIONS OWNER_EXECUTE GROUP_EXECUTE WORLD_EXECUTE OWNER_READ GROUP_READ WORLD_READ)
-   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_samples_dir}/readme DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME})
+   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_samples_dir}/readme.txt DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME})
 endif ()
 
 
