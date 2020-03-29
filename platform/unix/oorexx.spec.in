@@ -188,7 +188,7 @@ fi
 %{_datadir}/ooRexx/jabberwocky.txt
 %{_datadir}/ooRexx/rexx.sh
 %{_datadir}/ooRexx/rexx.csh
-%{_datadir}/ooRexx/readme
+%{_datadir}/ooRexx/readme.txt
 %{_datadir}/applications/rexxtry.desktop
 
 %{_datadir}/icons/hicolor/48x48/apps/oorexx.png
