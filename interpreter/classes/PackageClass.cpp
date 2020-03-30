@@ -222,8 +222,8 @@ void PackageClass::live(size_t liveMark)
     memory_mark(classes);
     memory_mark(resources);
     memory_mark(annotations);
-    memory_mark(loadedPackages);
     memory_mark(unattachedMethods);
+    memory_mark(namespaces);
     memory_mark(loadedPackages);
     memory_mark(installedPublicClasses);
     memory_mark(installedClasses);
@@ -265,8 +265,8 @@ void PackageClass::liveGeneral(MarkReason reason)
     memory_mark_general(classes);
     memory_mark_general(resources);
     memory_mark_general(annotations);
-    memory_mark_general(loadedPackages);
     memory_mark_general(unattachedMethods);
+    memory_mark_general(namespaces);
     memory_mark_general(loadedPackages);
     memory_mark_general(installedPublicClasses);
     memory_mark_general(installedClasses);
@@ -303,8 +303,8 @@ void PackageClass::flatten (Envelope *envelope)
     flattenRef(classes);
     flattenRef(resources);
     flattenRef(annotations);
-    flattenRef(loadedPackages);
     flattenRef(unattachedMethods);
+    flattenRef(namespaces);
     flattenRef(loadedPackages);
     flattenRef(installedPublicClasses);
     flattenRef(installedClasses);

@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -130,6 +130,7 @@ NativeActivation::NativeActivation(Activity *_activity)
 void NativeActivation::live(size_t liveMark)
 {
     memory_mark(previous);
+    memory_mark(code);
     memory_mark(executable);
     memory_mark(argArray);
     memory_mark(receiver);
@@ -140,6 +141,7 @@ void NativeActivation::live(size_t liveMark)
     memory_mark(saveList);
     memory_mark(result);
     memory_mark(objectVariables);
+    memory_mark(conditionName);
     memory_mark(conditionObj);
     memory_mark(securityManager);
 
@@ -160,6 +162,7 @@ void NativeActivation::live(size_t liveMark)
 void NativeActivation::liveGeneral(MarkReason reason)
 {
     memory_mark_general(previous);
+    memory_mark_general(code);
     memory_mark_general(executable);
     memory_mark_general(argArray);
     memory_mark_general(receiver);
@@ -170,6 +173,7 @@ void NativeActivation::liveGeneral(MarkReason reason)
     memory_mark_general(saveList);
     memory_mark_general(result);
     memory_mark_general(objectVariables);
+    memory_mark_general(conditionName);
     memory_mark_general(conditionObj);
     memory_mark_general(securityManager);
 

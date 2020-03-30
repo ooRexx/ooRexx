@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -219,6 +219,7 @@ void *AttributeGetterCode::operator new(size_t size)
  */
 void AttributeGetterCode::live(size_t liveMark)
 {
+    memory_mark(package);
     memory_mark(attribute);
 }
 
@@ -230,6 +231,7 @@ void AttributeGetterCode::live(size_t liveMark)
  */
 void AttributeGetterCode::liveGeneral(MarkReason reason)
 {
+    memory_mark_general(package);
     memory_mark_general(attribute);
 }
 
@@ -243,6 +245,7 @@ void AttributeGetterCode::flatten(Envelope *envelope)
 {
     setUpFlatten(AttributeGetterCode)
 
+    flattenRef(package);
     flattenRef(attribute);
 
     cleanUpFlatten
@@ -364,6 +367,7 @@ void *ConstantGetterCode::operator new(size_t size)
  */
 void ConstantGetterCode::live(size_t liveMark)
 {
+    memory_mark(package);
     memory_mark(constantValue);
     memory_mark(constantName);
 }
@@ -376,6 +380,7 @@ void ConstantGetterCode::live(size_t liveMark)
  */
 void ConstantGetterCode::liveGeneral(MarkReason reason)
 {
+    memory_mark_general(package);
     memory_mark_general(constantValue);
     memory_mark_general(constantName);
 }
@@ -390,6 +395,7 @@ void ConstantGetterCode::flatten(Envelope *envelope)
 {
     setUpFlatten(ConstantGetterCode)
 
+    flattenRef(package);
     flattenRef(constantValue);
     flattenRef(constantName);
 
@@ -480,6 +486,7 @@ void *DelegateCode::operator new(size_t size)
  */
 void DelegateCode::live(size_t liveMark)
 {
+    memory_mark(package);
     memory_mark(attribute);
 }
 
@@ -491,6 +498,7 @@ void DelegateCode::live(size_t liveMark)
  */
 void DelegateCode::liveGeneral(MarkReason reason)
 {
+    memory_mark_general(package);
     memory_mark_general(attribute);
 }
 
@@ -504,6 +512,7 @@ void DelegateCode::flatten(Envelope *envelope)
 {
     setUpFlatten(DelegateCode)
 
+    flattenRef(package);
     flattenRef(attribute);
 
     cleanUpFlatten

@@ -748,6 +748,7 @@ set (memory_sources ${build_memory_dir}/DeadObject.cpp
             ${build_memory_dir}/RexxMemory.cpp)
 set (execution_sources ${build_execution_dir}/CPPCode.cpp
             ${build_execution_dir}/ActivationStack.cpp
+            ${build_execution_dir}/ActivationSettings.cpp
             ${build_execution_dir}/RexxActivation.cpp
             ${build_execution_dir}/BaseCode.cpp
             ${build_execution_dir}/RexxCode.cpp

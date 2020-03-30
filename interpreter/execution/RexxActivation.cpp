@@ -318,16 +318,16 @@ void RexxActivation::live(size_t liveMark)
 {
     memory_mark(previous);
     memory_mark(executable);
-    memory_mark(scope);
     memory_mark(code);
-    memory_mark(settings.securityManager);
+    memory_mark(packageObject);
+    memory_mark(scope);
     memory_mark(receiver);
     memory_mark(activity);
     memory_mark(parent);
     memory_mark(doStack);
-    // the stack and the local variables handle their own marking.
+    // settings and stack handle their own marking.
+    settings.live(liveMark);
     stack.live(liveMark);
-    settings.localVariables.live(liveMark);
     memory_mark(current);
     memory_mark(next);
     memory_mark(result);
@@ -335,23 +335,12 @@ void RexxActivation::live(size_t liveMark)
     memory_mark(notifyObject);
     memory_mark(environmentList);
     memory_mark(conditionQueue);
-    memory_mark(settings.traps);
-    memory_mark(settings.conditionObj);
-    memory_mark(settings.parentCode);
-    memory_mark(settings.currentAddress);
-    memory_mark(settings.alternateAddress);
-    memory_mark(settings.messageName);
-    memory_mark(settings.objectVariables);
-    memory_mark(settings.calltype);
-    memory_mark(settings.streams);
-    memory_mark(settings.haltDescription);
     memory_mark(contextObject);
 
     // We're hold a pointer back to our arguments directly where they
     // are created.  Since in some places, this argument list comes
-    // from the C stack, we need to handle the marker ourselves.
+    // from the C stack, we need to handle the marking ourselves.
     memory_mark_array(argCount, argList);
-    memory_mark_array(settings.parentArgCount, settings.parentArgList);
 }
 
 
@@ -365,14 +354,15 @@ void RexxActivation::liveGeneral(MarkReason reason)
     memory_mark_general(previous);
     memory_mark_general(executable);
     memory_mark_general(code);
-    memory_mark_general(settings.securityManager);
+    memory_mark_general(packageObject);
+    memory_mark_general(scope);
     memory_mark_general(receiver);
     memory_mark_general(activity);
     memory_mark_general(parent);
     memory_mark_general(doStack);
-    // the stack and the local variables handle their own marking.
+    // settings and stack handle their own marking.
+    settings.liveGeneral(reason);
     stack.liveGeneral(reason);
-    settings.localVariables.liveGeneral(reason);
     memory_mark_general(current);
     memory_mark_general(next);
     memory_mark_general(result);
@@ -380,23 +370,12 @@ void RexxActivation::liveGeneral(MarkReason reason)
     memory_mark_general(notifyObject);
     memory_mark_general(environmentList);
     memory_mark_general(conditionQueue);
-    memory_mark_general(settings.traps);
-    memory_mark_general(settings.conditionObj);
-    memory_mark_general(settings.parentCode);
-    memory_mark_general(settings.currentAddress);
-    memory_mark_general(settings.alternateAddress);
-    memory_mark_general(settings.messageName);
-    memory_mark_general(settings.objectVariables);
-    memory_mark_general(settings.calltype);
-    memory_mark_general(settings.streams);
-    memory_mark_general(settings.haltDescription);
     memory_mark_general(contextObject);
 
     // We're hold a pointer back to our arguments directly where they
     // are created.  Since in some places, this argument list comes
     // from the C stack, we need to handle the marking ourselves.
     memory_mark_general_array(argCount, argList);
-    memory_mark_general_array(settings.parentArgCount, settings.parentArgList);
 }
 
 

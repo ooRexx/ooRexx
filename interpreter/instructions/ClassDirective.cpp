@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -83,6 +83,7 @@ void ClassDirective::live(size_t liveMark)
     memory_mark(inheritsClasses);
     memory_mark(instanceMethods);
     memory_mark(classMethods);
+    memory_mark(annotations);
     memory_mark(dependencies);
     memory_mark(classObject);
 }
@@ -106,6 +107,7 @@ void ClassDirective::liveGeneral(MarkReason reason)
     memory_mark_general(inheritsClasses);
     memory_mark_general(instanceMethods);
     memory_mark_general(classMethods);
+    memory_mark_general(annotations);
     memory_mark_general(dependencies);
     memory_mark_general(classObject);
 }
@@ -129,6 +131,7 @@ void ClassDirective::flatten(Envelope *envelope)
     flattenRef(inheritsClasses);
     flattenRef(instanceMethods);
     flattenRef(classMethods);
+    flattenRef(annotations);
     // we don't carry this one forward
     newThis->dependencies = OREF_NULL;
     // and not the class object either
