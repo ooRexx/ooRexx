@@ -109,7 +109,8 @@ void CompoundTableElement::flatten(Envelope *envelope)
 
     flattenRef(variableValue);
     flattenRef(variableName);
-    flattenRef(creator);
+    // we cannot flatten an activation, so this is nulled out also
+    creator = OREF_NULL;
     // We do not want to flatten a table of activities, so
     // null that out.
     dependents = OREF_NULL;
