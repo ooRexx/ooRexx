@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -109,7 +109,7 @@
   return context~parse
 
 
--- a class for formatting ing dates and times using a template
+-- a class for formatting dates and times using a template
 ::CLASS 'DateFormatter' PUBLIC
 -- formate a date using the template
 ::METHOD format CLASS
@@ -372,7 +372,7 @@
   hours = new
 
   -- we've set this, now there's some additional validation that can
-  -- be performed if the civid designation have been set
+  -- be performed if the civil designation have been set
 
   if civil \= .nil then do
     self~adjustCivilTime
@@ -492,7 +492,7 @@
   end
 
 
--- parse of an optional sign, returning it as either a positive or negative number
+-- parse off an optional sign, returning it as either a positive or negative number
 ::METHOD getSign
   if self~checkChar('+') then do
     return 1
@@ -676,7 +676,7 @@
     when "f" then do
       self~fraction = self~getFixedNumber(1, 0, 9) * 100000
     end
-    -- a time fraction in hundreths of a second
+    -- a time fraction in hundredths of a second
     when "ff" then do
       self~fraction = self~getFixedNumber(2, 0, 99) * 10000
     end
@@ -871,7 +871,7 @@
       end
   end
   else do
-      -- if we ended up too far in the future, step back a centry
+      -- if we ended up too far in the future, step back a century
       if (year - currentYear) > 49 then do
           year -= 100;
       end
@@ -896,7 +896,7 @@
     when "yy" then do
       self~year = self~resolveCentury(self~getFixedNumber(2, 0, 99))
     end
-    -- The year from1 to 9999, no leading zeros
+    -- The year from 1 to 9999, no leading zeros
     when "yyy" then do
       self~year = self~getVariableNumber(4, 0001, 9999)
     end
@@ -1141,22 +1141,17 @@
   -- get this as a basedate value using the local time then create the date object using the offset
   resultDate = .DateTime~new(date('F', date, 'S') + time("F", time, "L"), offset % 60000000)
 
-  -- now that we have this, see if there are and dangling elements to process
+  -- now that we have this, see if there are any dangling elements to process
   if weekDay \= .nil, weekDay \= resultDate~weekDay then do
     self~parsingError
   end
 
-  -- now that we have this, see if there are and dangling elements to process
+  -- now that we have this, see if there are any dangling elements to process
   if weekNumber \= .nil, weekNumber \= resultDate~weekNumber then do
     self~parsingError
   end
 
-  -- now that we have this, see if there are and dangling elements to process
-  if weekDay \= .nil, weekDay \= resultDate~weekNumberDay then do
-    self~parsingError
-  end
-
-  -- now that we have this, see if there are and dangling elements to process
+  -- now that we have this, see if there are any dangling elements to process
   if ordinal \= .nil, ordinal \= resultDate~yearDay then do
     self~parsingError
   end
@@ -1253,7 +1248,7 @@
     when "f" then do
       self~append(base~left(1))
     end
-    -- a time fraction in hundreths of a second
+    -- a time fraction in hundredths of a second
     when "ff" then do
       self~append(base~left(2))
     end

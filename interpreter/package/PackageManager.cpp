@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -168,6 +168,14 @@ void PackageManager::restore()
  */
 void PackageManager::live(size_t liveMark)
 {
+    // These variables reference objects that reside inside the loaded
+    // image, which never gets marked or swept, so it is not necessary
+    // for these to be marked:
+    // imagePackages
+    // imagePackageRoutines
+    // imageRegisteredRoutines
+    // imageLoadedRequires
+
     memory_mark(packages);
     memory_mark(packageRoutines);
     memory_mark(registeredRoutines);

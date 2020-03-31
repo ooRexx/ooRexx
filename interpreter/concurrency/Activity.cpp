@@ -107,6 +107,10 @@ void *Activity::operator new(size_t size)
  */
 void Activity::live(size_t liveMark)
 {
+    memory_mark(instance);
+    memory_mark(oldActivity);
+    memory_mark(currentExit);
+    memory_mark(nestedActivity);
     memory_mark(activations);
     memory_mark(topStackFrame);
     memory_mark(currentRexxFrame);
@@ -136,6 +140,10 @@ void Activity::live(size_t liveMark)
  */
 void Activity::liveGeneral(MarkReason reason)
 {
+    memory_mark_general(instance);
+    memory_mark_general(oldActivity);
+    memory_mark_general(currentExit);
+    memory_mark_general(nestedActivity);
     memory_mark_general(activations);
     memory_mark_general(topStackFrame);
     memory_mark_general(currentRexxFrame);
