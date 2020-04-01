@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -391,45 +391,33 @@ bool SysFileSystem::searchName(const char *name, const char *path, const char *e
  */
 bool SysFileSystem::primitiveSearchName(const char *name, const char *path, const char *extension, FileNameBuffer &resolvedName)
 {
-    FileNameBuffer tempName;
-    // construct the search name, potentially adding on an extension
-    tempName = name;
-    if (extension != NULL)
-    {
-        tempName += extension;
-    }
+    FileNameBuffer asIs, lower;
+    asIs = name;
+    lower = name;
+    Utilities::strlower((char *)lower);
+    // name may already be in lower case so we won't need a second iteration
+    int iterations = strcmp((char *)asIs, (char *)lower) == 0 ? 1 : 2;
 
-    // only do the direct search if this is qualified enough that
-    // it should not be located on the path
-    if (hasDirectory(tempName))
+    // for each name, check in both the provided case and lower case.
+    for (int i = 0; i < iterations; i++)
     {
-        for (int i = 0; i < 2; i++)
+        // construct the search name, potentially adding on an extension
+        // we always keep the extension in the case provided.
+        if (extension != NULL)
         {
-            // check the file as is first
-            if (checkCurrentFile(tempName, resolvedName))
-            {
-                return true;
-            }
-            // try again in lower case
-            Utilities::strlower((char *)tempName);
+            asIs += extension;
         }
-        return false;
-    }
-    else
-    {
-        // for each name, check in both the provided case and lower case.
-        for (int i = 0; i < 2; i++)
+
+        // do the direct search if this is qualified enough
+        // if not, try to locate it along the path
+        if (hasDirectory(asIs) ? checkCurrentFile(asIs, resolvedName) : searchPath(asIs, path, resolvedName))
         {
-            // go search along the path
-            if (searchPath(tempName, path, resolvedName))
-            {
-                return true;
-            }
-            // try again in lower case
-            Utilities::strlower((char *)tempName);
+            return true;
         }
-        return false;
+        // try again in lower case
+        asIs = lower;
     }
+    return false;
 }
 
 
