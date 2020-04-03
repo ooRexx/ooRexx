@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -1410,46 +1410,36 @@ RexxRoutine2(RexxObjectPtr, SysGetFileDateTime, CSTRING, file, OPTIONAL_CSTRING,
     struct    stat64 buf;
     struct    tm *newtime;
 
-
     RoutineQualifiedName qualifiedName(context, file);
+
+    if (timesel != NULL &&
+        timesel[0] != 'a' && timesel[0] != 'A' &&
+        timesel[0] != 'w' && timesel[0] != 'W')
+    {
+        invalidOptionException(context, "SysGetFileDateTime", "time selector", "'A' or 'W'", timesel);
+    }
 
     if (stat64(qualifiedName, &buf) < 0)
     {
-        return context->Int32ToObject(-1);
+        return context->WholeNumber(-1);
     }
 
-    if (timesel != NULL)
+    if (timesel == NULL || timesel[0] == 'w' || timesel[0] == 'W')
     {
-        switch (timesel[0])
-        {
-            case 'a':
-            case 'A':
-                newtime = localtime(&(buf.st_atime));
-                break;
-            case 'w':
-            case 'W':
-                newtime = localtime(&(buf.st_mtime));
-
-                break;
-            default:
-                invalidOptionException(context, "SysGetFileDateTime", "time selector", "'A' or 'W'", timesel);
-                context->InvalidRoutine();
-                return NULLOBJECT;
-        }
+        // 'w' last modification, this is the default
+        newtime = localtime(&(buf.st_mtime));
     }
     else
     {
-        newtime = localtime(&(buf.st_mtime));
+        // 'a' last access
+        newtime = localtime(&(buf.st_atime));
     }
-
-    newtime->tm_year += 1900;
-    newtime->tm_mon += 1;
 
     char retstr[100];
 
     snprintf(retstr, sizeof(retstr), "%4d-%02d-%02d %02d:%02d:%02d",
-             newtime->tm_year,
-             newtime->tm_mon,
+             newtime->tm_year + 1900,
+             newtime->tm_mon + 1,
              newtime->tm_mday,
              newtime->tm_hour,
              newtime->tm_min,
@@ -1485,6 +1475,8 @@ RexxRoutine3(int, SysSetFileDateTime, CSTRING, filename, OPTIONAL_CSTRING, newda
         return -1;
     }
 
+    // for all cases we need to keep access time as-is
+    timebuf.actime = mktime(localtime(&(buf.st_atime)));
 
     if (newdateSet == NULL && newtimeSet == NULL)
     {
@@ -1497,7 +1489,6 @@ RexxRoutine3(int, SysSetFileDateTime, CSTRING, filename, OPTIONAL_CSTRING, newda
         newtime = localtime(&(buf.st_mtime));
         if (newdateSet != NULL)
         {
-
             /* parse new date */
             if (sscanf(newdateSet, "%4d-%2d-%2d", &newtime->tm_year, &newtime->tm_mon, &newtime->tm_mday) != 3)
             {
@@ -1514,6 +1505,10 @@ RexxRoutine3(int, SysSetFileDateTime, CSTRING, filename, OPTIONAL_CSTRING, newda
                 return -1;
             }
         }
+        // mktime() should determine whether DST is in effect at the
+        // specified time.
+        newtime->tm_isdst = -1;
+
         ltime = mktime(newtime);
         timebuf.modtime = ltime;
 

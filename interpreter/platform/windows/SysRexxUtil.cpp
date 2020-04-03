@@ -2567,7 +2567,7 @@ RexxRoutine3(int, SysSetFileDateTime, CSTRING, name, OPTIONAL_CSTRING, newdate, 
         CloseHandle(setFile);
     }
 
-    return fOk ? 0 : 1;
+    return fOk ? 0 : -1;
 }
 
 /*************************************************************************
