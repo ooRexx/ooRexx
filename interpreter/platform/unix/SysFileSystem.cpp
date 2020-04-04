@@ -438,22 +438,19 @@ bool SysFileSystem::checkCurrentFile(const char *name, FileNameBuffer &resolvedN
     // a failure here means an invalid name of some sort
     if (!canonicalizeName(resolvedName))
     {
+        resolvedName = "";
         return false;
     }
 
-    struct stat64 dummy;                 /* structure for stat system calls   */
-
-    // ok, if this exists, life is good.  Return it.
-    if (stat64(resolvedName, &dummy) == 0)           /* look for file         */
+    // this needs to exists and be a regular file
+    struct stat64 dummy;
+    if (stat64(resolvedName, &dummy) == 0 &&  S_ISREG(dummy.st_mode))
     {
-        // this needs to be a regular file
-        if (S_ISREG(dummy.st_mode))
-        {
-            return true;
-        }
-        return false;
+        return true;
     }
+
     // not found
+    resolvedName = "";
     return false;
 }
 
@@ -471,6 +468,14 @@ bool SysFileSystem::checkCurrentFile(const char *name, FileNameBuffer &resolvedN
  */
 bool SysFileSystem::searchPath(const char *name, const char *path, FileNameBuffer &resolvedName)
 {
+    // if we have enough absolute directory information at the beginning
+    // we can bypass performing path searches.
+    if (hasDirectory(name))
+    {
+        resolvedName = "";
+        return checkCurrentFile(name, resolvedName);
+    }
+
     // get an end pointer
     const char *pathEnd = path + strlen(path);
 

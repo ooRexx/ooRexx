@@ -567,8 +567,8 @@ bool SysFileSystem::searchPath(const char *name, const char *path, FileNameBuffe
             getLongName(resolvedName);
             return true;
         }
-
     }
+    resolvedName = "";
     return false;        // not found
 }
 
