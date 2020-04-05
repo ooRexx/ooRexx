@@ -54,8 +54,6 @@ include(CheckFunctionExists)
 include(CheckSymbolExists)
 include(CheckCSourceCompiles)
 include(CheckStructHasMember)
-include(GNUInstallDirs)
-include(FindPkgConfig)
 set (CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib)
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
 set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib)
@@ -998,15 +996,7 @@ add_custom_command(TARGET rexx_exe POST_BUILD
    COMMENT "Adding custom manifest to rexx.exe...")
 endif ()
 
-if ( BUILD_DEB OR BUILD_RPM )
-# install renamed rexx for update-alternatives
-   install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rexx
-          DESTINATION ${INSTALL_EXECUTABLE_DIR}
-          RENAME rexx-oorexx
-          PERMISSIONS OWNER_EXECUTE GROUP_EXECUTE WORLD_EXECUTE OWNER_READ GROUP_READ WORLD_READ)
-else ()
-   install(TARGETS rexx_exe RUNTIME COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
-endif ()
+install(TARGETS rexx_exe RUNTIME COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
 
 #################### rexximage (bin file) ##########################
 # These are the core classes built into the .img file.
@@ -1232,15 +1222,7 @@ target_include_directories(rxqueue PUBLIC
             ${build_messages_dir})
 # Extra link library definitions
 target_link_libraries(rxqueue rexx rexxapi ${platform_rxqueue_libs} ${CMAKE_REQUIRED_LIBRARIES})
-if ( BUILD_DEB OR BUILD_RPM )
-# install renamed rxqueue for update-alternatives
-   install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rxqueue
-          DESTINATION ${INSTALL_EXECUTABLE_DIR}
-          RENAME rxqueue-oorexx
-          PERMISSIONS OWNER_EXECUTE GROUP_EXECUTE WORLD_EXECUTE OWNER_READ GROUP_READ WORLD_READ)
-else ()
-   install(TARGETS rxqueue RUNTIME COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
-endif ()
+install(TARGETS rxqueue RUNTIME COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
 
 #################### rxsubcom (executable) #########################
 # additional source files required by specific platforms
@@ -1823,36 +1805,15 @@ if (NOT WIN32)
               > ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${name}.${cat}.gz
               DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/${name}.${cat})
       add_custom_target(${name}_man ALL DEPENDS ${name}.${cat}.gz)
-
       install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${name}.${cat}.gz
           DESTINATION ${INSTALL_MAN_DIR}/man${cat}
           PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
    endmacro (add_manpage)
 
-   macro (add_manpage_alt name cat)
-      add_custom_command(OUTPUT ${name}.${cat}.gz
-              COMMAND gzip -c
-              ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/${name}.${cat}
-              > ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${name}.${cat}.gz
-              DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/${name}.${cat})
-      add_custom_target(${name}_man ALL DEPENDS ${name}.${cat}.gz)
-
-      install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${name}.${cat}.gz
-          DESTINATION ${INSTALL_MAN_DIR}/man${cat}
-          RENAME ${name}-oorexx.${cat}.gz
-          PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
-   endmacro (add_manpage_alt)
-
+   add_manpage (rexx 1)
    add_manpage (rexxc 1)
+   add_manpage (rxqueue 1)
    add_manpage (rxsubcom 1)
-   if ( BUILD_DEB OR BUILD_RPM )
-# rename rxqueue.1.gz and rexx.1.gz for update-alternatives
-      add_manpage_alt (rexx 1)
-      add_manpage_alt (rxqueue 1)
-   else ()
-      add_manpage (rexx 1)
-      add_manpage (rxqueue 1)
-   endif ()
 
    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rexx.sh DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME} PERMISSIONS OWNER_EXECUTE GROUP_EXECUTE WORLD_EXECUTE OWNER_READ GROUP_READ WORLD_READ)
    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rexx.csh DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME} PERMISSIONS OWNER_EXECUTE GROUP_EXECUTE WORLD_EXECUTE OWNER_READ GROUP_READ WORLD_READ)
@@ -2147,11 +2108,6 @@ if (BUILD_RPM)
    configure_file(${ORX_PLATFORM_DIR}/menu/rexxtry.desktop.in ${PROJECT_BINARY_DIR}/rexxtry.desktop)
    INSTALL (FILES ${PROJECT_BINARY_DIR}/rexxtry.desktop DESTINATION ${ORX_DESKTOP_DIR})
    #INSTALL (FILES ${ORX_PLATFORM_DIR}/menu/rexxtry.xml DESTINATION ${ORX_DESKTOP_DIR})
-   # oorexx-config
-   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${ORX_PLATFORM_DIR}/oorexx-config.in ${CMAKE_CURRENT_SOURCE_DIR}/${ORX_PLATFORM_DIR}/oorexx-config)
-   INSTALL (FILES ${CMAKE_CURRENT_SOURCE_DIR}/${ORX_PLATFORM_DIR}/oorexx-config
-            PERMISSIONS OWNER_EXECUTE GROUP_EXECUTE WORLD_EXECUTE OWNER_READ GROUP_READ WORLD_READ
-            DESTINATION ${INSTALL_EXECUTABLE_DIR})
    # Copy the ooRexx pixmap
    INSTALL (FILES ${ORX_PLATFORM_DIR}/oorexx.png DESTINATION ${ORX_PIXMAPS_DIR})
    # try to set up the menu system
@@ -2180,18 +2136,12 @@ if (BUILD_RPM)
    else ()
       set(CPACK_PACKAGE_RELEASE ${ORX_BLD_LVL})
    endif ()
-
-   set(CPACK_RPM_PACKAGE_VERSION ${ORX_VERSION})
-   set(CPACK_RPM_PACKAGE_RELEASE ${CPACK_PACKAGE_RELEASE})
    set(CPACK_RPM_PACKAGE_LICENSE "CPL")
    set(CPACK_RPM_PACKAGE_URL "http://www.oorexx.org/")
    set(CPACK_PACKAGE_CONTACT "sahananda@users.sf.net")
-   set(CPACK_RPM_PACKAGE_GROUP "Development/Languages")
-   set(CPACK_RPM_PACKAGE_VENDOR "Rexx Language Association")
-   set(CPACK_PACKAGING_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
+   set(CPACK_PACKAGING_INSTALL_PREXIX "${CMAKE_INSTALL_PREFIX}")
 # remove 'csh'-dependency as it doesn't seem to be required
 #  set(CPACK_RPM_PACKAGE_REQUIRES "csh")
-   set(CPACK_RPM_PACKAGE_REQUIRES "hicolor-icon-theme")
    if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "s390x")
       set(orx_install_arch "s390x")
    elseif (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64") # fix by using same logic as for BUILD_DEB
@@ -2205,9 +2155,6 @@ if (BUILD_RPM)
    else ()
       set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL}-${CPACK_PACKAGE_RELEASE}.${orx_install_arch}")
    endif ()
-   set(CPACK_RPM_FILE_NAME ${CPACK_PACKAGE_FILE_NAME}.rpm)
-   set(CPACK_RPM_PACKAGE_SUMMARY
-"Open Object Rexx is an object-oriented scripting language.")
    set(CPACK_RPM_PACKAGE_DESCRIPTION
 "Open Object Rexx is an object-oriented scripting language. The language
 is designed for both beginners and experienced Rexx programmers. It is
@@ -2220,12 +2167,6 @@ you learn more about objects.
 
 For more information on ooRexx, visit http://www.oorexx.org/
 For more information on Rexx, visit http://www.rexxla.org/")
-   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${ORX_PLATFORM_DIR}/oorexx.spec.in ${CMAKE_CURRENT_SOURCE_DIR}/${ORX_PLATFORM_DIR}/oorexx.spec)
-   set(CPACK_RPM_USER_BINARY_SPECFILE "${CMAKE_CURRENT_SOURCE_DIR}/${ORX_PLATFORM_DIR}/oorexx.spec")
-#   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${ORX_PLATFORM_DIR}/rpm_post.in ${CMAKE_CURRENT_SOURCE_DIR}/${ORX_PLATFORM_DIR}/rpm_post)
-#   set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE "${CMAKE_CURRENT_SOURCE_DIR}/${ORX_PLATFORM_DIR}/rpm_post")
-#   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${ORX_PLATFORM_DIR}/rpm_postun.in ${CMAKE_CURRENT_SOURCE_DIR}/${ORX_PLATFORM_DIR}/rpm_postun)
-#   set(CPACK_RPM_POST_UNINSTALL_SCRIPT_FILE "${CMAKE_CURRENT_SOURCE_DIR}/${ORX_PLATFORM_DIR}/rpm_postun")
 endif ()
 
 # Build a DEB
@@ -2236,11 +2177,6 @@ if (BUILD_DEB)
    configure_file(${ORX_PLATFORM_DIR}/menu/rexxtry.desktop.in ${PROJECT_BINARY_DIR}/rexxtry.desktop)
    INSTALL (FILES ${PROJECT_BINARY_DIR}/rexxtry.desktop DESTINATION ${ORX_DESKTOP_DIR})
    #INSTALL (FILES ${ORX_PLATFORM_DIR}/menu/rexxtry.xml DESTINATION ${ORX_DESKTOP_DIR})
-   # oorexx-config
-   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${ORX_PLATFORM_DIR}/oorexx-config.in ${CMAKE_CURRENT_SOURCE_DIR}/${ORX_PLATFORM_DIR}/oorexx-config)
-   INSTALL (FILES ${CMAKE_CURRENT_SOURCE_DIR}/${ORX_PLATFORM_DIR}/oorexx-config
-            PERMISSIONS OWNER_EXECUTE GROUP_EXECUTE WORLD_EXECUTE OWNER_READ GROUP_READ WORLD_READ
-            DESTINATION ${INSTALL_EXECUTABLE_DIR})
    # Copy the ooRexx pixmap
    INSTALL (FILES ${ORX_PLATFORM_DIR}/oorexx.png DESTINATION ${ORX_PIXMAPS_DIR})
    # try to set up the menu system
@@ -2265,7 +2201,6 @@ if (BUILD_DEB)
    set(CPACK_DEBIAN_PACKAGE_MAINTAINER "sahananda@users.sf.net")
    set(CPACK_PACKAGING_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/platform/unix/debian/cmake/postinst.in ${CMAKE_CURRENT_SOURCE_DIR}/platform/unix/debian/cmake/postinst)
-   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/platform/unix/debian/cmake/prerm.in ${CMAKE_CURRENT_SOURCE_DIR}/platform/unix/debian/cmake/prerm)
 # remove 'csh'-dependency as it doesn't seem to be required
 #  set(CPACK_DEBIAN_PACKAGE_DEPENDS "csh")
    # we need to copy these files so we can change the permissions
