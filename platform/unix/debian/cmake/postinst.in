@@ -35,27 +35,4 @@
 #/* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 #/*                                                                            */
 #/*----------------------------------------------------------------------------*/
-orx_current=@ORX_SUBST_CURRENT@
-orx_revision=@ORX_SUBST_REVISION@
-orx_age=@ORX_SUBST_AGE@
 
-# Set up the library version suffix.
-orx_libversion=${orx_current}.${orx_age}.${orx_revision}
-
-orx_prefix=@prefix@
-
-# Debian doesn't use lib64, so this is the same for 32-bit or 64-bit
-lib_dir=${orx_prefix}/lib
-bin_dir=${orx_prefix}/bin
-data_dir=${orx_prefix}/share/ooRexx
-
-prefix=@prefix@
-datarootdir=@datarootdir@
-exec_prefix=@exec_prefix@
-includedir=@includedir@
-libdir=@libdir@
-
-update-alternatives --install /usr/bin/rexx rexx /usr/bin/rexx-oorexx 25 \
-        --slave /usr/bin/rxqueue rxqueue /usr/bin/rxqueue-oorexx \
-        --slave /usr/share/man/man1/rexx.1.gz rexx.1.gz /usr/share/man/man1/rexx-oorexx.1.gz \
-        --slave /usr/share/man/man1/rxqueue.1.gz rxqueue.1.gz /usr/share/man/man1/rxqueue-oorexx.1.gz
