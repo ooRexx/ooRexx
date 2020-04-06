@@ -1682,13 +1682,18 @@ copy_build_file(mime.cls ${build_extensions_rxsock_dir})
 copy_build_file(smtp.cls ${build_extensions_rxsock_dir})
 
 # the shebang line needs adjusting in the .rex files, so we need to
-# do this based on the build target
-configure_build_file(rexxtry.rex ${build_samples_dir})
-configure_build_file(rexxcps.rex ${build_samples_dir})
+# do this based on the build target, sorted here alphabetically
+configure_build_file(arithmeticEvaluation.rex ${build_samples_dir})
+configure_build_file(arrayCallback.rex ${build_samples_dir})
 configure_build_file(ccreply.rex ${build_samples_dir})
+configure_build_file(concurrency.rex ${build_samples_dir})
+configure_build_file(constrained.rex ${build_samples_dir})
+configure_build_file(delegation.rex ${build_samples_dir})
+configure_build_file(dynamicMethod.rex ${build_samples_dir})
 configure_build_file(factor.rex ${build_samples_dir})
 configure_build_file(greply.rex ${build_samples_dir})
 configure_build_file(guess.rex ${build_samples_dir})
+configure_build_file(interface.rex ${build_samples_dir})
 configure_build_file(ktguard.rex ${build_samples_dir})
 configure_build_file(makestring.rex ${build_samples_dir})
 configure_build_file(month.rex ${build_samples_dir})
@@ -1700,23 +1705,16 @@ configure_build_file(scclient.rex ${build_samples_dir})
 configure_build_file(scserver.rex ${build_samples_dir})
 configure_build_file(sfclient.rex ${build_samples_dir})
 configure_build_file(sfserver.rex ${build_samples_dir})
-configure_build_file(stack.rex ${build_samples_dir})
-configure_build_file(usecomp.rex ${build_samples_dir})
-configure_build_file(usepipe.rex ${build_samples_dir})
-configure_build_file(arithmeticEvaluation.rex ${build_samples_dir})
-configure_build_file(arrayCallback.rex ${build_samples_dir})
-configure_build_file(concurrency.rex ${build_samples_dir})
-configure_build_file(constrained.rex ${build_samples_dir})
-configure_build_file(timezone.rex ${build_samples_dir})
-configure_build_file(delegation.rex ${build_samples_dir})
-configure_build_file(dynamicMethod.rex ${build_samples_dir})
-configure_build_file(interface.rex ${build_samples_dir})
 configure_build_file(singleLinkedList.rex ${build_samples_dir})
 configure_build_file(sortComposite.rex ${build_samples_dir})
+configure_build_file(stack.rex ${build_samples_dir})
 configure_build_file(synchronousConcurrency.rex ${build_samples_dir})
+configure_build_file(timezone.rex ${build_samples_dir})
 configure_build_file(treeTraversal.rex ${build_samples_dir})
-configure_build_file(usetree.rex ${build_samples_dir})
+configure_build_file(usecomp.rex ${build_samples_dir})
+configure_build_file(usepipe.rex ${build_samples_dir})
 configure_build_file(usesingleton.rex ${build_samples_dir})
+configure_build_file(usetree.rex ${build_samples_dir})
 
 add_custom_target(class_files ALL DEPENDS
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rxregexp.cls
@@ -1729,7 +1727,6 @@ add_custom_target(class_files ALL DEPENDS
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/smtp.cls
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/dateparser.cls
     ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/rexxtry.rex)
-
 
 install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rxregexp.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR})
 
@@ -1755,11 +1752,17 @@ install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_api_dir}/oorexxapi.h COMPONENT
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_api_dir}/oorexxerrors.h COMPONENT DevLib DESTINATION ${INSTALL_INCLUDE_DIR})
 
 # common sample programs
-install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/rexxcps.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/arithmeticEvaluation.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/arrayCallback.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/ccreply.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/concurrency.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/constrained.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/delegation.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/dynamicMethod.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/factor.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/greply.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/guess.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/interface.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/ktguard.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/makestring.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/month.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
@@ -1771,31 +1774,29 @@ install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/scclient.rex COMPONENT Sample
 install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/scserver.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/sfclient.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/sfserver.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/stack.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/usecomp.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/usepipe.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/arithmeticEvaluation.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/arrayCallback.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/concurrency.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/constrained.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/timezone.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/delegation.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/dynamicMethod.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/interface.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/singleLinkedList.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/sortComposite.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/stack.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/synchronousConcurrency.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/timezone.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/treeTraversal.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/usetree.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/usecomp.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/usepipe.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/usesingleton.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/usetree.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 
 install(PROGRAMS ${SAMPLES_SOURCE}/complex.cls COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 install(PROGRAMS ${SAMPLES_SOURCE}/pipe.cls COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 install(PROGRAMS ${SAMPLES_SOURCE}/semcls.cls COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${SAMPLES_SOURCE}/treeDirectory.cls COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 install(PROGRAMS ${SAMPLES_SOURCE}/singleton.cls COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${SAMPLES_SOURCE}/treeDirectory.cls COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 
+
+# used in synchronousConcurrency.rex
 install(FILES ${SAMPLES_SOURCE}/jabberwocky.txt COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+
+# Not strictly a sample but useful
+install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/rexxcps.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 
 if (NOT WIN32)
    macro (add_manpage name cat)
@@ -1815,8 +1816,6 @@ if (NOT WIN32)
    add_manpage (rxqueue 1)
    add_manpage (rxsubcom 1)
 
-   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rexx.sh DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME} PERMISSIONS OWNER_EXECUTE GROUP_EXECUTE WORLD_EXECUTE OWNER_READ GROUP_READ WORLD_READ)
-   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rexx.csh DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME} PERMISSIONS OWNER_EXECUTE GROUP_EXECUTE WORLD_EXECUTE OWNER_READ GROUP_READ WORLD_READ)
    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_samples_dir}/readme.txt DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME})
 endif ()
 
@@ -2139,7 +2138,7 @@ if (BUILD_RPM)
    set(CPACK_RPM_PACKAGE_LICENSE "CPL")
    set(CPACK_RPM_PACKAGE_URL "http://www.oorexx.org/")
    set(CPACK_PACKAGE_CONTACT "sahananda@users.sf.net")
-   set(CPACK_PACKAGING_INSTALL_PREXIX "${CMAKE_INSTALL_PREFIX}")
+   set(CPACK_PACKAGING_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 # remove 'csh'-dependency as it doesn't seem to be required
 #  set(CPACK_RPM_PACKAGE_REQUIRES "csh")
    if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "s390x")
