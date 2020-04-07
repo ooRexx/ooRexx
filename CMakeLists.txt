@@ -1851,7 +1851,7 @@ if (WIN32 AND DOC_SOURCE_DIR)
    set(CPACK_NSIS_MUI_ICON ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rexx.ico)
    set(CPACK_NSIS_MUI_UNIICON ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/install/uninstall.ico)
 
-   # Not sure why this is not working.  Claims it cannoth file the file, but it exists.
+   # Not sure why this is not working.  Claims it cannot find the file, but it exists.
    # It might need to be an installed file...not sure
    # set(CPACK_PACKAGE_ICON ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rexx.ico)
 
@@ -2119,7 +2119,7 @@ if (BUILD_RPM)
      execute_process(COMMAND ${XDG-DESKTOP-MENU_EXECUTABLE} install --novendor ${ORX_DESKTOP_DIR}/rexxtry.desktop)
      execute_process(COMMAND ${XDG-MIME_EXECUTABLE} default ${ORX_DESKTOP_DIR}/rexxtry.desktop application/x-ooRexx-item)
      ")
-   # This pevents the rpm from generating these subdirectories in the install.
+   # This prevents the rpm from generating these subdirectories in the install.
    set(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION
       ${CMAKE_INSTALL_PREFIX}
       ${CMAKE_INSTALL_PREFIX}/bin
@@ -2233,11 +2233,13 @@ if (BUILD_DEB)
    set(CPACK_DEBIAN_PACKAGE_DESCRIPTION "Open Object Rexx is an object-oriented scripting language.")
 endif ()
 
-if (BUILD_PKG)
-   set(CPACK_GENERATOR PKG)
-   #set (CPACK_OSX_PACKAGE_VERSION "10.10")
-   #set (CPACK_BUNDLE_PLIST xxx)
-   #set (CPACK_BUNDLE_STARTUP_COMMABD xxx)
+#Apple macOS
+if (MACOSX_BUNDLE)
+   set(CPACK_GENERATOR "DragNDrop")
+
+   set (CPACK_OSX_PACKAGE_VERSION "10.14")
+   set (CPACK_BUNDLE_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/macosx/org.rexxla.oorexx.rxapid.plist)
+   #set (CPACK_BUNDLE_STARTUP_COMMAND xxx)
 
    if (DEFINED PROD)
       set(CPACK_PACKAGE_RELEASE 1)
@@ -2250,10 +2252,11 @@ if (BUILD_PKG)
    else ()
       set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL}-${CPACK_PACKAGE_RELEASE}.${orx_install_arch}")
    endif ()
-   #set (CPACK_BUNDLE_NAME ${CPACK_PACKAGE_FILE_NAME})
+   set (CPACK_BUNDLE_NAME ${CPACK_PACKAGE_FILE_NAME})
 
-   set (CPACK_PACKAGE_ICON ${ORX_PLATFORM_DIR}/oorexx.png)
-   #set (CPACK_BUNDLE_ICON ${CPACK_PACKAGE_ICON})
+   #set (CPACK_PACKAGE_ICON ${ORX_PLATFORM_DIR}/oorexx.png)
+   set(CPACK_PACKAGE_ICON ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/oorexx.png)
+   set (CPACK_BUNDLE_ICON ${CPACK_PACKAGE_ICON})
 
    set(CPACK_PACKAGE_CONTACT "sahananda@users.sf.net")
    set(CPACK_PACKAGE_DESCRIPTION_SUMMARY
