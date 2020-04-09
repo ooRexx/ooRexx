@@ -2137,12 +2137,19 @@ if (BUILD_RPM)
    else ()
       set(CPACK_PACKAGE_RELEASE ${ORX_BLD_LVL})
    endif ()
+
+   set(CPACK_RPM_PACKAGE_VERSION ${ORX_VERSION})
+   set(CPACK_RPM_PACKAGE_RELEASE ${CPACK_PACKAGE_RELEASE})
    set(CPACK_RPM_PACKAGE_LICENSE "CPL")
    set(CPACK_RPM_PACKAGE_URL "http://www.oorexx.org/")
    set(CPACK_PACKAGE_CONTACT "sahananda@users.sf.net")
+   set(CPACK_RPM_PACKAGE_GROUP "Development/Languages")
+   set(CPACK_RPM_PACKAGE_VENDOR "Rexx Language Association")
    set(CPACK_PACKAGING_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 # remove 'csh'-dependency as it doesn't seem to be required
 #  set(CPACK_RPM_PACKAGE_REQUIRES "csh")
+   set(CPACK_RPM_PACKAGE_SUMMARY "Open Object Rexx is an object-oriented scripting language.")
+
    if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "s390x")
       set(orx_install_arch "s390x")
    elseif (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64") # fix by using same logic as for BUILD_DEB
