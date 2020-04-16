@@ -310,6 +310,9 @@ if (WIN32)
             /DORX_SYS_STR="${ORX_SYS_STR}"
             /DORX_SHARED_LIBRARY_EXT="${CMAKE_SHARED_LIBRARY_SUFFIX}"
             /DORX_REXXPATH="${CMAKE_REXXPATH}"
+# we build for Vista or higher; no more XP support
+# (this define restricts us to the Win 6.0 APIs; anything higher will fail)
+            /D_WIN32_WINNT=0x0600
 # suppress CRT_SECURE warnings
 # (we might instead use the secure versions, by using these two DEFINEs:
 #           /D_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1
