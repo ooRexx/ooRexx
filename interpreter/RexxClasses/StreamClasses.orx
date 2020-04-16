@@ -591,12 +591,14 @@ return position
 
   -- the last name element should not end with a separator
   -- remove it if one is there, but keep d:\ or \\?\ or \\.\
-  -- or a single "/" as-is
-  if separator == "\", buffer[2] == ":"
+  -- or \\?\C:\ or a single "/" as-is
+  if separator == "\", buffer~matchChar(2, ":")
       then minimum = 3
-  else if separator == "\", buffer~startsWith("\\")
-      then minimum = 4
-  else minimum = 1
+  else
+      -- is this \\?\C:\ or \\.\ Win32 file/device name space?
+      if separator == "\", buffer~startsWith("\\"), buffer~matchChar(3, "?.")
+          then minimum = buffer~matchChar(6, ":")~?(7, 4)
+          else minimum = 1
 
   do while buffer~length > minimum, buffer~endsWith(separator)
       buffer~delstr(buffer~length, 1)
@@ -735,7 +737,7 @@ return position
 --   /dir/file -> /dir -> / -> .nil
 --   d:\dir\file -> d:\dir -> d:\ -> .nil
 --   \\server\share\dir\file -> \\server\share\dir -> \\server\share -> .nil
---   \\?\d:\dir\file -> \\?\d:\dir -> \\?\d: -> \\?\ -> .nil
+--   \\?\d:\dir\file -> \\?\d:\dir -> \\?\d:\ -> .nil
 --   \\.\nul -> \\.\ -> .nil
 ::METHOD parent
   use strict arg
@@ -748,9 +750,9 @@ return position
   if path~startsWith("\\"), separator == "\" then do
     -- on Windows paths starting with \\ get special treatment
     if path~matchChar(3, "?.") then do
-      -- This is either the Win32 file namespace (\\?\) or the Win32
-      -- device namespace (\\.\)
-      root = 4
+      -- this is the Win32 file/device namespace
+      -- e. g. \\?\ or \\?\C:\ or \\.\
+      root = path~matchChar(6, ":")~?(7, 4)
     end
     else do
       -- this is the Windows \\server\share\dir form
