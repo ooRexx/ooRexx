@@ -282,9 +282,7 @@ bool SysFileSystem::fileExists(const char *name)
     DWORD dwAttrib = GetFileAttributes(name);
 
     return (dwAttrib != INVALID_FILE_ATTRIBUTES &&
-         !((dwAttrib & FILE_ATTRIBUTE_SYSTEM)
-          || (dwAttrib & FILE_ATTRIBUTE_HIDDEN)
-          || (dwAttrib & FILE_ATTRIBUTE_DIRECTORY)));
+          !(dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
 }
 
 
