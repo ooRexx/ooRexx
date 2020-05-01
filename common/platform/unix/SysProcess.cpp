@@ -271,7 +271,7 @@ bool SysProcess::playSpeaker(int frequency, int duration)
                 SysThread::longSleep(duration * 1000);
 
                 // turn sound off again
-                ioctl(fd, KDMKTONE, (duration << 16) | pitch);
+                ioctl(fd, KDMKTONE, 0);
 
                 close(fd);
                 return true;
