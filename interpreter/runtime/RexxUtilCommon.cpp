@@ -1714,7 +1714,7 @@ RexxRoutine1(int, SysFileDelete, CSTRING, path)
  *                'I' - Case-insensitive search (default)
  *                'N' - Precede each found string in result stem
  *                      with its line number in file (non-default)
-* @return  0 on success, non-zero on error.
+ * @return  0 on success, non-zero on error.
  *         ERROR_FILEOPEN if file cannot be openend.
  *         ERROR_NOMEM if not enough memory.
  */
@@ -1796,7 +1796,8 @@ RexxRoutine4(CSTRING, SysFileSearch, RexxStringObject, needle, CSTRING, file, Re
                 char lineNumber[32]; // 64-bit numbers require 20 chars + blank + NUL
                 snprintf(lineNumber, sizeof(lineNumber), "%zu ", currentLine);
 
-                size_t totalLineSize = strlen(lineNumber) + lineLength;
+                size_t lineNumberLength = strlen(lineNumber);
+                size_t totalLineSize = lineNumberLength + lineLength;
 
                 AutoFree lineBuffer = (char *)malloc(totalLineSize);
                 if (lineBuffer == NULL)
@@ -1807,8 +1808,8 @@ RexxRoutine4(CSTRING, SysFileSearch, RexxStringObject, needle, CSTRING, file, Re
                 }
 
                 // now build the return value
-                strncpy((char *)lineBuffer, lineNumber, totalLineSize);
-                memcpy((char *)lineBuffer + strlen(lineNumber), line, lineLength);
+                memcpy((char *)lineBuffer, lineNumber, lineNumberLength);
+                memcpy((char *)lineBuffer + lineNumberLength, line, lineLength);
 
                 RexxStringObject returnValue = context->NewString(lineBuffer, totalLineSize);
 
