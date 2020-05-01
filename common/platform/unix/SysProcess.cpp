@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -62,6 +62,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include "SysProcess.hpp"
+#include "SysThread.hpp"
 #include "rexx.h"
 #include <stdio.h>
 #include <sys/ioctl.h>
@@ -223,7 +224,7 @@ const char* SysProcess::getLibraryLocation()
 
 
 /**
- * do a beep tone
+ * Sound the speaker.
  *
  * @param frequency The frequency to beep at
  * @param duration  The duration to beep (in milliseconds)
@@ -233,34 +234,54 @@ const char* SysProcess::getLibraryLocation()
 bool SysProcess::playSpeaker(int frequency, int duration)
 {
 #ifdef HAVE_KDMKTONE
-    int fd = 1;   // The ioctl file descriptor
 
-    // do a test with this using zero to see if this will work
-    if (ioctl(fd, KDMKTONE, 0) != 0)
+    const char *console[] =
     {
-        // if this failed, try to open the console
-        fd	= open("/dev/tty", O_WRONLY);
-        // if this fails, then we can't play this
-        if (fd < 0)
+        "/dev/tty0",
+        "/dev/tty1",
+        "/dev/tty",
+        "/dev/console",
+        "/dev/vc/0"
+    };
+
+    int fd;
+    int io = -1;
+
+    // We need a file descriptor to run ioctl on the console, which will
+    // typically require root access rights.  Try a few devices and see
+    // if we can successfully open one of them.
+    for (int i = 0; i < sizeof(console) / sizeof(console[0]) && io < 0; i++)
+    {
+        // according to the docs open() may have unwanted side effects
+        // that can be avoided under Linux with the O_NONBLOCK flag
+        fd = open(console[i], O_RDWR | O_NONBLOCK);
+        if (fd >= 0)
         {
-            // try the virtual console as a fallback
-            fd = open("/dev/vc/0", O_WRONLY);
-            if (fd < 0)
+            // test KDMKTONE with zero just to see whether this will work
+            io = ioctl(fd, KDMKTONE, 0);
+            if (io >=0)
             {
-                return false;
+                // 1193180 is the magic number of clock cycles that the docs
+                // tell you to use to get a frequency in clock cycles
+                int pitch = 1193180 / frequency;
+                ioctl(fd, KDMKTONE, (duration << 16) | pitch);
+
+                // the sound is on, now wait for duration milliseconds
+                // MAX_DURATION is 60000, so there can be no overflow
+                SysThread::longSleep(duration * 1000);
+
+                // turn sound off again
+                ioctl(fd, KDMKTONE, (duration << 16) | pitch);
+
+                close(fd);
+                return true;
             }
+            close(fd);
         }
     }
-
-    // 1193180 is the magic number of clock cycles that the docs
-    // tell you to use to get a frequency in clock cycles
-    int pitch = 1193180 / frequency;
-    int rc = ioctl(fd, KDMKTONE, (duration << 16) | pitch);
-    return rc >=0;
-#else
+#endif
     // not available, need to use the low tech version
     return false;
-#endif
 }
 
 
