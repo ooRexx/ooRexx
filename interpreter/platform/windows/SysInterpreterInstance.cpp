@@ -110,6 +110,39 @@ void SysInterpreterInstance::initialize(InterpreterInstance *i, RexxOption *opti
         }
     }
 
+    // Allow Rexx console output to use virtual terminal (VT) sequences.
+    // This is based on the examples Microsoft gives in
+    // https://docs.microsoft.com/en-us/windows/console/console-virtual-terminal-sequences
+    // The Microsoft example shows
+    // a) SetConsoleMode STD_OUTPUT_HANDLE or'ing in ENABLE_VIRTUAL_TERMINAL_PROCESSING and DISABLE_NEWLINE_AUTO_RETURN
+    // b) SetConsoleMode STD_INPUT_HANDLE or'ing in ENABLE_VIRTUAL_TERMINAL_INPUT
+    // In addition to a) we also run SetConsoleMode for STD_ERROR_HANDLE
+    // but we don't do b) because this breaks PULL line editing (cursor
+    // keys emit ANSI characters instead of moving around).
+
+    // VT support was added around 10.0.10586, so we might or might not
+    // have some of these defines.  If missing, make them nop's.
+#ifndef ENABLE_VIRTUAL_TERMINAL_PROCESSING
+#   define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0
+#endif
+#ifndef DISABLE_NEWLINE_AUTO_RETURN
+#   define DISABLE_NEWLINE_AUTO_RETURN 0
+#endif
+
+    DWORD mode;
+    HANDLE h;
+
+    h = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (h != NULL && h != INVALID_HANDLE_VALUE && GetConsoleMode(h, &mode) != 0)
+    {
+        SetConsoleMode(h, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING | DISABLE_NEWLINE_AUTO_RETURN);
+    }
+    h = GetStdHandle(STD_ERROR_HANDLE);
+    if (h != NULL && h != INVALID_HANDLE_VALUE && GetConsoleMode(h, &mode) != 0)
+    {
+        SetConsoleMode(h, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING | DISABLE_NEWLINE_AUTO_RETURN);
+    }
+
     // Because of using the stand-alone runtime library or when using different compilers,
     // the std-streams of the calling program and the REXX.DLL might be located at different
     // addresses and therefore _file might be -1. If so, std-streams are reassigned to the
