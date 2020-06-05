@@ -111,7 +111,7 @@ clear:
   select                                       /* SAA-portable code.        */
     when abbrev(sysrx,  'Windows') then
       'CLS'                                    /* system to clear screen    */
-    when sysrx = 'LINUX' | sysrx = 'AIX' | sysrx = 'SUNOS' | sysrx = 'MACOS' then
+    when sysrx = 'LINUX' | sysrx = 'AIX' | sysrx = 'SUNOS' | sysrx = 'DARWIN' then
       'clear'                                  /* system to clear screen    */
     otherwise nop                              /* No such command available */
   end; say
@@ -177,7 +177,7 @@ help:                                          /* Request for online help.  */
       say '  Online Help started'
       'start "Rexx Online Documentation"' '"'||value("REXX_HOME",,"ENVIRONMENT")||"\doc\rexxref.pdf"||'"'
     end                                        /* ... for Unix              */
-    when sysrx = AIX | sysrx = LINUX | sysrx = 'SUNOS' then do
+    when sysrx = sysrx = 'LINUX' | sysrx = 'AIX' | sysrx = 'SUNOS' | sysrx = 'DARWIN' then do
       say '  Online help is not installed on' sysrx
       rc = 'Sorry!'
 
