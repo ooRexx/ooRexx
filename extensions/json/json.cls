@@ -147,7 +147,13 @@ return buffer~string
             buffer~append('"')
             do i = 1 to rexxObject~length
                 char = rexxObject~substr(i, 1)
-                if eJS~hasIndex(char) then buffer~append(eJS[char])
+                if char = "\", rexxObject~match(i + 1, "u"), rexxObject~substr(i + 2, 4)~dataType("x") then do
+                    -- balanced with our special handling of \uXXXX escape
+                    -- sequences (keep as-is), we also keep them as-is here
+                    buffer~append(rexxObject~substr(i, 6))
+                    i += 5
+                end
+                else if eJS~hasIndex(char) then buffer~append(eJS[char])
                 else if char <= '1f'x then buffer~append("\u00" || char~c2x)
                 else buffer~append(char)
             end
@@ -182,7 +188,7 @@ parseError:
     c = condition('o')
     message = c['ADDITIONAL'][1]
 extraChars:
-    raise syntax 3.900 array(message 'at' jsonString~substr(jsonPos, 25)~strip("t"))
+    raise syntax 93.900 array(message 'at' jsonString~substr(jsonPos, 25)~strip("t"))
 return .nil
 
 /**
@@ -344,15 +350,28 @@ parseError: raise propagate
         if char == '\' then do
             parse value jsonString with =(jsonPos) char2 +2
             if uJS~hasIndex(char2) then do
+                -- two-character escape sequences \" \\ \/ \b \f \n \r \t
                 jsonPos = jsonPos + 2
                 rexxString~append(uJS[char2])
             end
-            else if jsonString[jsonPos, 4] == "\u00" then do
-                -- we only support \u00XX escape sequences
+            else if jsonString~match(jsonPos, "\u00") then do
+                -- \u00XX escape sequence is supported
                 hex = jsonString[jsonPos + 4, 2]
                 if hex~length = 2, hex~dataType("x") then do
                     jsonPos = jsonPos + 6
                     rexxString~append(hex~x2c)
+                end
+                else
+                    raise user parseError array("Invalid escape sequence")
+            end
+            else if jsonString~match(jsonPos, "\u") then do
+                -- in general \uXXXX escape sequences are not supported
+                -- as ooRexx has no Unicode support
+                -- short of failing, we just just keep any \uXXXX as-is
+                hex = jsonString[jsonPos + 2, 4]
+                if hex~length = 4, hex~dataType("x") then do
+                    jsonPos = jsonPos + 6
+                    rexxString~append("\u", hex)
                 end
                 else
                     raise user parseError array("Invalid escape sequence")
