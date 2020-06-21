@@ -527,7 +527,6 @@
 #define Error_Parameter_Omitted_msg                                  599
 #define Error_No_OLE_instance_msg                                    600
 #define Error_Client_Disconnected_From_Server_msg                    601
-#define Error_Program_not_tokenized_msg                              602
 #define Error_Incorrect_call_read_from_writeonly_msg                 603
 #define Error_Incorrect_call_write_to_readonly_msg                   604
 #define Error_Incorrect_method_invbase64_msg                         611

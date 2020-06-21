@@ -63,7 +63,6 @@ ERROR_MAP Message_map_table[] = {     /* table of major and minor errors   */
       MINOR(Error_Program_unreadable_notfound)
       MINOR(Error_Program_unreadable_output_error)
       MINOR(Error_Program_unreadable_version)
-      MINOR(Error_Program_not_tokenized)
       MINOR(Error_Program_unreadable_invalid_encoding)
   MAJOR(Error_Program_interrupted)
       MINOR(Error_Program_interrupted_condition)

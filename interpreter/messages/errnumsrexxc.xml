@@ -1,22 +1,26 @@
 <section id="rexxcup">
-<title>RexxC Utility Program</title>
-<para>When RexxC encounters a syntax error in a Rexx program while tokenizing or syntax checking it, RexxC
-returns the negated ooRexx error code. In addition, RexxC issues the following errors:</para>
+<title>rexxc Utility Program</title>
+<para>When rexxc encounters a syntax error in a Rexx program while
+translating or syntax checking it, it returns the negated ooRexx error code.
+In addition, rexxc issues the following errors:</para>
 <section id="ERR127">
-<title>Error 127 - The REXXC command parameters are incorrect.</title>
+<title>Error 127 - The rexxc command parameters are incorrect.</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
-<para>The REXXC utility was invoked with zero or more than three parameters.  REXXC accepts the following parameters:
+<para>The rexxc utility was invoked with zero or more than two parameters.  rexxc accepts the following parameters:
         <itemizedlist>
         <listitem>
-<para>To check the syntax of a REXX program: REXXC Program_name [-s]</para>
+<para>To check the syntax of a REXX program: rexxc inputfile [-s]</para>
 </listitem>
         <listitem>
-<para>To convert a REXX program into a sourceless executable file: REXXC Program_name Output_file_name [-s] [-e]</para>
+<para>To translate a REXX program into a sourceless executable file: rexxc inputfile outputfile [-s] [-e]</para>
 </listitem>
         <listitem>
-<para>The -s option will suppress the copyright banner.</para>
+<para>The -s option suppresses the copyright banner and the -e option generates the outputfile in base64-encoded format.</para>
+</listitem>
+        <listitem>
+<para>On Windows the -s and -e options can alternatively be specified as /s and /e.</para>
 </listitem>
         </itemizedlist>
         </para>
@@ -26,11 +30,11 @@ returns the negated ooRexx error code. In addition, RexxC issues the following e
 <para> </para>
 </section>
 <section id="ERR129">
-<title>Error 129 - SYNTAX: rexxc InProgramName [OutProgramName] [-s] [-e]</title>
+<title>Error 129 - SYNTAX: rexxc inputfile [outputfile] [-s] [-e]</title>
 <para> </para>
 </section>
 <section id="ERR130">
-<title>Error 130 - Without OutProgramName REXXC only performs a syntax check.</title>
+<title>Error 130 - Without outputfile rexxc only performs a syntax check.</title>
 <para> </para>
 </section>
 </section>

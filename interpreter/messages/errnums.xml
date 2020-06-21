@@ -40,12 +40,6 @@
 </listitem>
 </varlistentry>
 <varlistentry>
-<term>904</term>
-<listitem>
-<para>Failure during initialization: Program "<emphasis role="italic">program</emphasis>" needs to be tokenized. To run untokenized scripts you need a full version of Object REXX.</para>
-</listitem>
-</varlistentry>
-<varlistentry>
 <term>905</term>
 <listitem>
 <para>Encoded compiled program "<emphasis role="italic">program_name</emphasis>" cannot be decoded.</para>

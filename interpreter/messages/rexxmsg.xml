@@ -96,15 +96,6 @@ optional for the subcodes.
       </SubMessage>
       <SubMessage>
         <Code>3</Code>
-        <Subcode>904</Subcode>
-        <MessageNumber>602</MessageNumber>
-        <Component>Rexx</Component>
-        <Severity>Warning</Severity>
-        <SymbolicName>Error_Program_not_tokenized</SymbolicName>
-        <Text>Failure during initialization: Program <q><Sub position="1" name="program"/></q> needs to be tokenized. To run untokenized scripts you need a full version of Object REXX.</Text>
-      </SubMessage>
-      <SubMessage>
-        <Code>3</Code>
         <Subcode>905</Subcode>
         <MessageNumber>477</MessageNumber>
         <Component>Rexx</Component>
@@ -6730,7 +6721,7 @@ special character (such as a parenthesis).
                 </varlistentry>
                 <varlistentry>
                     <term>
-            .           dllname
+                        dllname
                     </term>
                     <listitem>
                         <para>
@@ -6751,15 +6742,16 @@ special character (such as a parenthesis).
         <Component>REXXC</Component>
         <Severity>Error</Severity>
         <SymbolicName>Error_REXXC_cmd_parm_incorrect</SymbolicName>
-        <Text>The REXXC command parameters are incorrect.</Text>
-        <Explanation><para>The REXXC utility was invoked with zero or more than three parameters.  REXXC accepts the following parameters:
+        <Text>The rexxc command parameters are incorrect.</Text>
+        <Explanation><para>The rexxc utility was invoked with zero or more than two parameters.  rexxc accepts the following parameters:
         <itemizedlist>
-        <listitem><para>To check the syntax of a REXX program: REXXC Program_name [-s]</para></listitem>
-        <listitem><para>To convert a REXX program into a sourceless executable file: REXXC Program_name Output_file_name [-s] [-e]</para></listitem>
-        <listitem><para>The -s option will suppress the copyright banner.</para></listitem>
+        <listitem><para>To check the syntax of a REXX program: rexxc inputfile [-s]</para></listitem>
+        <listitem><para>To translate a REXX program into a sourceless executable file: rexxc inputfile outputfile [-s] [-e]</para></listitem>
+        <listitem><para>The -s option suppresses the copyright banner and the -e option generates the outputfile in base64-encoded format.</para></listitem>
+        <listitem><para>On Windows the -s and -e options can alternatively be specified as /s and /e.</para></listitem>
         </itemizedlist>
         </para></Explanation>
-        <UserAction><para>Check the REXXC parameters and retry the command.</para></UserAction>
+        <UserAction><para>Check the rexxc parameters and retry the command.</para></UserAction>
       </SubMessage>
       <SubMessage>
         <Code>999</Code>
@@ -6777,7 +6769,7 @@ special character (such as a parenthesis).
         <Component>REXXC</Component>
         <Severity>Error</Severity>
         <SymbolicName>Error_REXXC_wrongNrArg</SymbolicName>
-        <Text>SYNTAX: rexxc InProgramName [OutProgramName] [-s] [-e]</Text>
+        <Text>SYNTAX: rexxc inputfile [outputfile] [-s] [-e]</Text>
       </SubMessage>
       <SubMessage>
         <Code>999</Code>
@@ -6786,7 +6778,7 @@ special character (such as a parenthesis).
         <Component>REXXC</Component>
         <Severity>Error</Severity>
         <SymbolicName>Error_REXXC_SynCheckInfo</SymbolicName>
-        <Text>Without OutProgramName REXXC only performs a syntax check.</Text>
+        <Text>Without outputfile rexxc only performs a syntax check.</Text>
       </SubMessage>
       <SubMessage>
         <Code>999</Code>

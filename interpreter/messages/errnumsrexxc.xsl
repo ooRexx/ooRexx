@@ -4,9 +4,10 @@
 <xsl:preserve-space elements="para"/>
 <xsl:template match="Messages">
 <section id="rexxcup">
-<title>RexxC Utility Program</title>
-<para>When RexxC encounters a syntax error in a Rexx program while tokenizing or syntax checking it, RexxC
-returns the negated ooRexx error code. In addition, RexxC issues the following errors:</para>
+<title>rexxc Utility Program</title>
+<para>When rexxc encounters a syntax error in a Rexx program while
+translating or syntax checking it, it returns the negated ooRexx error code.
+In addition, rexxc issues the following errors:</para>
 
 <xsl:for-each select="Message/Subcodes/SubMessage[Component = 'REXXC']">
 <xsl:sort select="MessageNumber" data-type="number"/>
