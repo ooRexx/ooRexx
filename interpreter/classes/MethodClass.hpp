@@ -139,6 +139,9 @@ class MethodClass : public BaseExecutable
     inline bool  isScope(RexxClass *s) {return scope == s;}
 
     inline BaseCode  *getCode()     { return code; }
+
+    static MethodClass* restore(RexxString *fileName, BufferClass *buffer);
+
     MethodClass  *newRexx(RexxObject **, size_t);
     MethodClass  *newFileRexx(RexxString *, PackageClass *);
     MethodClass  *loadExternalMethod(RexxString *methodName, RexxString *descriptor);

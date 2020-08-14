@@ -53,6 +53,7 @@
 #include "DirectoryClass.hpp"
 #include "ProtectedObject.hpp"
 #include "BufferClass.hpp"
+#include "ProgramMetaData.hpp"
 #include "RexxInternalApis.h"
 #include "RoutineClass.hpp"
 #include "PackageClass.hpp"
@@ -413,6 +414,30 @@ void MethodClass::setAttributes(AccessFlag _access, ProtectedFlag _protected, Gu
 }
 
 
+
+/**
+ * Restore a program from a simple buffer.
+ *
+ * @param fileName The file name of the program we're restoring from.
+ * @param buffer   The source buffer.  This contains all of the saved metadata
+ *                 ahead of the the flattened object.
+ *
+ * @return The inflated Method object, if valid.
+ */
+MethodClass* MethodClass::restore(RexxString *fileName, BufferClass *buffer)
+{
+    // try to restore the routine object from the compiled file, ProgramMetaData handles all of the details here
+    RoutineClass * routine=ProgramMetaData::restore(fileName, buffer);
+    if (routine!=NULL)
+    {
+        // create and return a new method, use the restored compiled code for it
+        return new MethodClass(fileName, routine->getCode());
+    }
+    return NULL;
+}
+
+
+
 /**
  * Static method used for constructing new method objects in
  * various contexts (such as the define method on the Class class).
@@ -518,7 +543,6 @@ MethodClass *MethodClass::newFileRexx(RexxString *filename, PackageClass *source
 
     // go create a method from filename
     Protected<MethodClass> newMethod = LanguageParser::createMethod(filename, sourceContext);
-
     classThis->completeNewObject(newMethod);
     return newMethod;
 }

@@ -81,6 +81,21 @@
 #include "VariableReferenceOp.hpp"
 
 
+const char *ENCODED_NEEDLE = "/**/@REXX@";   // from ProgramMetaData.cpp
+
+inline RexxString *rs_format_L()    // create and return RexxString for "L"
+{
+    static RexxString * format_l = RexxString::newString("L",1);
+    return format_l;
+}
+
+inline RexxString *rs_LF()          // create and return RexxString for the LF character
+{
+    static RexxString * lf = RexxString::newString("\x0a",1);
+    return lf;
+}
+
+
 /**
  * Static method for creating a new MethodClass instance.
  *
@@ -94,6 +109,21 @@
  */
 MethodClass *LanguageParser::createMethod(RexxString *name, ArrayClass *source, PackageClass *sourceContext)
 {
+    // check whether the data is representing an encoded compiled Rexx program (rexxc with the '/e' switch),
+    // i.e. the second entry consists of the string "/**/@REXX@" only;
+    if (source->items()>1 && source->get(2)->stringValue()->strCompare(ENCODED_NEEDLE))
+    {
+        RexxString *strSource=source->toString(rs_format_L(), rs_LF());  // use single LF for concatenation
+        BufferClass *program_buffer = new_buffer(strSource->getStringData(), strSource->getLength());
+
+        // try to restore a compiled and encoded program first
+        Protected<MethodClass> method = MethodClass::restore(name, program_buffer);
+        if (method != (MethodClass *)OREF_NULL)
+        {
+            return method;
+        }
+    }
+
     // create the appropriate array source, then the parser, then generate the
     // code.
     Protected<ProgramSource> programSource = new ArrayProgramSource(source);
@@ -136,9 +166,28 @@ MethodClass *LanguageParser::createMethod(RexxString *name, BufferClass *source)
  */
 MethodClass *LanguageParser::createMethod(RexxString *name, PackageClass *sourceContext)
 {
+    // load the file into a buffer
+    Protected<BufferClass> program_buffer = FileProgramSource::readProgram(name->getStringData());
+    // if this failed, report an error now.
+    if (program_buffer == (BufferClass *)OREF_NULL)
+    {
+        reportException(Error_Program_unreadable_name, name);
+    }
+
+    // try to restore a flattened program first
+    Protected<MethodClass> method = MethodClass::restore(name, program_buffer);
+    if (method != (MethodClass *)OREF_NULL)
+    {
+        // method->setPackageObject(sourceContext);
+        // method->getPackage()->addPackage(sourceContext);
+        // method->getPackage()->inheritPackageContext(sourceContext);
+        // method->getPackage()->install();
+        return method;
+    }
+
     // create the appropriate program source, then the parser, then generate the
     // code.
-    Protected<ProgramSource> programSource = new FileProgramSource(name);
+    Protected<ProgramSource> programSource = new BufferProgramSource(program_buffer);
     Protected<LanguageParser> parser = new LanguageParser(name, programSource);
     return parser->generateMethod(sourceContext);
 }
@@ -157,6 +206,21 @@ MethodClass *LanguageParser::createMethod(RexxString *name, PackageClass *source
  */
 RoutineClass *LanguageParser::createRoutine(RexxString *name, ArrayClass *source, PackageClass *sourceContext)
 {
+    // check whether the data is representing an encoded compiled Rexx program (rexxc with the '/e' switch),
+    // i.e. the second entry consists of the string "/**/@REXX@" only;
+    if (source->items()>1 && source->get(2)->stringValue()->strCompare(ENCODED_NEEDLE))
+    {
+        RexxString *strSource=source->toString(rs_format_L(), rs_LF());  // use single LF for concatenation
+        BufferClass *program_buffer = new_buffer(strSource->getStringData(), strSource->getLength());
+
+        // try to restore a compiled and encoded program first
+        Protected<RoutineClass> routine = RoutineClass::restore(name, program_buffer);
+        if (routine != (RoutineClass *)OREF_NULL)
+        {
+            return routine;
+        }
+    }
+
     // create the appropriate array source, then the parser, then generate the
     // code.
     Protected<ProgramSource> programSource = new ArrayProgramSource(source);
@@ -261,6 +325,21 @@ RoutineClass* LanguageParser::createProgram(RexxString *name, BufferClass *sourc
  */
 RoutineClass* LanguageParser::createProgram(RexxString *name, ArrayClass *source, PackageClass *sourceContext)
 {
+    // check whether the data is representing an encoded compiled Rexx program (rexxc with the '/e' switch),
+    // i.e. the second entry consists of the string "/**/@REXX@" only;
+    if (source->items()>1 && source->get(2)->stringValue()->strCompare(ENCODED_NEEDLE))
+    {
+        RexxString *strSource=source->toString(rs_format_L(), rs_LF());  // use single LF for concatenation
+        BufferClass *program_buffer = new_buffer(strSource->getStringData(), strSource->getLength());
+
+        // try to restore a compiled and encoded program first
+        Protected<RoutineClass> routine = RoutineClass::restore(name, program_buffer);
+        if (routine != (RoutineClass *)OREF_NULL)
+        {
+            return routine;
+        }
+    }
+
     // create the appropriate array source, then the parser, then generate the
     // code.
     Protected<ProgramSource> programSource = new ArrayProgramSource(source);
