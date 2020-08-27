@@ -1775,10 +1775,10 @@ bool StringUtil::decodeBase64(const char *source, size_t inputLength, char *dest
             if (ch == '=')
             {
                 // if we're looking for the first digit, then the next character
-                // muust also be an '='
+                // must also be an '='
                 if (digit == 2)
                 {
-                    if (inputLength < 2 || *source != '=')
+                    if (inputLength == 0 || *source != '=')
                     {
                         return false;
                     }
