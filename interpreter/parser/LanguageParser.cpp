@@ -83,18 +83,6 @@
 
 const char *ENCODED_NEEDLE = "/**/@REXX@";   // from ProgramMetaData.cpp
 
-inline RexxString *rs_format_L()    // create and return RexxString for "L"
-{
-    static RexxString * format_l = RexxString::newString("L",1);
-    return format_l;
-}
-
-inline RexxString *rs_LF()          // create and return RexxString for the LF character
-{
-    static RexxString * lf = RexxString::newString("\x0a",1);
-    return lf;
-}
-
 
 /**
  * Static method for creating a new MethodClass instance.
@@ -113,8 +101,8 @@ MethodClass *LanguageParser::createMethod(RexxString *name, ArrayClass *source, 
     // i.e. the second entry consists of the string "/**/@REXX@" only;
     if (source->items()>1 && source->get(2)->stringValue()->strCompare(ENCODED_NEEDLE))
     {
-        RexxString *strSource=source->toString(rs_format_L(), rs_LF());  // use single LF for concatenation
-        BufferClass *program_buffer = new_buffer(strSource->getStringData(), strSource->getLength());
+        Protected<RexxString> strSource=source->toString(GlobalNames::LINES, GlobalNames::LINEFEED);  // use single LF for concatenation
+        Protected<BufferClass> program_buffer = new_buffer(strSource->getStringData(), strSource->getLength());
 
         // try to restore a compiled and encoded program first
         Protected<MethodClass> method = MethodClass::restore(name, program_buffer);
@@ -210,8 +198,8 @@ RoutineClass *LanguageParser::createRoutine(RexxString *name, ArrayClass *source
     // i.e. the second entry consists of the string "/**/@REXX@" only;
     if (source->items()>1 && source->get(2)->stringValue()->strCompare(ENCODED_NEEDLE))
     {
-        RexxString *strSource=source->toString(rs_format_L(), rs_LF());  // use single LF for concatenation
-        BufferClass *program_buffer = new_buffer(strSource->getStringData(), strSource->getLength());
+        Protected<RexxString> strSource=source->toString(GlobalNames::LINES, GlobalNames::LINEFEED);  // use single LF for concatenation
+        Protected<BufferClass> program_buffer = new_buffer(strSource->getStringData(), strSource->getLength());
 
         // try to restore a compiled and encoded program first
         Protected<RoutineClass> routine = RoutineClass::restore(name, program_buffer);
@@ -329,8 +317,8 @@ RoutineClass* LanguageParser::createProgram(RexxString *name, ArrayClass *source
     // i.e. the second entry consists of the string "/**/@REXX@" only;
     if (source->items()>1 && source->get(2)->stringValue()->strCompare(ENCODED_NEEDLE))
     {
-        RexxString *strSource=source->toString(rs_format_L(), rs_LF());  // use single LF for concatenation
-        BufferClass *program_buffer = new_buffer(strSource->getStringData(), strSource->getLength());
+        Protected<RexxString> strSource=source->toString(GlobalNames::LINES, GlobalNames::LINEFEED);  // use single LF for concatenation
+        Protected<BufferClass> program_buffer = new_buffer(strSource->getStringData(), strSource->getLength());
 
         // try to restore a compiled and encoded program first
         Protected<RoutineClass> routine = RoutineClass::restore(name, program_buffer);

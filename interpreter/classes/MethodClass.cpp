@@ -427,13 +427,13 @@ void MethodClass::setAttributes(AccessFlag _access, ProtectedFlag _protected, Gu
 MethodClass* MethodClass::restore(RexxString *fileName, BufferClass *buffer)
 {
     // try to restore the routine object from the compiled file, ProgramMetaData handles all of the details here
-    RoutineClass * routine=ProgramMetaData::restore(fileName, buffer);
-    if (routine!=NULL)
+    Protected<RoutineClass> routine = ProgramMetaData::restore(fileName, buffer);
+    if (routine != (RoutineClass *)OREF_NULL)
     {
         // create and return a new method, use the restored compiled code for it
         return new MethodClass(fileName, routine->getCode());
     }
-    return NULL;
+    return OREF_NULL;
 }
 
 
