@@ -2633,8 +2633,9 @@ RexxInstruction *LanguageParser::guardNew()
             {
                 // turn on variable tracking during expression evaluation
                 setGuard();
-                // evaluate the WHEN expression, which is required
-                expression = requiredExpression(TERM_EOC, Error_Invalid_expression_guard);
+                // evaluate the WHEN expression, which is required. It is also a logical
+                // expression, so commas are allowed.
+                expression = requiredLogicalExpression(TERM_EOC, Error_Invalid_expression_guard);
 
                 // get the guard expression variable list
                 variable_list = getGuard();
