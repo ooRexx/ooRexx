@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -2595,7 +2595,7 @@ RexxInstruction *LanguageParser::guardNew()
     // first token must be either GUARD ON or GUARD OFF.
     if (!token->isSymbol())
     {
-        syntaxError(Error_Symbol_expected_numeric, token);
+        syntaxError(Error_Invalid_subkeyword_guard, token);
     }
 
     // this tells us which way to set

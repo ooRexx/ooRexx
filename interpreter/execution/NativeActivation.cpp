@@ -2476,7 +2476,7 @@ RexxObject *NativeActivation::guardOnWhenUpdated(const char *name)
         return OREF_NULL;
     }
     // now use this to set the inform status on the variable
-    retriever->setGuard(objectVariables);
+    retriever->setGuard(methodVariables());
     // clear the guard sem on the activity
     activity->guardSet();
     // our desired state is to have the guard, so set it now. The wait will release it and
@@ -2487,7 +2487,7 @@ RexxObject *NativeActivation::guardOnWhenUpdated(const char *name)
     guardWait();
 
     // retrieve the value
-    return retriever->getRealValue(methodVariables());
+    return retriever->getRealValue(objectVariables);
 }
 
 
@@ -2518,7 +2518,7 @@ RexxObject *NativeActivation::guardOffWhenUpdated(const char *name)
         return OREF_NULL;
     }
     // now use this to set the inform status on the variable
-    retriever->setGuard(objectVariables);
+    retriever->setGuard(methodVariables());
     // clear the guard sem on the activity
     activity->guardSet();
     // our desired state is to have the guard off, so set it now.
@@ -2528,7 +2528,7 @@ RexxObject *NativeActivation::guardOffWhenUpdated(const char *name)
     guardWait();
 
     // retrieve the value
-    return retriever->getRealValue(methodVariables());
+    return retriever->getRealValue(objectVariables);
 }
 
 
