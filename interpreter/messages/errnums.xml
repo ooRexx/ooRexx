@@ -3014,7 +3014,7 @@ special character (such as a parenthesis).
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
-<para>An external class, method, or routine (specified with the EXTERNAL option on a ::CLASS, ::METHOD, or ::ROUTINE directive, or as a second argument on a NEW message to the Method class) cannot be found.</para>
+<para>An external method or routine (specified with the EXTERNAL option on an ::ATTRIBUTE, a ::METHOD, or a ::ROUTINE directive) cannot be found.</para>
 <para>The associated subcodes are: </para>
 <variablelist>
 <varlistentry>
@@ -4171,7 +4171,7 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>917</term>
 <listitem>
-<para>Incorrect external directive name "<emphasis role="italic">method</emphasis>".</para>
+<para>Incorrect external name specification "<emphasis role="italic">name</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>

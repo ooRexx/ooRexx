@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -564,7 +564,7 @@ MethodClass *MethodClass::loadExternalMethod(RexxString *methodName, RexxString 
     // convert external into words
     Protected<ArrayClass> _words = StringUtil::words(descriptor->getStringData(), descriptor->getLength());
     // "LIBRARY libbar [foo]"
-    if (_words->size() > 0 && ((RexxString *)(_words->get(1)))->strCompare("LIBRARY"))
+    if (_words->size() > 0 && ((RexxString *)(_words->get(1)))->strCaselessCompare("LIBRARY"))
     {
         RexxString *library = OREF_NULL;
         // the default entry point name is the internal name

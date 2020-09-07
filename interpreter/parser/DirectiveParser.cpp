@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -1357,9 +1357,8 @@ void LanguageParser::decodeExternalMethod(RexxString *methodName, RexxString *ex
     procedure = methodName;
     library = OREF_NULL;
 
-    // convert into an array of words
-    // NOTE:  This method makes all of the words part of the
-    // common string pool
+    // convert external into array of words (this also adds all words
+    // to the common string pool and uppercases the first word)
     Protected<ArrayClass> _words = words(externalSpec);
     // not 'LIBRARY library [entry]' form?
     if (((RexxString *)(_words->get(1)))->strCompare("LIBRARY"))
@@ -2591,8 +2590,8 @@ void LanguageParser::routineDirective()
         // is this mapped to an external library?
         if (externalname != OREF_NULL)
         {
-            // convert external into words (this also adds the strings
-            // to the common string pool)
+            // convert external into array of words (this also adds all words
+            // to the common string pool and uppercases the first word)
             Protected<ArrayClass> _words = words(externalname);
             // ::ROUTINE foo EXTERNAL "LIBRARY libbar [foo]"
             // NOTE:  decodeMethodLibrary doesn't really work for routines

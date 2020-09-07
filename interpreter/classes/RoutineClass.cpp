@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation.wri All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -507,7 +507,7 @@ RoutineClass *RoutineClass::loadExternalRoutine(RexxString *name, RexxString *de
     // convert external into words
     Protected<ArrayClass> words = StringUtil::words(libraryDescriptor->getStringData(), libraryDescriptor->getLength());
     // "LIBRARY libbar [foo]"
-    if (words->size() > 0 && ((RexxString *)(words->get(1)))->strCompare("LIBRARY"))
+    if (words->size() > 0 && ((RexxString *)(words->get(1)))->strCaselessCompare("LIBRARY"))
     {
         RexxString *library = OREF_NULL;
         // the default entry point name is the internal name

@@ -4232,7 +4232,7 @@ special character (such as a parenthesis).
     <Severity>Warning</Severity>
     <SymbolicName>Error_External_name_not_found</SymbolicName>
     <Text>External name not found.</Text>
-    <Explanation><para>An external class, method, or routine (specified with the EXTERNAL option on a ::CLASS, ::METHOD, or ::ROUTINE directive, or as a second argument on a NEW message to the Method class) cannot be found.</para></Explanation>
+    <Explanation><para>An external method or routine (specified with the EXTERNAL option on an ::ATTRIBUTE, a ::METHOD, or a ::ROUTINE directive) cannot be found.</para></Explanation>
     <Subcodes>
       <SubMessage>
         <Code>90</Code>
@@ -5949,7 +5949,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Translation_bad_external</SymbolicName>
-        <Text>Incorrect external directive name <q><Sub position="1" name="method"/></q>.</Text>
+        <Text>Incorrect external name specification <q><Sub position="1" name="name"/></q>.</Text>
       </SubMessage>
       <SubMessage>
         <Code>99</Code>

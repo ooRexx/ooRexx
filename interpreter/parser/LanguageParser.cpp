@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -4026,7 +4026,7 @@ ArrayClass  *LanguageParser::words(RexxString *string)
     // now make commonstring versions of the rest of the words
     for (size_t i = 2; i <= count; i++)
     {
-        wordArray->put(commonString(((RexxString *)wordArray->get(1))), 1);
+        wordArray->put(commonString(((RexxString *)wordArray->get(i))), i);
     }
 
     return wordArray;

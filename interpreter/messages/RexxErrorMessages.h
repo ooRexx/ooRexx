@@ -682,7 +682,7 @@ ERROR_MESSAGE Message_table[] = {      /* table of major and minor errors   */
     MESSAGE(Error_Translation_directive_interpret, "INTERPRET data must not contain directive instructions.")
     MESSAGE(Error_Translation_use_local_interpret, "INTERPRET data must not contain USE LOCAL.")
     MESSAGE(Error_Translation_bad_directive, "Unrecognized directive instruction.")
-    MESSAGE(Error_Translation_bad_external, "Incorrect external directive name \"&1\".")
+    MESSAGE(Error_Translation_bad_external, "Incorrect external name specification \"&1\".")
     MESSAGE(Error_Translation_use_comma, "USE ARG requires a \",\" between variable names; found \"&1\".")
     MESSAGE(Error_Translation_reply, "REPLY can only be issued in an object method invocation.")
     MESSAGE(Error_Translation_invalid_line, "Incorrect program line in method source array.")
