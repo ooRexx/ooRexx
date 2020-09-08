@@ -1471,8 +1471,9 @@ void SysFileIterator::filterShortNames()
         return;
     }
 
-    // use fnmatch() to handle all of the globbing
-    while (!PathMatchSpec(findFileData.cFileName, fileSpec))
+    // PathMatchSpec seems to treat fileSpec as a semicolon-delimited list
+    // We must use the Ex version
+    while (S_FALSE == PathMatchSpecEx(findFileData.cFileName, fileSpec, PMSF_NORMAL))
     {
         // now locate the next one
         if (!FindNextFile(handle, &findFileData))
