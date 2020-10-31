@@ -287,7 +287,7 @@ void getUniqueFileName(const char *fileTemplate, char filler, FileNameBuffer &fi
  * @return  0 on success, non-zero on error.  For all errors, a condition is
  *          raised.
  */
-RexxRoutine5(uint32_t, SysFileTree, CSTRING, fileSpec, RexxStemObject, files, OPTIONAL_CSTRING, opts,
+RexxRoutine5(uint32_t, SysFileTree, CSTRING, fileSpec, RexxObjectPtr, files, OPTIONAL_CSTRING, opts,
              OPTIONAL_CSTRING, targetAttr, OPTIONAL_CSTRING, newAttr)
 {
     try
@@ -311,12 +311,10 @@ RexxRoutine5(uint32_t, SysFileTree, CSTRING, fileSpec, RexxStemObject, files, OP
 
 // this next section are platform-independent methods for the TreeFinder class.
 // platform-specific methods are located in the appropriate SysRexxUtil.cpp file.
-TreeFinder::TreeFinder(RexxCallContext *c, const char *f, RexxStemObject s, const char *opts, const char *targetAttr, const char *newAttr) :
-    context(c), count(0), files(s), filePath(c), fileSpec(c),
+TreeFinder::TreeFinder(RexxCallContext *c, const char *f, RexxObjectPtr sa, const char *opts, const char *targetAttr, const char *newAttr) :
+    context(c), stemArray(c, sa, 2), filePath(c), fileSpec(c),
     foundFile(c), foundFileLine(c), nameSpec(c)
 {
-    // clear any existing count to be zero before we start looking
-    context->SetStemArrayElement(files, 0, context->WholeNumber(0));
     // save the initial file spec
     fileSpec = f;
     // validate the file specification
@@ -336,7 +334,7 @@ TreeFinder::TreeFinder(RexxCallContext *c, const char *f, RexxStemObject s, cons
 TreeFinder::~TreeFinder()
 {
     // make sure we finalized the count before returning.
-    context->SetStemArrayElement(files, 0, context->WholeNumber(count));
+    stemArray.complete();
 }
 
 
@@ -386,14 +384,15 @@ void TreeFinder::validateFileSpec()
         nullStringException(context, "SysFileTree", 1);
     }
 
-    // apply any platform-specific rules to the file spec name.
-    validateFileSpecName();
-
     // apply platform rules to adjust for directories.
     adjustDirectory();
 
     // perform any adjustments needed to the spec
     adjustFileSpec();
+
+    // apply any platform-specific rules to the file spec name.
+    // run this last so that we validate the adjusted final file name.
+    validateFileSpecName();
 }
 
 
@@ -552,7 +551,7 @@ bool TreeFinder::goodOpts(const char *opts)
  * the file name portion.  The path portion is then returned in
  * filePath and the file name portion is returned in nameSpec.
  *
- * The filePOath portion will end with the PathDelimiter
+ * The filePath portion will end with the PathDelimiter
  * character if the filespec contains a path.
  *
  */
@@ -746,12 +745,8 @@ void TreeFinder::recursiveFindFile(FileNameBuffer &path)
  */
 void TreeFinder::addResult(const char *v)
 {
-    RexxStringObject t = context->String(v);
-
-    // Add the file name to the stem and be done with it.
-    count++;
-    context->SetStemArrayElement(files, count, t);
-    context->ReleaseLocalReference(t);
+    // Add this value to our results Stem or Array
+    stemArray.addValue(v);
 }
 
 
@@ -1715,14 +1710,14 @@ RexxRoutine1(int, SysFileDelete, CSTRING, path)
  *                'N' - Precede each found string in result stem
  *                      with its line number in file (non-default)
  * @return  0 on success, non-zero on error.
- *         ERROR_FILEOPEN if file cannot be openend.
+ *         ERROR_FILEOPEN if file cannot be opened.
  *         ERROR_NOMEM if not enough memory.
  */
 
-RexxRoutine4(CSTRING, SysFileSearch, RexxStringObject, needle, CSTRING, file, RexxStemObject, stem, OPTIONAL_CSTRING, opts)
+RexxRoutine4(CSTRING, SysFileSearch, RexxStringObject, needle, CSTRING, file, RexxObjectPtr, stem, OPTIONAL_CSTRING, opts)
 {
     bool        linenums = false;        // should line numbers be inclued in the output
-    bool        sensitive = false;       // how should searchs be performed
+    bool        sensitive = false;       // how should searches be performed
 
     // was the option specified?
     if (opts != NULL)
@@ -1762,6 +1757,7 @@ RexxRoutine4(CSTRING, SysFileSearch, RexxStringObject, needle, CSTRING, file, Re
         }
     }
 
+    StemHandler stemVariable(context, stem, 3);
     LineReader fileSource;
     RoutineQualifiedName qualifiedName(context, file);
 
@@ -1769,7 +1765,6 @@ RexxRoutine4(CSTRING, SysFileSearch, RexxStringObject, needle, CSTRING, file, Re
     if (!fileSource.open(qualifiedName))
     {
         // no items are returned
-        context->SetStemArrayElement(stem, 0, context->WholeNumber(0));
         return ERROR_FILEOPEN;
     }
 
@@ -1780,8 +1775,6 @@ RexxRoutine4(CSTRING, SysFileSearch, RexxStringObject, needle, CSTRING, file, Re
     size_t needleLength = context->StringLength(needle);
 
     size_t currentLine = 0;
-
-    size_t currentStemIndex = 0;
 
     // keep reading while we find lines
     while (fileSource.getLine(line, lineLength))
@@ -1803,7 +1796,6 @@ RexxRoutine4(CSTRING, SysFileSearch, RexxStringObject, needle, CSTRING, file, Re
                 if (lineBuffer == NULL)
                 {
                     // we still return the items we've collected so far
-                    context->SetStemArrayElement(stem, 0, context->StringSizeToObject(currentStemIndex));
                     return ERROR_NOMEM;
                 }
 
@@ -1811,25 +1803,17 @@ RexxRoutine4(CSTRING, SysFileSearch, RexxStringObject, needle, CSTRING, file, Re
                 memcpy((char *)lineBuffer, lineNumber, lineNumberLength);
                 memcpy((char *)lineBuffer + lineNumberLength, line, lineLength);
 
-                RexxStringObject returnValue = context->NewString(lineBuffer, totalLineSize);
-
-                context->SetStemArrayElement(stem, ++currentStemIndex, returnValue);
-                context->ReleaseLocalReference(returnValue);
+                stemVariable.addValue(lineBuffer, totalLineSize);
             }
             else
             {
-                RexxStringObject returnValue = context->NewString(line, lineLength);
-
-                context->SetStemArrayElement(stem, ++currentStemIndex, returnValue);
-                context->ReleaseLocalReference(returnValue);
+                stemVariable.addValue(line, lineLength);
             }
         }
     }
 
     fileSource.close();
 
-    // make sure we update the count with the number of return items
-    context->SetStemArrayElement(stem, 0, context->StringSizeToObject(currentStemIndex));
     return "0"; // success
 }
 

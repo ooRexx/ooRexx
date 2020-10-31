@@ -415,6 +415,7 @@ ERROR_MESSAGE Message_table[] = {      /* table of major and minor errors   */
     MESSAGE(Error_Incorrect_call_stem_size, "Stem argument does not have a valid count for element 0.")
     MESSAGE(Error_Incorrect_call_stem_range, "The operation is outside the size of the stem array (\"&1\").")
     MESSAGE(Error_Incorrect_call_stem_sparse_array, "Stem element at position \"&1\" is not set.")
+    MESSAGE(Error_Incorrect_call_noarray_nostem, "Argument &1 must be an array object, a stem object, or a stem name value; found \"&2\".")
     MESSAGE(Error_Conversion, "Bad arithmetic conversion.")
     MESSAGE(Error_Conversion_operator, "Nonnumeric value (\"&1\") used in arithmetic operation.")
     MESSAGE(Error_Conversion_prefix, "Nonnumeric value (\"&1\") used with prefix operator.")

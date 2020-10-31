@@ -411,6 +411,7 @@
 #define Rexx_Error_Incorrect_call_stem_size                               40922
 #define Rexx_Error_Incorrect_call_stem_range                              40923
 #define Rexx_Error_Incorrect_call_stem_sparse_array                       40924
+#define Rexx_Error_Incorrect_call_noarray_nostem                          40925
 #define Rexx_Error_Conversion                                             41000
 #define Rexx_Error_Conversion_operator                                    41001
 #define Rexx_Error_Conversion_prefix                                      41003

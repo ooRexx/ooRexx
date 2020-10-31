@@ -570,6 +570,7 @@
 #define Error_Unmatched_quote_user_defined_msg                       649
 #define Error_Invalid_whole_number_method_msg                        650
 #define Error_Logical_value_property_msg                             651
+#define Error_Incorrect_call_noarray_nostem_msg                      652
 #define Error_Variable_expected_USE_msg                              653
 #define Error_Variable_expected_PARSE_msg                            654
 #define Error_Symbol_expected_LABEL_msg                              655

@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -114,7 +114,7 @@ void inline invalidOptionException(RexxCallContext *c, const char *fName, const 
 
 
 /**
- * Raise an error for two many arguments
+ * Raise an error for too many arguments
  *
  * @param c      The call context
  * @param fname  The name of the function.
@@ -163,12 +163,18 @@ void inline unsetStemException(RexxCallContext *c)
 
 
 /**
- * Simple class for managing returning results as a stem object.
+ * Simple class for managing returning results as a stem or an array object.
  */
 class StemHandler
 {
  public:
-     StemHandler(RexxCallContext *c, RexxStemObject s = NULLOBJECT) : context(c), stem(s), arrayCount(0) { }
+     StemHandler(RexxCallContext *c, RexxStemObject s = NULLOBJECT) : context(c), stem(s), arrayCount(0), array(NULLOBJECT), isArray(false) { }
+
+     StemHandler(RexxCallContext *c, RexxObjectPtr s, int position) : context(c), arrayCount(0)
+     {
+         setStem(s, position);
+     }
+
      ~StemHandler()
      {
          complete();
@@ -176,7 +182,7 @@ class StemHandler
 
      void complete()
      {
-         if (stem != NULLOBJECT)
+         if (!isArray && stem != NULLOBJECT)
          {
              context->SetStemArrayElement(stem, 0, context->StringSizeToObject(arrayCount));
              stem = NULLOBJECT;
@@ -185,49 +191,64 @@ class StemHandler
 
      void setStem(RexxObjectPtr stemArgument, int position)
      {
-         // try to resolve this directly. This is normally either a stem object already or a
-         // valid stem name.
-         stem = context->ResolveStemVariable(stemArgument);
-
-         // this could be an invalid argument, but it might be a name like "a.1", where the
-         // tail needs to be extracted
-         if (stem == NULLOBJECT)
+         // as an alternative to a stem, is this an array?
+         isArray = context->IsArray(stemArgument);
+         if (isArray)
          {
-             // This is a bit of a pain. It would be nice to create this argument as a stem
-             // object, but people have been coding stem sorts using a compound variable rather than
-             // a stem name because the old code was lax and it just happened to work. We need to process this
-             // as a name and make sure it has a period at the end.
-
-             // we need to get a stem name, and also check for extension. We only process this if it
-             // is a string object
-             context->ThrowException2(Rexx_Error_Incorrect_call_nostem, context->WholeNumberToObject(position), stemArgument);
+             array = (RexxArrayObject)stemArgument;
+             context->SendMessage0(array, "EMPTY");
          }
-             // this is a required value...throw an error if not given
+         else
+         {
+             // try to resolve a stem.  This is either a stem object already, or
+             // a valid stem name.
+             stem = context->ResolveStemVariable(stemArgument);
+
+             // this could be an invalid argument, or it might be a name like "a.1"
+             if (stem == NULLOBJECT)
+             {
+                 // Argument must be an array object, a stem object, or a stem name value
+                 context->ThrowException2(Rexx_Error_Incorrect_call_noarray_nostem, context->WholeNumberToObject(position), stem);
+             }
+         }
      }
 
      void addList(const char *values)
      {
-         // values is a list of null terminated string, terminated with a double null
+         // values is a list of null terminated strings, terminated with a double null
          while (*values != '\0')
          {
-             addValue(values);
              size_t valueLen = strlen(values);
-             values += strlen(values) + 1;
+             addValue(values, valueLen);
+             values += valueLen + 1;
          }
      }
 
      void addValue(const char *value)
      {
-         size_t valueLen = strlen(value);
-         RexxStringObject s = context->NewString(value, valueLen);
-         context->SetStemArrayElement(stem, ++arrayCount, s);
-         context->ReleaseLocalReference(s);
+         addValue(value, strlen(value));
+     }
+
+     void addValue(const char *value, size_t valueLen)
+     {
+         if (isArray)
+         {
+             context->ArrayAppendString(array, value, valueLen);
+         }
+         else
+         {
+             RexxStringObject s = context->NewString(value, valueLen);
+             context->SetStemArrayElement(stem, ++arrayCount, s);
+             context->ReleaseLocalReference(s);
+         }
      }
 
  protected:
      RexxCallContext *context; // the call context
      RexxStemObject stem;      // the stem we're managing
-     size_t arrayCount;        // the current arrayCount
+     size_t arrayCount;        // the current stem count
+     RexxArrayObject array;    // the array we're managing
+     bool isArray;             // true if we manage an array, false if a stem
 };
 
 
@@ -340,7 +361,7 @@ class TreeFinder
      };
 
 
-     TreeFinder(RexxCallContext *c, const char *f, RexxStemObject s, const char *opts, const char *targetAttr, const char *newAttr);
+     TreeFinder(RexxCallContext *c, const char *f, RexxObjectPtr sa, const char *opts, const char *targetAttr, const char *newAttr);
      ~TreeFinder();
 
      void findFiles();
@@ -381,8 +402,7 @@ class TreeFinder
  protected:
 
      RexxCallContext *context;                     // the initial call context
-     size_t         count;                         // Number of found file lines
-     RexxStemObject files;                         // Stem that holds results.
+     StemHandler stemArray;                        // handles results as Stem or Array
      RoutineFileNameBuffer filePath;               // the file path portion of the search. Will get updated with recursions.
      RoutineFileNameBuffer fileSpec;               // File name portion of the search for file spec, may contain glob characters.
      RoutineFileNameBuffer foundFile;              // Full path name of found file

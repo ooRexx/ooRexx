@@ -414,6 +414,7 @@ ERROR_MAP Message_map_table[] = {     /* table of major and minor errors   */
       MINOR(Error_Incorrect_call_stem_size)
       MINOR(Error_Incorrect_call_stem_range)
       MINOR(Error_Incorrect_call_stem_sparse_array)
+      MINOR(Error_Incorrect_call_noarray_nostem)
   MAJOR(Error_Conversion)
       MINOR(Error_Conversion_operator)
       MINOR(Error_Conversion_prefix)

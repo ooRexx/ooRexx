@@ -3464,6 +3464,15 @@ special character (such as a parenthesis).
         <SymbolicName>Error_Incorrect_call_stem_sparse_array</SymbolicName>
         <Text>Stem element at position <q><Sub position="1" name="position"/></q> is not set.</Text>
       </SubMessage>
+      <SubMessage>
+        <Code>40</Code>
+        <Subcode>925</Subcode>
+        <MessageNumber>652</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Incorrect_call_noarray_nostem</SymbolicName>
+        <Text>Argument <Sub position="1" name="argument"/> must be an array object, a stem object, or a stem name value; found <q><Sub position="2" name="value"/></q>.</Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>

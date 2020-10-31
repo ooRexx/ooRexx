@@ -2459,6 +2459,12 @@ special character (such as a parenthesis).
 <para>Stem element at position "<emphasis role="italic">position</emphasis>" is not set.</para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>925</term>
+<listitem>
+<para>Argument <emphasis role="italic">argument</emphasis> must be an array object, a stem object, or a stem name value; found "<emphasis role="italic">value</emphasis>".</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 <section id="ERR41">

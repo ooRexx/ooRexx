@@ -1032,18 +1032,12 @@ RexxRoutine1(RexxStringObject, SysGetKey, OPTIONAL_CSTRING, echoOpt)
 *            ERROR_RETSTR   - Error opening INI or querying/writing info.*
 *************************************************************************/
 
-RexxRoutine4(RexxStringObject, SysIni, OPTIONAL_CSTRING, iniFile, CSTRING, app, OPTIONAL_RexxObjectPtr, key, OPTIONAL_RexxObjectPtr, val)
+RexxRoutine4(RexxStringObject, SysIni, OPTIONAL_CSTRING, iniFile, CSTRING, app, RexxObjectPtr, key, OPTIONAL_RexxObjectPtr, val)
 {
     // the ini file is optional and defaults to WIN.INI
     if (iniFile == NULL)
     {
         iniFile = "WIN.INI";
-    }
-
-    // if the key was not specified, use a null string
-    if (key == NULLOBJECT)
-    {
-        key = context->NullString();
     }
 
     // Process first off of the app key. This could be a keyword command, which changes
@@ -1122,6 +1116,12 @@ RexxRoutine4(RexxStringObject, SysIni, OPTIONAL_CSTRING, iniFile, CSTRING, app, 
     // this could be a DELETE: operation for a particular application
     if (stricmp(keyName, "DELETE:") == 0)
     {
+        // the 4th argument cannot be specified
+        if (argumentExists(4))
+        {
+            maxArgException(context, "SysIni DELETE:", 4);
+        }
+
         // A request to delete all keys for a given application
         if (!WritePrivateProfileString(app, NULL, NULL, iniFile))
         {
@@ -3091,7 +3091,7 @@ RexxRoutine4(int, SysToUniCode, RexxStringObject, source, OPTIONAL_CSTRING, code
 * Return:    error number                                                *
 *************************************************************************/
 
-RexxRoutine1(uint32_t, SysWinGetPrinters, RexxStemObject, stem)
+RexxRoutine1(uint32_t, SysWinGetPrinters, RexxObjectPtr, stem)
 {
     DWORD realSize = 0;
     DWORD entries = 0;
@@ -3125,7 +3125,7 @@ RexxRoutine1(uint32_t, SysWinGetPrinters, RexxStemObject, stem)
         pArray.realloc(currentSize);
     }
 
-    StemHandler stemVariable(context, stem);
+    StemHandler stemVariable(context, stem, 1);
 
     PRINTER_INFO_2 *pResult = (PRINTER_INFO_2 *)(char *)pArray;
 
