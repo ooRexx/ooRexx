@@ -237,38 +237,77 @@ void SysFileSystem::qualifyStreamName(const char *unqualifiedName, FileNameBuffe
 
 
 /**
- * Perform a "find first" operation for a file.
+ * Get attribute flags for a file with the given name.
  *
- * @param name   the target name (may include wildcard characters)
+ * @param name   The name to check.
  *
- * @return true if a file was located, false if not.
+ * @return File attribute flags if the file exists,
+ *         INVALID_FILE_ATTRIBUTES otherwise.
  */
-bool SysFileSystem::findFirstFile(const char *name)
+DWORD SysFileSystem::getFileAttributes(const char *name)
 {
-    HANDLE FindHandle;
-    WIN32_FIND_DATA FindData;
+    DWORD dwAttrib = GetFileAttributes(name);
 
-    FindHandle = FindFirstFile(name, &FindData);
-
-    if (FindHandle != INVALID_HANDLE_VALUE)
+    // For system files like hiberfil.sys GetFileAttributes fails with
+    // ERROR_SHARING_VIOLATION (The process cannot access the file because it is
+    // being used by another process).  In this case FindFirstFile is still able
+    // to return attributes (we don't use it in the first place as it is slower).
+    if (dwAttrib == INVALID_FILE_ATTRIBUTES &&
+        GetLastError() == ERROR_SHARING_VIOLATION)
     {
-        FindClose(FindHandle);
-        if ((FindData.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM)
-            || (FindData.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
-            || (FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+        WIN32_FIND_DATA findData;
+        HANDLE hFind = FindFirstFile(name, &findData);
+        if (hFind != INVALID_HANDLE_VALUE)
         {
-            return false;
+            dwAttrib = findData.dwFileAttributes;
+            FindClose(hFind);
         }
-        else
+    }
+    return dwAttrib;
+}
+
+
+/**
+ * Get the FILETIME for a file with the given name.
+ *
+ * @param name   The name to check.
+ * @param type   The type of FILETIME to return.
+ *               Can be FiletimeAccess, FiletimeWrite, or FiletimeCreation
+ * @param time   The returned FILETIME.
+ *
+ * @return true if the file exists, false otherwise.
+ */
+bool SysFileSystem::getFiletime(const char *name, FiletimeType type, FILETIME *time)
+{
+    WIN32_FILE_ATTRIBUTE_DATA stat;
+
+    if (GetFileAttributesEx(name, GetFileExInfoStandard, &stat))
+    {
+        *time = type == FiletimeAccess ? stat.ftLastAccessTime :
+               (type == FiletimeWrite ? stat.ftLastWriteTime : stat.ftCreationTime);
+        return true;
+    }
+
+    // For system files like hiberfil.sys GetFileAttributesEx fails with
+    // ERROR_SHARING_VIOLATION (The process cannot access the file because it is
+    // being used by another process).  In this case FindFirstFile is still able
+    // to return attributes (we don't use it in the first place as it is slower).
+    else if (GetLastError() == ERROR_SHARING_VIOLATION)
+    {
+        WIN32_FIND_DATA statFind;
+        HANDLE hFind = FindFirstFile(name, &statFind);
+        if (hFind != INVALID_HANDLE_VALUE)
         {
+            FindClose(hFind);
+            *time = type == FiletimeAccess ? statFind.ftLastAccessTime :
+                   (type == FiletimeWrite ? statFind.ftLastWriteTime : statFind.ftCreationTime);
             return true;
         }
     }
-    else
-    {
-        return false;
-    }
+    // we failed to retrieve the timestamp
+    return false;
 }
+
 
 /**
  * Check to see if a file with a given name exists.
@@ -279,7 +318,7 @@ bool SysFileSystem::findFirstFile(const char *name)
  */
 bool SysFileSystem::fileExists(const char *name)
 {
-    DWORD dwAttrib = GetFileAttributes(name);
+    DWORD dwAttrib = getFileAttributes(name);
 
     return (dwAttrib != INVALID_FILE_ATTRIBUTES &&
           !(dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
@@ -725,7 +764,7 @@ int SysFileSystem::deleteDirectory(const char *name)
  */
 bool SysFileSystem::isDirectory(const char *name)
 {
-    DWORD dwAttrs = GetFileAttributes(name);
+    DWORD dwAttrs = getFileAttributes(name);
     return (dwAttrs != INVALID_FILE_ATTRIBUTES) && (dwAttrs & FILE_ATTRIBUTE_DIRECTORY);
 }
 
@@ -829,7 +868,7 @@ bool SysFileSystem::canWrite(const char *name)
  */
 bool SysFileSystem::isFile(const char *name)
 {
-    DWORD dwAttrs = GetFileAttributes(name);
+    DWORD dwAttrs = getFileAttributes(name);
     return (dwAttrs != INVALID_FILE_ATTRIBUTES) && (dwAttrs & (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT)) == 0;
 }
 
@@ -843,7 +882,7 @@ bool SysFileSystem::isFile(const char *name)
  */
 bool SysFileSystem::exists(const char *name)
 {
-    DWORD dwAttrs = GetFileAttributes(name);
+    DWORD dwAttrs = getFileAttributes(name);
     return (dwAttrs != INVALID_FILE_ATTRIBUTES);
 }
 
@@ -858,25 +897,17 @@ bool SysFileSystem::exists(const char *name)
  */
 int64_t SysFileSystem::getLastModifiedDate(const char *name)
 {
-    HANDLE newHandle = CreateFile(name, FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE,
-                                  NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
-    if ( newHandle == INVALID_HANDLE_VALUE )
+    FILETIME time, localTime;
+    if (getFiletime(name, FiletimeWrite, &time) &&
+        FileTimeToLocalFileTime(&time, &localTime))
+    {
+        // convert to ticks
+        return FileTimeToMicroseconds(localTime);
+    }
+    else
     {
         return NoTimeStamp;
     }
-
-    FILETIME lastWriteGetTime, lastWriteTime;
-    if ( !(GetFileTime(newHandle, NULL, NULL, &lastWriteGetTime) &&
-           FileTimeToLocalFileTime(&lastWriteGetTime, &lastWriteTime)) )
-    {
-        CloseHandle(newHandle);
-        return NoTimeStamp;
-    }
-
-    CloseHandle(newHandle);
-
-    // convert to ticks
-    return FileTimeToMicroseconds(lastWriteTime);
 }
 
 
@@ -890,25 +921,17 @@ int64_t SysFileSystem::getLastModifiedDate(const char *name)
  */
 int64_t SysFileSystem::getLastAccessDate(const char *name)
 {
-    HANDLE newHandle = CreateFile(name, FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE,
-                                  NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
-    if ( newHandle == INVALID_HANDLE_VALUE )
+    FILETIME time, localTime;
+    if (getFiletime(name, FiletimeAccess, &time) &&
+        FileTimeToLocalFileTime(&time, &localTime))
+    {
+        // convert to ticks
+        return FileTimeToMicroseconds(localTime);
+    }
+    else
     {
         return NoTimeStamp;
     }
-
-    FILETIME fileLastAccessTime, lastAccessTime;
-    if ( !(GetFileTime(newHandle, NULL, &fileLastAccessTime, NULL) &&
-           FileTimeToLocalFileTime(&fileLastAccessTime, &lastAccessTime)) )
-    {
-        CloseHandle(newHandle);
-        return NoTimeStamp;
-    }
-
-    CloseHandle(newHandle);
-
-    // convert to ticks
-    return FileTimeToMicroseconds(lastAccessTime);
 }
 
 
@@ -917,23 +940,47 @@ int64_t SysFileSystem::getLastAccessDate(const char *name)
  *
  * @param name   The name of the target file.
  *
- * @return the 64-bit file size.
+ * @return the 64-bit file size, or zero if not a valid file
  */
 int64_t SysFileSystem::getFileLength(const char *name)
 {
     WIN32_FILE_ATTRIBUTE_DATA stat;
+    DWORD high = 0, low = 0;
 
-    // if we fail or this is a directory we return zero
-    // the file size fields do not have a meaning for directories
-    if (GetFileAttributesEx(name, GetFileExInfoStandard, &stat) == 0 ||
-        stat.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+    if (GetFileAttributesEx(name, GetFileExInfoStandard, &stat))
     {
-        return 0;
+        // if this is a directory we cannot retrieve a file size
+        // these fields do not have a meaning for directories
+        if ((stat.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0)
+        {
+            high = stat.nFileSizeHigh;
+            low = stat.nFileSizeLow;
+        }
     }
 
-    int64_t result = ((int64_t)stat.nFileSizeHigh) << 32;
-    result += (int64_t)stat.nFileSizeLow;
-    return result;
+    // For system files like hiberfil.sys GetFileAttributesEx fails with
+    // ERROR_SHARING_VIOLATION (The process cannot access the file because it is
+    // being used by another process).  In this case FindFirstFile is still able
+    // to return attributes (we don't use it in the first place as it is slower).
+    else if (GetLastError() == ERROR_SHARING_VIOLATION)
+    {
+        WIN32_FIND_DATA statFind;
+
+        HANDLE hFind = FindFirstFile(name, &statFind);
+        if (hFind != INVALID_HANDLE_VALUE)
+        {
+            FindClose(hFind);
+            // if this is a directory we cannot retrieve a file size
+            // for directories these fields have no meaning
+            if ((statFind.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0)
+            {
+                high = statFind.nFileSizeHigh;
+                low = statFind.nFileSizeLow;
+            }
+        }
+    }
+    // returns file size if a valid file, otherwise returns 0
+    return (((int64_t)high) << 32) + ((int64_t)low);
 }
 
 
@@ -959,7 +1006,7 @@ bool SysFileSystem::makeDirectory(const char *name)
  */
 bool SysFileSystem::isHidden(const char *name)
 {
-    DWORD dwAttrs = GetFileAttributes(name);
+    DWORD dwAttrs = getFileAttributes(name);
     return (dwAttrs != INVALID_FILE_ATTRIBUTES) && (dwAttrs & FILE_ATTRIBUTE_HIDDEN);
 }
 

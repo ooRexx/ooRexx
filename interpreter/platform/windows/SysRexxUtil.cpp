@@ -2583,11 +2583,9 @@ RexxRoutine3(int, SysSetFileDateTime, CSTRING, name, OPTIONAL_CSTRING, newdate, 
 
 RexxRoutine2(RexxObjectPtr, SysGetFileDateTime, CSTRING, name, OPTIONAL_CSTRING, selector)
 {
+    SysFileSystem::FiletimeType type;
     FILETIME  sFileTime;
     FILETIME  sLocalFileTime;
-    FILETIME  *psFileCreated = NULL;
-    FILETIME  *psFileAccessed = NULL;
-    FILETIME  *psFileWritten = NULL;
     SYSTEMTIME sLocalSysTime;
 
     if (selector != NULL)
@@ -2596,15 +2594,15 @@ RexxRoutine2(RexxObjectPtr, SysGetFileDateTime, CSTRING, name, OPTIONAL_CSTRING,
         {
             case 'c':
             case 'C':
-                psFileCreated = &sFileTime;
+                type = SysFileSystem::FiletimeCreation;
                 break;
             case 'a':
             case 'A':
-                psFileAccessed = &sFileTime;
+                type = SysFileSystem::FiletimeAccess;
                 break;
             case 'w':
             case 'W':
-                psFileWritten = &sFileTime;
+                type = SysFileSystem::FiletimeWrite;
                 break;
             default:
                 invalidOptionException(context, "SysGetFileDateTime", "time selector", "'A', 'C', or 'W'", selector);
@@ -2612,36 +2610,24 @@ RexxRoutine2(RexxObjectPtr, SysGetFileDateTime, CSTRING, name, OPTIONAL_CSTRING,
     }
     else
     {
-        psFileWritten = &sFileTime;
+        type = SysFileSystem::FiletimeWrite;
     }
 
-    /* open file for read to query time */
-    HANDLE setFile = CreateFile(name, FILE_READ_ATTRIBUTES,
-                                FILE_SHARE_READ | FILE_SHARE_WRITE,
-                                NULL, OPEN_EXISTING, FILE_FLAG_WRITE_THROUGH |
-                                FILE_FLAG_BACKUP_SEMANTICS, NULL);
-    if (setFile != INVALID_HANDLE_VALUE)
+    if (SysFileSystem::getFiletime(name, type, &sFileTime) &&
+        FileTimeToLocalFileTime(&sFileTime, &sLocalFileTime) &&
+        FileTimeToSystemTime(&sLocalFileTime, &sLocalSysTime))
     {
-        BOOL fOk = GetFileTime(setFile, psFileCreated, psFileAccessed, psFileWritten);
-        CloseHandle(setFile);
-        fOk &= FileTimeToLocalFileTime(&sFileTime, &sLocalFileTime);
-        fOk &= FileTimeToSystemTime(&sLocalFileTime, &sLocalSysTime);
-
-        if (fOk)
-        {
-            char buffer[256];
-            snprintf(buffer, sizeof(buffer), "%4d-%02d-%02d %02d:%02d:%02d",
-                    sLocalSysTime.wYear,
-                    sLocalSysTime.wMonth,
-                    sLocalSysTime.wDay,
-                    sLocalSysTime.wHour,
-                    sLocalSysTime.wMinute,
-                    sLocalSysTime.wSecond);
-            return context->String(buffer);
-        }
+        char buffer[256];
+        snprintf(buffer, sizeof(buffer), "%4d-%02d-%02d %02d:%02d:%02d",
+                sLocalSysTime.wYear,
+                sLocalSysTime.wMonth,
+                sLocalSysTime.wDay,
+                sLocalSysTime.wHour,
+                sLocalSysTime.wMinute,
+                sLocalSysTime.wSecond);
+        return context->String(buffer);
     }
     return context->WholeNumber(-1);
-
 }
 
 
@@ -3259,7 +3245,7 @@ RexxRoutine1(int, SysWinSetDefaultPrinter, CSTRING, printer)
 
 RexxRoutine1(logical_t, SysIsFileCompressed, CSTRING, file)
 {
-    DWORD dwAttrs = GetFileAttributes(file);
+    DWORD dwAttrs = SysFileSystem::getFileAttributes(file);
     return (dwAttrs != 0xffffffff) && (dwAttrs & FILE_ATTRIBUTE_COMPRESSED);
 }
 
@@ -3275,7 +3261,7 @@ RexxRoutine1(logical_t, SysIsFileCompressed, CSTRING, file)
 
 RexxRoutine1(logical_t, SysIsFileEncrypted, CSTRING, file)
 {
-    DWORD dwAttrs = GetFileAttributes(file);
+    DWORD dwAttrs = SysFileSystem::getFileAttributes(file);
     return (dwAttrs != 0xffffffff) && (dwAttrs & FILE_ATTRIBUTE_ENCRYPTED);
 }
 
@@ -3292,7 +3278,7 @@ RexxRoutine1(logical_t, SysIsFileEncrypted, CSTRING, file)
 
 RexxRoutine1(logical_t, SysIsFileNotContentIndexed, CSTRING, file)
 {
-    DWORD dwAttrs = GetFileAttributes(file);
+    DWORD dwAttrs = SysFileSystem::getFileAttributes(file);
     return (dwAttrs != 0xffffffff) && (dwAttrs & FILE_ATTRIBUTE_NOT_CONTENT_INDEXED);
 }
 
@@ -3308,7 +3294,7 @@ RexxRoutine1(logical_t, SysIsFileNotContentIndexed, CSTRING, file)
 
 RexxRoutine1(logical_t, SysIsFileOffline, CSTRING, file)
 {
-    DWORD dwAttrs = GetFileAttributes(file);
+    DWORD dwAttrs = SysFileSystem::getFileAttributes(file);
     return (dwAttrs != 0xffffffff) && (dwAttrs & FILE_ATTRIBUTE_OFFLINE);
 }
 
@@ -3324,7 +3310,7 @@ RexxRoutine1(logical_t, SysIsFileOffline, CSTRING, file)
 
 RexxRoutine1(logical_t, SysIsFileSparse, CSTRING, file)
 {
-    DWORD dwAttrs = GetFileAttributes(file);
+    DWORD dwAttrs = SysFileSystem::getFileAttributes(file);
     return (dwAttrs != 0xffffffff) && (dwAttrs & FILE_ATTRIBUTE_SPARSE_FILE);
 }
 
@@ -3341,7 +3327,7 @@ RexxRoutine1(logical_t, SysIsFileSparse, CSTRING, file)
 
 RexxRoutine1(logical_t, SysIsFileTemporary, CSTRING, file)
 {
-    DWORD dwAttrs = GetFileAttributes(file);
+    DWORD dwAttrs = SysFileSystem::getFileAttributes(file);
     return (dwAttrs != 0xffffffff) && (dwAttrs & FILE_ATTRIBUTE_TEMPORARY);
 }
 

@@ -61,6 +61,14 @@ class SysFileSystem
          MaximumFileNameBuffer = MAX_PATH + FILENAME_MAX
      };
 
+     // getFiletime flags
+     typedef enum
+     {
+         FiletimeAccess,
+         FiletimeWrite,
+         FiletimeCreation,
+     } FiletimeType;
+
      static int stdinHandle;
      static int stdoutHandle;
      static int stderrHandle;
@@ -76,6 +84,8 @@ class SysFileSystem
      static bool  searchPath(const char *name, const char *path, FileNameBuffer &resolvedName);
      static void  qualifyStreamName(const char *unqualifiedName, FileNameBuffer &qualifiedName);
      static bool  getFullPathName(const char *name, FileNameBuffer &resolvedName);
+     static DWORD getFileAttributes(const char *name);
+     static bool  getFiletime(const char *name, FiletimeType type, FILETIME *time);
      static bool  fileExists(const char *name);
      static bool  hasExtension(const char *name);
      static bool  hasDirectory(const char *name);
@@ -87,7 +97,6 @@ class SysFileSystem
      static bool  checkCurrentFile(const char *name, FileNameBuffer &resolvedName);
      static void  getLongName(FileNameBuffer &name);
      static void  getProperPathCase(FileNameBuffer &name);
-     static bool  findFirstFile(const char *name);
      static int   deleteFile(const char *name);
      static int   deleteDirectory(const char *name);
      static bool  isDirectory(const char *name);
