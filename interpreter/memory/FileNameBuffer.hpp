@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -227,7 +227,7 @@ class FileNameBuffer
              return false;
          }
 
-         return strcmp(buffer, s) == 0;
+         return strncmp(buffer, s, slen) == 0;
      }
 
      inline bool endsWith(char c)
