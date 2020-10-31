@@ -1110,22 +1110,80 @@ bool SysFileSystem::setFileWritable(const char *name)
 /**
  * indicate whether the file system is case sensitive.
  *
- * @return For Windows, always returns false.
+ * @return For Windows, the case-sensitivity of the first root is
+ *         returned, typically C:\
  */
 bool SysFileSystem::isCaseSensitive()
 {
-    return false;
+    FileNameBuffer roots;
+    getRoots(roots);
+    // Best guess is to return the case-sensitivity of the first root.
+    return isCaseSensitive((const char *)roots);
 }
 
 
 /**
- * test if an individual file is a case sensitive name
+ * Test if a file or directory is case-sensitive.
  *
- * @return For Windows, always returns false.
+ * On Windows, case-sensitivity is defined on a per-directory basis.
+ * Once a directory has been set as case-sensitive, files in this
+ * directory and any newly created subdirectories within this directory
+ * become case-sensitive.  Existing subdirectories and files within
+ * those existing subdirectories stay as they are.
+ *
+ * @return true if this is a case-sensitive directory, or a file within a
+ *              case-sensitive directory, false otherwise.
  */
 bool SysFileSystem::isCaseSensitive(const char *name)
 {
-    return false;
+    // Starting with Windows 10 build 17093, if the Windows Subsystem for Linux
+    // is enabled, a per-directory case sensitivity can be set with the command
+    // fsutil file setCaseSensitiveInfo <path> enable.
+    // As of 10/2020 there's only scarce information available on the API
+    // to query the case-sensitivity of a directory.  It seems that
+    // GetFileInformationByHandleEx() will be enhanced as follows:
+    // typedef enum _FILE_INFO_BY_HANDLE_CLASS will include a new
+    //     FileCaseSensitiveInfo Int32 with value 23
+    // plus the following structure is to return the value
+    // typedef struct _FILE_CASE_SENSITIVE_INFO {
+    //     ULONG Flags;
+    // } FILE_CASE_SENSITIVE_INFO, *PFILE_CASE_SENSITIVE_INFO;
+#define future_FileCaseSensitiveInfo (FILE_INFO_BY_HANDLE_CLASS)23
+    typedef struct _future_FILE_CASE_SENSITIVE_INFO {
+        ULONG Flags;
+    } future_FILE_CASE_SENSITIVE_INFO;
+
+    future_FILE_CASE_SENSITIVE_INFO stat;
+
+    AutoFree tmp = strdup(name);
+
+    while (!isDirectory(tmp))
+    {
+        size_t len = strlen(tmp);
+        // scan backwards to find the previous directory delimiter
+        for (; len > 1; len--)
+        {
+            // is this the directory delimiter?
+            if (tmp[len] == '\\')
+            {
+                // don't go beyond root backslash
+                tmp[tmp[len - 1] == ':' ? len + 1 : len] = '\0';
+                break;
+            }
+        }
+    }
+    // at this point the tmp variable should name an existing directory
+
+    HANDLE handle = CreateFile(tmp, FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE,
+        NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+    if (handle == INVALID_HANDLE_VALUE)
+    {
+        return false;
+    }
+    bool success = GetFileInformationByHandleEx(handle, future_FileCaseSensitiveInfo,
+        &stat, sizeof(future_FILE_CASE_SENSITIVE_INFO));
+    CloseHandle(handle);
+    return success ? stat.Flags != 0 : false;
 }
 
 

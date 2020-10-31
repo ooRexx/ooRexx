@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -68,7 +68,7 @@ RexxMethod0(CSTRING, file_path_separator)
 
 
 /**
- * Return the file system case sensitivity section
+ * Return the file system case sensitivity
  */
 RexxMethod0(logical_t, file_case_sensitive)
 {
@@ -77,7 +77,7 @@ RexxMethod0(logical_t, file_case_sensitive)
 
 
 /**
- * Return the file system case sensitivity section
+ * Return the case sensitivity of a file
  */
 RexxMethod1(logical_t, this_file_case_sensitive, CSTRING, fileName)
 {
@@ -87,7 +87,7 @@ RexxMethod1(logical_t, this_file_case_sensitive, CSTRING, fileName)
 
 
 /**
- * Return the file system case sensitivity section
+ * Return whether file can be opened for reading
  */
 RexxMethod1(logical_t, file_can_read, CSTRING, name)
 {
@@ -96,7 +96,7 @@ RexxMethod1(logical_t, file_can_read, CSTRING, name)
 
 
 /**
- * Return the file system case sensitivity section
+ * Return whether file can be opened for writing
  */
 RexxMethod1(logical_t, file_can_write, CSTRING, name)
 {
