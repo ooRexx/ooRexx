@@ -1165,6 +1165,12 @@ RexxRoutine4(RexxStringObject, SysIni, OPTIONAL_CSTRING, iniFile, CSTRING, app, 
     // this could be a key deletion request
     if (stricmp(valueString, "DELETE:") == 0)
     {
+        // the 4th argument cannot be specified
+        if (argumentExists(4))
+        {
+            maxArgException(context, "SysIni DELETE:", 4);
+        }
+
         // A request to delete all keys for a given application
         if (!WritePrivateProfileString(app, keyName, NULL, iniFile))
         {
