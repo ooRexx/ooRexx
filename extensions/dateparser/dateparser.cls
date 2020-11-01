@@ -1501,6 +1501,9 @@
 
   -- zero offset is always marked as Zulu time
   if offset == 0 then do
+    -- type must be valid: "z", "zz", "zzz", or "zzzz"
+    if type~length > 4 then
+      self~templateError(type)
     self~append('Z')
   end
   else do
@@ -1522,18 +1525,18 @@
       when "z" then do
         self~append(hours)
       end
-      -- The the offset as a signed two digit number
+      -- The offset as a signed two digit number
       when "zz" then do
         self~append(hours~right(2, '0'))
       end
       -- The offset as "hhmm"
       when "zzz" then do
-        --this returns the padded value
+        -- this returns the padded value
         self~append(right(hours, 2, '0')||right(minutes, 2, '0'))
       end
       -- The offset as "hh:mm", where ":" is the defined time separator
       when "zzzz" then do
-        --this returns the padded value
+        -- this returns the padded value
         self~append(right(hours, 2, '0')||self~formats~timeSeparator||right(minutes, 2, '0'))
       end
       otherwise do
