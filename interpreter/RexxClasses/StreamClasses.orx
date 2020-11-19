@@ -257,10 +257,16 @@ notready:
 
   select                               /* process each command              */
     when command_word = 'CLOSE' then
-      return self~close
+      if parms = "" then
+        return self~close
+      else
+        raise syntax 93                -- CLOSE cannot have parms
 
     when command_word = 'FLUSH' then
-      return self~flush
+      if parms = "" then
+        return self~flush
+      else
+        raise syntax 93                -- FLUSH cannot have parms
 
     when command_word = 'OPEN' then
       return self~open(parms)
@@ -293,7 +299,7 @@ notready:                              /* standard notready handler         */
   parse value ' DATETIME EXISTS HANDLE POSITION SEEK SIZE STREAMTYPE TIMESTAMP' with (subcommand) +1 subcommand .
   select
                                        /* need the date and time?           */
-    when subcommand = 'DATETIME' then do
+    when subcommand = 'DATETIME', parms = '' then do
                                        /* transient style stream?           */
       if self~!query_streamtype = 'TRANSIENT' then
         return ''                      /* this doesn't have a date          */
@@ -309,10 +315,10 @@ notready:                              /* standard notready handler         */
       return ''                        /* no time, just return a null string*/
     end
                                        /* query the existence               */
-    when subcommand = 'EXISTS' then
+    when subcommand = 'EXISTS', parms = '' then
       return self~!query_exists        /* just check to see                 */
                                        /* get the file handle               */
-    when subcommand = 'HANDLE' then do
+    when subcommand = 'HANDLE', parms = '' then do
       return self~!query_handle        /* return the file handle            */
     end
                                        /* position or seek?                 */
@@ -321,14 +327,14 @@ notready:                              /* standard notready handler         */
       return self~!query_position(parms)
     end
                                        /* get the size                      */
-    when subcommand = 'SIZE' then
+    when subcommand = 'SIZE', parms = '' then
       return self~!query_size          /* go ask for it                     */
                                        /* asking for the stream type?       */
-    when subcommand = 'STREAMTYPE' then
+    when subcommand = 'STREAMTYPE', parms = '' then
       return self~!query_streamtype    /* just return the type              */
 
                                        /* asking for a timestamp?           */
-    when subcommand = 'TIMESTAMP' then do
+    when subcommand = 'TIMESTAMP', parms = '' then do
                                        /* have a transient stream?          */
       if self~!query_streamtype = 'TRANSIENT' then
         return ''                      /* no time stamp possible            */

@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -106,12 +106,12 @@ public:
     {
         int64_t off = 0;
 
-        /* convert string into long for later*/
+        // convert string into int64_t, but don't overflow
         for (size_t i = 0; i < length; i++)
         {
             char ch = string[i];
 
-            if (!isdigit(ch))
+            if (!isdigit(ch) || off > (off * 10) + (ch - '0'))
             {
                 return false;
             }
@@ -123,16 +123,16 @@ public:
     }
 
 
-    inline bool toNumber(int &num)
+    inline bool toNumber(size_t &num)
     {
-        int off = 0;
+        size_t off = 0;
 
-        /* convert string into long for later*/
+        // convert string into size_t, but don't overflow
         for (size_t i = 0; i < length; i++)
         {
             char ch = string[i];
 
-            if (!isdigit(ch))
+            if (!isdigit(ch) || off > (off * 10) + (ch - '0'))
             {
                 return false;
             }

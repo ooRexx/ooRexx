@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -128,15 +128,15 @@ StreamInfo *checkStreamInfo(RexxMethodContext *context, void *streamPtr, RexxObj
  */
 int reclength_token(TokenDefinition* ttsp, StreamToken &tokenizer, void *userparms)
 {
-                                        /* get the next token in TokenString */
-    if (tokenizer.nextToken())
+   // record length can only be specified once
+   if (tokenizer.nextToken() && *((size_t *)userparms) == 0)
     {
-        int offset = 0;
+        size_t offset = 0;
 
-        // must be convertable
-        if (!tokenizer.toNumber(offset))
+        // record length must be convertible and > 0
+        if (!tokenizer.toNumber(offset) || offset == 0)
         {
-            return 1;   // non numeric token, error
+            return 1;   // non-numeric token or zero, error
         }
 
         *((size_t *)userparms) = offset;
@@ -159,8 +159,8 @@ int reclength_token(TokenDefinition* ttsp, StreamToken &tokenizer, void *userpar
  */
 int position_offset(TokenDefinition* ttsp, StreamToken &tokenizer, void *userparms)
 {
-                                       /* get the next token in TokenString */
-   if (tokenizer.nextToken())
+   // offset can only be specified once
+   if (tokenizer.nextToken() && *((int64_t *)userparms) == -1)
    {
        int64_t offset = 0;
 
@@ -615,6 +615,7 @@ const char *StreamInfo::handleOpen(const char *options)
     {
     /* Action table for open parameters */
         ParseAction  OpenActionread[] = {
+            ParseAction(MEB, read_only),
             ParseAction(MEB, write_only),
             ParseAction(MEB, read_write),
             ParseAction(BitOr, oflag, RX_O_RDONLY),
@@ -623,6 +624,7 @@ const char *StreamInfo::handleOpen(const char *options)
         };
         ParseAction OpenActionwrite[] = {
             ParseAction(MEB, read_only),
+            ParseAction(MEB, write_only),
             ParseAction(MEB, read_write),
             ParseAction(BitOr, oflag, WR_CREAT),
             ParseAction(SetBool, write_only, true),
@@ -631,11 +633,13 @@ const char *StreamInfo::handleOpen(const char *options)
         ParseAction OpenActionboth[] = {
             ParseAction(MEB, read_only),
             ParseAction(MEB, write_only),
+            ParseAction(MEB, read_write),
             ParseAction(BitOr, oflag, RDWR_CREAT),
             ParseAction(SetBool, read_write, true),
             ParseAction()
         };
         ParseAction OpenActionnobuffer[] = {
+            ParseAction(MEB, nobuffer),
             ParseAction(SetBool, nobuffer, true),
             ParseAction()
         };
@@ -645,7 +649,7 @@ const char *StreamInfo::handleOpen(const char *options)
             ParseAction()
         };
         ParseAction OpenActionreclength[] = {
-            ParseAction(MIB, record_based, true),
+            ParseAction(MIB, record_based),
             ParseAction(CallItem, reclength_token, &binaryRecordLength),
             ParseAction()
         };
@@ -2208,8 +2212,9 @@ RexxMethod1(CSTRING, stream_flush, CSELF, streamPtr)
 const char *StreamInfo::streamOpen(const char *options)
 {
     int oflag = 0;                      // no default open options
-    int pmode = 0;                      /* and the protection mode           */
-    int shared = RX_SH_DENYRW;             /* def. open is non shared           */
+    int pmode = 0;                      // and the protection mode
+    int shared = RX_SH_DENYRW;          // default open is non-shared
+    bool shared_set = false;            // was a SHARExxx option already specified?
 
     // if already open, make sure we close this
     if (isopen)
@@ -2238,6 +2243,7 @@ const char *StreamInfo::streamOpen(const char *options)
     {
     /* Action table for open parameters */
         ParseAction  OpenActionread[] = {
+            ParseAction(MEB, read_only),
             ParseAction(MEB, read_write),
             ParseAction(MEB, write_only),
             ParseAction(MEB, append),
@@ -2249,16 +2255,18 @@ const char *StreamInfo::streamOpen(const char *options)
         };
 
         ParseAction OpenActionwrite[] = {
-            ParseAction(MEB, read_write),
             ParseAction(MEB, read_only),
+            ParseAction(MEB, read_write),
+            ParseAction(MEB, write_only),
             ParseAction(SetBool, write_only, true),
             ParseAction(BitOr, oflag, WR_CREAT),
             ParseAction(BitOr, pmode, RX_S_IWRITE),
             ParseAction()
         };
         ParseAction OpenActionboth[] = {
-            ParseAction(MEB, write_only),
             ParseAction(MEB, read_only),
+            ParseAction(MEB, read_write),
+            ParseAction(MEB, write_only),
             ParseAction(SetBool, read_write, true),
             ParseAction(BitOr, oflag, RDWR_CREAT),
             ParseAction(BitOr, pmode, IREAD_IWRITE),
@@ -2266,6 +2274,7 @@ const char *StreamInfo::streamOpen(const char *options)
         };
         ParseAction OpenActionappend[] = {
             ParseAction(MEB, read_only),
+            ParseAction(MEB, append),
             ParseAction(ME, oflag, RX_O_TRUNC),
             ParseAction(SetBool, append, true),
             ParseAction(BitOr, oflag, RX_O_APPEND),
@@ -2273,16 +2282,18 @@ const char *StreamInfo::streamOpen(const char *options)
         };
         ParseAction OpenActionreplace[] = {
             ParseAction(MEB, read_only),
-            ParseAction(ME, oflag, RX_O_APPEND),
+            ParseAction(MEB, append),
+            ParseAction(ME, oflag, RX_O_TRUNC),
             ParseAction(BitOr, oflag, RX_O_TRUNC),
             ParseAction()
         };
         ParseAction OpenActionnobuffer[] = {
+            ParseAction(MEB, nobuffer),
             ParseAction(SetBool, nobuffer, true),
             ParseAction()
         };
         ParseAction OpenActionbinary[] = {
-            ParseAction(MEB, record_based, true),
+            ParseAction(MEB, record_based),
             ParseAction(SetBool, record_based, true),
             ParseAction()
         };
@@ -2293,16 +2304,22 @@ const char *StreamInfo::streamOpen(const char *options)
         };
 
         ParseAction OpenActionshared[] = {
+            ParseAction(MEB, shared_set),
+            ParseAction(SetBool, shared_set, true),
             ParseAction(SetItem, shared, RX_SH_DENYNO),
             ParseAction()
         };
 
         ParseAction OpenActionsharedread[] = {
+            ParseAction(MEB, shared_set),
+            ParseAction(SetBool, shared_set, true),
             ParseAction(SetItem, shared, RX_SH_DENYWR),
             ParseAction()
         };
 
         ParseAction OpenActionsharedwrite[] = {
+            ParseAction(MEB, shared_set),
+            ParseAction(SetBool, shared_set, true),
             ParseAction(SetItem, shared, RX_SH_DENYRD),
             ParseAction()
         };
@@ -2371,12 +2388,7 @@ const char *StreamInfo::streamOpen(const char *options)
         append = false;
         oflag |= RDWR_CREAT;
         pmode |= IREAD_IWRITE;
-
-        // TODO: note that the docs say the default shared mode is SHARED.  But,
-        // the code on entry sets the default to not shared.  Need to either fix
-        // the docs or the code.
     }
-
 
     resolveStreamName();                /* get the fully qualified name      */
 
@@ -2626,21 +2638,25 @@ int64_t StreamInfo::streamPosition(const char *options)
             ParseAction()
         };
         ParseAction Operation_Read[] = {
+            ParseAction(ME, position_flags, operation_read),
             ParseAction(ME, position_flags, operation_write),
             ParseAction(BitOr, position_flags, operation_read),
             ParseAction()
         };
         ParseAction Operation_Write[] = {
             ParseAction(ME, position_flags, operation_read),
+            ParseAction(ME, position_flags, operation_write),
             ParseAction(BitOr, position_flags, operation_write),
             ParseAction()
         };
         ParseAction Position_By_Char[] = {
             ParseAction(ME, position_flags, position_by_line),
+            ParseAction(ME, position_flags, position_by_char),
             ParseAction(BitOr, position_flags, position_by_char),
             ParseAction()
         };
         ParseAction Position_By_Line[] = {
+            ParseAction(ME, position_flags, position_by_line),
             ParseAction(ME, position_flags, position_by_char),
             ParseAction(BitOr, position_flags, position_by_line),
             ParseAction()
@@ -3021,30 +3037,39 @@ RexxObjectPtr StreamInfo::queryStreamPosition(const char *options)
     /* Action table for query position parameters */
 
         ParseAction Query_System_Position[] = {
-            ParseAction(ME, position_flags, query_write_position),
+            ParseAction(ME, position_flags, query_system_position),
             ParseAction(ME, position_flags, query_read_position),
+            ParseAction(ME, position_flags, query_write_position),
+            ParseAction(ME, position_flags, query_char_position),
+            ParseAction(ME, position_flags, query_line_position),
             ParseAction(BitOr, position_flags, query_system_position),
             ParseAction()
         };
         ParseAction Query_Read_Position[] = {
-            ParseAction(ME, position_flags, query_write_position),
             ParseAction(ME, position_flags, query_system_position),
+            ParseAction(ME, position_flags, query_read_position),
+            ParseAction(ME, position_flags, query_write_position),
             ParseAction(BitOr, position_flags, query_read_position),
             ParseAction()
         };
         ParseAction Query_Write_Position[] = {
-            ParseAction(ME, position_flags, query_read_position),
             ParseAction(ME, position_flags, query_system_position),
+            ParseAction(ME, position_flags, query_read_position),
+            ParseAction(ME, position_flags, query_write_position),
             ParseAction(BitOr, position_flags, query_write_position),
             ParseAction()
         };
         ParseAction Query_Char_Position[] = {
+            ParseAction(ME, position_flags, query_system_position),
+            ParseAction(ME, position_flags, query_char_position),
             ParseAction(ME, position_flags, query_line_position),
             ParseAction(BitOr, position_flags, query_char_position),
             ParseAction()
         };
         ParseAction Query_Line_Position[] = {
+            ParseAction(ME, position_flags, query_system_position),
             ParseAction(ME, position_flags, query_char_position),
+            ParseAction(ME, position_flags, query_line_position),
             ParseAction(BitOr, position_flags, query_line_position),
             ParseAction()
         };
