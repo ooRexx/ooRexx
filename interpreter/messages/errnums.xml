@@ -1576,23 +1576,17 @@ special character (such as a parenthesis).
 </variablelist>
 </section>
 <section id="ERR30">
-<title>Error 30 - Name or string too long.</title>
+<title>Error 30 - Name or symbol too long.</title>
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
-<para>A variable name, label name, literal (quoted) string has exceeded the allowed limit of 250 characters. The limit for names includes any substitutions. A possible cause of this error is if you use a period (.) in a name, causing an unexpected substitution. Leaving off an ending quotation mark for a literal string, or putting a single quotation mark in a string, can cause this error because several clauses can be included in the string. For example, write the string 'don't' as 'don't' or "don't".</para>
+<para>A variable name, label name, or symbol has exceeded the allowed limit of 250 characters.</para>
 <para>The associated subcodes are: </para>
 <variablelist>
 <varlistentry>
 <term>001</term>
 <listitem>
-<para>Name exceeds 250 characters:  "<emphasis role="italic">name</emphasis>".</para>
-</listitem>
-</varlistentry>
-<varlistentry>
-<term>002</term>
-<listitem>
-<para>Literal string exceeds 250 characters:  "<emphasis role="italic">string</emphasis>".</para>
+<para>Name or symbol exceeds 250 characters:  "<emphasis role="italic">name</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
@@ -1600,18 +1594,6 @@ special character (such as a parenthesis).
 <listitem>
 <para>
 <emphasis role="italic">message</emphasis>.</para>
-</listitem>
-</varlistentry>
-<varlistentry>
-<term>901</term>
-<listitem>
-<para>Hexadecimal literal string exceeds 250 characters "<emphasis role="italic">string</emphasis>".</para>
-</listitem>
-</varlistentry>
-<varlistentry>
-<term>902</term>
-<listitem>
-<para>Binary literal string exceeds 250 characters "<emphasis role="italic">string</emphasis>".</para>
 </listitem>
 </varlistentry>
 </variablelist>

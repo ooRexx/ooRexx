@@ -2251,8 +2251,8 @@ special character (such as a parenthesis).
     <Component>Rexx</Component>
     <Severity>Warning</Severity>
     <SymbolicName>Error_Name_too_long</SymbolicName>
-    <Text>Name or string too long.</Text>
-    <Explanation><para>A variable name, label name, literal (quoted) string has exceeded the allowed limit of 250 characters. The limit for names includes any substitutions. A possible cause of this error is if you use a period (.) in a name, causing an unexpected substitution. Leaving off an ending quotation mark for a literal string, or putting a single quotation mark in a string, can cause this error because several clauses can be included in the string. For example, write the string 'don't' as 'don't' or "don't".</para></Explanation>
+    <Text>Name or symbol too long.</Text>
+    <Explanation><para>A variable name, label name, or symbol has exceeded the allowed limit of 250 characters.</para></Explanation>
     <Subcodes>
       <SubMessage>
         <Code>30</Code>
@@ -2261,16 +2261,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Name_too_long_name</SymbolicName>
-        <Text>Name exceeds 250 characters:  <q><Sub position="1" name="name"/></q>.</Text>
-      </SubMessage>
-      <SubMessage>
-        <Code>30</Code>
-        <Subcode>002</Subcode>
-        <MessageNumber>321</MessageNumber>
-        <Component>Rexx</Component>
-        <Severity>Warning</Severity>
-        <SymbolicName>Error_Name_too_long_string</SymbolicName>
-        <Text>Literal string exceeds 250 characters:  <q><Sub position="1" name="string"/></q>.</Text>
+        <Text>Name or symbol exceeds 250 characters:  <q><Sub position="1" name="name"/></q>.</Text>
       </SubMessage>
       <SubMessage>
         <Code>30</Code>
@@ -2280,24 +2271,6 @@ special character (such as a parenthesis).
         <Severity>Warning</Severity>
         <SymbolicName>Error_Name_too_long_user_defined</SymbolicName>
         <Text><Sub position="1" name="message"/>.</Text>
-      </SubMessage>
-      <SubMessage>
-        <Code>30</Code>
-        <Subcode>901</Subcode>
-        <MessageNumber>322</MessageNumber>
-        <Component>Rexx</Component>
-        <Severity>Warning</Severity>
-        <SymbolicName>Error_Name_too_long_hex</SymbolicName>
-        <Text>Hexadecimal literal string exceeds 250 characters <q><Sub position="1" name="string"/></q>.</Text>
-      </SubMessage>
-      <SubMessage>
-        <Code>30</Code>
-        <Subcode>902</Subcode>
-        <MessageNumber>323</MessageNumber>
-        <Component>Rexx</Component>
-        <Severity>Warning</Severity>
-        <SymbolicName>Error_Name_too_long_bin</SymbolicName>
-        <Text>Binary literal string exceeds 250 characters <q><Sub position="1" name="string"/></q>.</Text>
       </SubMessage>
     </Subcodes>
   </Message>

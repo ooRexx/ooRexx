@@ -283,10 +283,7 @@
 #define Rexx_Error_Environment_name_name                                  29001
 #define Rexx_Error_Name_too_long                                          30000
 #define Rexx_Error_Name_too_long_name                                     30001
-#define Rexx_Error_Name_too_long_string                                   30002
 #define Rexx_Error_Name_too_long_user_defined                             30900
-#define Rexx_Error_Name_too_long_hex                                      30901
-#define Rexx_Error_Name_too_long_bin                                      30902
 #define Rexx_Error_Invalid_variable                                       31000
 #define Rexx_Error_Invalid_variable_assign                                31001
 #define Rexx_Error_Invalid_variable_number                                31002
