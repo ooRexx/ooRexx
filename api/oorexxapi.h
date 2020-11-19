@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -273,7 +273,7 @@ END_EXTERN_C()
 // the argument is a "special" virtual argument derived from context
 #define SPECIAL_ARGUMENT  0x02
 
-typedef struct
+typedef struct _ValueDescriptor
 {
 // union containing argument values for each of the passable/returnable
 // types from a method/function call.  The arguments are pass/retrieved
