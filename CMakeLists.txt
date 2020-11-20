@@ -564,6 +564,9 @@ set (build_utilities_rexxpaws_dir ${build_utilities_dir}/platform/windows/rexxpa
 set (build_utilities_rexxhide_dir ${build_utilities_dir}/platform/windows/rexxhide)
 
 if (WIN32)
+# change exception handling flag for [bugs:#1728] Hang condition
+string(REGEX REPLACE "/EHsc" "/EHsc-" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+
 # This replaces the /MD compile flag with /MT.
 set(CompilerFlags
         CMAKE_CXX_FLAGS
