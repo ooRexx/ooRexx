@@ -1484,7 +1484,10 @@ void RexxActivation::trapOff(RexxString *condition, bool signal)
     // if we no longer have NOVALUE or ANY enabled, then we can turn
     // off novalue processing in the variable pool
     // (we only need to check this for SIGNAL, not for CALL)
-    if (signal && !settings.traps->hasIndex(GlobalNames::NOVALUE) && !settings.traps->hasIndex(GlobalNames::ANY))
+    bool conditionIsAny = condition->strCompare(GlobalNames::ANY);
+    if (signal &&
+       (conditionIsAny || condition->strCompare(GlobalNames::NOVALUE)) &&
+       !settings.traps->hasIndex(GlobalNames::NOVALUE) && !settings.traps->hasIndex(GlobalNames::ANY))
     {
         settings.localVariables.setNovalueOff();
         // we also need to disable the novalue error setting from ::OPTIONS in order to restore
@@ -1493,7 +1496,6 @@ void RexxActivation::trapOff(RexxString *condition, bool signal)
     }
 
     // we also disable an OPTIONS condition SYNTAX that we may have
-    bool conditionIsAny = condition->strCompare(GlobalNames::ANY);
     if (isErrorSyntaxEnabled() &&
        (conditionIsAny || condition->strCompare(GlobalNames::ERRORNAME)))
     {
