@@ -54,7 +54,6 @@
 #include "DirectoryClass.hpp"
 #include "ProtectedObject.hpp"
 #include "BufferClass.hpp"
-#include "SmartBuffer.hpp"
 #include "ProgramMetaData.hpp"
 #include "Utilities.hpp"
 #include "PackageManager.hpp"

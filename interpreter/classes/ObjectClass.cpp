@@ -45,7 +45,6 @@
 #include "ObjectClass.hpp"
 #include "StringClass.hpp"
 #include "BufferClass.hpp"
-#include "SmartBuffer.hpp"
 #include "DirectoryClass.hpp"
 #include "VariableDictionary.hpp"
 #include "ArrayClass.hpp"

@@ -97,7 +97,6 @@ class MethodClass : public BaseExecutable
     void         run(Activity *,  RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
     MethodClass *newScope(RexxClass  *);
     void         setScope(RexxClass  *);
-    SmartBuffer  *saveMethod();
     RexxObject  *setUnguardedRexx();
     RexxObject  *setGuardedRexx();
     RexxObject  *setPrivateRexx();
