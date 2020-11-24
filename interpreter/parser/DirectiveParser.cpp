@@ -1115,7 +1115,6 @@ void LanguageParser::optionsDirective()
                     {
                         case SUBDIRECTIVE_SYNTAX:
                         {
-
                             package->enableErrorSyntax();
                             break;
                         }
@@ -1252,13 +1251,13 @@ void LanguageParser::optionsDirective()
                     break;
                 }
 
-                // ::OPTIONS ANY
-                case SUBDIRECTIVE_ANY:
+                // ::OPTIONS ALL
+                case SUBDIRECTIVE_ALL:
                 {
                     token = nextReal();
                     if (!token->isSymbol())
                     {
-                        syntaxError(Error_Symbol_or_string_keyword, GlobalNames::ANY);
+                        syntaxError(Error_Symbol_or_string_keyword, GlobalNames::ALL);
                     }
 
                     switch (token->subDirective())
@@ -1287,7 +1286,7 @@ void LanguageParser::optionsDirective()
                         }
 
                         default:
-                            syntaxError(Error_Invalid_subkeyword_following, GlobalNames::ANY, token->value());
+                            syntaxError(Error_Invalid_subkeyword_following, GlobalNames::ALL, token->value());
                     }
                     break;
                 }
