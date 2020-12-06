@@ -4088,7 +4088,7 @@ void LanguageParser::errorPosition(RexxErrorCodes errorcode, RexxToken *token )
 {
     SourceLocation tokenLocation = token->getLocation();
 
-    ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, new_array(new_integer(tokenLocation.getOffset()), new_integer(tokenLocation.getLineNumber())), OREF_NULL);
+    ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, new_array(new_integer(tokenLocation.getOffset() + 1), new_integer(tokenLocation.getLineNumber())), OREF_NULL);
 }
 
 
