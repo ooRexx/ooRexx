@@ -82,8 +82,9 @@ class FileNameBuffer
          return (const char *)buffer;
      }
 
+     // ensureCapacity always leaves a space for a null terminator
      void ensureCapacity(size_t size);
-     inline void ensureCapacity(const char *add) { ensureCapacity(strlen(buffer) + strlen(add) + 1); }
+     inline void ensureAdditionalCapacity(const char *add) { ensureCapacity(strlen(buffer) + strlen(add)); }
      inline void expandCapacity(size_t c)  { ensureCapacity(bufferSize + c); }
      inline void shiftLeft(size_t l)
      {
@@ -117,7 +118,7 @@ class FileNameBuffer
 
      inline FileNameBuffer &operator=(const char *s)
      {
-         ensureCapacity(strlen(s) + 1);
+         ensureCapacity(strlen(s));
          strncpy(buffer, s, bufferSize);
          return *this;
      }
@@ -132,54 +133,50 @@ class FileNameBuffer
 
          const char *str = (const char *)s.buffer;
 
-         ensureCapacity(strlen(str) + 1);
+         ensureCapacity(strlen(str));
          strncpy(buffer, str, bufferSize);
          return *this;
      }
 
      inline FileNameBuffer &operator=(char *s)
      {
-         ensureCapacity(strlen(s) + 1);
+         ensureCapacity(strlen(s));
          strncpy(buffer, s, bufferSize);
          return *this;
      }
 
      inline FileNameBuffer &operator+=(const char *s)
      {
-         ensureCapacity(s);
+         ensureAdditionalCapacity(s);
          strncat(buffer, s, bufferSize);
          return *this;
      }
 
      inline FileNameBuffer &operator+=(char *s)
      {
-         ensureCapacity(s);
+         ensureAdditionalCapacity(s);
          strncat(buffer, s, bufferSize);
          return *this;
      }
 
-
      inline FileNameBuffer &operator+=(char c)
      {
          size_t currentLen = length();
-         ensureCapacity(currentLen + 2);
+         ensureCapacity(currentLen + 1);
 
          buffer[currentLen] = c;
          buffer[currentLen + 1] = '\0';
          return *this;
      }
 
-
      inline FileNameBuffer &operator+=(FileNameBuffer &s)
      {
          return *this += (const char *)s;
      }
 
-
-
      inline FileNameBuffer& set(const char *s, size_t l)
      {
-         ensureCapacity(l + 1);
+         ensureCapacity(l);
          memcpy(buffer, s, l);
          buffer[l] = '\0';
          return *this;
@@ -188,7 +185,7 @@ class FileNameBuffer
      inline FileNameBuffer& append(const char *s, size_t l)
      {
          size_t currentLength = length();
-         ensureCapacity(currentLength + 1 + 1);
+         ensureCapacity(currentLength + l);
          memcpy(buffer + currentLength, s, l);
          buffer[currentLength + l] = '\0';
          return *this;
@@ -254,6 +251,19 @@ class FileNameBuffer
              *this += SysFileSystem::PathDelimiter;
          }
      }
+
+     inline size_t locatePathDelimiter(size_t start = 0)
+     {
+         for (size_t i = start; i < length(); i++)
+         {
+             if (buffer[i] == SysFileSystem::PathDelimiter)
+             {
+                 return i;
+             }
+         }
+         return length();
+     }
+
 
  protected:
      char *buffer;                 // the current buffer

@@ -256,67 +256,77 @@ RexxRoutine1(int, SysCurState, CSTRING, option)
 
 
 /*************************************************************************
-* Function:  SysDriveInfo                                                *
+* Function:  SysDriveInfo - returns total number of free bytes,          *
+*                           total number of bytes, and                   *
+*                           volume label                                 *
 *                                                                        *
-* Syntax:    call SysDriveInfo drive                                     *
+* Syntax:    result = SysDriveInfo([drive])                              *
 *                                                                        *
-* Params:    drive - 'C', 'D', 'E', etc.                                 *
+* Params:    drive - d, d:, d:\, \\share\path                            *
+*                    if omitted, defaults to current drive               *
 *                                                                        *
-* Return:    disk free total label                                       *
+* Return:    result - drive free total label                             *
+*                     null string for any error                          *
 *************************************************************************/
 
-RexxRoutine1(RexxStringObject, SysDriveInfo, CSTRING, drive)
+RexxRoutine1(RexxStringObject, SysDriveInfo, OPTIONAL_CSTRING, drive)
 {
-    size_t driveLength = strlen(drive);
+    FileNameBuffer d;
 
-    if (driveLength == 0 || driveLength > 2 || (driveLength == 2 && drive[1] != ':'))
+    if (drive == NULL)
     {
-        context->ThrowException1(Rexx_Error_Incorrect_call_user_defined, context->String("Invalid drive specification"));
-    }
-
-    // This must be a valid alphabetic character
-    if (drive[0] < 'A' || drive[0] > 'z')
-    {
-        context->ThrowException1(Rexx_Error_Incorrect_call_user_defined, context->String("Invalid drive specification"));
-    }
-
-    char driveLetter[8];
-    snprintf(driveLetter, sizeof(driveLetter), "%c:\\", toupper(drive[0]));
-
-    char volumeName[MAX_PATH];
-    char fileSystemType[MAX_PATH];
-
-    /* get the volume name and file system type */
-    BOOL gotVolume = GetVolumeInformation(driveLetter, volumeName, (DWORD)sizeof(volumeName),
-                                          NULL, NULL, NULL,
-                                          fileSystemType, (DWORD)sizeof(fileSystemType));
-
-    DWORD gviError = GetLastError();
-
-    /* use appropriate function */
-    uint64_t freeBytesToCaller;
-    uint64_t totalBytes;
-    uint64_t freeBytes;
-
-    BOOL gotDiskSpace = GetDiskFreeSpaceEx(driveLetter, (PULARGE_INTEGER)&freeBytesToCaller, (PULARGE_INTEGER)&totalBytes, (PULARGE_INTEGER)&freeBytes);
-
-    DWORD gdfsError = GetLastError();
-
-    if (gotVolume && gotDiskSpace)
-    {
-        char retstr[256];
-
-        snprintf(retstr, sizeof(retstr),      // drive free total label
-                 "%c%c  %-12I64u %-12I64u %-13s",
-                 driveLetter[0], driveLetter[1],
-                 freeBytes, totalBytes, volumeName);
-        /* create return string       */
-        return context->String(retstr);
+        // Although the Windows APIs interpret NULL as the current drive,
+        // we still need to figure out the actual current drive as we are
+        // expected to return it as the first word.
+        GetCurrentDirectory((DWORD)d.capacity(), (LPTSTR)d);
+        if (d.length() >= 3 && d.at(1) == ':' && d.at(2) == '\\')
+        {
+            // current directory is a standard d:\path, just keep the d:\ part
+            d.truncate(3);
+        }
+        else if (d.startsWith("\\\\"))
+        {
+            // current directory is a UNC path, just keep the \\share\path\ part
+            d.truncate(d.locatePathDelimiter(d.locatePathDelimiter(2) + 1));
+        }
     }
     else
     {
-        return context->NullString();
+        d = drive;
+        // We just let the Windows APIs handle all the different ways to
+        // specify a volume, like d:\, \\?\d:, \\localhost\path, etc.  But
+        // on top of that we support a single-character drive d.
+        if (d.length() == 1 && isalpha(d.at(0)))
+        {
+            // make this a valid drive specification
+            d += ":\\";
+        }
     }
+
+    // GetVolumeInformation() is picky, it requires a final backslash
+    if (d.length() > 0)
+    {
+        d.addFinalPathDelimiter();
+    }
+
+    // get the volume label, then the total bytes and total free bytes
+    char volume[MAX_PATH];
+    uint64_t total, free;
+    if (GetVolumeInformation((char * )d, volume, (DWORD)sizeof(volume), NULL, NULL, NULL, NULL, 0) &&
+        GetDiskFreeSpaceEx(d, NULL, (PULARGE_INTEGER)&total, (PULARGE_INTEGER)&free))
+    {
+        // we remove any trailing backslash for our return string
+        if (d.length() > 1 && d.endsWith("\\"))
+        {
+            d.truncate(d.length() - 1);
+        }
+
+        // return drive free total label
+        char retstr[256];
+        snprintf(retstr, sizeof(retstr), "%s %I64u %I64u %s", (char *)d, free, total, volume);
+        return context->String(retstr);
+    }
+    return context->NullString();
 }
 
 
@@ -1704,101 +1714,90 @@ RexxRoutine0(RexxStringObject, SysSystemDirectory)
 /*************************************************************************
 * Function:  SysFileSystemType                                           *
 *                                                                        *
-* Syntax:    result = SysFileSystemType("drive")                         *
+* Syntax:    result = SysFileSystemType([drive])                         *
 *                                                                        *
-* Params:    drive - drive letter (in form of 'D:')                      *
-*        or  none - current drive                                        *
+* Params:    drive - d, d:, d:\, \\share\path                            *
+*                    if omitted, defaults to current drive               *
 *                                                                        *
-* Return:    result - File System Name attached to the specified drive   *
-*                     (FAT, HPFS ....)                                   *
-*            '' - Empty string in case of any error                      *
+* Return:    result - the drive's file system (e. g. NTFS, FAT)          *
+*                     null string for any error                          *
 *************************************************************************/
 
 RexxRoutine1(RexxStringObject, SysFileSystemType, OPTIONAL_CSTRING, drive)
 {
+    FileNameBuffer d;
+
     if (drive != NULL)
     {
-        size_t driveLen = strlen(drive);
-        char driveChar = toupper(drive[0]);
-        char chDriveLetter[4];
-        // GetVolumeInformation requires a trailing backslash
-        // if we have just a-z or a: - z: we add a backslash
-        if (driveLen >= 1 && driveLen <= 2 &&
-            driveChar >= 'A' && driveChar <= 'Z' &&
-           (drive[1] == '\0' || drive[1] == ':'))
+        d = drive;
+        // We just let the Windows APIs handle all the different ways to
+        // specify a volume, like d:\, \\?\d:, \\localhost\path, etc.  But
+        // on top of that we support a single-character drive d.
+        if (d.length() == 1 && isalpha(d.at(0)))
         {
-            snprintf(chDriveLetter, sizeof(chDriveLetter), "%c:\\", drive[0]);
-            drive = chDriveLetter;
+            // make this a valid drive specification
+            d += ":\\";
+        }
+
+        // GetVolumeInformation() is picky, it requires a final backslash
+        if (d.length() > 0)
+        {
+            d.addFinalPathDelimiter();
         }
     }
-    // in addition to the special case above, all of these should work:
-    // \, C:\, \\localhost\C$\, \\?\C:\, \\.\C:\, NULL
-    char fileSystemName[MAX_PATH];
 
-    RexxStringObject result = context->NullString();
-
-    if (GetVolumeInformation(
-            drive,    // address of root directory of the file system
-            NULL,    // address of name of the volume
-            0,    // length of lpVolumeNameBuffer
-            NULL,    // address of volume serial number
-            NULL,    // address of system's maximum filename length
-            NULL,    // address of file system flags
-            fileSystemName,    // address of name of file system
-            sizeof(fileSystemName)     // length of lpFileSystemNameBuffer
-            ))
+    // get the file system type
+    char fileSystem[MAX_PATH];
+    if (GetVolumeInformation((drive == NULL) ? NULL : (char * )d, NULL, 0, NULL, NULL, NULL, fileSystem, sizeof(fileSystem)))
     {
-        result = context->NewStringFromAsciiz(fileSystemName);
+        return context->NewStringFromAsciiz(fileSystem);
     }
-
-    return result;
+    return context->NullString();
 }
 
 
 /*************************************************************************
 * Function:  SysVolumeLabel                                              *
 *                                                                        *
-* Syntax:    result = SysVolumeLabel("drive")                            *
+* Syntax:    result = SysVolumeLabel([drive])                            *
 *                                                                        *
-* Params:    drive - drive letter (in form of 'D:')                      *
-*        or  none - current drive                                        *
+* Params:    drive - d, d:, d:\, \\share\path                            *
+*                    if omitted, defaults to current drive               *
 *                                                                        *
-* Return     '' - Empty string in case of any error                      *
+* Return:    result - the volume label                                   *
+*                     null string for any error                          *
 *************************************************************************/
 
 RexxRoutine1(RexxStringObject, SysVolumeLabel, OPTIONAL_CSTRING, drive)
 {
-    CHAR chDriveLetter[4];
+    FileNameBuffer d;
+
     if (drive != NULL)
     {
-        size_t driveLen = strlen(drive);
-
-        if (driveLen == 0 || driveLen > 2 || (driveLen == 2 && drive[1] != ':'))
+        d = drive;
+        // We just let the Windows APIs handle all the different ways to
+        // specify a volume, like d:\, \\?\d:, \\localhost\path, etc.  But
+        // on top of that we support a single-character drive d.
+        if (d.length() == 1 && isalpha(d.at(0)))
         {
-            context->ThrowException1(Rexx_Error_Incorrect_call_user_defined, context->String("Invalid drive specification"));
+            // make this a valid drive specification
+            d += ":\\";
         }
-        snprintf(chDriveLetter, sizeof(chDriveLetter), "%c:\\", drive[0]);
-        drive = chDriveLetter;
+
+        // GetVolumeInformation() is picky, it requires a final backslash
+        if (d.length() > 0)
+        {
+            d.addFinalPathDelimiter();
+        }
     }
+
+    // get the volume label
     char volumeName[MAX_PATH];
-
-    RexxStringObject result = context->NullString();
-
-    if (GetVolumeInformation(
-            drive,           /* address of root directory of the file system */
-            volumeName,                      /*address of name of the volume */
-            sizeof(volumeName),              /* length of lpVolumeNameBuffer */
-            NULL,                         /* address of volume serial number */
-            NULL,             /* address of system's maximum filename length */
-            NULL,                            /* address of file system flags */
-            NULL,                          /* address of name of file system */
-            0                            /* length of lpFileSystemNameBuffer */
-            ))
+    if (GetVolumeInformation((drive == NULL) ? NULL : (char * )d, volumeName, sizeof(volumeName), NULL, NULL, NULL, NULL, 0))
     {
-        result = context->NewStringFromAsciiz(volumeName);
+        return context->NewStringFromAsciiz(volumeName);
     }
-
-    return result;
+    return context->NullString();
 }
 
 
