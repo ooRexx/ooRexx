@@ -60,6 +60,10 @@
 #include <pwd.h>
 #include <errno.h>
 #include <fnmatch.h>
+#ifdef FS_CASEFOLD_FL
+# include <linux/fs.h>
+# include <sys/ioctl.h>
+#endif
 #include "SysFileSystem.hpp"
 #include "Utilities.hpp"
 #include "ActivityManager.hpp"
@@ -1186,38 +1190,27 @@ bool SysFileSystem::setFileWritable(const char *name)
 /**
  * indicate whether the file system is case sensitive.
  *
- * @return For Unix systems, always returns true. For MacOS,
- *         this needs to be determined on a case-by-case basis.
- *         This returns the information for the root file system
+ * @return true if root (/) is case-sensitive.
  */
 bool SysFileSystem::isCaseSensitive()
 {
-#ifndef HAVE_PC_CASE_SENSITIVE
-    return true;
-#else
-    long res = pathconf("/", _PC_CASE_SENSITIVE);
-    if (res != -1)
-    {
-        return (res == 1);
-    }
-    // any error means this value is not supported for this file system
-    // so the result is most likely true (unix standard)
-    return true;
-#endif
+    return isCaseSensitive("/");
 }
 
 
 /**
  * test if an individual file is a case sensitive name
  *
- * @return For Unix systems, always returns true. For MacOS,
- *         this needs to be determined on a case-by-case basis.
+ * Most Unix file systems by default are case-sensitive (with the exception
+ * of e. g. Darwin).  But since Linux kernel 5.2 a per-directory
+ * case-insensitivity is supported on ext4 file systems.
+ * On Darwin, partitions may be configured to be case *sensitive*.
+ *
+ * @return true if the given file is located within a case-sensitive directory.
  */
 bool SysFileSystem::isCaseSensitive(const char *name)
 {
-#ifndef HAVE_PC_CASE_SENSITIVE
-    return true;
-#else
+#if defined HAVE_PC_CASE_SENSITIVE || defined HAVE_FS_CASEFOLD_FL
     AutoFree tmp = strdup(name);
 
     while (!SysFileSystem::exists(tmp))
@@ -1242,15 +1235,33 @@ bool SysFileSystem::isCaseSensitive(const char *name)
     }
 
     // at this point the tmp variable contains something that exists
+#endif
+
+#if defined HAVE_PC_CASE_SENSITIVE
+    // Darwin supports case *sensitive* partitions
     long res = pathconf(tmp, _PC_CASE_SENSITIVE);
     if (res != -1)
     {
         return (res == 1);
     }
+    // any error means this value is not supported for this file system
+    // so the result is most likely true (unix standard)
 
+#elif defined HAVE_FS_CASEFOLD_FL
+    // Linux kernel 5.2 now supports per-directory case-insensitivity on
+    // ext4 file systems
+    int attr = 0;
+    int fd = open(tmp, O_RDONLY | O_NONBLOCK);
+    if (fd >= 0)
+    {
+        ioctl(fd, FS_IOC_GETFLAGS, &attr);
+        close(fd);
+        return (attr & FS_CASEFOLD_FL) == 0;
+    }
     // non-determined, just return true
-    return true;
 #endif
+
+    return true;
 }
 
 

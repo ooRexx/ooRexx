@@ -108,6 +108,9 @@
 /* Define to 1 if KDMKTONE is a valid value */
 #cmakedefine HAVE_KDMKTONE
 
+/* Define to 1 if FS_CASEFOLD_FL is a valid value */
+#cmakedefine HAVE_FS_CASEFOLD_FL
+
 /* Define to 1 if _NSGetExecutablePath is a valid function */
 #cmakedefine HAVE_NSGETEXECUTABLEPATH
 

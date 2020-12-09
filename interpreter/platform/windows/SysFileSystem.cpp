@@ -1157,15 +1157,15 @@ bool SysFileSystem::setFileWritable(const char *name)
 /**
  * indicate whether the file system is case sensitive.
  *
- * @return For Windows, the case-sensitivity of the first root is
- *         returned, typically C:\
+ * @return For Windows, the case-sensitivity of the Windows system
+ *         directory is returned, typically C:\Windows\system32
  */
 bool SysFileSystem::isCaseSensitive()
 {
-    FileNameBuffer roots;
-    getRoots(roots);
-    // Best guess is to return the case-sensitivity of the first root.
-    return isCaseSensitive((const char *)roots);
+    char system[SysFileSystem::MaximumPathLength];
+
+    GetSystemDirectory(system, sizeof(system));
+    return isCaseSensitive(system);
 }
 
 
