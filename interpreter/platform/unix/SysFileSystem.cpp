@@ -60,7 +60,7 @@
 #include <pwd.h>
 #include <errno.h>
 #include <fnmatch.h>
-#ifdef FS_CASEFOLD_FL
+#ifdef HAVE_FS_CASEFOLD_FL
 # include <linux/fs.h>
 # include <sys/ioctl.h>
 #endif
