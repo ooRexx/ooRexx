@@ -919,6 +919,21 @@ void LanguageParser::methodDirective()
         // there is any opportunity to protect the object.
         Protected<RexxCode> code = translateBlock();
 
+        // While the general default for methods is GUARDED, for plain methods
+        // (no ATTRIBUTE, ABSTRACT, DELEGATE, or EXTERNAL) we choose a more
+        // convenient default based on whether the method really requires the
+        // variable pool: GUARDED only if the method's first instruction is
+        // EXPOSE or USE LOCAL, else it is UNGUARDED.
+        if (guardFlag == DEFAULT_GUARD)
+        {
+            RexxInstruction *first = code->getFirstInstruction();
+            if (first == NULL ||
+               (!first->isType(KEYWORD_EXPOSE) && !first->isType(KEYWORD_USE_LOCAL)))
+            {
+                guardFlag = UNGUARDED_METHOD;
+            }
+        }
+
         // go do the next block of code
         _method = new MethodClass(name, code);
     }
