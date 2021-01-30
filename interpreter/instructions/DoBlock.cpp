@@ -164,7 +164,6 @@ bool DoBlock::checkOver(RexxActivation *context, ExpressionStack *stack)
 
     // assign the control variable and trace this result
     control->assign(context, result);
-    context->traceResult(result);
     overIndex++;
     return true;
 }
@@ -182,23 +181,31 @@ bool DoBlock::checkOver(RexxActivation *context, ExpressionStack *stack)
  * @return True if the loop should continue, false if we've hit
  *         a termination condition.
  */
-bool DoBlock::checkControl(RexxActivation *context, ExpressionStack *stack, bool increment )
+bool DoBlock::checkControl(RexxActivation *context, ExpressionStack *stack, bool increment)
 {
-    // get the control variable value and trace
-    RexxObject *result = control->getValue(context);
-    context->traceResult(result);
+    RexxObject *result = OREF_NULL;
 
     // if this is time to increment the value, perform the plus operation
     // to add in the BY increment.
     if (increment)
     {
+        // get the control variable value and trace
+        result = control->evaluate(context, stack);
+        // increment using the plus operator
         result = result->callOperatorMethod(OPERATOR_PLUS, by);
 
-        // the control variable gets set immediately, and we trace this
+        // the control variable gets set immediately, and and the assignment will also get traced
         // increment result
-        control->set(context, result);
-        context->traceResult(result);
+        control->assign(context, result);
     }
+    else
+    {
+        // get the control variable value without tracing. We've
+        // already traced the initial assignment as part of the setup. This
+        // prevents getting an extra add looking item traced.
+        result = control->getValue(context);
+    }
+
 
     // if we have a termination condition, do the compare now by calling the operator method.
     if (to != OREF_NULL)
