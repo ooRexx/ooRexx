@@ -448,8 +448,9 @@ void StreamInfo::checkStreamType()
             // not given as a binary record length?
             if (!binaryRecordLength)
             {
+                int64_t size64 = size();
                 // one stream, one record, up to the record size restriction
-                binaryRecordLength = (size_t)size();
+                binaryRecordLength = size64 <= SIZE_MAX ? (size_t)size64 : 0;
                 if (binaryRecordLength == 0)
                 {
                     // raise an exception for this
@@ -1109,8 +1110,8 @@ void StreamInfo::completeLine(size_t writeLength)
  */
 void StreamInfo::writeFixedLine(const char *data, size_t length)
 {
-    /* calculate the length needed       */
-    size_t write_length = binaryRecordLength - (size_t)((charWritePosition % binaryRecordLength) - 1);
+    // calculate the length needed
+    size_t write_length = binaryRecordLength - (charWritePosition - 1) % binaryRecordLength;
     // make sure we don't go over the length of the record.
     if (length > write_length)
     {
@@ -1663,7 +1664,7 @@ RexxStringObject StreamInfo::linein(bool _setPosition, int64_t position, size_t 
     {
         // we need to adjust for any charin operations that might have
         // occurred within this record
-        size_t read_length = binaryRecordLength - (size_t)((charReadPosition % (int64_t)binaryRecordLength) - 1);
+        size_t read_length = binaryRecordLength - (charReadPosition - 1) % binaryRecordLength;
         // a buffer string allows us to read the data into an actual string object
         // without having to first read it into a separate buffer.  Since charin()
         // is frequently used to read in entire files at one shot, this can be a
@@ -1730,9 +1731,7 @@ int StreamInfo::arrayin(RexxArrayObject result)
         {
             // we need to adjust for any charin operations that might have
             // occurred within this record
-            size_t read_length = binaryRecordLength -
-             ((charReadPosition % (int64_t)binaryRecordLength) == 0 ? 0 :
-             (size_t)(charReadPosition % (int64_t)binaryRecordLength) - 1);
+            size_t read_length = binaryRecordLength - (charReadPosition - 1) % binaryRecordLength;
             // a buffer string allows us to read the data into an actual string object
             // without having to first read it into a separate buffer.  Since charin()
             // is frequently used to read in entire files at one shot, this can be a
@@ -1991,7 +1990,7 @@ int StreamInfo::lineout(RexxStringObject data, bool _setPosition, int64_t positi
         if (record_based)
         {
             // calculate length to write out
-            size_t padding = binaryRecordLength - (size_t)((charWritePosition % binaryRecordLength) - 1);
+            size_t padding = binaryRecordLength - (charWritePosition - 1) % binaryRecordLength;
             completeLine(padding);
         }
         // not a line repositioning?  we need to close
@@ -2003,8 +2002,8 @@ int StreamInfo::lineout(RexxStringObject data, bool _setPosition, int64_t positi
         {
             setLineWritePosition(position);
         }
-        /* set the proper position           */
-        return 0;                       /* no residual                       */
+        // no data, no residual!
+        return 0;
     }
 
     // get the specifics
@@ -2022,11 +2021,9 @@ int StreamInfo::lineout(RexxStringObject data, bool _setPosition, int64_t positi
     // binary mode write?
     if (record_based)
     {
-        /* if the line_out is longer than    */
-        /* reclength plus any char out data  */
-        /*  raise a syntax error - invalid   */
-        /* call to routine                   */
-        if (binaryRecordLength < length + ((charWritePosition % binaryRecordLength) - 1))
+        // raise syntax if the line plus any (if any) charOut data is
+        // longer than our RECLENGTH
+        if (binaryRecordLength < length + (charWritePosition - 1) % binaryRecordLength)
         {
             raiseException(Rexx_Error_Incorrect_method);
         }
@@ -2759,7 +2756,6 @@ int64_t StreamInfo::streamPosition(const char *options)
     {
         if (append)    /* opened append?                    */
         {
-
             notreadyError(0);             // cause a notready condition
             return 0;
         }
@@ -3179,7 +3175,7 @@ int64_t StreamInfo::getLineReadPosition()
     if (record_based)
     {
         // calculate this using the record length
-        return (charReadPosition / binaryRecordLength) + (charReadPosition % binaryRecordLength ? 1 : 0);
+        return (charReadPosition - 1) / binaryRecordLength + 1;
     }
     else
     {
