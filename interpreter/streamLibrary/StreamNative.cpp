@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -1551,9 +1551,15 @@ RexxMethod3(RexxStringObject, stream_charin, CSELF, streamPtr, OPTIONAL_int64_t,
  */
 size_t StreamInfo::charout(RexxStringObject data, bool _setPosition, int64_t position)
 {
-    // no data given?  This is really a close operation.
+    // no data given?  This is a close request or a position request
     if (data == NULLOBJECT)
     {
+        // if this is a (perfectly valid!) request to close a read-only
+        // stream, we don't do any writeSetup to avoid raising NOTREADY
+        if (read_only && !_setPosition)
+        {
+            close();
+        }
         // do the setup operations
         writeSetup();
         // if no position was specified, close this out
@@ -1970,9 +1976,16 @@ RexxMethod1(int64_t, stream_chars, CSELF, streamPtr)
  */
 int StreamInfo::lineout(RexxStringObject data, bool _setPosition, int64_t position)
 {
-    // nothing to process?
+    // no data given?  This is a close request or a position request
     if (data == NULLOBJECT)
     {
+        // if this is a (perfectly valid!) request to close a read-only
+        // stream, we don't do any writeSetup to avoid raising NOTREADY
+        if (read_only && !_setPosition)
+        {
+            close();
+        }
+        // do the setup operations
         writeSetup();
         // if this is a binary stream, we may have a line to complete
         if (record_based)
