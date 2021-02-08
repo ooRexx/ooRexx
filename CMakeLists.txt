@@ -2250,47 +2250,8 @@ endif ()
 
 #Apple macOS
 if (MACOSX_BUNDLE)
-   set(CPACK_GENERATOR "DragNDrop")
-
-   set (CPACK_OSX_PACKAGE_VERSION "10.14")
-   set (CPACK_BUNDLE_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/macosx/org.rexxla.oorexx.rxapid.plist)
-   #set (CPACK_BUNDLE_STARTUP_COMMAND xxx)
-
-   if (DEFINED PROD)
-      set(CPACK_PACKAGE_RELEASE 1)
-   else ()
-      set(CPACK_PACKAGE_RELEASE ${ORX_BLD_LVL})
-   endif ()
-   set(orx_install_arch "x86_64")
-   if (DEFINED OS_DIST)
-      set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL}-${CPACK_PACKAGE_RELEASE}.${OS_DIST}.${orx_install_arch}")
-   else ()
-      set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL}-${CPACK_PACKAGE_RELEASE}.${orx_install_arch}")
-   endif ()
-   set (CPACK_BUNDLE_NAME ${CPACK_PACKAGE_FILE_NAME})
-
-   #set (CPACK_PACKAGE_ICON ${ORX_PLATFORM_DIR}/oorexx.png)
-   set(CPACK_PACKAGE_ICON ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/oorexx.png)
-   set (CPACK_BUNDLE_ICON ${CPACK_PACKAGE_ICON})
-
-   set(CPACK_PACKAGE_CONTACT "sahananda@users.sf.net")
-   set(CPACK_PACKAGE_DESCRIPTION_SUMMARY
-"Open Object Rexx is an object-oriented scripting language. The language
-is designed for both beginners and experienced Rexx programmers. It is
-easy to learn and use, and provides an excellent vehicle to enter the
-world of object-oriented programming without much effort.
-
-It extends the procedural way of Rexx programming with object-oriented
-features that allow you to gradually change your programming style as
-you learn more about objects.
-
-For more information on ooRexx, visit http://www.oorexx.org/
-For more information on Rexx, visit http://www.rexxla.org/")
+   # This section is currently not used. The installer is built in a post-process
 endif ()
-
-
-
-
 
 
 # Do not move the following statement!! It must be the last statement in this file.
