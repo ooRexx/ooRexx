@@ -58,6 +58,7 @@ class ProgramSource;
 class BaseCode : public RexxInternalObject
 {
 public:
+
     virtual void run(Activity *, MethodClass *, RexxObject *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
     virtual void call(Activity *, RoutineClass *, RexxString *,  RexxObject **, size_t, RexxString *, RexxString *, ActivationContext, ProtectedObject &);
     virtual void call(Activity *, RoutineClass *, RexxString *,  RexxObject **, size_t, ProtectedObject &);

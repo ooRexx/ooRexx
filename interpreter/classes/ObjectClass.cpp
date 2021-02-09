@@ -2870,8 +2870,10 @@ RexxObject *RexxObject::hasMethodRexx(RexxString *message )
  */
 RexxNilObject::RexxNilObject()
 {
-    // use the initial identify hash and save this.
-    hashValue = identityHash();
+    // The nil object needs to use a static hashcode so it remains
+    // the same after an image install. We use an arbitrary hardcoded value
+    // so that we get a constant value in the saved image file.
+    hashValue = 0xDEADBEEF;
     // we are a special proxy object.
     makeProxiedObject();
 }

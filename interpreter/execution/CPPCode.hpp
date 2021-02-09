@@ -150,6 +150,10 @@ public:
     void *operator new(size_t);
     inline void operator delete(void *) { }
 
+    void live(size_t)override;
+    void liveGeneral(MarkReason)override;
+    void flatten(Envelope *)override;
+
     inline AbstractCode() { }
     inline AbstractCode(RESTORETYPE restoreType) { }
 

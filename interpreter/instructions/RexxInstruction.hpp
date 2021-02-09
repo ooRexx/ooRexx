@@ -130,6 +130,10 @@ class RexxBlockInstruction : public RexxInstruction
 
      // virtual functions required by subclasses to override.
 
+     void live(size_t)override;
+     void liveGeneral(MarkReason reason)override;
+     void flatten(Envelope *)override;
+
      bool isBlock()override { return true; }
      // all block instructions are also control instructions.
      bool isControl()override { return true; }

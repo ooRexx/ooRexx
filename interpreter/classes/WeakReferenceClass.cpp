@@ -133,6 +133,10 @@ void WeakReference::liveGeneral(MarkReason reason)
     if (reason == SAVINGIMAGE || reason == RESTORINGIMAGE)
     {
         memory_mark_general(referentObject);
+        // this is no longer managed as a weak reference if it is in the
+        // image. Remove the link to the next item so that we don't store this information
+        // in the image file.
+        nextReferenceList = NULL;
     }
 }
 

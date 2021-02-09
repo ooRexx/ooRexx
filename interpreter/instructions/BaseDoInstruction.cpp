@@ -53,6 +53,53 @@
 
 
 /**
+ * Perform garbage collection on a live object.
+ *
+ * @param liveMark The current live mark.
+ */
+void RexxBlockInstruction::live(size_t liveMark)
+{
+    // must be first object marked
+    memory_mark(nextInstruction);
+    memory_mark(end);
+    memory_mark(label);
+}
+
+
+/**
+ * Perform generalized live marking on an object.  This is
+ * used when mark-and-sweep processing is needed for purposes
+ * other than garbage collection.
+ *
+ * @param reason The reason for the marking call.
+ */
+void RexxBlockInstruction::liveGeneral(MarkReason reason)
+{
+    // must be first object marked
+    memory_mark_general(nextInstruction);
+    memory_mark_general(end);
+    memory_mark_general(label);
+}
+
+
+/**
+ * Flatten a source object.
+ *
+ * @param envelope The envelope that will hold the flattened object.
+ */
+void RexxBlockInstruction::flatten(Envelope *envelope)
+{
+    setUpFlatten(RexxBlockInstruction)
+
+    flattenRef(nextInstruction);
+    flattenRef(end);
+    flattenRef(label);
+
+    cleanUpFlatten
+}
+
+
+/**
  * Common method for handling debug pauses at block boundaries.
  *
  * @param context The current activation context.
