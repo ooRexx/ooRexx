@@ -107,6 +107,12 @@ void CPPCode::liveGeneral(MarkReason reason)
     {
         package = TheRexxPackage;
     }
+    else if (reason == SAVINGIMAGE)
+    {
+        // if we're saving the image, zero the pointer value out so that this creates
+        // consistently repeatable build.
+        cppEntry = NULL;
+    }
     else if (reason == RESTORINGIMAGE || reason == UNFLATTENINGOBJECT)
     {
         cppEntry = exportedMethods[methodIndex];

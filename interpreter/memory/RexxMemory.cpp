@@ -1416,6 +1416,10 @@ void MemoryObject::saveImage(const char *imageTarget)
 
         // mark any other referenced objects in the copy.
         copyObject->liveGeneral(SAVINGIMAGE);
+        // so that we don't store variable pointer values in the image, null out the
+        // copy object virtual function pointer now that we're done with it
+        copyObject->setVirtualFunctions(NULL);
+
         // if this is a non-primitive behaviour, we need to mark that also
         // so that it is copied into the buffer.  The primitive behaviours have already
         // been handled as part of the savearray.

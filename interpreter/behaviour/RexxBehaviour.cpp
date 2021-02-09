@@ -118,15 +118,22 @@ void RexxBehaviour::live(size_t liveMark)
 void RexxBehaviour::liveGeneral(MarkReason reason)
 {
     // special handling if marking during a save image.
-    if (reason == SAVINGIMAGE && isNonPrimitive())
+    if (reason == SAVINGIMAGE)
     {
-        // mark this as needing resolution when restored.
-        setNotResolved();
+        // if non primitive, this will need extra processing during restore.
+        if (isNonPrimitive())
+        {
+            // mark this as needing resolution when restored.
+            setNotResolved();
+        }
+        // even though we re-resolve this on restore, we null this out so what
+        // we create a consistent image build
+        operatorMethods = NULL;
     }
     // the other side of the process?
     else if (reason == RESTORINGIMAGE)
     {
-        // if we have a non-primitive here on a restore image, we need to fix this up.
+    // if we have a non-primitive here on a restore image, we need to fix this up.
         if (isNonPrimitive())
         {
             resolveNonPrimitiveBehaviour();

@@ -115,6 +115,12 @@ void LibraryPackage::liveGeneral(MarkReason reason)
     memory_mark_general(routines);
     memory_mark_general(publicRoutines);
     memory_mark_general(methods);
+
+    // if saving the image, clear all library information.
+    if (reason == SAVINGIMAGE)
+    {
+        lib.reset();
+    }
 }
 
 
