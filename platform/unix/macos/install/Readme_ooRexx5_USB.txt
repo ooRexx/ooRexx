@@ -13,15 +13,15 @@ It extends the procedural way of Rexx programming with object-oriented
 features that allow you to gradually change your programming style as
 you learn more about objects.
 
-For more information on ooRexx, visit http://www.oorexx.org/
-For more information on Rexx, visit http://www.rexxla.org/")
+For more information on ooRexx, visit https://www.oorexx.org/
+For more information on Rexx, visit   https://www.rexxla.org/
 
 ===================================================================
 
-How To install ooRexx on a USB Stick for use with macOS
+How To install ooRexx 5 on a USB Stick for use with macOS
 
-1. Copy ooRexx5 image (.dmg file) to the desktop or to a folder.
-   Image name will show version & date
+1. Copy the ooRexx5 image (.dmg file) to the desktop or to a folder. Image name
+   will show version and revision such as ooRexx-5.0.0-12149.macOS.x86_64
 2. Mount the image by double clicking on it
 3. format a USB Stick and give it the name OOREXX5
 4. Copy ooRexx5 folder from image to USB Stick
@@ -36,7 +36,7 @@ To use the USB installation
    Use the process monitor to check that no rexx or rxapi processes
    are still running. Kill them using kill <PID> if they are still running.
 
-6. Open a Terminal and enter: export PATH="/Volumes/OOREXX5/bin:${PATH}"
+6. Open a Terminal and enter: export PATH="/Volumes/OOREXX5/bin:$PATH"
 
 Confirm that the installation works by entering one of:
 
@@ -58,4 +58,5 @@ When done, to stop using the USB install:
 (for safety reboot)
 
 PLEASE ALSO NOTE:
-ooRexx 5 can be installed anywhere, without any elevated rights, i.e. it is "sudo free" as long as it is installed where the user has R/W rights.
+ooRexx 5 can be installed anywhere, without any elevated rights, i.e. it is
+"sudo free" as long as it is installed where the user has R/W rights.
