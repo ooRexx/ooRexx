@@ -2460,7 +2460,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Logical_value_logical_list</SymbolicName>
-        <Text>Value of logical list expression element must be exactly <q>0</q> or <q>1</q>; found <q><Sub position="2" name="value"/></q>.</Text>
+        <Text>Value of logical list expression element must be exactly <q>0</q> or <q>1</q>; found <q><Sub position="1" name="value"/></q>.</Text>
       </SubMessage>
       <SubMessage>
         <Code>34</Code>
@@ -2859,7 +2859,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Invalid_expression_missing_general</SymbolicName>
-        <Text>Missing expression following <Sub position="1" name="keyword"/> keyword of a <Sub position="1" name="instruction"/> instruction.</Text>
+        <Text>Missing expression following <Sub position="1" name="keyword"/> keyword of a <Sub position="2" name="instruction"/> instruction.</Text>
       </SubMessage>
       <SubMessage>
         <Code>35</Code>
@@ -5568,7 +5568,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Execution_library_method</SymbolicName>
-        <Text>Unable to load method <q><Sub position="1" name="name"/></q> from library <q><Sub position="1" name="library"/></q>.</Text>
+        <Text>Unable to load method <q><Sub position="1" name="name"/></q> from library <q><Sub position="2" name="library"/></q>.</Text>
       </SubMessage>
       <SubMessage>
         <Code>98</Code>
