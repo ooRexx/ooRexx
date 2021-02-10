@@ -119,6 +119,7 @@ void LibraryPackage::liveGeneral(MarkReason reason)
     // if saving the image, clear all library information.
     if (reason == SAVINGIMAGE)
     {
+        package = NULL;
         lib.reset();
     }
 }

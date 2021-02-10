@@ -1992,6 +1992,9 @@ void ArrayClass::resize()
             memoryObject.reSize(this, sizeof(ArrayClass));
             // the outer array has no elements
             arraySize = 0;
+            // Since the new size includes a single objects field, we clear that out
+            // now so we don't end with dangliing unmarked references is saved objects.
+            objects[0] = OREF_NULL;
         }
     }
 }

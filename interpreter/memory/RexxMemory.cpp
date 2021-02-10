@@ -1414,8 +1414,6 @@ void MemoryObject::saveImage(const char *imageTarget)
         // object, but rather the save image copy.
         RexxInternalObject *copyObject = (RexxInternalObject *)(imageBuffer + (uintptr_t)markObject->behaviour);
 
-        uintptr_t offset = (uintptr_t)markObject->behaviour;
-
         // mark any other referenced objects in the copy.
         copyObject->liveGeneral(SAVINGIMAGE);
         // so that we don't store variable pointer values in the image, null out the
