@@ -91,31 +91,51 @@ class ForLoop
 class ControlledLoop : public ForLoop
 {
  public:
-    inline ControlledLoop() : control(OREF_NULL), initial(OREF_NULL), to(OREF_NULL), by(OREF_NULL), ForLoop()
-    {
-        for (size_t i = 0; i < 3; i++)
-        {
-            expressions[i] = EXP_NONE;
-        }
-    }
+     inline ControlledLoop(): control(OREF_NULL), initial(OREF_NULL), to(OREF_NULL), by(OREF_NULL), ForLoop()
+     {
+         for (size_t i = 0; i < 3; i++)
+         {
+             expressions[i] = EXP_NONE;
+         }
+     }
 
-    // helper memory marking methods for embedding classes to call.
-    inline void live(size_t liveMark)
-    {
-        memory_mark(forCount);
-        memory_mark(control);
-        memory_mark(initial);
-        memory_mark(to);
-        memory_mark(by);
-    }
-    inline void liveGeneral(MarkReason reason)
-    {
-        memory_mark_general(forCount);
-        memory_mark_general(control);
-        memory_mark_general(initial);
-        memory_mark_general(to);
-        memory_mark_general(by);
-    }
+     // helper memory marking methods for embedding classes to call.
+     inline void live(size_t liveMark)
+     {
+         memory_mark(forCount);
+         memory_mark(control);
+         memory_mark(initial);
+         memory_mark(to);
+         memory_mark(by);
+     }
+     inline void liveGeneral(MarkReason reason)
+     {
+         memory_mark_general(forCount);
+         memory_mark_general(control);
+         memory_mark_general(initial);
+         memory_mark_general(to);
+         memory_mark_general(by);
+     }
+
+     /**
+      * An assignment override that ensures that we don't pick up any padding from the assigned instance.
+      *
+      * @param c      The assignment source.
+      */
+     inline void operator=(const ControlledLoop &c)
+     {
+         forCount = c.forCount;
+         control = c.control;
+         initial = c.initial;
+         to = c.to;
+         by = c.by;
+
+         for (size_t i = 0; i < 3; i++)
+         {
+             expressions[i] = c.expressions[i];
+         }
+     }
+
 
 
     void setup(RexxActivation *context, ExpressionStack *stack, DoBlock *doblock);
