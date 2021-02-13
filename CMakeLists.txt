@@ -262,7 +262,7 @@ if (WIN32)
 
    # if the user didn't specify a CMAKE_INSTALL_PREFIX
    # we override the CMake default of /usr/local, instead using:
-   # * $HOME/Applications/ooRexxV on macOS
+   # * $HOME/Applications/ooRexx5 on macOS
    # * /usr on other Unix-like systems
    if (APPLE)
      if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
@@ -2249,10 +2249,53 @@ if (BUILD_DEB)
 endif ()
 
 #Apple macOS
-if (MACOSX_BUNDLE)
-   # This section is currently not used. The installer is built in a post-process
-endif ()
+if (BUILD_DMG)
+# The installer is built in a post-process script initialised from here
 
+# Always 64 bit for macOS
+   set(orx_install_arch "x86_64")
+   set(OS_DIST "macOS")
+
+# This is copied from DEB & RPM Installers
+   if (DEFINED PROD)
+      set(CPACK_PACKAGE_RELEASE 1)
+   else ()
+      set(CPACK_PACKAGE_RELEASE ${ORX_BLD_LVL})
+   endif ()
+
+   message(STATUS "****************************")
+   message(STATUS "Set vars here for post build")
+   message(STATUS "****************************")
+   message(STATUS "CPACK_PACKAGE_NAME ${CPACK_PACKAGE_NAME}")
+   message(STATUS "ORX_MAJOR ${ORX_MAJOR}")
+   message(STATUS "ORX_MINOR ${ORX_MINOR}")
+   message(STATUS "ORX_MOD_LVL ${ORX_MOD_LVL}")
+   message(STATUS "ORX_VERSION ${ORX_VERSION}")
+
+   message(STATUS "CPACK_PACKAGE_RELEASE ${CPACK_PACKAGE_RELEASE}")
+   message(STATUS "OS_DIST ${OS_DIST}")
+   message(STATUS "orx_install_arch ${orx_install_arch}")
+
+   message(STATUS "CMAKE_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX}")
+   message(STATUS "ORX_PLATFORM_DIR ${ORX_PLATFORM_DIR}")
+   message(STATUS "CMAKE_SOURCE_DIR ${CMAKE_SOURCE_DIR}")
+   message(STATUS "CMAKE_BINARY_DIR ${CMAKE_BINARY_DIR}")
+   message(STATUS "CMAKE_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX}") 
+
+   if (DEFINED OS_DIST)
+      set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL}-${CPACK_PACKAGE_RELEASE}.${OS_DIST}.${orx_install_arch}")
+   else ()
+      set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL}-${CPACK_PACKAGE_RELEASE}.${orx_install_arch}")
+   endif ()
+
+   message(STATUS "CPACK_PACKAGE_FILE_NAME ${CPACK_PACKAGE_FILE_NAME}")
+
+   # the CMAKE snippet to be added to the CMakeLists
+   # Be sure to do this AFTER you set the CPACK_PACKAGE_FILE_NAME (is thus true for macOS? CHECK)
+
+   configure_file( ${CMAKE_SOURCE_DIR}/platform/unix/macos/install/build_macOS_dmg.sh.in ${CMAKE_BINARY_DIR}/build_macOS_dmg.sh IMMEDIATE @ONLY )
+
+endif ()
 
 # Do not move the following statement!! It must be the last statement in this file.
 include(CPack)

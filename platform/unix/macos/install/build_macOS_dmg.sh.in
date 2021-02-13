@@ -1,0 +1,69 @@
+#! /usr/bin/env bash
+#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# the script (build_macOS_dmg.sh.in) to be configured
+
+# the data passed from CMAKE
+cpack_package_name="@CPACK_PACKAGE_NAME@"
+orx_major="@ORX_MAJOR@"
+orx_minor="@ORX_MINOR@"
+orx_mod_lvl="@ORX_MOD_LVL@"
+orx_version="@ORX_VERSION@"
+
+cpack_package_release="@CPACK_PACKAGE_RELEASE@"
+os_dist="@OS_DIST@"
+orx_install_arch="@orx_install_arch@"
+cmake_install_prefix="@CMAKE_INSTALL_PREFIX@"
+orx_platform_dir="@ORX_PLATFORM_DIR@"
+cmake_source_dir="@CMAKE_SOURCE_DIR@"
+cmake_binary_dir="@CMAKE_BINARY_DIR@"
+cmake_install_prefix="@CMAKE_INSTALL_PREFIX@"
+cpack_package_file_name="@CPACK_PACKAGE_FILE_NAME@"
+
+echo
+echo "In build_macOS_dmg"
+echo "cpack_package_name" $cpack_package_name
+echo "orx_version" $orx_version
+echo "orx_major" $orx_major
+echo "orx_minor" $orx_minor
+echo "orx_mod_lvl" $orx_mod_lvl
+echo "cpack_package_release" $cpack_package_release
+echo "os_dist" $os_dist
+echo "orx_install_arch" $orx_install_arch
+echo "orx_platform_dir" $orx_platform_dir
+echo "cmake_source_dir" $cmake_source_dir
+echo "cmake_binary_dir" $cmake_binary_dir
+echo "cmake_install_prefix" $cmake_install_prefix
+echo
+
+# the rest of the script using the preset variables
+
+mkdir $cmake_binary_dir/temp_dmg_dir
+cp -R $cmake_install_prefix $cmake_binary_dir/temp_dmg_dir/$cpack_package_name$orx_major
+cp $cmake_source_dir/platform/unix/macos/install/Readme_ooRexx.txt $cmake_binary_dir/temp_dmg_dir/Readme_ooRexx.txt
+cp $cmake_source_dir/platform/unix/macos/install/Readme_ooRexx_USB.txt $cmake_binary_dir/temp_dmg_dir/Readme_ooRexx_USB.txt
+cp $cmake_source_dir/CPLv1.0.txt $cmake_binary_dir/temp_dmg_dir/CPLv1.0.txt
+ln -sfvh /Applications $cmake_binary_dir/temp_dmg_dir
+# fileicon is open source, install with brew install fileicon if missing
+/usr/local/bin/fileicon set $cmake_binary_dir/temp_dmg_dir/$cpack_package_name$orx_major $cmake_source_dir/platform/unix/macos/install/oorexx.png
+# This is really only needed once but keep to document steps
+mkdir -p $cmake_binary_dir/temp_dmg_dir/Documentation
+# use cURL to download the latest documentation (this takes some time)
+curl -L https://sourceforge.net/projects/oorexx/files/oorexx-docs/5.0.0beta/rexxref.pdf > $cmake_binary_dir/temp_dmg_dir/Documentation/rexxref.pdf
+curl -L https://sourceforge.net/projects/oorexx/files/oorexx-docs/5.0.0beta/rexxapi.pdf > $cmake_binary_dir/temp_dmg_dir/Documentation/rexxapi.pdf
+curl -L https://sourceforge.net/projects/oorexx/files/oorexx-docs/5.0.0beta/rexxpg.pdf > $cmake_binary_dir/temp_dmg_dir/Documentation/rexxpg.pdf
+curl -L https://sourceforge.net/projects/oorexx/files/oorexx-docs/5.0.0beta/rexxextensions.pdf > $cmake_binary_dir/temp_dmg_dir/Documentation/rexxextensions.pdf
+curl -L https://sourceforge.net/projects/oorexx/files/oorexx-docs/5.0.0beta/unixextensions.pdf > $cmake_binary_dir/temp_dmg_dir/Documentation/unixextensions.pdf
+curl -L https://sourceforge.net/projects/oorexx/files/oorexx-docs/5.0.0beta/rxsock.pdf  > $cmake_binary_dir/temp_dmg_dir/Documentation/xsock.pdf
+curl -L https://sourceforge.net/projects/oorexx/files/oorexx-docs/5.0.0beta/rxmath.pdf > $cmake_binary_dir/temp_dmg_dir/Documentation/rxmath.pdf
+curl -L https://sourceforge.net/projects/oorexx/files/oorexx-docs/5.0.0beta/rxftp.pdf > $cmake_binary_dir/temp_dmg_dir/Documentation/rxftp.pdf
+curl -L https://sourceforge.net/projects/oorexx/files/oorexx-docs/5.0.0beta/rexxgtk.pdf > $cmake_binary_dir/temp_dmg_dir/Documentation/rexxgtk.pdf
+curl -L https://sourceforge.net/projects/oorexx/files/oorexx-docs/5.0.0beta/orxncurses.pdf > $cmake_binary_dir/temp_dmg_dir/Documentation/orxncurses.pdf
+curl -L https://sourceforge.net/projects/oorexx/files/oorexx-docs/5.0.0beta/readme.pdf > $cmake_binary_dir/temp_dmg_dir/Documentation/readme.pdf
+curl -L https://sourceforge.net/projects/oorexx/files/oorexx-docs/5.0.0beta/ReadMe.txt > $cmake_binary_dir/temp_dmg_dir/Documentation/ReadMe.txt
+
+# Create the dmg locally
+rm -f $cmake_binary_dir/$cpack_package_name$orx_major.dmg
+hdiutil create -fs HFS+ -volname $cpack_package_name$orx_major -srcfolder $cmake_binary_dir/temp_dmg_dir $cmake_binary_dir/$cpack_package_name$orx_major.dmg
+/usr/local/bin/fileicon set $cmake_binary_dir/$cpack_package_name$orx_major.dmg $cmake_source_dir/platform/unix/macos/install/oorexx.png
+cp $cmake_binary_dir/$cpack_package_name$orx_major.dmg $cmake_binary_dir/$cpack_package_file_name.dmg
+rm -f $cmake_binary_dir/$cpack_package_name$orx_major.dmg
