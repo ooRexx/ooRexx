@@ -5,35 +5,9 @@
 # the data passed from CMAKE
 cpack_package_name="@CPACK_PACKAGE_NAME@"
 orx_major="@ORX_MAJOR@"
-orx_minor="@ORX_MINOR@"
-orx_mod_lvl="@ORX_MOD_LVL@"
-orx_version="@ORX_VERSION@"
-
-cpack_package_release="@CPACK_PACKAGE_RELEASE@"
-os_dist="@OS_DIST@"
-orx_install_arch="@orx_install_arch@"
-cmake_install_prefix="@CMAKE_INSTALL_PREFIX@"
-orx_platform_dir="@ORX_PLATFORM_DIR@"
-cmake_source_dir="@CMAKE_SOURCE_DIR@"
 cmake_binary_dir="@CMAKE_BINARY_DIR@"
 cmake_install_prefix="@CMAKE_INSTALL_PREFIX@"
-cpack_package_file_name="@CPACK_PACKAGE_FILE_NAME@"
-
-echo
-echo "In build_macOS_dmg"
-echo "cpack_package_name" $cpack_package_name
-echo "orx_version" $orx_version
-echo "orx_major" $orx_major
-echo "orx_minor" $orx_minor
-echo "orx_mod_lvl" $orx_mod_lvl
-echo "cpack_package_release" $cpack_package_release
-echo "os_dist" $os_dist
-echo "orx_install_arch" $orx_install_arch
-echo "orx_platform_dir" $orx_platform_dir
-echo "cmake_source_dir" $cmake_source_dir
-echo "cmake_binary_dir" $cmake_binary_dir
-echo "cmake_install_prefix" $cmake_install_prefix
-echo
+cmake_source_dir="@CMAKE_SOURCE_DIR@"
 
 # the rest of the script using the preset variables
 
@@ -61,7 +35,7 @@ curl -L https://sourceforge.net/projects/oorexx/files/oorexx-docs/5.0.0beta/orxn
 curl -L https://sourceforge.net/projects/oorexx/files/oorexx-docs/5.0.0beta/readme.pdf > $cmake_binary_dir/temp_dmg_dir/Documentation/readme.pdf
 curl -L https://sourceforge.net/projects/oorexx/files/oorexx-docs/5.0.0beta/ReadMe.txt > $cmake_binary_dir/temp_dmg_dir/Documentation/ReadMe.txt
 
-# Create the dmg locally
+# Create the dmg locally, will look something like ooRexx-5.0.0-12160.macOS.x86_64.dmg
 rm -f $cmake_binary_dir/$cpack_package_name$orx_major.dmg
 hdiutil create -fs HFS+ -volname $cpack_package_name$orx_major -srcfolder $cmake_binary_dir/temp_dmg_dir $cmake_binary_dir/$cpack_package_name$orx_major.dmg
 /usr/local/bin/fileicon set $cmake_binary_dir/$cpack_package_name$orx_major.dmg $cmake_source_dir/platform/unix/macos/install/oorexx.png
