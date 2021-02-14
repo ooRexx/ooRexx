@@ -20,16 +20,23 @@ cmake_source_dir="@CMAKE_SOURCE_DIR@"
 
 # the rest of the script using the preset variables
 
-# Rebuild everything from scratch everytime
+# Rebuild everything from scratch everytime, erase build dir or write errors will occur
+rm -dfr $cmake_binary_dir/temp_dmg_dir
 mkdir $cmake_binary_dir/temp_dmg_dir
 
 cp -R $cmake_install_prefix $cmake_binary_dir/temp_dmg_dir/$cpack_package_name$orx_major
 
 cp $cmake_source_dir/platform/unix/macos/install/Readme_ooRexx.txt $cmake_binary_dir/temp_dmg_dir/Readme_ooRexx.txt
 
+cp $cmake_source_dir/platform/unix/macos/install/Readme_ooRexx.txt $cmake_binary_dir/temp_dmg_dir/$cpack_package_name$orx_major/Readme_ooRexx.txt
+
 cp $cmake_source_dir/platform/unix/macos/install/Readme_ooRexx_USB.txt $cmake_binary_dir/temp_dmg_dir/Readme_ooRexx_USB.txt
 
+cp $cmake_source_dir/platform/unix/macos/install/Readme_ooRexx_USB.txt $cmake_binary_dir/temp_dmg_dir/$cpack_package_name$orx_major/Readme_ooRexx_USB.txt
+
 cp $cmake_source_dir/CPLv1.0.txt $cmake_binary_dir/temp_dmg_dir/CPLv1.0.txt
+
+cp $cmake_source_dir/CPLv1.0.txt $cmake_binary_dir/temp_dmg_dir/$cpack_package_name$orx_major/CPLv1.0.txt
 
 ln -sfvh /Applications $cmake_binary_dir/temp_dmg_dir
 
@@ -52,6 +59,9 @@ curl -L https://sourceforge.net/projects/oorexx/files/oorexx-docs/5.0.0beta/rexx
 curl -L https://sourceforge.net/projects/oorexx/files/oorexx-docs/5.0.0beta/orxncurses.pdf > $cmake_binary_dir/temp_dmg_dir/Documentation/orxncurses.pdf
 curl -L https://sourceforge.net/projects/oorexx/files/oorexx-docs/5.0.0beta/readme.pdf > $cmake_binary_dir/temp_dmg_dir/Documentation/readme.pdf
 curl -L https://sourceforge.net/projects/oorexx/files/oorexx-docs/5.0.0beta/ReadMe.txt > $cmake_binary_dir/temp_dmg_dir/Documentation/ReadMe.txt
+
+# Put a copy of the documentation also inside the "App"
+cp -R $cmake_binary_dir/temp_dmg_dir/Documentation $cmake_binary_dir/temp_dmg_dir/$cpack_package_name$orx_major/Documentation
 
 # Create the dmg locally, will look something like ooRexx-5.0.0-12160.macOS.x86_64.dmg
 rm -f $cmake_binary_dir/$cpack_package_name$orx_major.dmg
