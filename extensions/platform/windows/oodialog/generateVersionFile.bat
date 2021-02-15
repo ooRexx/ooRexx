@@ -4,7 +4,7 @@
 @REM This program and the accompanying materials are made available under
 @REM the terms of the Common Public License v1.0 which accompanies this
 @REM distribution. A copy is also available at the following address:
-@REM http://www.oorexx.org/license.html
+@REM https://www.oorexx.org/license.html
 @REM
 @REM Redistribution and use in source and binary forms, with or
 @REM without modification, are permitted provided that the following

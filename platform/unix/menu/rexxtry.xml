@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+<mime-info xmlns="https://specifications.freedesktop.org/shared-mime-info-spec/latest/">
  <mime-type type="application/x-ooRexx-item">
     <sub-class-of type="text/xml"/>
     <sub-class-of type="application/xml"/>

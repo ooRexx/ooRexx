@@ -3,7 +3,7 @@
 ;
 ; This script requires a plugin added to your NSIS installation.  It needs to
 ; be put into ${NSISDIR}\Plugins directory:
-;   ooRexxProcess.dll  -> http://sourceforge.net/projects/oorexx/files/  under oorexx-buildutils
+;   ooRexxProcess.dll  -> https://sourceforge.net/projects/oorexx/files/  under oorexx-buildutils
 ;
 !verbose 3
 
@@ -72,7 +72,7 @@ ${UnStrTok}
 ;!define MUI_FINISHPAGE_SHOWREADME_FUNCTION SomeFunctionToBeCreated
 
 !define MUI_FINISHPAGE_LINK "Getting started with Windows ${LONGNAME}"
-!define MUI_FINISHPAGE_LINK_LOCATION "http://www.rexxla.org/rexxlang/rexxtut.html"
+!define MUI_FINISHPAGE_LINK_LOCATION "https://www.rexxla.org/rexxlang/rexxtut.html"
 
 !define MUI_ABORTWARNING
 
@@ -347,9 +347,9 @@ Section "${LONGNAME} Core (required)" SecMain
   WriteRegExpandStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "InstallLocation" '"$INSTDIR"'
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "DisplayName" "${LONGNAME}"
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "DisplayIcon" "${DISPLAYICON}"
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "HelpLink" "http://www.rexxla.org/support.html"
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "URLUpdateInfo" "http://sourceforge.net/project/showfiles.php?group_id=119701"
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "URLInfoAbout" "http://www.rexxla.org/"
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "HelpLink" "https://www.rexxla.org/support.html"
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "URLUpdateInfo" "https://sourceforge.net/project/showfiles.php?group_id=119701"
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "URLInfoAbout" "https://www.rexxla.org/"
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "DisplayVersion" "${VERSION}"
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${SHORTNAME}" "Publisher" "Rexx Language Association"
 

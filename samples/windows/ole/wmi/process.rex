@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* https://www.oorexx.org/license.html                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -45,10 +45,10 @@
 /*                                                                          */
 /* Note:                                                                    */
 /* Windows 2000 has WMI pre-installed, on WinNT/98 it has to be installed   */
-/* manually. See: http://msdn.microsoft.com/downloads/sdks/wmi/eula.asp     */
+/* manually. See: https://msdn.microsoft.com/downloads/sdks/wmi/eula.asp     */
 /*                                                                          */
 /* A complete overview of the used classes is available at:                 */
-/* http://msdn.microsoft.com/library/psdk/wmisdk/clascomp_3d4j.htm          */
+/* https://msdn.microsoft.com/library/psdk/wmisdk/clascomp_3d4j.htm          */
 /*                                                                          */
 /****************************************************************************/
 

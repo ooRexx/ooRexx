@@ -5,7 +5,7 @@
 #/* This program and the accompanying materials are made available under       */
 #/* the terms of the Common Public License v1.0 which accompanies this         */
 #/* distribution. A copy is also available at the following address:           */
-#/* http://www.oorexx.org/license.html                                         */
+#/* https://www.oorexx.org/license.html                                        */
 #/*                                                                            */
 #/* Redistribution and use in source and binary forms, with or                 */
 #/* without modification, are permitted provided that the following            */
@@ -479,11 +479,11 @@ if (NOT WIN32)
   endif ()
 endif ()
 set (PACKAGE ${PROJECT_NAME})
-set (PACKAGE_BUGREPORT "http://sourceforge.net/projects/oorexx/")
+set (PACKAGE_BUGREPORT "https://sourceforge.net/projects/oorexx/")
 set (PACKAGE_NAME ${PROJECT_NAME})
 set (PACKAGE_STRING ${PROJECT_NAME})
 set (PACKAGE_TARNAME "ooRexx.tar")
-set (PACKAGE_URL "http://www.oorexx.org/")
+set (PACKAGE_URL "https://www.oorexx.org/")
 set (PACKAGE_VERSION ${ORX_VER_STR})
 set (VERSION ${ORX_VER_STR})
 set (STDC_HEADERS 1)
@@ -1855,7 +1855,7 @@ if (WIN32 AND DOC_SOURCE_DIR)
    set(CPACK_PACKAGE_INSTALL_REGISTRY_KEY "Open Object Rexx")
    # ask for a modify the pack dialg
    set(CPACK_NSIS_INSTALLED_ICON_NAME "rexx.exe,0")
-   set(CPACK_NSIS_URL_INFO_ABOUT "http://www.oorexx.org")
+   set(CPACK_NSIS_URL_INFO_ABOUT "https://www.oorexx.org")
    set(CPACK_NSIS_MUI_ICON ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rexx.ico)
    set(CPACK_NSIS_MUI_UNIICON ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/install/uninstall.ico)
 
@@ -2149,7 +2149,7 @@ if (BUILD_RPM)
    set(CPACK_RPM_PACKAGE_VERSION ${ORX_VERSION})
    set(CPACK_RPM_PACKAGE_RELEASE ${CPACK_PACKAGE_RELEASE})
    set(CPACK_RPM_PACKAGE_LICENSE "CPL")
-   set(CPACK_RPM_PACKAGE_URL "http://www.oorexx.org/")
+   set(CPACK_RPM_PACKAGE_URL "https://www.oorexx.org/")
    set(CPACK_PACKAGE_CONTACT "sahananda@users.sf.net")
    set(CPACK_RPM_PACKAGE_GROUP "Development/Languages")
    set(CPACK_RPM_PACKAGE_VENDOR "Rexx Language Association")
@@ -2181,8 +2181,8 @@ It extends the procedural way of Rexx programming with object-oriented
 features that allow you to gradually change your programming style as
 you learn more about objects.
 
-For more information on ooRexx, visit http://www.oorexx.org/
-For more information on Rexx, visit http://www.rexxla.org/")
+For more information on ooRexx, visit https://www.oorexx.org/
+For more information on Rexx, visit https://www.rexxla.org/")
 endif ()
 
 # Build a DEB
@@ -2212,7 +2212,7 @@ if (BUILD_DEB)
       set(CPACK_PACKAGE_RELEASE ${ORX_BLD_LVL})
    endif ()
    set(CPACK_DEBIAN_PACKAGE_SECTION "devel")
-   set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "http://www.oorexx.org/")
+   set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "https://www.oorexx.org/")
    set(CPACK_PACKAGE_CONTACT "sahananda@users.sf.net")
    set(CPACK_DEBIAN_PACKAGE_MAINTAINER "sahananda@users.sf.net")
    set(CPACK_PACKAGING_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")

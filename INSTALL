@@ -206,11 +206,11 @@ Windows
 The "windows-build.txt" file included in the archive has the details for
 building and installing on a Windows system.
 
-Unix-like Systems (Linux, Solaris, AIX, etc.)
+Unix-like Systems (Linux, Solaris, macOSAIX, etc.)
 ---------------------------------------------
 
 The "unix-like-build.txt" file included in the archive has the details for
-building and installing on Unix-like systems, including Mac OSX.
+building and installing on Unix-like systems, including macOS.
 
 
 Checkout, Build, and Install from the Subversion Repository
@@ -222,7 +222,7 @@ the procedure is the same on all platforms.  Subversion clients and / or
 instructions for installing Subversion clients for most platforms are
 available at:
 
-  http://subversion.tigris.org/project_packages.html
+  https://subversion.apache.org/
 
 Once the Subversion client is installed, the command to checkout is as
 follows, using the 4.x head as an example:
@@ -241,7 +241,7 @@ name that is desired, 'interpreter' might be a common choice.
 
 Again, note that the svn command is the same on any platform.  The example
 happens to be from a Windows system, the svn command is the same on Linux,
-AIX, etc..
+macOS, AIX, etc..
 
 When the source tree is checked out, it will include the "windows-build.txt"
 and the "unix-like-build.txt" files.  Pick the file appropriate for the

@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                                         */
+/* https://www.oorexx.org/license.html                                        */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -264,7 +264,7 @@ char *REXXENTRY RexxGetVersionInformation()
     char copy2[] = "\nCopyright (c) " OOREXX_COPY_YEAR " Rexx Language Association. All rights reserved.";
     char copy3[] = "\nThis program and the accompanying materials are made available under the terms";
     char copy4[] = "\nof the Common Public License v1.0 which accompanies this distribution or at";
-    char copy5[] = "\nhttp://www.oorexx.org/license.html";
+    char copy5[] = "\nhttps://www.oorexx.org/license.html";
     char *ptr = (char *)SystemInterpreter::allocateResultMemory(strlen(header) + strlen(ver) + strlen(build) + strlen(__DATE__) +
         strlen(mode) + strlen(copy1) + strlen(copy2) + strlen(copy3) + strlen(copy4) + strlen(copy5) + 1);
     if (ptr != NULL)

@@ -5,7 +5,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* https://www.oorexx.org/license.html                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -390,7 +390,7 @@ bool isUserInAdminGroup(HWND hwnd, bool isVistaOrLater, uint32_t *rc)
     }
 
     // Check if the token to be checked contains admin SID.
-    // http://msdn.microsoft.com/en-us/library/aa379596(VS.85).aspx:
+    // https://msdn.microsoft.com/en-us/library/aa379596(VS.85).aspx:
     // To determine whether a SID is enabled in a token, that is, whether it
     // has the SE_GROUP_ENABLED attribute, call CheckTokenMembership.
     BOOL inAdminGroup;
