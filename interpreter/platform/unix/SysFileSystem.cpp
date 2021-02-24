@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -357,8 +357,9 @@ bool SysFileSystem::hasDirectory(const char *name)
 {
     // hasDirectory() means we have enough absolute directory
     // information at the beginning to bypass performing path searches.
-    // We really only need to look at the first character.
-    return name[0] == '~' || name[0] == '/' || name[0] == '.';
+    return name[0] == '~' || name[0] == '/' ||
+          (name[0] == '.' && name[1] == '/') ||
+          (name[0] == '.' && name[1] == '.' && name[2] == '/');
 }
 
 
