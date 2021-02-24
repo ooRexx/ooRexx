@@ -528,7 +528,7 @@ bool SysFileSystem::primitiveSearchName(const char *name, const char *path, cons
         return checkCurrentFile(tempName, resolvedName);
     }
 
-    if (searchOnPath(name, path, extension, resolvedName))
+    if (searchOnPath(tempName, path, NULL, resolvedName))
     {
         return true;
     }
