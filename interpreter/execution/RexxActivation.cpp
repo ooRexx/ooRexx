@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -82,11 +82,6 @@
 #include "CommandIOConfiguration.hpp"
 #include "CommandIOContext.hpp"
 #include "LibraryPackage.hpp"
-
-
-
-
-
 
 
 /**
@@ -2091,6 +2086,11 @@ bool RexxActivation::form()
 void RexxActivation::setDigits(wholenumber_t digitsVal)
 {
     settings.packageSettings.setDigits(digitsVal);
+    if (isInterpret())
+    {
+        // .context in an INTERPRET should pick up changes too
+        parent->setDigits(digitsVal);
+    }
 }
 
 
@@ -2102,6 +2102,11 @@ void RexxActivation::setDigits(wholenumber_t digitsVal)
 void RexxActivation::setFuzz(wholenumber_t fuzzVal)
 {
     settings.packageSettings.setFuzz(fuzzVal);
+    if (isInterpret())
+    {
+        // .context in an INTERPRET should pick up changes too
+        parent->setFuzz(fuzzVal);
+    }
 }
 
 /**
@@ -2112,6 +2117,11 @@ void RexxActivation::setFuzz(wholenumber_t fuzzVal)
 void RexxActivation::setForm(bool formVal)
 {
     settings.packageSettings.setForm(formVal);
+    if (isInterpret())
+    {
+        // .context in an INTERPRET should pick up changes too
+        parent->setForm(formVal);
+    }
 }
 
 
