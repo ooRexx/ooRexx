@@ -49,7 +49,7 @@ Using a generically named release as an example, to install without
 prompting into the "D:\Local Interpreters" directory, the following command
 line could be used:
 
-E:\downloads\ooRexx-4.1.2.windows.X86_64.exe /S /D=D:\Local Interpreters\ooRexx
+E:\downloads\ooRexx-5.0.0-12188.windows.x86_64.exe /S /D=D:\Local Interpreters\ooRexx
 
 An existing version of ooRexx must be uninstalled before installation.
 Starting the installer when a previous version of ooRexx is installed will
@@ -58,7 +58,7 @@ installer is started from a command prompt using the /S option.
 
 Notes for Windows Versions After XP
 -----------------------------------
-Windows Vista and later verssions have a feature known as User Account
+Windows Vista and later versions have a feature known as User Account
 Control (UAC.)  ooRexx is fully supported on these versions of Windows,
 however UAC places some restrictions on the ooRexx installer.  The same
 Windows installer is used on all versions of Windows.
@@ -132,12 +132,12 @@ the first command, (dpkg -P or rpm -e) they are the commands to uninstall a
 previous version.
 
 tom@Loon:~/downloads$ dpkg -P ooRexx
-tom@Loon:~/downloads$ dpkg -i ooRexx-4.1.2.x86_64.deb
+tom@Loon:~/downloads$ dpkg -i ooRexx-5.0.0-12189.ubuntu1604.x86_64.deb
 # if systemd is installed:
 tom@Loon:~/downloads$ sudo systemctl --system daemon-reload
 
 Raven:/home/tom # rpm -e ooRexx
-Raven:/home/tom # rpm -iv ooRexx-3.1.2-1.i386.rpm
+Raven:/home/tom # rpm -iv oorexx/5.0.0beta/ooRexx-5.0.0-12189.centos7.x86_64.rpm
 # if systemd is installed:
 Raven:/home/tom # sudo systemctl --system daemon-reload
 
@@ -153,10 +153,43 @@ follows:
 Mac OSX
 -------
 
-There are .dmg install packages for both Intel and PowerPC based Mac OSX
-systems.  The commands to install a .dmg file are as follows:
+There is a .dmg install package for Intel based macOS systems.
 
-%
+The commands to install a .dmg file are as follows:
+
+1. Copy the ooRexx5 image (.dmg file) to the desktop or to a folder. Image name
+   will show version and revision such as ooRexx-5.0.0-12149.macOS.x86_64
+2. Mount the image by double clicking on it
+3. Drag ooRexx5 to the Applications icon
+For Mojave and before:
+4a. Add "export PATH=/Applications/ooRexx5/bin:$PATH" to .bash_profile
+For Catalina:
+4b. Add "export PATH=/Applications/ooRexx5/bin:$PATH" to .zshrc
+
+Confirm that the installation works by entering one of:
+
+rexx -v (display version of Rexx)
+
+rexx (show syntax)
+
+rexx /Applications/ooRexx5/share/ooRexx/rexxcps (benchmark)
+
+To uninstall just drag the folder ooRexx5 in /Applications to the garbage
+bin and remove the export line from .bash_profile or .zshrc.
+
+NOTE: .bash_profile and .zshrc are invisible files that resides in each users
+home folder, to see it press shift command . (dot or period character),
+all 3 at the same time.
+
+If you do not have .bash_profile enter touch .bash_profile in a terminal
+window to create it. Same for .zshrc if you are using Catalina.
+
+PLEASE ALSO NOTE:
+ooRexx 5 can be installed anywhere, without any elevated rights, i.e. it is
+"sudo free" as long as it is installed where the user has R/W rights. You
+can for instance make a folder "Applications" (if not already existing) in
+the home folder (~) and drag ooRexx5 there. The export line in .bash_profile
+or .zshrc should be amended correspondingly.
 
 AIX
 ---
@@ -206,7 +239,7 @@ Windows
 The "windows-build.txt" file included in the archive has the details for
 building and installing on a Windows system.
 
-Unix-like Systems (Linux, Solaris, macOSAIX, etc.)
+Unix-like Systems (Linux, Solaris, macOS, AIX, etc.)
 ---------------------------------------------
 
 The "unix-like-build.txt" file included in the archive has the details for
@@ -225,25 +258,28 @@ available at:
   https://subversion.apache.org/
 
 Once the Subversion client is installed, the command to checkout is as
-follows, using the 4.x head as an example:
+follows, using the 5.0.0 trunk as an example:
 
-E:\work>svn co https://oorexx.svn.sourceforge.net/svnroot/oorexx/main/trunk interpreter
+svn co svn://svn.code.sf.net/p/oorexx/code-0/main/trunk oorexxSVN
 
-You can also check out the release code for any version of ooRexx.  Using
-the 4.1.0 relase as an example, use the proper release number for other
-versions:
+For a specific revision:
+svn co svn://svn.code.sf.net/p/oorexx/code-0/main/trunk@12000 oorexxSVN
 
-E:\work>svn co https://oorexx.svn.sourceforge.net/svnroot/oorexx/main/releases/4.1.0 interpreter
+You can also check out the release code for any prior version of ooRexx.
+Using the 4.2.0 relase as an example, use the proper release number for 
+other versions:
+
+svn co svn://svn.code.sf.net/p/oorexx/code-0/main/releases/4.2.0/trunk OldSVN
 
 In this command, the last word of the command is the directory into which
 the source tree will be checked out.  The name of the directory can be any
-name that is desired, 'interpreter' might be a common choice.
+name that is desired.
 
-Again, note that the svn command is the same on any platform.  The example
-happens to be from a Windows system, the svn command is the same on Linux,
-macOS, AIX, etc..
+Again, note that the svn command is the same on any platform (Windows, Linux,
+macOS, AIX, etc..)
 
 When the source tree is checked out, it will include the "windows-build.txt"
 and the "unix-like-build.txt" files.  Pick the file appropriate for the
 platform on which the build is to take place, and follow the directions in
 the file.
+%
