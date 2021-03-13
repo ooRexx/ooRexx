@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -1099,6 +1099,11 @@ RexxRoutine4(RexxStringObject, SysIni, OPTIONAL_CSTRING, iniFile, CSTRING, app, 
         StemHandler stemVariable(context);            // used to manipulate the stem variable for return values.
 
         // val is the stem variable for this case
+        if (argumentOmitted(4))
+        {
+            // Missing argument; argument 4 is required
+            context->ThrowException1(Rexx_Error_Invalid_argument_noarg, context->WholeNumberToObject(4));
+        }
         stemVariable.setStem(val, 4);
 
         size_t lSize = 0x0000ffffL;
@@ -1129,7 +1134,7 @@ RexxRoutine4(RexxStringObject, SysIni, OPTIONAL_CSTRING, iniFile, CSTRING, app, 
         // the 4th argument cannot be specified
         if (argumentExists(4))
         {
-            maxArgException(context, "SysIni DELETE:", 4);
+            maxArgException(context, "SysIni DELETE:", 3);
         }
 
         // A request to delete all keys for a given application

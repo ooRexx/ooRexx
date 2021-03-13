@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -2503,7 +2503,7 @@ struct RexxMethodContext_
 struct RexxCallContext_
 {
      RexxThreadContext *threadContext;   // the interpreter instance state
-     CallContextInterface *functions;    // functions available in a method context
+     CallContextInterface *functions;    // functions available in a call context
      ValueDescriptor *arguments;         // the argument descriptor
 
 #ifdef __cplusplus
@@ -3330,7 +3330,7 @@ struct RexxCallContext_
 struct RexxExitContext_
 {
      RexxThreadContext *threadContext;   // the interpreter instance state
-     ExitContextInterface *functions;    // functions available in a method context
+     ExitContextInterface *functions;    // functions available in an exit context
      ValueDescriptor *arguments;         // the argument descriptor
 
 #ifdef __cplusplus
