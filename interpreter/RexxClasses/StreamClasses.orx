@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -211,29 +211,27 @@ notready:                              /* standard notready handler         */
 ::METHOD  makearray                    /* arrayin method                    */
   forward message 'ARRAYIN'
 
-::METHOD  arrayin                      /* stream makearray method           */
-  use strict arg type='LINES'
-  signal on notready                   /* the notready handler              */
+::METHOD  arrayIn                      -- Stream arrayIn method
+  use strict arg type = "LINES"
 
-  type = type~left(1)~upper
-  if type == 'L' then                  /* line type operation?              */
-      linein = 1                       /* set the line flag                 */
-  else if type == 'C' then             /* character operation?              */
-      linein = 0                       /* not a line operation              */
+  if type~caselessStartsWith("L") then
+      linein = 1                       -- line operation
+  else if type~caselessStartsWith("C") then
+      linein = 0                       -- character operation
   else
-      raise syntax 93                  /* raise an error                    */
-
-  array = .array~new                   -- we work directly on an array
+      raise syntax 93.915 array ("CL", type)
 
   signal on notready                   -- the notready trap is a better means of
                                        -- handling this.
   if linein then do
+      array = .array~new(self~lines)
       -- delegate this to the native method, which will trigger a notready
       -- when done reading.  It will fill in values as it goes.
       self~line_arrayin(array)
   end
   else do
-      do forever
+      array = .Array~new(self~chars)
+      loop
           array~append(self~charin)
       end
   end
@@ -933,4 +931,8 @@ return position
   expose path
   use strict arg
   return path
+
+::method makeString
+  use strict arg
+  forward message "QUALIFIEDPATH"
 

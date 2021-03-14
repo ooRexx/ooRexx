@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -2140,38 +2140,17 @@ Output:
      FORWARD class (super) array ()-- forward to superclass, remove possible argument
   end
 
--- override for the makestring method
-::method makestring
-  forward to (self~string)
+::method makeString
+  forward message "STRING"
 
 ::method string               -- create a string representation, using the optional delimiter
   expose size
+  use strict arg delimiter = ",", order = "F"
 
-  use strict arg delimiter=",", order = "F"
-
-  order = order~upper~left(1)
-  if self~items=0 then        -- return empty strings, if no elements
-     return ""
-
-  order = order~upper~left(1)
-  if pos(order, "FL")=0 then  -- oops: not a valid argument!
+  if \order~caselessStartsWith("F"), \order~caselessStartsWith("L") then
      raise syntax 93.914 array (2, '"F" (FIFO) or "L" (LIFO)', arg(2))
 
-  mb=.MutableBuffer~new       -- use a MutableBuffer for the string chunks
-                              -- use MAKEARRAY for a snapshot in the desired order
-  array=self~makearray(order) -- use supplied order
-
-  k=.false                    -- append supplied delimiter?
-  do i=1 to array~items
-     if k then                -- at least one item already there, hence use delimiter
-        mb~append(delimiter)
-     else                     -- first iteration
-        k=.true
-
-     mb~append(array[i]~string) -- get element from array, get its string value
-  end
-
-  return mb~string            -- now turn MutableBuffer object into a plain string
+  return self~makeArray(order)~toString(, delimiter)
 
 /*****************************************/
 /* UNION         method                  */
@@ -3332,6 +3311,9 @@ nomethod:
   use strict arg    -- enforces no arguments
   return self~isoDate
 
+::method makeString
+  forward message "STRING"
+
 
 -- TimeSpan represents an interval of time.  Timespans are created by subtracting
 -- two DateTime objects.  They also can be added to DateTime objects.
@@ -3825,6 +3807,9 @@ nomethod:
   else do
       return sign||hours~right(2, '0')":"minutes~right(2, '0')":"seconds~right(2, '0')"."microseconds~right(6, '0')
   end
+
+::method makeString
+  forward message "STRING"
 
 
 -- NOTE: undocumented ArgUtil class has been superseded by documented Validate class
