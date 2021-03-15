@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -49,6 +49,7 @@
 #include "Interpreter.hpp"
 #include "SystemInterpreter.hpp"
 #include "SysProcess.hpp"
+#include "PackageClass.hpp"
 
 RexxClass *RexxInfo::classInstance = OREF_NULL;   // singleton class instance
 
@@ -498,10 +499,10 @@ RexxObject *RexxInfo::getRexxExecutable()
     {
         return TheNilObject;
     }
-    else
-    {
-        return new_string(path);
-    }
+    RexxClass *fileClass = TheRexxPackage->findClass(GlobalNames::FILE);
+    Protected<RexxObject> pathString = new_string(path);
+    ProtectedObject result;
+    return fileClass->sendMessage(GlobalNames::NEW, pathString, result);
 }
 
 
@@ -518,10 +519,10 @@ RexxObject *RexxInfo::getRexxLibrary()
     {
         return TheNilObject;
     }
-    else
-    {
-        return new_string(path);
-    }
+    RexxClass *fileClass = TheRexxPackage->findClass(GlobalNames::FILE);
+    Protected<RexxObject> pathString = new_string(path);
+    ProtectedObject result;
+    return fileClass->sendMessage(GlobalNames::NEW, pathString, result);
 }
 
 
