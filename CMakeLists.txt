@@ -1,6 +1,6 @@
 #/*----------------------------------------------------------------------------*/
 #/*                                                                            */
-#/* Copyright (c) 2014-2020 Rexx Language Association. All rights reserved.    */
+#/* Copyright (c) 2014-2021 Rexx Language Association. All rights reserved.    */
 #/*                                                                            */
 #/* This program and the accompanying materials are made available under       */
 #/* the terms of the Common Public License v1.0 which accompanies this         */
@@ -1036,6 +1036,15 @@ macro (copy_build_file name source)
        )
 endmacro (copy_build_file)
 
+# handy macro for copying files from the source into the build samples directory.
+macro (copy_samples_file name source)
+    ADD_CUSTOM_COMMAND(
+       OUTPUT ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/${name}
+       COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/${source}/${name} ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/${name}
+       DEPENDS ${source}/${name}
+       )
+endmacro (copy_samples_file)
+
 # handy macro for configuring files from the source into the build directory.
 macro (configure_build_file name source)
     configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${source}/${name} ${CMAKE_CURRENT_BINARY_DIR}/${source}/${name} @ONLY)
@@ -1688,6 +1697,12 @@ copy_build_file(socket.cls ${build_extensions_rxsock_dir})
 copy_build_file(streamsocket.cls ${build_extensions_rxsock_dir})
 copy_build_file(mime.cls ${build_extensions_rxsock_dir})
 copy_build_file(smtp.cls ${build_extensions_rxsock_dir})
+copy_samples_file(complex.cls       ${build_samples_dir})
+copy_samples_file(pipe.cls          ${build_samples_dir})
+copy_samples_file(semcls.cls        ${build_samples_dir})
+copy_samples_file(singleton.cls     ${build_samples_dir})
+copy_samples_file(treeDirectory.cls ${build_samples_dir})
+copy_samples_file(Jabberwocky.txt   ${build_samples_dir})
 
 # the shebang line needs adjusting in the .rex files, so we need to
 # do this based on the build target, sorted here alphabetically
@@ -1736,6 +1751,14 @@ add_custom_target(class_files ALL DEPENDS
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/mime.cls
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/smtp.cls
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/dateparser.cls
+
+    ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/complex.cls
+    ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/pipe.cls
+    ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/semcls.cls
+    ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/singleton.cls
+    ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/treeDirectory.cls
+    ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/Jabberwocky.txt
+
     ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/rexxtry.rex)
 
 install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rxregexp.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR})
