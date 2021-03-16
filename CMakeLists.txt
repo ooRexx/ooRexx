@@ -1702,7 +1702,7 @@ copy_samples_file(pipe.cls          ${build_samples_dir})
 copy_samples_file(semcls.cls        ${build_samples_dir})
 copy_samples_file(singleton.cls     ${build_samples_dir})
 copy_samples_file(treeDirectory.cls ${build_samples_dir})
-copy_samples_file(Jabberwocky.txt   ${build_samples_dir})
+copy_samples_file(jabberwocky.txt   ${build_samples_dir})
 
 # the shebang line needs adjusting in the .rex files, so we need to
 # do this based on the build target, sorted here alphabetically
@@ -1757,7 +1757,7 @@ add_custom_target(class_files ALL DEPENDS
     ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/semcls.cls
     ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/singleton.cls
     ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/treeDirectory.cls
-    ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/Jabberwocky.txt
+    ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/jabberwocky.txt
 
     ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/rexxtry.rex)
 
