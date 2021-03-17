@@ -49,6 +49,7 @@
 #include "Interpreter.hpp"
 #include "SystemInterpreter.hpp"
 #include "SysProcess.hpp"
+#include "ArrayClass.hpp"
 #include "PackageClass.hpp"
 
 RexxClass *RexxInfo::classInstance = OREF_NULL;   // singleton class instance
@@ -482,8 +483,7 @@ RexxObject *RexxInfo::getMaxPathLength()
  */
 RexxObject *RexxInfo::getMaxArraySize()
 {
-    // see interpreter/classes/ArrayClass.hpp
-    return new_integer(Numerics::MAX_WHOLENUMBER / 10);
+    return new_integer(ArrayClass::MaxFixedArraySize);
 }
 
 

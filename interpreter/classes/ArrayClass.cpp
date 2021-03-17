@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -177,9 +177,9 @@ size_t ArrayClass::validateSize(RexxObject *size, size_t position)
     // Make sure it's an integer
     size_t totalSize = nonNegativeArgument(size, position);
 
-    if (totalSize >= MaxFixedArraySize)
+    if (totalSize > MaxFixedArraySize)
     {
-        reportException(Error_Incorrect_method_array_too_big, MaxFixedArraySize - 1);
+        reportException(Error_Incorrect_method_array_too_big, MaxFixedArraySize);
     }
     return totalSize;
 }
@@ -211,9 +211,10 @@ ArrayClass *ArrayClass::createMultidimensional(RexxObject **dims, size_t count, 
         size_t currentSize = nonNegativeArgument(currentDim, i + 1);
         // going to do an overflow?  By dividing, we can detect a
         // wrap situation.
-        if (currentSize != 0 && ((MaxFixedArraySize / currentSize) < totalSize))
+printf("multidim %zd / %zd <= %zd \r\n", MaxFixedArraySize - 1, currentSize, totalSize);
+        if (currentSize != 0 && (MaxFixedArraySize + 1) / currentSize < totalSize)
         {
-            reportException(Error_Incorrect_method_array_too_big, MaxFixedArraySize - 1);
+            reportException(Error_Incorrect_method_array_too_big, MaxFixedArraySize);
         }
         // keep running total size and put integer object into current position
         totalSize *= currentSize;
@@ -224,9 +225,9 @@ ArrayClass *ArrayClass::createMultidimensional(RexxObject **dims, size_t count, 
     }
 
     // a final sanity check for out of bounds
-    if (totalSize >= MaxFixedArraySize)
+    if (totalSize > MaxFixedArraySize)
     {
-        reportException(Error_Incorrect_method_array_too_big, MaxFixedArraySize - 1);
+        reportException(Error_Incorrect_method_array_too_big, MaxFixedArraySize);
     }
 
     // create a new array item
@@ -1263,9 +1264,9 @@ bool ArrayClass::validateSingleDimensionIndex(RexxObject **index, size_t indexCo
         if (!isInbounds(position))
         {
             // could be WAAAAAAY out of bounds.
-            if ((boundsError & RaiseBoundsInvalid) && position >= MaxFixedArraySize)
+            if ((boundsError & RaiseBoundsInvalid) && position > MaxFixedArraySize)
             {
-                reportException(Error_Incorrect_method_array_too_big, MaxFixedArraySize - 1);
+                reportException(Error_Incorrect_method_array_too_big, MaxFixedArraySize);
             }
             // if we're doing a put operation, we need to extend the upper bounds
             // to include
@@ -2041,9 +2042,9 @@ void ArrayClass::extend(size_t toSize)
         return;
     }
 
-    if (toSize >= MaxFixedArraySize)
+    if (toSize > MaxFixedArraySize)
     {
-        reportException(Error_Incorrect_method_array_too_big, MaxFixedArraySize - 1);
+        reportException(Error_Incorrect_method_array_too_big, MaxFixedArraySize);
     }
 
     // double the size for small Arrays

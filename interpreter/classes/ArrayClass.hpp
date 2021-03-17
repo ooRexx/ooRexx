@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -327,6 +327,8 @@ class ArrayClass : public RexxObject
     static ArrayClass *nullArray;
 
     static const size_t DefaultArraySize = 16;     // default size for ooRexx allocation
+    // maximum Array size we can handle
+    static const size_t MaxFixedArraySize = (Numerics::MAX_WHOLENUMBER / 10) + 1;
 
  protected:
 
@@ -339,8 +341,6 @@ class ArrayClass : public RexxObject
     inline RexxInternalObject **slotAddress(size_t index) { return &(data()[index - 1]); }
     inline size_t       dataSize() { return ((char *)slotAddress(size() + 1)) - ((char *)data()); }
 
-    // maximum size we can handle
-    static const size_t MaxFixedArraySize = (Numerics::MAX_WHOLENUMBER / 10) + 1;
     static const size_t MinimumArraySize;      // the minimum size we allocate.
     // for small Arrays, we expand by doubling the current size, however
     // for Arrays larger than this limit, we just extend by half the current size
