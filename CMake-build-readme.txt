@@ -29,7 +29,7 @@ ooRexx on multiple platforms (Windows, Linux, macOS etc) using CMake.
    distribution's repository.
    For macOS you can also install CMake using homebrew or MacPorts.
    Do note that for macOS the minimally required cmake version is 3.12.
-   For all other platforms the minimally required cmake version is 3.8. 
+   For all other platforms the minimally required cmake version is 2.8.12 
 
 2. Check out the ooRexx source from the SourceForge SVN repository:
 
