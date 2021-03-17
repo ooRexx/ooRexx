@@ -211,7 +211,6 @@ ArrayClass *ArrayClass::createMultidimensional(RexxObject **dims, size_t count, 
         size_t currentSize = nonNegativeArgument(currentDim, i + 1);
         // going to do an overflow?  By dividing, we can detect a
         // wrap situation.
-printf("multidim %zd / %zd <= %zd \r\n", MaxFixedArraySize - 1, currentSize, totalSize);
         if (currentSize != 0 && (MaxFixedArraySize + 1) / currentSize < totalSize)
         {
             reportException(Error_Incorrect_method_array_too_big, MaxFixedArraySize);
