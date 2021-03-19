@@ -240,7 +240,6 @@ if (WIN32)
 
  else ()
 
-# ------------->
    # 2019-01-08, as per Enrico Sorichetti's advice about applying the RPATH settings for maximum flexibility
    # do not skip the full RPATH for the build tree
    SET( CMAKE_SKIP_BUILD_RPATH  FALSE)
@@ -258,28 +257,14 @@ if (WIN32)
    # add the automatically determined parts of the RPATH
    # which point to directories outside the build tree to the install RPATH
    SET( CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-# <------------
 
-   # if the user didn't specify a CMAKE_INSTALL_PREFIX
-   # we override the CMake default of /usr/local, instead using:
-   # * $HOME/Applications/ooRexx5 on macOS
-   # * /usr on other Unix-like systems
-   if (APPLE)
-     if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-       set (CMAKE_INSTALL_PREFIX $ENV{HOME}/Applications/ooRexx${ORX_MAJOR}
-         CACHE PATH "Default install path" FORCE)
-     endif()
+   # if the user didn't specify a CMAKE_INSTALL_PREFIX we override the CMake
+   # default on Apple Darwin to $HOME/Applications/ooRexx5
+   if (APPLE AND CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+     set (CMAKE_INSTALL_PREFIX $ENV{HOME}/Applications/ooRexx${ORX_MAJOR}
+       CACHE PATH "Default install path" FORCE)
      set (INSTALL_LIB_DIR ${CMAKE_INSTALL_PREFIX}/lib)
-   else ()
-     if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-       set (CMAKE_INSTALL_PREFIX /usr CACHE PATH "Default install path" FORCE)
-     endif()
-     find_path(INSTALL_LIB_DIR libc.so PATHS ${CMAKE_INSTALL_PREFIX}/lib ${CMAKE_INSTALL_PREFIX}/lib64)
-     # at least on Ubuntu above doesn't seem to work; use fallback:
-     if (${INSTALL_LIB_DIR} STREQUAL "INSTALL_LIB_DIR-NOTFOUND")
-       set (INSTALL_LIB_DIR ${CMAKE_INSTALL_PREFIX}/lib)
-     endif ()
-   endif ()
+   endif()
    message(STATUS "CMAKE_INSTALL_PREFIX is ${CMAKE_INSTALL_PREFIX}")
    message(STATUS "INSTALL_LIB_DIR is ${INSTALL_LIB_DIR}")
 
@@ -1686,17 +1671,17 @@ endif ()
 #################### misc files ##########################
 
 # These artifacts apply to all platforms
-# For the .cls class files, we copy these to the build directory so that the build has a full
-# working copy of the class files for testing/development purposes
-copy_build_file(rxregexp.cls ${build_extensions_rxregexp_dir})
-copy_build_file(rxftp.cls ${build_extensions_rxftp_dir})
-copy_build_file(csvStream.cls ${build_extensions_csvstream_dir})
-copy_build_file(json.cls ${build_extensions_json_dir})
-copy_build_file(dateparser.cls ${build_extensions_dateparser_dir})
-copy_build_file(socket.cls ${build_extensions_rxsock_dir})
+# We copy the .cls class files to the build directory so that the build has a
+# full working copy of the class files for testing/development purposes
+copy_build_file(rxregexp.cls     ${build_extensions_rxregexp_dir})
+copy_build_file(rxftp.cls        ${build_extensions_rxftp_dir})
+copy_build_file(csvStream.cls    ${build_extensions_csvstream_dir})
+copy_build_file(json.cls         ${build_extensions_json_dir})
+copy_build_file(dateparser.cls   ${build_extensions_dateparser_dir})
+copy_build_file(socket.cls       ${build_extensions_rxsock_dir})
 copy_build_file(streamsocket.cls ${build_extensions_rxsock_dir})
-copy_build_file(mime.cls ${build_extensions_rxsock_dir})
-copy_build_file(smtp.cls ${build_extensions_rxsock_dir})
+copy_build_file(mime.cls         ${build_extensions_rxsock_dir})
+copy_build_file(smtp.cls         ${build_extensions_rxsock_dir})
 copy_samples_file(complex.cls       ${build_samples_dir})
 copy_samples_file(pipe.cls          ${build_samples_dir})
 copy_samples_file(semcls.cls        ${build_samples_dir})
