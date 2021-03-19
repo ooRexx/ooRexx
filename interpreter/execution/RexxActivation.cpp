@@ -619,6 +619,8 @@ RexxObject* RexxActivation::run(RexxObject *_receiver, RexxString *name, RexxObj
                     // save the nested setting
                     bool nested = parent->settings.localVariables.isNested();
                     // propagate parent's settings back
+                    // but keep the parent's message name as is
+                    settings.messageName = parent->settings.messageName;
                     parent->getSettings(settings);
                     if (!nested)
                     {
