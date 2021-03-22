@@ -555,9 +555,15 @@ RexxObject* RexxActivation::run(RexxObject *_receiver, RexxString *name, RexxObj
     // we might have a package option that turned on tracing.  If this
     // is a routine or method invocation in one of those packages, give the
     // initial entry trace so the user knows where we are.
-    if (tracingAll() && isMethodOrRoutine())
+    // Must be one of ::OPTIONS TRACE ALL/RESULTS/INTERMEDIATES/LABELS
+    if (tracingLabels() && isMethodOrRoutine())
     {
         traceEntry();
+        if (!tracingAll())
+        {
+            // we pause on the label only for ::OPTIONS TRACE LABELS
+            pauseLabel();
+        }
     }
 
     // this is the main execution loop...continue until we get a terminating

@@ -357,6 +357,7 @@ class RexxActivation : public ActivationBase
    inline void              clearTraceSettings() { settings.packageSettings.traceSettings.setTraceOff(); settings.intermediateTrace = false; }
    inline bool              tracingResults() {return settings.packageSettings.traceSettings.tracingResults(); }
    inline bool              tracingAll() {return settings.packageSettings.traceSettings.tracingAll(); }
+   inline bool              tracingLabels() {return settings.packageSettings.traceSettings.tracingLabels(); }
    inline bool              inDebug() { return settings.packageSettings.traceSettings.isDebug() && !debugPause;}
    inline void              traceResult(RexxObject * v) { if (tracingResults()) traceValue(v, TRACE_PREFIX_RESULT); };
    inline void              traceKeywordResult(RexxString *k, RexxObject *v) { if (tracingResults()) traceTaggedValue(TRACE_PREFIX_KEYWORD, NULL, true, k, VALUE_MARKER, v); }
