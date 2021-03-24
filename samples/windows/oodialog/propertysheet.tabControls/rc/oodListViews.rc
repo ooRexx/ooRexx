@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2011-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2011-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -45,7 +45,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 IDD_ADDRESS DIALOG 9, 23, 281, 140
 STYLE DS_MODALFRAME | DS_SETFONT | WS_CAPTION | WS_POPUP | WS_SYSMENU
 CAPTION "Add New Record"
-FONT 8, "MS Sans Serif"
+FONT 10, "MS Shell Dlg"
 {
     LTEXT           "First name:", -1, 11, 26, 39, 8, SS_LEFT
     EDITTEXT        IDC_EDIT_FNAME, 54, 25, 71, 12, ES_AUTOHSCROLL
@@ -74,7 +74,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 IDD_LISTVIEWS DIALOG 0, 0, 400, 242
 STYLE DS_3DLOOK | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_CAPTION | WS_VISIBLE | WS_POPUP | WS_SYSMENU
 CAPTION "List Views"
-FONT 8, "Ms Shell Dlg"
+FONT 10, "MS Shell Dlg"
 {
     CONTROL         "", IDC_TAB, WC_TABCONTROL, WS_TABSTOP, 10, 10, 380, 175
     AUTOCHECKBOX    "Use Info Tips", IDC_CK_INFOTIPS, 10, 194, 81, 13
@@ -91,7 +91,7 @@ FONT 8, "Ms Shell Dlg"
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 IDD_PAGE DIALOG 0, 0, 380, 160
 STYLE DS_CONTROL | DS_SHELLFONT | WS_CHILDWINDOW
-FONT 8, "Ms Shell Dlg"
+FONT 10, "MS Shell Dlg"
 {
     CONTROL         "", IDC_LISTVIEW, WC_LISTVIEW, WS_TABSTOP | WS_BORDER | LVS_EDITLABELS | LVS_LIST | LVS_SHOWSELALWAYS, 3, 3, 368, 154
 }

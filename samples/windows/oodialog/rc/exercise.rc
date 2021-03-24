@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -49,7 +49,7 @@ produced by IBM Resource Workshop
 100 DIALOG 26, 28, 263, 163
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Exercise Dialog"
-FONT 8, "MS Sans Serif"
+FONT 10, "MS Shell Dlg"
 {
  CONTROL "Entryline", 10, "EDIT", WS_BORDER | WS_TABSTOP, 56, 8, 198, 14
  CONTROL "ComboBox", 11, "COMBOBOX", CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 59, 36, 193, 77

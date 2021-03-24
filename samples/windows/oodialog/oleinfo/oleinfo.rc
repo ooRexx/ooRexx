@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -38,31 +38,30 @@
 /****************************************************************************
 oleview.rc
 
-produced by IBM Object REXX Resource Workshop
 *****************************************************************************/
 
 #include <windows.h>
 
-#define BITMAP_2	2
-#define DIALOG_5	5
-#define DIALOG_4	4
-#define HelpDialog	4714
-#define DIALOG_3	3
-#define ResultDialog	4713
-#define DIALOG_2	2
-#define RegistryDialog	4712
-#define DIALOG_1	1
-#define MainDialog	4711
+#define BITMAP_2 2
+#define DIALOG_5 5
+#define DIALOG_4 4
+#define HelpDialog 4714
+#define DIALOG_3 3
+#define ResultDialog 4713
+#define DIALOG_2 2
+#define RegistryDialog 4712
+#define DIALOG_1 1
+#define MainDialog 4711
 
 MainDialog DIALOG 6, 15, 294, 318
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Open Object Rexx OLE/ActiveX Object Viewer"
-FONT 8, "MS Sans Serif"
+FONT 10, "MS Shell Dlg"
 {
  PUSHBUTTON "Exit", 200, 8, 296, 50, 14
  PUSHBUTTON "Help", IDHELP, 236, 296, 50, 14
- LTEXT "ProgID", -1, 8, 8, 52, 9
- LTEXT "Name", -1, 8, 22, 52, 8
+ LTEXT     "ProgID", -1, 8, 8, 52, 9
+ LTEXT          "Name", -1, 8, 22, 52, 8
  LTEXT "Documentation", -1, 8, 36, 52, 9
  EDITTEXT 101, 68, 22, 162, 11, ES_AUTOHSCROLL | ES_READONLY | WS_BORDER | WS_TABSTOP
  EDITTEXT 102, 68, 36, 162, 11, ES_AUTOHSCROLL | ES_READONLY | WS_BORDER | WS_TABSTOP
@@ -86,7 +85,7 @@ FONT 8, "MS Sans Serif"
 RegistryDialog DIALOG 6, 15, 198, 219
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Registry Information"
-FONT 8, "MS Sans Serif"
+FONT 10, "MS Shell Dlg"
 {
  DEFPUSHBUTTON "OK", IDOK, 8, 196, 50, 14
  PUSHBUTTON "Cancel", IDCANCEL, 140, 196, 50, 14
@@ -97,7 +96,7 @@ FONT 8, "MS Sans Serif"
 ResultDialog DIALOG 6, 15, 251, 219
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Result of method invocation"
-FONT 8, "MS Sans Serif"
+FONT 10, "MS Shell Dlg"
 {
  DEFPUSHBUTTON "OK", IDOK, 100, 196, 50, 14
  LTEXT "Return Value", -1, 8, 8, 48, 9
@@ -108,7 +107,7 @@ FONT 8, "MS Sans Serif"
 HelpDialog DIALOG 6, 15, 345, 208
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Help"
-FONT 8, "Fixedsys"
+FONT 10, "Fixedsys"
 {
  DEFPUSHBUTTON "OK", IDOK, 290, 188, 50, 14
  EDITTEXT 500, 4, 7, 336, 176, ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_BORDER | WS_VSCROLL | WS_TABSTOP

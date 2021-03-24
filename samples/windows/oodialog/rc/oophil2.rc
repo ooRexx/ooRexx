@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -43,7 +43,7 @@
 100 DIALOG 0, 0, 282, 236
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Philosophers' Forks Animation"
-FONT 10, "MS Sans Serif"
+FONT 10, "MS Shell Dlg"
 {
  AUTO3STATE "Button", 101, 108, 4, 65, 65, BS_OWNERDRAW | WS_CHILD | WS_VISIBLE | WS_TABSTOP
  AUTO3STATE "Button", 102, 216, 33, 65, 65, BS_OWNERDRAW | WS_CHILD | WS_VISIBLE | WS_TABSTOP

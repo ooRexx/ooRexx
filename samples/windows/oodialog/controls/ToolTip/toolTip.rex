@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2012-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2012-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -260,7 +260,7 @@
         when count == 1 then do
             do i = 1 to tt~getToolCount
                 toolInfo = tt~enumTools(i)
-                say 'Tool info  hwnd:    ' toolInfo~rexxHwnd
+--@@crashes     say 'Tool info  hwnd:    ' toolInfo~rexxHwnd
                 say 'Tool info  id:      ' toolInfo~rexxID
                 say 'Tool info  text:    ' toolInfo~text
                 say 'Tool info  flags:   ' toolInfo~flags

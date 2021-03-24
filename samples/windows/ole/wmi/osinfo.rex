@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* https://www.oorexx.org/license.html                         */
+/* https://www.oorexx.org/license.html                                        */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -37,36 +37,30 @@
 /*----------------------------------------------------------------------------*/
 /****************************************************************************/
 /* Name: osinfo.rex                                                         */
-/* Type: Object REXX Script using OLE interface                             */
-/* Resource: sysinfo.rc                                                     */
+/* Type: ooRexx script using OLE interface                                  */
 /*                                                                          */
 /* Description:                                                             */
 /* A sample script that is using a Windows Management Instrumentation (WMI) */
 /* object ("Win32_OperatingSystem") to obtain information about the         */
 /* installed operating system(s)                                            */
 /*                                                                          */
-/* Note:                                                                    */
-/* Windows 2000 has WMI pre-installed, on WinNT/98 it has to be installed   */
-/* manually. See: https://msdn.microsoft.com/downloads/sdks/wmi/eula.asp     */
-/*                                                                          */
-/* A complete overview of the used classes is available at:                 */
-/* https://msdn.microsoft.com/library/psdk/wmisdk/clascomp_3d4j.htm          */
+/* An overview of the used Win32_OperatingSystem class is available at:     */
+/* https://docs.microsoft.com/en-us/windows/win32/cimwin32prov/win32-operatingsystem */
 /*                                                                          */
 /****************************************************************************/
 
-/* prepare a few arrays for more human-readable output */
-boolArray = .array~of("no","yes")
-boostArray = .array~of("None","Minimum","Maximum")
-qLengthArray = .array~of("???","Unknown","One tick","Two ticks")
-qTypeArray = .array~of("???","Unknown","Fixed","Variable")
+-- prepare a few arrays for more human-readable output
+boolArray = "no", "yes"
+boostArray = "None", "Minimum", "Maximum"
+ostypeArray = .resources~ostype
 
-/* obtain a WMI object */
+-- obtain a WMI object
 WMIObject = .OLEObject~GetObject("WinMgmts:{impersonationLevel=impersonate}")
 
-/* obtain a collection of all Win32_OperatingSystem objects */
+-- obtain a collection of all Win32_OperatingSystem objects
 objects = WMIObject~InstancesOf("Win32_OperatingSystem")
 
-/* process each OperatingSystem object in the collection */
+-- process each OperatingSystem object in the collection
 do object over objects
   call head object~Description, "="
 
@@ -110,13 +104,13 @@ do object over objects
   /************* Memory *************/
   call head "Memory"
 
-  call print "Free physical memory:", object~FreePhysicalMemory
-  call print "Free space in paging files:", object~FreeSpaceInPagingFiles
-  call print "Size stored in paging files:", object~SizeStoredInPagingFiles
-  call print "Free virtual memory:", object~FreeVirtualMemory
-  call print "Total swap space:", object~TotalSwapSpaceSize
-  call print "Total virtual memory:", object~TotalVirtualMemorySize
-  call print "Total visible memory:", object~TotalVisibleMemorySize
+  call print "Free physical memory:", object~FreePhysicalMemory, "MEMORY"
+  call print "Free space in paging files:", object~FreeSpaceInPagingFiles, "MEMORY"
+  call print "Size stored in paging files:", object~SizeStoredInPagingFiles, "MEMORY"
+  call print "Free virtual memory:", object~FreeVirtualMemory, "MEMORY"
+  call print "Total swap space:", object~TotalSwapSpaceSize, "MEMORY"
+  call print "Total virtual memory:", object~TotalVirtualMemorySize, "MEMORY"
+  call print "Total visible memory:", object~TotalVisibleMemorySize, "MEMORY"
 
   /************* System Settings *************/
   call head "System Settings"
@@ -124,53 +118,121 @@ do object over objects
   call print "Foreground Application Boost:", object~ForegroundApplicationBoost, boostArray
   call print "Maximum number of processes:", object~MaxNumberOfProcesses
   call print "Numer of processes:", object~NumberOfProcesses
-  call print "Maximal process memory size:", object~MaxProcessMemorySize
+  call print "Maximal process memory size:", object~MaxProcessMemorySize, "MEMORY"
   call print "Organization:", object~Organization
   call print "Registered User:", object~RegisteredUser
   call print "OS language:", object~OSLanguage
-  call print "OS type:", object~OSType
-  call print "Plus Product ID:", object~PlusProductID
-  call print "Plus version number:", object~PlusVersionNumber
+  call print "OS type:", object~OSType, ostypeArray
 
 end
 
-exit
 
-
-
-/* print a header */
+-- print a header
 ::routine head
   use arg title
+  title = " " title " "
 
-  if arg(2,'o') = 1 then do
+  if arg(2, "omitted") then do
     say
-    say "-"~copies(22) center(title,32,' ') "-"~copies(22)
+    say title~center(78, "-")
     say
   end
   else do
     say arg(2)~copies(78)
-    say arg(2)~copies(20) center(title,36,' ') arg(2)~copies(20)
+    say title~center(78, arg(2))
     say arg(2)~copies(78)
   end
 
-/* display retrieved information */
+-- display retrieved information
 ::routine print
-  desc=arg(1)
-  content=arg(2)
+  use arg desc, content
 
-  /* see if the information needs to be processed or simply displayed */
-  if arg(3,'o') = 0 then do
-    /* process date to a more human-readable form */
-    if arg(3) = "DATE" then do
-      d = date('L',left(content,8),'S')
-      parse value substr(content,9) with t '.' .
-      content = d"," substr(t,1,2)":"substr(t,3,2)":"substr(t,5,2)
-    end
-    /* else: use array to display information */
-    else
-      content = arg(3)[content+1]
+  if content == .nil then
+    return
+
+  -- see if the information needs to be processed or simply displayed
+  if arg(3, "exists") then
+    -- we can process some information display a more human-readable form
+    select case arg(3)
+      when "MEMORY" then do
+        -- memory sizes are returned in units of kilobytes
+        content = content % 1024 "MB"
+      end
+      when "DATE" then do
+        -- e. g. 20201004184321.000000+060
+        parse var content yyyy +4 mm +2 dd +2 hh +2 min +2 ss +2 dot +1 usec +6 offset
+        content = .DateTime~new(yyyy, mm, dd, hh, min, ss, usec, offset)~toLocalTime
+      end
+      otherwise -- use array to translate information
+        content = arg(3)[content + 1]
   end
-  if content \= .nil then
-    say left(desc,32,' ') content
+  say left(desc, 30) content
 
-  return .nil
+
+::options digits 20 -- memory sizes can be very large
+
+::resource ostype
+Unknown
+Other
+MACOS
+ATTUNIX
+DGUX
+DECNT
+Digital Unix
+OpenVMS
+HPUX
+AIX
+MVS
+OS400
+OS/2
+JavaVM
+MSDOS
+WIN3x
+WIN95
+WIN98
+WINNT
+WINCE
+NCR3000
+NetWare
+OSF
+DC/OS
+Reliant UNIX
+SCO UnixWare
+SCO OpenServer
+Sequent
+IRIX
+Solaris
+SunOS
+U6000
+ASERIES
+TandemNSK
+TandemNT
+BS2000
+LINUX
+Lynx
+XENIX
+VM/ESA
+Interactive UNIX
+BSDUNIX
+FreeBSD
+NetBSD
+GNU Hurd
+OS9
+MACH Kernel
+Inferno
+QNX
+EPOC
+IxWorks
+VxWorks
+MiNT
+BeOS
+HP MPE
+NextStep
+PalmPilot
+Rhapsody
+Windows 2000
+Dedicated
+OS/390
+VSE
+TPF
+::END

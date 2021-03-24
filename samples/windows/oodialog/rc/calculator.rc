@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -78,7 +78,7 @@ produced by IBM Object REXX Resource Workshop
 DIALOG_1 DIALOG 13, 20, 222, 212
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX
 CAPTION "Calculator"
-FONT 8, "MS Sans Serif"
+FONT 10, "MS Shell Dlg"
 {
  EDITTEXT TLine, 13, 13, 188, 14, ES_READONLY | WS_BORDER | WS_TABSTOP
  PUSHBUTTON "1", BNo1, 20, 39, 14, 14

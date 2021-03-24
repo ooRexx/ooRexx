@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -36,8 +36,8 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /****************************************************************************/
-/* Name: CALCULATOR.REX                                                     */
-/* Type: Object REXX Script                                                 */
+/* Name: calculator.rex                                                     */
+/* Type: ooRexx Script                                                      */
 /* Resource: CALCULATOR                                                     */
 /*                                                                          */
 /* Description:                                                             */
@@ -45,7 +45,7 @@
 /*                                                                          */
 /****************************************************************************/
 
-/* Find our installation direcotory */
+/* Find our installation directory */
 
 j = locate()
 
@@ -53,7 +53,7 @@ j = locate()
 calcDlg = .Calculator~new
 
 /* Set the defaults for arithmetic operations (optional) */
-NUMERIC DIGITS 9            /* precision can be up to 16 digits for RxMath */
+NUMERIC DIGITS 16           /* precision can be up to 16 digits for RxMath */
 NUMERIC FORM   SCIENTIFIC   /* controls exponential notation */
 NUMERIC FUZZ   0            /* number of digits ignored for numeric comparison */
 

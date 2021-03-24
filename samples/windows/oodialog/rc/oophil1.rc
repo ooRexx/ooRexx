@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -47,7 +47,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 101 DIALOG 86, 68, 211, 125
 STYLE DS_MODALFRAME | DS_SETFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP | WS_SYSMENU
 CAPTION "Philosophers' Forks Setup"
-FONT 8, "MS Sans Serif"
+FONT 10, "MS Shell Dlg"
 {
     EDITTEXT        101, 87, 11, 36, 12, ES_NUMBER
     CONTROL         "", 107, UPDOWN_CLASS, UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_AUTOBUDDY | UDS_SETBUDDYINT, 111, 11, 12, 12

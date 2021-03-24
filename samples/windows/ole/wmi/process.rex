@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* https://www.oorexx.org/license.html                         */
+/* https://www.oorexx.org/license.html                                        */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -37,18 +37,14 @@
 /*----------------------------------------------------------------------------*/
 /****************************************************************************/
 /* Name: process.rex                                                        */
-/* Type: Object REXX Script using OLE interface                             */
+/* Type: ooRexx script using OLE interface                                  */
 /*                                                                          */
 /* Description:                                                             */
 /* Demo application for displaying running processes of a windows system    */
 /* with WMI.                                                                */
 /*                                                                          */
-/* Note:                                                                    */
-/* Windows 2000 has WMI pre-installed, on WinNT/98 it has to be installed   */
-/* manually. See: https://msdn.microsoft.com/downloads/sdks/wmi/eula.asp     */
-/*                                                                          */
-/* A complete overview of the used classes is available at:                 */
-/* https://msdn.microsoft.com/library/psdk/wmisdk/clascomp_3d4j.htm          */
+/* An overview of the used Win32_Process class is available at:             */
+/* https://docs.microsoft.com/en-us/windows/win32/cimwin32prov/win32-process */
 /*                                                                          */
 /****************************************************************************/
 
