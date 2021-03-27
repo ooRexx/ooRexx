@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2012-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2012-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -219,7 +219,7 @@ void getToolIdentifiers(RexxMethodContext *c, LPTOOLINFO pTI, RexxObjectPtr *hwn
 
         // If ctrlType is winUnknown, the hwnd must be a dialog.
         oodControl_t ctrlType = controlHwnd2controlType(pTI->hwnd);
-        if ( ctrlType == winUnknown )
+        if ( ctrlType == winUnknown || ctrlType == winDialog )
         {
             pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)getWindowPtr(pTI->hwnd, GWLP_USERDATA);
             rxHwnd = pcpbd->rexxSelf;

@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -1007,7 +1007,7 @@ BOOL CppMenu::maybeConnectItem(uint32_t id, CSTRING text, logical_t connect, CST
             if ( _methodName == NULL )
             {
                 _methodName = strdup_2methodName(text);
-                if ( _methodName = NULL )
+                if ( _methodName == NULL )
                 {
                     oodSetSysErrCode(c->threadContext, ERROR_NOT_ENOUGH_MEMORY);
                     goto done_out;

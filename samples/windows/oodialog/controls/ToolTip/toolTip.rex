@@ -260,7 +260,7 @@
         when count == 1 then do
             do i = 1 to tt~getToolCount
                 toolInfo = tt~enumTools(i)
---@@crashes     say 'Tool info  hwnd:    ' toolInfo~rexxHwnd
+                say 'Tool info  hwnd:    ' toolInfo~rexxHwnd
                 say 'Tool info  id:      ' toolInfo~rexxID
                 say 'Tool info  text:    ' toolInfo~text
                 say 'Tool info  flags:   ' toolInfo~flags
