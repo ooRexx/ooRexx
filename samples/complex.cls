@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -44,18 +44,19 @@
 /*                                                                            */
 /*  Description:                                                              */
 /*  This program demonstrates how to create a complex number class using the  */
-/*  ::class and ::method directives.  Also shown is an example of subclassing */
-/*  the complex number class (the vector subclass).  Finally, the stringlike  */
-/*  class demonstrates the use of a mixin to provide some string behavior to  */
-/*  the complex number class.                                                 */
+/*  ::class and ::method directives.  Also shown is how to implement a        */
+/*  compareTo method for the Orderable and Comparable mixin classes, and an   */
+/*  example of subclassing the complex number class: the Vector subclass.     */
+/*  Finally, the Stringlike class demonstrates the use of a mixin to provide  */
+/*  some string behavior to the Complex class.                                */
 /******************************************************************************/
 
                                               /* complex number data class      */
-::class "Complex" public inherit stringlike orderable
+::class Complex public inherit stringlike orderable comparable
 
 ::method init                                 /* initialize a complex number    */
   expose real imaginary                       /* expose the state data          */
-  use strict arg real, imaginary = 0          /* access the two numbers         */
+  use strict arg real = 0, imaginary = 0      /* access the two numbers         */
   real += 0                                   /* force rounding                 */
   imaginary += 0
 
@@ -121,34 +122,16 @@
   qi=((b*c)-(a*d))/(c**2+d**2)
   return self~class~new(qr,qi)                /* return the new value           */
 
-::method '%'                                  /* integer division method        */
+::method abs                                  /* absolute value method          */
   expose real imaginary                       /* access the state values        */
-  use strict arg divisor                      /* get the operand                */
+  use strict arg                              /* no arguments allowed           */
 
-  if divisor~isa(.string) then                /* if just a simple number,       */
-    divisor = self~class~new(divisor)         /* convert to complex             */
-
-  a=real                                      /* get real and imaginaries for   */
-  b=imaginary                                 /* both numbers                   */
-  c=divisor~real
-  d=divisor~imaginary
-  qr=((b*d)+(a*c))%(c**2+d**2)                /* generate the new result values */
-  qi=((b*c)-(a*d))%(c**2+d**2)
-  return self~class~new(qr,qi)                /* return the new value           */
-
-::method '//'                                 /* remainder method               */
-  expose real imaginary                       /* access the state values        */
-  use strict arg divisor                      /* get the operand                */
-
-  if divisor~isa(.string) then                /* if just a simple number,       */
-    divisor = self~class~new(divisor)         /* convert to complex             */
-
-  intdiv = self%divisor                       /* do the integer division        */
-
-  return self - (intdiv * divisor)            /* remultiply and subtract        */
+  return sqrt(real**2 + imaginary**2)
 
 ::method string                               /* format as a string value       */
   expose real imaginary                       /* get the state info             */
+  use strict arg                              /* no arguments allowed           */
+
   -- format as real+/-imaginaryi, but use short format if possible
   select
     when imaginary = 0 then return real
@@ -161,22 +144,15 @@
     when imaginary < 0 then return real || imaginary"i"
   end
 
--- Technically, complex numbers are not mathematically orderable.  This is considered
--- a "lexical" ordering, which is still a useful operation and demonstrates the use
--- of the orderable mixin class.  Ordering is defined by first comparing the real parts,
--- and if they are equal, then compare the imaginary parts
+-- Although mathematically complex numbers are not ordered, here ordering is
+-- done based on the absolute value (method ABS) of the complex number.
 ::method compareTo
   expose real imaginary
   use strict arg other
 
-  -- we need this to be a numeric comparison, so subtract other from
-  -- ourself and check the resulting real and imaginary parts
-  diff = self - other
-  -- the sign of the real part gives us the result we want
-  res = diff~real~sign
-  -- if the real part is zero, then use the imaginary sign
-  if res = 0 then return diff~imaginary~sign
-  return res
+  -- COMPARETO must return -1 if other is larger than the receiving object,
+  -- 0 if the two objects are equal, and 1 if other is smaller.
+  return (self~abs - other~abs)~sign
 
 ::class "Vector" subclass complex public      /* vector subclass of complex     */
 -- NOTE:  This inherits the "[]" and init methods from the parent...nothing additional
@@ -198,5 +174,5 @@
                                               /* just forward to the string val.*/
   forward to(self~string) message(msgname) arguments(args)
 
-::method makestring                           /* add MAKESTRING capability      */
-  return self~string                          /* return the string value        */
+
+::routine sqrt  public external "library rxmath RxCalcSqrt"

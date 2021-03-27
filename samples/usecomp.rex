@@ -50,85 +50,22 @@
 /******************************************************************************/
 
 Say 'A simple example of complex number arithmetic:'
-comp1 = .complex[8,4]                       /* create two complex numbers     */
-comp2 = .complex[4,1]
+comp1 = .complex~new(-6,4)                  /* create two complex numbers     */
+comp2 = .complex[4,1]                       /* alternate syntax               */
+comp3 = .complex[-8]                        /* imaginary part omitted         */
+comp4 = .complex[, -1]                      /* real part omitted              */
 
 /* Note that SAY uses the STRING method of the COMPLEX class for display      */
+say '-('comp1') is' (-comp1)
+say '('comp2')~abs is' comp2~abs
 say '('comp1') + ('comp2') is' comp1+comp2
 say '('comp1') - ('comp2') is' comp1-comp2
 say '('comp1') * ('comp2') is' comp1*comp2
 say '('comp1') / ('comp2') is' comp1/comp2
-say '('comp1') % ('comp2') is' comp1%comp2
-say '('comp1') // ('comp2') is' comp1//comp2
 
-say
-
-/* Some more tests to show the syntax also					*/
-z1 = .complex~new(1,7)
-z2 = .complex~new(2,3)
-say 'z1 = .complex~new(1,7) =' z1~makestring
-say 'z2 = .complex~new(2,3) =' z2~makestring
-
-z3 = z1 + z2
-say 'z3 = z1 + z2 =' z3~makestring
-
-z3 = + z2
-say 'z3 = + z2 =' z3~makestring
-
-z3 = z1 - z2
-say 'z3 = z1 - z2 =' z3~makestring
-
-z3 = - z2
-say 'z3 = - z2 =' z3~makestring
-
-z3 = z1 * z2
-say 'z3 = z1 * z2 =' z3~makestring
-
-z3 = z1 / z2
-say 'z3 = z1 / z2 =' z3~makestring
-
-/* 
-BE WARNED integer division and remainder needs some consideration:
-https://math.stackexchange.com/questions/889809/calculating-the-reminder-when-dividing-complex-numbers
-Using this two numbers givequotient = 0 and remainder 3+3i ->
-z1 = .complex~new(3,3) z2 = .complex~new(4,0) z3 = z1 % z2 = 0; z3 = z1 // z2 = 3+3i
-Meaning that the remainder is (absolut value) larger than the divisor!
-*/
-
-say
-
-z1 = .complex~new(1,3)
-z2 = .complex~new(4,)
-say 'z1 = .complex~new(1,3) =' z1~makestring
-say 'z2 = .complex~new(4,) =' z2~makestring
-
-z3 = z1 % z2
-say 'z3 = z1 % z2 =' z3~makestring 
-
-z3 = z1 // z2
-say 'z3 = z1 // z2 =' z3~makestring
-
-say
-
-z1 = .complex~new(3,3)
-z2 = .complex~new(2,-5)
-say 'z1 = .complex~new(3,3) =' z1~makestring
-say 'z2 = .complex~new(2,-5) =' z2~makestring
-
-/* compare z1 to z2 */
-
-say 'z1~compareTo(z2) =' z1~compareTo(z2)
-
-/* check some syntactic features */
-say
-say 'check some syntactic features'
-say
-
-say '.complex~new(2,0) =' .complex~new(2,0)~makestring
-say '.complex~new(2,) =' .complex~new(2,)~makestring
-say '.complex~new(0,2) =' .complex~new(0,2)~makestring
-
- /* This vill raise a syntax error! */
--- z2 = .complex~new(,2)
+/* Note that comparisons and SORT use the COMPARETO method for ordering       */
+say '('comp1') > ('comp2') is' (comp1>comp2)
+say '.Array~of(('comp1'), ('comp2'), ('comp3'), ('comp4'))~sort[1] is' -
+    .Array~of(comp1, comp2, comp3, comp4)~sort[1]
 
 ::REQUIRES 'complex.cls'
