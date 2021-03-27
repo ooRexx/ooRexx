@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -1969,7 +1969,6 @@ RexxString *NumberString::formatInternal(wholenumber_t integers, wholenumber_t d
     wholenumber_t decimalDigits = 0;
     wholenumber_t decimalSpace = 0;
     wholenumber_t leadingExpZeros = 0;
-    wholenumber_t exponentSpaces = 0;
     wholenumber_t trailingDecimalZeros = 0;
     wholenumber_t exponentSize = 0;
 
@@ -3760,7 +3759,7 @@ NumberString *NumberString::Min(RexxObject **args, size_t argCount)
 
 
 /**
- * This method determines if the formatted numberstring is s true integer
+ * This method determines if the formatted numberstring is a true integer
  * string.  That is, its not of the form 1.00E3 but 1000
  *
  * @return true if this can be represented as a true whole number value,
@@ -3782,7 +3781,6 @@ bool NumberString::isInteger()
         return true;
     }
 
-    wholenumber_t expFactor = 0;
     // get size of the integer part of this number
     wholenumber_t adjustedLength = numberExponent + digitsCount;
     // ok, now do the exponent check...if we need one, not an integer
@@ -3798,20 +3796,8 @@ bool NumberString::isInteger()
         return true;
     }
 
-    // get the adjusted length (expValue is negative, so this will
-    // be less than length of the string).
-    wholenumber_t integers = numberExponent + digitsCount;
-    wholenumber_t decimals = digitsCount - integers;
-    // we can have a number of leading zeros for a decimal number,
-    // so it is possible all of our digits are decimals.
-    if (integers < 0)
-    {
-        integers = 0;
-        decimals = digitsCount;
-    }
-
     // validate that all decimal positions are zero
-    for (wholenumber_t numIndex = integers; numIndex < digitsCount; numIndex++)
+    for (wholenumber_t numIndex = adjustedLength; numIndex < digitsCount; numIndex++)
     {
         if (numberDigits[numIndex] != 0)
         {
