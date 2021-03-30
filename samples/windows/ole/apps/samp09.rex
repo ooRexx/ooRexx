@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -43,32 +43,61 @@
 /*                                                                    */
 /**********************************************************************/
 
+excelApplication = .OLEObject~new("Excel.Application")
+excelApplication~visible = .true             -- make Excel visible
+Worksheet = excelApplication~Workbooks~Add~Worksheets[1]
 
-excelObject = .OLEObject~new("Excel.Application")
-Worksheet = excelObject~Workbooks~Add~Worksheets[1]
-myTitles="ABCDEFGHI"
+colTitles = "ABCDEFGHI"                      -- define first nine column letters
+lastLine = 12                                -- number of lines to process
 
-do j = 1 to 10
-  do i = 1 to myTitles~length
-    title = myTitles~substr(i,1)
-    cell = Worksheet~Range(title||j) -- e.g. ~Range("A1")
-    if j = 1 then do
-      cell~value = "Type" title  -- header of first row
-      cell~font~bold = .true
+sumFormula = "=sum(?2:?"lastLine-1")"        -- English formula: question marks will be changed to column letter
+say "sumFormula:      " sumFormula "(question marks will be changed to column letter)"
+
+do line = 1 to lastLine                      -- iterate over lines
+  do col = 1 to colTitles~length             -- iterate over columns
+    colLetter = colTitles[col]               -- get column letter
+    cell = Worksheet~Range(colLetter||line)  -- e.g. ~Range("A1")
+
+    if line = 1 then do                -- first row? yes, build title
+      cell~value = "Type" colLetter          -- header in first row
+      cell~font~bold = .true                 -- make font bold
+      cell~Interior~ColorIndex = 36          -- light yellow
+      xlHAlignRight = excelApplication~getConstant("xlHAlignRight") -- get right adjust constant
+      cell~style~horizontalAlignment = xlHAlignRight  -- right adjust title
     end
-    else if j = 10 then do -- final row? yes, build sums
+    else if line = lastLine then do    -- last row? yes, build sums
       /* set formula, e.g. "=sum(B2:B9)" */
-      cell~formula = "=sum(?2:?9)"~translate(title,"?")
-      cell~Interior~ColorIndex = 24 -- light blue
+      cell~formula = sumFormula~changeStr("?",colLetter) -- adjust formula to column to sum up
+      cell~formula = cell~formulaLocal       -- make sure formula matches local language (e.g. sum -> summe in German Excel)
+      cell~Interior~ColorIndex = 8           -- light blue
     end
-    else -- a row between 2 and 9: fill with random value
-      cell~value = random()
+    else do -- a row between 2 and 9: fill with random values
+      cell~value = random(999999) / 100      -- create a random decimal value
+      cell~font~ColorIndex = 11              -- set from black to violet
+    end
   end
 end
 
-/* save sheet in default TEMP directory */
-Worksheet~SaveAs( value("TEMP",,ENVIRONMENT)"\demo.xls")
-excelObject~Quit
-exit
+   -- create a format string for our numbers, use thousands and decimal separators
+formatString = "#"excelApplication~thousandsSeparator"##0"excelApplication~decimalSeparator"00"
+say "formatString:    " formatString           -- show format string
 
+excelApplication~useSystemSeparators = .false   -- allow our format string to be used everywhere
+stringRange="A2:"colTitles~right(1)lastLine
+say "formatting range:" stringRange
+WorkSheet~range(stringRange)~numberFormat = formatString -- get range and set its number format
+
+   -- make sure that file gets quietly overwritten in case it exists already
+excelApplication~DisplayAlerts = .false      -- no alerts from now on
+
+/* save sheet in user's home directory */
+homeDir = value("USERPROFILE",,"ENVIRONMENT")-- get value for environment variable "USERPROFILE"
+fileName = homeDir"\samp09_ooRexx.xlsx"      -- build fully qualified filename
+say "fully qualified fileName:" fileName     -- show fully qualifed filename
+Worksheet~SaveAs(fileName)                   -- save file
+
+   -- let the user inspect the Excel file
+say "Excel sheet got saved to file, press enter to continue ..."
+parse pull .                                 -- wait for user to press enter
+excelApplication~Quit                        -- close Excel
 
