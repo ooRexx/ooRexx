@@ -55,6 +55,8 @@ lastLine = 12                                -- number of lines to process
 sumFormula = "=sum(?2:?"lastLine-1")"        -- English formula: question marks will be changed to column letter
 say "sumFormula:      " sumFormula "(question marks will be changed to column letter)"
 
+xlHAlignRight = excelApplication~getConstant("xlHAlignRight") -- get value of "horizontal align right" constant
+
 do line = 1 to lastLine                      -- iterate over lines
   do col = 1 to colTitles~length             -- iterate over columns
     colLetter = colTitles[col]               -- get column letter
@@ -64,7 +66,6 @@ do line = 1 to lastLine                      -- iterate over lines
       cell~value = "Type" colLetter          -- header in first row
       cell~font~bold = .true                 -- make font bold
       cell~Interior~ColorIndex = 36          -- light yellow
-      xlHAlignRight = excelApplication~getConstant("xlHAlignRight") -- get right adjust constant
       cell~style~horizontalAlignment = xlHAlignRight  -- right adjust title
     end
     else if line = lastLine then do    -- last row? yes, build sums
