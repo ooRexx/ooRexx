@@ -1,7 +1,7 @@
 #!@OOREXX_SHEBANG_PROGRAM@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -49,7 +49,8 @@
 queue = .workqueue~new
 
 -- our inputs and outputs
-input = .stream~new("jabberwocky.txt")
+-- (we use jabberwocky.txt from the same samples directory)
+input = .stream~new(.File~new("jabberwocky.txt", .File~new(.context~package~name)~parent))
 output = .output
 
 -- the file reader reads lines from the input stream and writes to
@@ -99,8 +100,9 @@ writer = .filewriter~new(output, queue)
     if \queue~isEmpty then return queue~pull
     -- if the other thread says it is done sending us stuff, time to shut down
     if stopped then return .nil
-    -- nothing on the queue, not stopped yet, so release the guard and wait until
-    -- there's something pending to work on.
+    -- nothing on the queue, not stopped yet, so reset actionPending, release
+    -- the guard and wait until there's pending to work on.
+    actionPending = .false
     guard on when actionPending
   end
 
