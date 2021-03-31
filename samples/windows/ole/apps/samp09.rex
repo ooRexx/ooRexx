@@ -50,6 +50,8 @@ Worksheet = excelApplication~Workbooks~Add~Worksheets[1]
 colTitles = "ABCDEFGHI"                      -- define first nine column letters
 lastLine = 12                                -- number of lines to process
 
+   /* HINT: if your local Excel user interface language is not English, you may need to rename the
+            function name 'sum' to your user interface language, e.g. in German to 'summe' */
 sumFormula = "=sum(?2:?"lastLine-1")"        -- English formula: question marks will be changed to column letter
 say "sumFormula:      " sumFormula "(question marks will be changed to column letter)"
 
@@ -68,7 +70,6 @@ do line = 1 to lastLine                      -- iterate over lines
     else if line = lastLine then do    -- last row? yes, build sums
       /* set formula, e.g. "=sum(B2:B9)" */
       cell~formula = sumFormula~changeStr("?",colLetter) -- adjust formula to column to sum up
-      cell~formula = cell~formulaLocal       -- make sure formula matches local language (e.g. sum -> summe in German Excel)
       cell~Interior~ColorIndex = 8           -- light blue
     end
     else do -- a row between 2 and 9: fill with random values
@@ -76,6 +77,21 @@ do line = 1 to lastLine                      -- iterate over lines
       cell~font~ColorIndex = 11              -- set from black to violet
     end
   end
+end
+
+   -- check whether Excel's user interface language causes the "#NAME?" error, if so advice
+sumCell = WorkSheet~range("A"lastLine)       -- get sum-cell of column A
+if sumCell~text = "#NAME?" then
+do
+   say
+   say "** Excel reports a '#NAME?' error for the 'sum' function! Probable cause: **"
+   say "** your local Excel user interface language is not set to English, therefore you need **"
+   say "** to adjust the function name 'sum' in the variable 'sumFormula' to your user interface **"
+   say "** language and rerun this program (e.g. in German you need to rename 'sum' to 'summe') **"
+   say "** sumCell~formula:" sumCell~formula
+   say "** sumCell~text:   " sumCell~text
+   say "** sumCell~value:  " sumCell~value
+   say
 end
 
    -- create a format string for our numbers, use thousands and decimal separators
