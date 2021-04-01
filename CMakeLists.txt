@@ -48,6 +48,7 @@ else()
     cmake_minimum_required (VERSION 2.8.12)
 endif()
 cmake_policy(VERSION 2.8...3.3)
+project (ooRexx)
 include(CheckIncludeFile)
 include(CheckLibraryExists)
 include(CheckFunctionExists)
@@ -63,7 +64,6 @@ set (CMAKE_SAMPLES_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/samples)
 #/*----------------------------------------------------------------------------*/
 #/* Project settings                                                           */
 #/*----------------------------------------------------------------------------*/
-project (ooRexx)
 # The version of ooRexx to make
 set (ORX_API_LEVEL 4)
 set (ORX_MAJOR 5)
@@ -2144,6 +2144,7 @@ if (BUILD_RPM)
       ${CMAKE_INSTALL_PREFIX}/bin
       ${CMAKE_INSTALL_PREFIX}/lib
       ${CMAKE_INSTALL_PREFIX}/lib64
+      ${CMAKE_INSTALL_PREFIX}/include
       ${CMAKE_INSTALL_PREFIX}/share
       ${CMAKE_INSTALL_PREFIX}/share/man
       ${CMAKE_INSTALL_PREFIX}/share/man/man1
@@ -2165,8 +2166,6 @@ if (BUILD_RPM)
    set(CPACK_RPM_PACKAGE_GROUP "Development/Languages")
    set(CPACK_RPM_PACKAGE_VENDOR "Rexx Language Association")
    set(CPACK_PACKAGING_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
-# remove 'csh'-dependency as it doesn't seem to be required
-#  set(CPACK_RPM_PACKAGE_REQUIRES "csh")
    set(CPACK_RPM_PACKAGE_SUMMARY "Open Object Rexx is an object-oriented scripting language.")
 
    set(CPACK_RPM_PACKAGE_ARCHITECTURE ${CMAKE_HOST_SYSTEM_PROCESSOR})
@@ -2221,8 +2220,6 @@ if (BUILD_DEB)
    set(CPACK_DEBIAN_PACKAGE_MAINTAINER "sahananda@users.sf.net")
    set(CPACK_PACKAGING_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/platform/unix/debian/cmake/postinst.in ${CMAKE_CURRENT_SOURCE_DIR}/platform/unix/debian/cmake/postinst)
-# remove 'csh'-dependency as it doesn't seem to be required
-#  set(CPACK_DEBIAN_PACKAGE_DEPENDS "csh")
    # we need to copy these files so we can change the permissions
    file(COPY ${CMAKE_SOURCE_DIR}/platform/unix/debian/cmake/postinst
            DESTINATION ${CMAKE_BINARY_DIR}
@@ -2239,8 +2236,6 @@ if (BUILD_DEB)
    else ()
       set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL}-${CPACK_PACKAGE_RELEASE}.${CMAKE_HOST_SYSTEM_PROCESSOR}")
    endif ()
-   # Be sure to do this AFTER you set the CPACK_PACKAGE_FILE_NAME
-   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/platform/unix/debian/cmake/fixup_deb.sh.in ${CMAKE_BINARY_DIR}/fixup_deb.sh)
    # The DEB generator does not support a multi-line description.
    set(CPACK_DEBIAN_PACKAGE_DESCRIPTION "Open Object Rexx is an object-oriented scripting language.")
 endif ()
