@@ -43,10 +43,10 @@ message(STATUS "CMake version is ${CMAKE_VERSION}")
 if (APPLE)
 # apple build with lower cmake version have an @rpath problem
     cmake_minimum_required (VERSION 3.12)
-else()
+else ()
 #for other platforms
     cmake_minimum_required (VERSION 2.8.12)
-endif()
+endif ()
 cmake_policy(VERSION 2.8...3.3)
 project (ooRexx)
 include(CheckIncludeFile)
@@ -111,7 +111,7 @@ if (ORX_SHEBANG)
          endif ()
          message(STATUS "OOREXX_SHEBANG_PROGRAM: \"${OOREXX_SHEBANG_PROGRAM}\" (ORX_SHEBANG=1 hence hardcoded to installation directory)")
       endif ()
-   else()
+   else ()
       # use supplied string verbatim; note: the shebang "#!" is already supplied in the sample Rexx file
       set (OOREXX_SHEBANG_PROGRAM "${ORX_SHEBANG}")
       message(STATUS "OOREXX_SHEBANG_PROGRAM: \"${OOREXX_SHEBANG_PROGRAM}\" (value supplied via ORX_SHEBANG)")
@@ -173,7 +173,7 @@ if (ORX_REXXPATH)
     message(STATUS "Setting REXX search path to ${ORX_REXXPATH}")
     set (CMAKE_REXXPATH ${ORX_REXXPATH})
 
-endif()
+endif ()
 
 
 # Common install variables
@@ -214,7 +214,7 @@ if (WIN32)
    # to the CMAKE format for the install commands.
    if (DOC_SOURCE_DIR)
       file(TO_CMAKE_PATH ${DOC_SOURCE_DIR} DOC_SOURCE_DIR)
-   endif()
+   endif ()
 
    # location where we assemble everything to build the installer
    set (NSIS_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/NSIS)
@@ -239,25 +239,31 @@ if (WIN32)
      set(NSIS_COMPONENT_SHORTCUTS_Docs "${NSIS_COMPONENT_SHORTCUTS_Docs}\n!insertmacro ConfigureDocShortCut \"${name}\" \"${file}\"")
    ENDMACRO ()
 
- else ()
+else ()
 
-   # 2019-01-08, as per Enrico Sorichetti's advice about applying the RPATH settings for maximum flexibility
-   # do not skip the full RPATH for the build tree
-   SET( CMAKE_SKIP_BUILD_RPATH  FALSE)
+   # To ensure the required libraries are always found, regardless of whether
+   # executables are run directly from the build tree or after installation, we
+   # use settings similar to what is suggested in "Always full RPATH" at:
+   # https://gitlab.kitware.com/cmake/community/-/wikis/doc/cmake/RPATH-handling
 
-   # when building, don't use the install RPATH
-   # only later on when installing
-   SET( CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+   # use (i.e. don't skip) the full RPATH for the build tree
+   set (CMAKE_SKIP_BUILD_RPATH FALSE)
 
-   if( APPLE )
-       SET( CMAKE_INSTALL_RPATH "@executable_path/../lib")
-   else()
-       SET( CMAKE_INSTALL_RPATH "$ORIGIN/../lib")
-   endif()
+   # when building, don't use the install RPATH already (only later when installing)
+   set (CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+
+   if (APPLE)
+       SET (CMAKE_INSTALL_RPATH "@executable_path/../lib")
+   else ()
+       # using $ORIGIN/.. instead of ${CMAKE_INSTALL_PREFIX} allows the package
+       # to be relocated during installation, but this comes at a cost: we can't
+       # be sure that all platforms we intend to run on really support $ORIGIN
+       SET (CMAKE_INSTALL_RPATH "$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
+   endif ()
 
    # add the automatically determined parts of the RPATH
    # which point to directories outside the build tree to the install RPATH
-   SET( CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+   set (CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
    # if the user didn't specify a CMAKE_INSTALL_PREFIX we override the CMake
    # default on Apple Darwin to $HOME/Applications/ooRexx5
@@ -265,9 +271,9 @@ if (WIN32)
      set (CMAKE_INSTALL_PREFIX $ENV{HOME}/Applications/ooRexx${ORX_MAJOR}
        CACHE PATH "Default install path" FORCE)
      set (INSTALL_LIB_DIR ${CMAKE_INSTALL_PREFIX}/lib)
-   else()
+   else ()
      set (INSTALL_LIB_DIR ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR})
-   endif()
+   endif ()
    message(STATUS "CMAKE_INSTALL_PREFIX is ${CMAKE_INSTALL_PREFIX}")
    message(STATUS "INSTALL_LIB_DIR is ${INSTALL_LIB_DIR}")
 
@@ -1183,7 +1189,7 @@ if (XALAN_EXECUTABLE)
     add_dependencies(rexx message_headers)
     add_dependencies(rexxapi message_headers)
 
-endif()
+endif ()
 
 
 #################### rexxc (executable) #########################
