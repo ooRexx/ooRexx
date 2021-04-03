@@ -2225,18 +2225,6 @@ if (BUILD_DEB)
    set(CPACK_PACKAGE_CONTACT "sahananda@users.sf.net")
    set(CPACK_DEBIAN_PACKAGE_MAINTAINER "sahananda@users.sf.net")
    set(CPACK_PACKAGING_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
-   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/platform/unix/debian/cmake/postinst.in ${CMAKE_CURRENT_SOURCE_DIR}/platform/unix/debian/cmake/postinst)
-   # we need to copy these files so we can change the permissions
-   file(COPY ${CMAKE_SOURCE_DIR}/platform/unix/debian/cmake/postinst
-           DESTINATION ${CMAKE_BINARY_DIR}
-           FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ
-           GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
-   file(COPY ${CMAKE_SOURCE_DIR}/platform/unix/debian/cmake/prerm
-           DESTINATION ${CMAKE_BINARY_DIR}
-           FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ
-           GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
-   set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA
-           "${CMAKE_BINARY_DIR}/postinst;${CMAKE_BINARY_DIR}/prerm;")
    if (DEFINED OS_DIST)
       set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL}-${CPACK_PACKAGE_RELEASE}.${OS_DIST}.${CMAKE_HOST_SYSTEM_PROCESSOR}")
    else ()
@@ -2246,7 +2234,7 @@ if (BUILD_DEB)
    set(CPACK_DEBIAN_PACKAGE_DESCRIPTION "Open Object Rexx is an object-oriented scripting language.")
 endif ()
 
-#Apple macOS
+# Build for Apple macOS
 if (BUILD_DMG)
 # The installer is built in a post-process script build_macOS_dmg.sh.in
 # initialised from platform/unix/macos/install/build_macOS_dmg.sh.in
