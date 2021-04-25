@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -36,13 +36,11 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /*****************************************************************************/
-/* REXX Windows Support                                                      */
 /*                                                                           */
 /* Main interpreter control.  This is the preferred location for all         */
 /* platform independent global variables.                                    */
 /* The interpreter does not instantiate an instance of this                  */
 /* class, so most variables and methods should be static.                    */
-/*                                                                           */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -130,6 +128,7 @@ public:
     static RexxObject *localServer;         // local environment initialization server
     static const char *languageLevel;       // the language level of this interpreter
     static RexxString* qualifyFileSystemName(RexxString *name);
+    static locale_t c_locale;               // the "C" locale
 
 protected:
     static SysMutex  resourceLock;   // use to lock resources accessed outside of kernel global lock

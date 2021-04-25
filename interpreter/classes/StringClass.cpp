@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -2272,23 +2272,7 @@ RexxString *RexxString::newString(double number)
  */
 RexxString *RexxString::newString(double number, size_t precision)
 {
-    if (number == 0.0)
-    {
-        return new_string("0");
-    }
-    else
-    {
-        char buffer[64];
-        // format as a string
-        sprintf(buffer, "%.*g", (int)precision, number);
-        size_t len = strlen(buffer);
-        // if the last character is a decimal, we remove that
-        if (buffer[len - 1] == '.')
-        {
-            len--;
-        }
-        return new_string(buffer, len);
-    }
+    return new_numberstringFromDouble(number, precision)->stringValue();
 }
 
 

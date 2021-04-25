@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -57,6 +57,7 @@
 #include "RexxInternalApis.h"
 
 #include <stdio.h>
+#include <locale.h>
 
 
 // global resource lock
@@ -71,6 +72,13 @@ RexxObject *Interpreter::localServer = OREF_NULL;
 
 // the interpreter active state flag
 bool Interpreter::active = false;
+
+// pre-computed "C" locale for *_l() functions like strtod_l
+#ifdef _WIN32
+locale_t Interpreter::c_locale = _create_locale(LC_ALL, "C");
+#else
+locale_t Interpreter::c_locale = newlocale(LC_ALL_MASK, "C", (locale_t) 0);
+#endif
 
 
 // exit return codes.
