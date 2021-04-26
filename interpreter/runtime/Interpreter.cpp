@@ -57,7 +57,10 @@
 #include "RexxInternalApis.h"
 
 #include <stdio.h>
-#include <locale.h>
+#include <locale.h>   // locale_t etc.
+#ifdef HAVE_XLOCALE_H
+# include <xlocale.h> // locale_t etc. on BSD/Darwin
+#endif
 
 
 // global resource lock

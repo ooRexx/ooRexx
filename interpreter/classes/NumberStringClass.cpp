@@ -55,7 +55,10 @@
 #include <math.h>
 #include <float.h>
 #include <ctype.h>
-#include <locale.h>
+#include <locale.h>   // locale_t etc.
+#ifdef HAVE_XLOCALE_H
+# include <xlocale.h> // locale_t etc. on BSD/Darwin
+#endif
 #include <cmath>
 #include <cfloat>
 

@@ -91,10 +91,6 @@
 #include "config.h"
 #endif
 
-#if defined( HAVE_LOCALE_H )
-#include <locale.h>
-#endif
-
 #include "oorexxapi.h"
 
 #if defined( HAVE_SYS_WAIT_H )
@@ -1167,24 +1163,13 @@ char* getErrorMessage(const char *repository, int setnum, int msgnum)
     }
 #if defined( HAVE_CATOPEN )
 
-#if defined( HAVE_SETLOCALE )
-    // catopen() will search along NLSPATH
+    // if name doesn't contain a '/' catopen() will search along NLSPATH
     // NLSPATH may contain both %N, which is replaced by the specified
-    // catalog name, and %L, which is replaced by the language.
-    // We also remember the current locale which we will restore later
-    // as it otherwise interferes with e. g. rxregexp's use of islower()
-    char *locale = strdup(setlocale(LC_ALL, NULL));
-    setlocale(LC_ALL, "en_US");
-#endif
-
+    // catalog name, and %L, which is replaced by the LANG variable.
     nl_catd catalog;                     // catalog handle
 
-    if ((catalog = catopen(repository, NL_CAT_LOCALE)) == (nl_catd)-1)
+    if ((catalog = catopen(repository, 0)) == (nl_catd)-1)
     {
-#if defined( HAVE_SETLOCALE )
-        setlocale(LC_ALL, locale);       // restore locale
-        free(locale);
-#endif
         return strdup("Error: Message catalog not found");
     }
 
@@ -1199,13 +1184,8 @@ char* getErrorMessage(const char *repository, int setnum, int msgnum)
         // we need to copy it before closing the catalog
         msg = strdup(msg);
     }
-
     catclose(catalog);                   // close the catalog
 
-#if defined( HAVE_SETLOCALE )
-    setlocale(LC_ALL, locale);           // restore locale
-    free(locale);
-#endif
     return msg;                          // return the message or our error
 
 #else

@@ -1,7 +1,7 @@
 /* config.h.in.  Generated from CMake.  */
 
 /* Define to 1 if you have the <attr/xattr.h> header file. */
-#cmakedefine HAVE_ATTR_XATTR_H
+#cmakedefine HAVE_XATTR_H
 
 /* Define to 1 if you have the 'catopen' function. */
 #cmakedefine HAVE_CATOPEN
@@ -9,32 +9,14 @@
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #cmakedefine HAVE_DLFCN_H
 
-/* Define to 1 if you have the <fcntl.h> header file. */
-#cmakedefine HAVE_FCNTL_H
-
 /* Define to 1 if you have the <features.h> header file. */
 #cmakedefine HAVE_FEATURES_H
 
 /* Define to 1 if you have the <filehdr.h> header file. */
 #cmakedefine HAVE_FILEHDR_H
 
-/* Define to 1 if you have the 'fstat' function. */
-#cmakedefine HAVE_FSTAT
-
-/* Define to 1 if you have the 'gcvt' function. */
-#cmakedefine HAVE_GCVT
-
-/* Define to 1 if you have the 'geteuid' function. */
-#cmakedefine HAVE_GETEUID
-
-/* Define to 1 if you have the 'getpgrp' function. */
-#cmakedefine HAVE_GETPGRP
-
 /* Define to 1 if you have the 'getpwuid' function. */
 #cmakedefine HAVE_GETPWUID
-
-/* Define to 1 if you have the 'gettimeofday' function. */
-#cmakedefine HAVE_GETTIMEOFDAY
 
 /* Define to 1 if you have the 'getuserattr' function. */
 #cmakedefine HAVE_GETUSERATTR
@@ -51,11 +33,8 @@
 /* Define to 1 if you have the 'rt' library (-lrt). */
 #cmakedefine HAVE_LIBRT
 
-/* Define to 1 if you have the <limits.h> header file. */
-#cmakedefine HAVE_LIMITS_H
-
-/* Define to 1 if you have the <locale.h> header file. */
-#cmakedefine HAVE_LOCALE_H
+/* Define to 1 if you have the <xlocale.h> header file. */
+#cmakedefine HAVE_XLOCALE_H
 
 /* Define to 1 if you have the <malloc.h> header file. */
 #cmakedefine HAVE_MALLOC_H
@@ -63,17 +42,8 @@
 /* Define to 1 if you have the <memory.h> header file. */
 #cmakedefine HAVE_MEMORY_H
 
-/* Define to 1 if you have the 'memset' function. */
-#cmakedefine HAVE_MEMSET
-
-/* Define to 1 if you have the <mesg.h> header file. */
-#cmakedefine HAVE_MESG_H
-
 /* Define to 1 if you have nanosleep function */
 #cmakedefine HAVE_NANOSLEEP
-
-/* Define to 1 if you have the <netinet/in.h> header file. */
-#cmakedefine HAVE_NETINET_IN_H
 
 /* Define to 1 if you have the <nl_types.h> header file. */
 #cmakedefine HAVE_NL_TYPES_H
@@ -129,38 +99,17 @@
 /* Define to 1 if you have the <sched.h> header file. */
 #cmakedefine HAVE_SCHED_H
 
-/* Define to 1 if you have the 'setlocale' function. */
-#cmakedefine HAVE_SETLOCALE
-
-/* Define to 1 if you have the 'sighold' function. */
-#cmakedefine HAVE_SIGHOLD
-
 /* Define to 1 if you have the <signal.h> header file. */
 #cmakedefine HAVE_SIGNAL_H
 
 /* Define to 1 if you have the 'sigprocmask' function. */
 #cmakedefine HAVE_SIGPROCMASK
 
-/* Define to 1 if you have the <stdarg.h> header file. */
-#cmakedefine HAVE_STDARG_H
-
 /* Define to 1 if you have the <stdint.h> header file. */
 #cmakedefine HAVE_STDINT_H
 
-/* Define to 1 if you have the <stdlib.h> header file. */
-#cmakedefine HAVE_STDLIB_H
-
-/* Define to 1 if you have the 'strdup' function. */
-#cmakedefine HAVE_STRDUP
-
 /* Define to 1 if you have the <strings.h> header file. */
 #cmakedefine HAVE_STRINGS_H
-
-/* Define to 1 if you have the <string.h> header file. */
-#cmakedefine HAVE_STRING_H
-
-/* Define to 1 if you have the <stropts.h> header file. */
-#cmakedefine HAVE_STROPTS_H
 
 /* Define to 1 if you have the <sys/filio.h> header file. */
 #cmakedefine HAVE_SYS_FILIO_H
@@ -180,20 +129,8 @@
 /* Define to 1 if you have the <sys/signal.h> header file. */
 #cmakedefine HAVE_SYS_SIGNAL_H
 
-/* Define to 1 if you have the <sys/socket.h> header file. */
-#cmakedefine HAVE_SYS_SOCKET_H
-
-/* Define to 1 if you have the <sys/stat.h> header file. */
-#cmakedefine HAVE_SYS_STAT_H
-
-/* Define to 1 if you have the <sys/syscall.h> header file. */
-#cmakedefine HAVE_SYS_SYSCALL_H
-
 /* Define to 1 if you have the <sys/time.h> header file. */
 #cmakedefine HAVE_SYS_TIME_H
-
-/* Define to 1 if you have the <sys/types.h> header file. */
-#cmakedefine HAVE_SYS_TYPES_H
 
 /* Define to 1 if you have the <sys/utsname.h> header file. */
 #cmakedefine HAVE_SYS_UTSNAME_H
@@ -210,14 +147,8 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #cmakedefine HAVE_UNISTD_H
 
-/* Define to 1 if you have the <usersec.h> header file. */
-#cmakedefine HAVE_USERSEC_H
-
 /* Define to 1 if you have the <ncurses.h> header file. */
 #cmakedefine HAVE_NCURSES_H
-
-/* Define to 1 if you have the 'vprintf' function. */
-#cmakedefine HAVE_VPRINTF
 
 /* Name of package */
 #define PACKAGE ${PACKAGE}
