@@ -1156,7 +1156,7 @@ RexxRoutine2(int,
 {
 
 
-    return removexattr(fname, name);
+    return RemoveXattr(fname, name);
 }
 #endif
 

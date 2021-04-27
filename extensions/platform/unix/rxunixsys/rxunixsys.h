@@ -79,7 +79,7 @@
 # define stat64 stat
 # define HOST_NAME_MAX _POSIX_HOST_NAME_MAX
 
-# on DARWIN the xattr functions have additional arguments
+// on DARWIN the xattr functions have additional arguments
 // ssize_t getxattr(const char *path, const char *name, void *value, size_t size, u_int32_t position, int options);
 // int setxattr(const char *path, const char *name, const void *value, size_t size, u_int32_t position, int options);
 // int removexattr(const char *path, const char *name, int options);
