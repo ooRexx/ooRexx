@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2009-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2009-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -32,9 +32,6 @@
 /* OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING    */
 /* NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS         */
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
-/*                                                                            */
-/* Authors;                                                                   */
-/*       W. David Ashley <dashley@us.ibm.com>                                 */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 
@@ -1052,7 +1049,7 @@ RexxRoutine1(RexxObjectPtr,
 #endif
 
 
-#ifdef HAVE_XATTR_H
+#ifdef HAVE_XATTR
 /**
  * Method:        SysSetxattr
  *
@@ -1072,7 +1069,7 @@ RexxRoutine3(int,
              CSTRING, name,
              CSTRING, val)
 {
-    return setxattr(fname, name, val, strlen(val) + 1, 0);
+    return SetXattr(fname, name, val, strlen(val) + 1, 0);
 }
 
 
@@ -1095,12 +1092,12 @@ RexxRoutine2(RexxObjectPtr,
     ssize_t sz;
     char *buf;
 
-    sz = getxattr(fname, name, NULL, 0);
+    sz = GetXattr(fname, name, NULL, 0);
     if (sz == -1) {
         return context->NullString();
     }
     buf = (char *)alloca(sz);
-    getxattr(fname, name, buf, sz);
+    GetXattr(fname, name, buf, sz);
 
     return (RexxObjectPtr)context->NewStringFromAsciiz(buf);
 }
@@ -1122,12 +1119,12 @@ RexxRoutine1(RexxObjectPtr,
     ssize_t sz;
     char *buf, *name;
 
-    sz = listxattr(fname, NULL, 0);
+    sz = ListXattr(fname, NULL, 0);
     if (sz == -1) {
         return context->NullString();
     }
     buf = (char *)alloca(sz);
-    listxattr(fname, buf, sz);
+    ListXattr(fname, buf, sz);
 
     // create a Rexx array of the xattr names
     RexxArrayObject arr = context->NewArray(1);
@@ -1690,10 +1687,10 @@ RexxRoutineEntry orxnixclib_routines[] = {
 #endif
     REXX_TYPED_ROUTINE(SysGetservbyname, SysGetservbyname),
     REXX_TYPED_ROUTINE(SysGetservbyport, SysGetservbyport),
-#if !defined(OPENBSD)
+#ifdef HAVE_WORDEXP
     REXX_TYPED_ROUTINE(SysWordexp, SysWordexp),
 #endif
-#ifdef HAVE_XATTR_H
+#ifdef HAVE_XATTR
     REXX_TYPED_ROUTINE(SysSetxattr, SysSetxattr),
     REXX_TYPED_ROUTINE(SysGetxattr, SysGetxattr),
     REXX_TYPED_ROUTINE(SysListxattr, SysListxattr),

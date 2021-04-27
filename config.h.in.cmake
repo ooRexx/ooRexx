@@ -1,7 +1,7 @@
 /* config.h.in.  Generated from CMake.  */
 
-/* Define to 1 if you have the <attr/xattr.h> header file. */
-#cmakedefine HAVE_XATTR_H
+/* Define to 1 if you have the <sys/xattr.h> header file. */
+#cmakedefine HAVE_SYS_XATTR_H
 
 /* Define to 1 if you have the 'catopen' function. */
 #cmakedefine HAVE_CATOPEN
@@ -38,6 +38,14 @@
 
 /* Define to 1 if you have the <malloc.h> header file. */
 #cmakedefine HAVE_MALLOC_H
+
+/* Define to 1 if you have the <alloca.h> header file. */
+#cmakedefine HAVE_ALLOCA_H
+
+/* Define to 1 if you have the <wordexp.h> header file. */
+#cmakedefine HAVE_WORDEXP_H
+/* Define to 1 if you have the 'wordexp' function. */
+#cmakedefine HAVE_WORDEXP
 
 /* Define to 1 if you have the <memory.h> header file. */
 #cmakedefine HAVE_MEMORY_H
