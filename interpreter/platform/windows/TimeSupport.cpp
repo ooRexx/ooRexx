@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -112,6 +112,33 @@ void SystemInterpreter::getCurrentTime(RexxDateTime *Date )
     Date->day = localTime.wDay;
     Date->month = localTime.wMonth;
     Date->year = localTime.wYear;
+}
+
+
+/**
+ * Returns a high-resolution ticks value in nanoseconds well suited for
+ * execution speed measurements.  It is neither guaranteed to be the
+ * current time (it isn't), nor that the actual resolution is nanoseconds
+ * (on Intel or AMD chips with invariant TSC support it is in the 100 ns range).
+ *
+ * @return The ticks value.
+ */
+int64_t SystemInterpreter::getNanosecondTicks()
+{
+    static LONGLONG frequency = -1;
+    LARGE_INTEGER f, time;
+
+    // we query the ticks frequency on our first call only
+    if (frequency == -1)
+    {
+        QueryPerformanceFrequency(&f);
+        // 10 mio., i. e. 100 ns on an Intel i5 1.9 GHz
+        frequency = f.QuadPart;
+    }
+    // the call itself takes approx. 30 ns
+    QueryPerformanceCounter(&time);
+    // convert ticks to nanoseconds and return
+    return time.QuadPart * 1000000000 / frequency;
 }
 
 

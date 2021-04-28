@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -80,6 +80,22 @@ void SystemInterpreter::getCurrentTime(RexxDateTime *Date )
     GMTDate->tm_isdst = -1;
     // in microseconds
     Date->timeZoneOffset = ((int64_t)(tv.tv_sec - mktime(GMTDate))) * 1000000UL;
+}
+
+
+/**
+ * Returns a high-resolution ticks value in nanoseconds well suited for
+ * execution speed measurements.  It is neither guaranteed to be the
+ * current time, nor that the actual resolution is nanoseconds (on Intel
+ * or AMD chips with invariant TSC support it is in the 100 ns range).
+ *
+ * @return The ticks value.
+ */
+int64_t SystemInterpreter::getNanosecondTicks()
+{
+    struct timespec time;
+    clock_gettime(CLOCK_REALTIME, &time);
+    return (int64_t)time.tv_sec * 1000000000 + time.tv_nsec;
 }
 
 
