@@ -114,8 +114,6 @@
 /* OPTIONAL:  Finally, any other global defined constants for system specific */
 /* code usage.                                                                */
 /******************************************************************************/
-#define locale_t _locale_t
-#define strtod_l _strtod_l
 
 #endif
 

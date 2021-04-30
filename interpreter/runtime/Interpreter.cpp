@@ -57,10 +57,6 @@
 #include "RexxInternalApis.h"
 
 #include <stdio.h>
-#include <locale.h>   // locale_t etc.
-#ifdef HAVE_XLOCALE_H
-# include <xlocale.h> // locale_t etc. on BSD/Darwin
-#endif
 
 
 // global resource lock
@@ -75,14 +71,6 @@ RexxObject *Interpreter::localServer = OREF_NULL;
 
 // the interpreter active state flag
 bool Interpreter::active = false;
-
-// pre-computed "C" locale for *_l() functions like strtod_l
-#ifdef _WIN32
-locale_t Interpreter::c_locale = _create_locale(LC_ALL, "C");
-#else
-locale_t Interpreter::c_locale = newlocale(LC_ALL_MASK, "C", (locale_t) 0);
-#endif
-
 
 // exit return codes.
 const int RC_OK         = 0;

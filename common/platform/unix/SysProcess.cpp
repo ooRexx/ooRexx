@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -117,6 +117,7 @@ const char* SysProcess::getExecutableFullPath()
     }
 
     char path[PATH_MAX];
+    char *path_p = path;
 
 #ifdef HAVE_NSGETEXECUTABLEPATH
     // Darwin
@@ -126,9 +127,11 @@ const char* SysProcess::getExecutableFullPath()
         path[0] = '\0';
     }
 #elif defined HAVE_GETEXECNAME
-    // SunOS, Solaris et al.
-    if (getexecname(), path) == NULL)
+    // SunOS, Solaris, OpenIndiana et al.
+    path_p = getexecname();
+    if (path_p == NULL)
     {
+        path_p = path;
         path[0] = '\0';
     }
 #else
@@ -154,7 +157,7 @@ const char* SysProcess::getExecutableFullPath()
 #endif
 
     // this is the file location with any symbolic links resolved.
-    char *modulePath = realpath(path, NULL);
+    char *modulePath = realpath(path_p, NULL);
     if (modulePath == NULL)
     {
         return NULL;

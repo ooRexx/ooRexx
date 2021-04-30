@@ -50,11 +50,6 @@
 #include "RexxCore.h"
 #include "SysSemaphore.hpp"
 
-#include <locale.h>   // locale_t etc.
-#ifdef HAVE_XLOCALE_H
-# include <xlocale.h> // locale_t etc. on BSD/Darwin
-#endif
-
 
 class InterpreterInstance;
 class ListClass;
@@ -134,7 +129,6 @@ public:
     static RexxObject *localServer;         // local environment initialization server
     static const char *languageLevel;       // the language level of this interpreter
     static RexxString* qualifyFileSystemName(RexxString *name);
-    static locale_t c_locale;               // the "C" locale
 
 protected:
     static SysMutex  resourceLock;   // use to lock resources accessed outside of kernel global lock

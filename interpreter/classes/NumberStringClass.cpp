@@ -55,9 +55,9 @@
 #include <math.h>
 #include <float.h>
 #include <ctype.h>
-#include <locale.h>   // locale_t etc.
+#include <locale.h>   // localeconv
 #ifdef HAVE_XLOCALE_H
-# include <xlocale.h> // locale_t etc. on BSD/Darwin
+# include <xlocale.h> // localeconv on BSD
 #endif
 #include <cmath>
 #include <cfloat>
@@ -711,23 +711,41 @@ bool NumberString::doubleValue(double &result)
     // strtod() is locale-dependent, and we cannot be sure that we run under
     // the default "C" locale, as some badly behaved native code (a known
     // example being BSF.CLS) may have called setlocale(LC_ALL, "") or similar.
-    // Make sure we convert using a locale which has a dot as decimal radix.
-    if (*localeconv()->decimal_point == '.')
+
+    // strtod_l() is available on many platforms, but e. g. Openindiana is
+    // missing it.  Switching back and forth with uselocale() would work
+    // (maybe slow), but uselocale() isn't readily available on Windws,
+    // where it would require setlocale() together with
+    // _configthreadlocale(_ENABLE_PER_THREAD_LOCALE).  We instead employ a
+    // hack: should the current locale not have the dot as decimal radix, we
+    // replace any dot with the current locale radix before conversion.
+
+    char localeRadix = localeconv()->decimal_point;
+
+    // if the current locale uses a dot as radix, just do a straight conversion
+    // (very common)
+    if (localeRadix == '.')
     {
-        // the current locale is acceptable as it uses '.'
-        // this will be very common and is a bit faster than strtod_l()
         result = strtod(string, NULL);
     }
     else
     {
-        // convert using our pre-computed "C" locale
-        result = strtod_l(string, NULL, Interpreter::c_locale);
-        // should we ever have to build on a platform lacking strtod_l(), this
-        // could be amended with code to switch the thread's locale to the
-        // "C" locale with uselocal(c_locale), run strtod(), and switch back
-        // to the previous locale with uselocal().
-        // Windows lacks uselocal(), but does have strtod_l().
+        // The current locale uses no dot.  Change any dot to locale radix
+        // before conversion, but don't modify the Rexx string itself.
+        char *str = strdup(string);
+        if (str == NULL)
+        {
+            return false;
+        }
+        char *dotPos = strchr(str, '.');
+        if (dotPos != NULL)
+        {
+            *dotPos = localeRadix;
+        }
+        result = strtod(str, NULL);
+        free(str);
     }
+
     // and let pass all of the special cases
     return true;
 }
@@ -4070,7 +4088,7 @@ NumberString *NumberString::newInstanceFromDouble(double number, wholenumber_t p
     // the default "C" locale, as some badly behaved native code (a known
     // example being BSF.CLS) may have called setlocale(LC_ALL, "") or similar.
     // As snprintf_l() only exists on BSD-based and Windows systems and
-    // uselocal() isn't readily available on Windws, where it would require
+    // uselocale() isn't readily available on Windws, where it would require
     // setlocale() together with _configthreadlocale(_ENABLE_PER_THREAD_LOCALE),
     // we employ a hack: should the current locale not have the dot as decimal
     // radix, we replace the actual radix with a dot in the converted string.
