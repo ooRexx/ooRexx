@@ -117,7 +117,7 @@ const char* SysProcess::getExecutableFullPath()
     }
 
     char path[PATH_MAX];
-    char *path_p = path;
+    const char *path_p = path;
 
 #ifdef HAVE_NSGETEXECUTABLEPATH
     // Darwin
