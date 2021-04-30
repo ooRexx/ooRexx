@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -301,17 +301,26 @@ class MemorySegmentSet
       }
       void addSegments(size_t requiredSpace);
 
-      inline void validateObject(size_t bytes)
+      inline void validateObject(size_t bytes, RexxInternalObject *o)
       {
-      #ifdef CHECKOREFS
-          /* is object invalid size?           */
-          if (!MemoryObject::isValidSize(bytes)) {
-              /* Yes, this is not good.  Exit      */
-              /* Critical Section and report       */
-              /* unrecoverable error.              */
-              Interpreter::logicError("Bad object detected during Garbage Collection, unable to continue");
+#ifdef _DEBUG
+          // does this object have an invalid size?
+          if (!Memory::isValidSize(bytes))
+          {
+              printf("GC detected invalid object size=%zd (type=%zd, min=%zd, grain=%zd)" line_end, bytes, o->getObjectTypeNumber(), Memory::MinimumObjectSize, Memory::ObjectGrain);
+              // hexdump the first 64 bytes
+              unsigned char *s = (unsigned char *)o;
+              for (int lines = 1; lines <= 2; lines++)
+              {
+                  for (int blocks = 1; blocks <= 8; blocks++)
+                  {
+                    printf("%02x%02x%02x%02x ", *s, *(s + 1), *(s + 2), *(s + 3));
+                    s += 4;
+                  }
+                  printf(line_end);
+              }
           }
-      #endif
+#endif
       }
 
 

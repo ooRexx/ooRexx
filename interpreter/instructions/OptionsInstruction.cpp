@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -76,22 +76,18 @@ void RexxInstructionOptions::execute(RexxActivation *context, ExpressionStack *s
 
 // NOTE:  processing is currently disabled, but if options are reenabled, the
 // processing framework is here.
-#if 0
+#ifdef _DEBUG
     // break up into an array of words
-    ArrayClass *words = stringValue->subWords(OREF_NULL, OREF_NULL)l
+    ArrayClass *words = stringValue->subWords(OREF_NULL, OREF_NULL);
     size_t wordCount = words->size();
 
     for (size_t i = 1; i <= wordCount ;i++)
     {
         RexxString *word = (RexxString *)words->get(i);
-
-#ifdef _DEBUG
         if (word->strCaselessCompare("DUMPMEMORY"))
         {
-            memoryObject.dumpEnable = true;
-            memoryObject.dump();
+            memoryObject.dumpImageStats();
         }
-#endif
     }
 #endif
     context->pauseInstruction();

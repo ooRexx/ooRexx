@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -93,8 +93,8 @@ void MemoryStats::printSavedImageStats()
 /* Function:  Print out accumulated image statistics                          */
 /******************************************************************************/
 {
-    printf("    ObjectTypeNum         Total Objects       TotalBytes\n");
-    printf("    =============         ==============      ==========\n");
+    printf("    ObjectTypeNum         Total Objects       TotalBytes" line_end);
+    printf("    =============         ==============      ==========" line_end);
 
     for (int i = 0; i <= T_Last_Class_Type; i++)
     {
@@ -108,10 +108,10 @@ void MemoryStats::printMemoryStats()
 /* Function:  Print out statistics for a memory snapshot                      */
 /******************************************************************************/
 {
-    printf("All Objects in Object Memory, by allocation type\n\n");
+    printf("All Objects in Object Memory, by allocation type" line_end line_end);
 
-    printf("    ObjectTypeNum         Total Objects       TotalBytes\n");
-    printf("    =============         ==============      ==========\n");
+    printf("    ObjectTypeNum         Total Objects       TotalBytes" line_end);
+    printf("    =============         ==============      ==========" line_end);
     int i;
 
     for (i = 0; i <= T_Last_Class_Type; i++)
@@ -119,7 +119,7 @@ void MemoryStats::printMemoryStats()
         objectStats[i].printStats(i);
     }
 
-    printf("\nSegment set allocation statistics\n\n");
+    printf(line_end "Segment set allocation statistics" line_end line_end);
 
     normalStats.printStats();
     largeStats.printStats();
@@ -131,10 +131,10 @@ void SegmentStats::printStats()
 /* Function:  Print out statistics for a segment set snapshot                 */
 /******************************************************************************/
 {
-  printf("\n\n %s:  Total bytes %zu in %zu segments \n", name, totalBytes, count);
-  printf("Largest segment is %zu bytes, smallest is %zu bytes\n", largestSegment, smallestSegment);
-  printf("Total Live objects %zu, using %zu bytes\n", liveObjects, liveBytes);
-  printf("Total Dead objects %zu, using %zu bytes\n\n", deadObjects, deadBytes);
+  printf("%s:  Total bytes %zu in %zu segments " line_end, name, totalBytes, count);
+  printf("Largest segment is %zu bytes, smallest is %zu bytes" line_end, largestSegment, smallestSegment);
+  printf("Total Live objects %zu, using %zu bytes" line_end, liveObjects, liveBytes);
+  printf("Total Dead objects %zu, using %zu bytes" line_end line_end, deadObjects, deadBytes);
 }
 
 
@@ -143,7 +143,10 @@ void ObjectStats::printStats(int type)
 /* Function:  Print out accumulated statistics for an individual objec type   */
 /******************************************************************************/
 {
-    printf("    %3d                     %8zu            %8zu  \n", type, count, size);
+    if (count > 0 || size > 0)
+    {
+        printf("    %3d                     %8zu            %8zu  " line_end, type, count, size);
+    }
 }
 
 

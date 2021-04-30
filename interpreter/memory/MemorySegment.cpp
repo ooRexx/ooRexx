@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -996,7 +996,7 @@ void MemorySegmentSet::sweepSingleSegment(MemorySegment *sweepSegment)
         {
             // Get size of object for stats and do validation if in debug mode
             size_t bytes = objectPtr->getObjectSize();
-            validateObject(bytes);
+            validateObject(bytes, objectPtr);
             // update our live object counters
             liveObjectBytes += bytes;
             sweepSegment->liveObjects++;
@@ -1010,7 +1010,7 @@ void MemorySegmentSet::sweepSingleSegment(MemorySegment *sweepSegment)
         {
             // get the size of the first object and validate things if in debug mode.
             size_t deadLength = objectPtr->getObjectSize();
-            validateObject(deadLength);
+            validateObject(deadLength, objectPtr);
 
             // now scan forward to sweep up as many dead objects as we can.
             RexxInternalObject *nextObjectPtr = objectPtr->nextObject();
@@ -1019,7 +1019,7 @@ void MemorySegmentSet::sweepSingleSegment(MemorySegment *sweepSegment)
             {
                 // get the size and add to the accumulator
                 size_t bytes = nextObjectPtr->getObjectSize();
-                validateObject(bytes);
+                validateObject(bytes, nextObjectPtr);
                 deadLength += bytes;
             }
             // add this value to the accumulators we use to make
