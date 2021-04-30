@@ -720,7 +720,7 @@ bool NumberString::doubleValue(double &result)
     // hack: should the current locale not have the dot as decimal radix, we
     // replace any dot with the current locale radix before conversion.
 
-    char localeRadix = localeconv()->decimal_point;
+    char localeRadix = *localeconv()->decimal_point;
 
     // if the current locale uses a dot as radix, just do a straight conversion
     // (very common)

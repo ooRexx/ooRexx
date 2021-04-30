@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -2227,7 +2227,6 @@ RexxObject *RexxObject::run(RexxObject **arguments, size_t argCount)
     requiredArgument(methobj, "method");
     // make sure we have a method object, including creating one from source if necessary
     methobj = MethodClass::newMethodObject(GlobalNames::RUN, (RexxObject *)methobj, (RexxClass *)TheNilObject, "method");
-    Protected<ArrayClass> argList;
 
     // if we have arguments, decode how we are supposed to handle method arguments.
     if (argCount > 1)
