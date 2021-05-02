@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -75,7 +75,7 @@
 
 #define PROG_DESC "REXX mathematical function library"
 #define PROG_VERS "1.1"
-#define PROG_COPY "Copyright (c) 2005-2017 Rexx Language Association."
+#define PROG_COPY "Copyright (c) 2005-2021 Rexx Language Association."
 #define PROG_ALRR "All rights reserved."
 
 /*------------------------------------------------------------------
