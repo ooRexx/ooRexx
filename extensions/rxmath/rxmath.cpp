@@ -66,15 +66,11 @@
 *                                                                     *
 **********************************************************************/
 
-#include <errno.h>
-
 /*------------------------------------------------------------------
  * program defines
  *------------------------------------------------------------------*/
-
-
 #define PROG_DESC "REXX mathematical function library"
-#define PROG_VERS "1.1"
+#define PROG_VERS "1.2"
 #define PROG_COPY "Copyright (c) 2005-2021 Rexx Language Association."
 #define PROG_ALRR "All rights reserved."
 
@@ -84,11 +80,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
 #include <ctype.h>
-
 #include <math.h>
-#include <fcntl.h>
 
 /*------------------------------------------------------------------
  * rexx includes
@@ -357,29 +350,14 @@ protected:
 };
 
 
-/* Helper functions **************************************************/
+/*
+We no longer use matherr()
+We can't on Windows (https://docs.microsoft.com/en-us/cpp/c-runtime-library/reference/matherr)
+"you cannot replace the default _matherr routine in a DLL client of the CRT DLL"
 
-/*************************************************************************
-* Function:  matherr                                                     *
-*                                                                        *
-* Syntax:    matherr is called by the system if exist whenever  a mathe  *
-*            matical function fails.                                     *
-*                                                                        *
-* Return:    NO_UTIL_ERROR - Successful.                                 *
-*************************************************************************/
-#ifdef WIN32
-int _cdecl _matherr(struct _exception *x )
-#elif OPSYS_SUN
-int matherr(struct __math_exception *x)    /* return string            */
-#elif OPSYS_AIX
-int matherr(struct __exception *x)         /* return string            */
-#endif
-#if defined(WIN32) || defined(OPSYS_SUN) || defined(OPSYS_AIX)
-{
-    // we'll just swallow this and allow nans to be generated
-    return(1);
-}
-#endif
+On Linux matherr() is "marked as obsolete.  Since glibc 2.27, the mechanism has
+been removed altogether"
+*/
 
 /*************************************************************************
 * Function:  MathLoadFuncs                                               *
@@ -459,6 +437,12 @@ RexxRoutine2(RexxObjectPtr, RxCalcLog, double, x, OPTIONAL_uint32_t, precision)
 {
     NumericFormatter formatter(context, argumentExists(2), precision);
 
+    // on SunOS/Solaris/OpenIndiana log(-1) returns -infinity, not nan
+    // we manually check here for a valid domain
+    if (x < -1.0)
+    {
+        return formatter.format(nan(""));
+    }
     // calculate and return
     return formatter.format(log(x));
 }
@@ -467,6 +451,12 @@ RexxRoutine2(RexxObjectPtr, RxCalcLog10, double, x, OPTIONAL_uint32_t, precision
 {
     NumericFormatter formatter(context, argumentExists(2), precision);
 
+    // on SunOS/Solaris/OpenIndiana log10(-1) returns -infinity, not nan
+    // we manually check here for a valid domain
+    if (x < -1.0)
+    {
+        return formatter.format(nan(""));
+    }
     // calculate and return
     return formatter.format(log10(x));
 }
@@ -599,6 +589,14 @@ RexxRoutine1(RexxObjectPtr, RxCalcPi, OPTIONAL_uint32_t, precision)
 RexxRoutine3(RexxObjectPtr, RxCalcArcSin, double, x, OPTIONAL_uint32_t, precision, OPTIONAL_CSTRING, units)
 {
     TrigFormatter formatter(context, argumentExists(2), precision, units);
+
+    // on SunOS/Solaris/OpenIndiana asin(2) returns 0, not nan
+    // https://docs.oracle.com/cd/E36784_01/html/E36877/matherr-3m.html
+    // we manually check here for a valid domain
+    if (x < -1.0 || x > 1.0)
+    {
+        return formatter.format(nan(""));
+    }
     // calculate and return
     return formatter.evaluateArc(x, ARCSINE);
 }
@@ -607,6 +605,14 @@ RexxRoutine3(RexxObjectPtr, RxCalcArcSin, double, x, OPTIONAL_uint32_t, precisio
 RexxRoutine3(RexxObjectPtr, RxCalcArcCos, double, x, OPTIONAL_uint32_t, precision, OPTIONAL_CSTRING, units)
 {
     TrigFormatter formatter(context, argumentExists(2), precision, units);
+
+    // on SunOS/Solaris/OpenIndiana acos(2) returns 0, not nan
+    // https://docs.oracle.com/cd/E36784_01/html/E36877/matherr-3m.html
+    // we manually check here for a valid domain
+    if (x < -1.0 || x > 1.0)
+    {
+        return formatter.format(nan(""));
+    }
     // calculate and return
     return formatter.evaluateArc(x, ARCCOSINE);
 }
