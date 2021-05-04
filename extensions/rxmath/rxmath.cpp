@@ -439,7 +439,7 @@ RexxRoutine2(RexxObjectPtr, RxCalcLog, double, x, OPTIONAL_uint32_t, precision)
 
     // on SunOS/Solaris/OpenIndiana log(-1) returns -infinity, not nan
     // we manually check here for a valid domain
-    if (x < -1.0)
+    if (x < 0.0)
     {
         return formatter.format(nan(""));
     }
@@ -453,7 +453,7 @@ RexxRoutine2(RexxObjectPtr, RxCalcLog10, double, x, OPTIONAL_uint32_t, precision
 
     // on SunOS/Solaris/OpenIndiana log10(-1) returns -infinity, not nan
     // we manually check here for a valid domain
-    if (x < -1.0)
+    if (x < 0.0)
     {
         return formatter.format(nan(""));
     }
