@@ -339,7 +339,7 @@ else ()
             -DORX_SHARED_LIBRARY_EXT="${CMAKE_SHARED_LIBRARY_SUFFIX}"
             -DORX_REXXPATH="${CMAKE_REXXPATH}"
             -D${ORX_SYS_STR} -DOPSYS_${ORX_SYS_STR} -DHAVE_CONFIG_H)
-    set (ORX_SYSLIB_DL dl)
+    set (ORX_SYSLIB_DL ${CMAKE_DL_LIBS})
     set (ORX_SYSLIB_PTHREAD pthread)
 endif ()
 
@@ -364,6 +364,7 @@ if (NOT WIN32)
   check_include_file(filehdr.h HAVE_FILEHDR_H)
   check_function_exists(getpwuid HAVE_GETPWUID)
   check_function_exists(IDtouser HAVE_IDTOUSER)
+  check_function_exists(euidaccess HAVE_EUIDACCESS)
   find_library(HAVE_LIBPTHREAD pthread)
   find_library(HAVE_LIBRT rt)
   check_include_file(nl_types.h HAVE_NL_TYPES_H)
@@ -387,7 +388,7 @@ if (NOT WIN32)
                            return 0;}"
                           HAVE_PTHREAD_MUTEX_RECURSIVE)
   # this requires -ldl on the link
-  set(CMAKE_REQUIRED_LIBRARIES dl)
+  set(CMAKE_REQUIRED_LIBRARIES ${CMAKE_DL_LIBS})
   check_c_source_compiles("#include <dlfcn.h>
                            int main(int arg, char **argv) {
                            Dl_info DlInfo;

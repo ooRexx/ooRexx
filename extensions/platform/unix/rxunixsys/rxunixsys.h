@@ -56,6 +56,7 @@
 #include <grp.h>
 #include <time.h>
 #include <netdb.h>
+#include <arpa/inet.h>
 #ifdef HAVE_WORDEXP_H
 #include <wordexp.h>
 #endif
@@ -77,7 +78,6 @@
 
 #if defined(__APPLE__)
 # define stat64 stat
-# define HOST_NAME_MAX _POSIX_HOST_NAME_MAX
 
 // on DARWIN the xattr functions have additional arguments
 // ssize_t getxattr(const char *path, const char *name, void *value, size_t size, u_int32_t position, int options);
@@ -95,7 +95,11 @@
 #define ListXattr listxattr
 #endif
 
-#ifdef __sun
+#if defined(OPSYS_NETBSD) || defined(OPSYS_FREEBSD) || defined(OPSYS_OPENBSD)
+#define stat64 stat
+#endif
+
+#if !defined(HOST_NAME_MAX) && defined(_POSIX_HOST_NAME_MAX)
 # define HOST_NAME_MAX _POSIX_HOST_NAME_MAX
 #endif
 

@@ -9,6 +9,9 @@
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #cmakedefine HAVE_DLFCN_H
 
+/* Define to 1 if you have the 'euidaccess' function. */
+#cmakedefine HAVE_EUIDACCESS
+
 /* Define to 1 if you have the <features.h> header file. */
 #cmakedefine HAVE_FEATURES_H
 

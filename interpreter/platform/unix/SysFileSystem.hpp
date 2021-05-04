@@ -53,7 +53,7 @@
 #include <sys/stat.h>
 
 
-#if defined __APPLE__
+#if defined (__APPLE__) || defined(OPSYS_NETBSD) || defined(OPSYS_FREEBSD) || defined(OPSYS_OPENBSD)
 // avoid warning: '(f)stat64' is deprecated: first deprecated in macOS 10.6
 #define stat64 stat
 #define fstat64 fstat
