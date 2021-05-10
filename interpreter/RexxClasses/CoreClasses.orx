@@ -4194,3 +4194,21 @@ nomethod:
   -- this is equivalent of ">>="
   forward message(">>=")
 
+
+/** This metaclass makes sure that only a single instance of a class can be created,
+*   a "singleton". After a singleton got created each time a NEW message gets sent
+*   to the class will cause that singleton to be returned. The Singleton metaclass
+*   makes sure that the singleton object will return itself upon receiving the COPY
+*   message.
+*/
+::class "Singleton" mixinclass class public
+
+::method new            -- create a new instance
+  expose s              -- attribute to hold singleton
+  if var("S")=.false then  -- not yet created?
+  do
+     self~define("COPY", "return self")   -- make sure COPY returns singleton as well
+     forward class (super) continue       -- let the superclass create the instance
+     s=result           -- fetch & save the returned instance
+  end
+  return s              -- return singleton instance

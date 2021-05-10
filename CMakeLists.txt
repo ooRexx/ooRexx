@@ -1668,7 +1668,6 @@ copy_build_file(smtp.cls         ${build_extensions_rxsock_dir})
 copy_samples_file(complex.cls       ${build_samples_dir})
 copy_samples_file(pipe.cls          ${build_samples_dir})
 copy_samples_file(semcls.cls        ${build_samples_dir})
-copy_samples_file(singleton.cls     ${build_samples_dir})
 copy_samples_file(treeDirectory.cls ${build_samples_dir})
 copy_samples_file(jabberwocky.txt   ${build_samples_dir})
 
@@ -1723,7 +1722,6 @@ add_custom_target(class_files ALL DEPENDS
     ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/complex.cls
     ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/pipe.cls
     ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/semcls.cls
-    ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/singleton.cls
     ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/treeDirectory.cls
     ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/jabberwocky.txt
 
@@ -1789,7 +1787,6 @@ install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/usetree.rex COMPONENT Samples
 install(PROGRAMS ${SAMPLES_SOURCE}/complex.cls COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 install(PROGRAMS ${SAMPLES_SOURCE}/pipe.cls COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 install(PROGRAMS ${SAMPLES_SOURCE}/semcls.cls COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
-install(PROGRAMS ${SAMPLES_SOURCE}/singleton.cls COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 install(PROGRAMS ${SAMPLES_SOURCE}/treeDirectory.cls COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 
 

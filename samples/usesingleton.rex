@@ -1,8 +1,7 @@
 #!@OOREXX_SHEBANG_PROGRAM@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -38,28 +37,44 @@
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
 /*  Description:                                                              */
-/*  usesingleton.rex demonstrates how to use the singleton class              */
+/*  usesingleton.rex demonstrates how to use the Singleton class              */
 /******************************************************************************/
 
-o1=.singletonExample~new   /* create an instance                              */
-say "o1~createtime:" o1~createtime "o1~identityHash:" o1~identityHash
+do clz over .test, .testSingleton   -- iterate over the two classes
+   rounds=3
+   say "creating" rounds "objects of type:" clz
+   do i=1 to rounds
+      say "   round #" i":" clz~new -- create new instance
+   end
+   say
+end
 
-call syssleep .1           /* make sure 1/10 second passes by                 */
-o2=.singletonExample~new   /* create another instance                */
+/* ========================================================================= */
+/** This Test class counts the number of instances that get created for it.  */
+::class Test
+/* ------------- class method and class attribute definitions -------------- */
+::method init class  -- class constructor
+  expose counter
+  counter=0          -- make sure attribute is initialized to 0
 
-say "o2~createtime:" o2~createtime "o2~identityHash:" o2~identityHash
-say "o1==o2?" (o1==o2)     /* are both objects identical (the same) object?   */
+::attribute counter get private class  -- getter method that increases counter
+  expose counter     -- access attribute
+  counter+=1         -- increase counter by 1
+  return counter     -- return new counter value
+/* ------------- instance method and instance attribute definitions -------- */
+::attribute nr get   -- getter method
 
-::requires "singleton.cls" /* get access to the public metaclass singleton    */
+::method init        -- constructor that sets the value of attribute nr
+  expose nr          -- expose attribute
+  nr=self~class~counter -- new instance: fetch new counter from class and save it
 
-/* ========================================================================== */
-::class singletonExample metaclass singleton /* use the singleton metaclass   */
-/* ========================================================================== */
-/* instance methods to verify it works */
-/* ========================================================================== */
-::attribute createtime
-/* -------------------------------------------------------------------------- */
-::method init              /* constructor method                              */
-   expose createTime
-   createTime=.dateTime~new
-   say "init running at" createTime "for new object:" self~identityHash
+::method makestring  -- a string representation of the object
+  expose nr          -- expose attribute
+                     -- return a string representation
+  return "a" self~class~id"[nr="nr",identityHash="self~identityHash"]"
+
+/* ========================================================================= */
+/** This class makes sure that only a single instance of it gets created by
+*   using Singleton as its metaclass.
+*/
+::class TestSingleton subclass Test metaclass Singleton
