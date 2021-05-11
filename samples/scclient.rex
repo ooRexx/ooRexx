@@ -1,9 +1,7 @@
 #!@OOREXX_SHEBANG_PROGRAM@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Description: Simple socket client using socket class                       */
-/*                                                                            */
-/* Copyright (c) 2007-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2007-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -36,9 +34,9 @@
 /* NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS         */
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
-/* Author: David Ruggles                                                      */
-/*                                                                            */
 /*----------------------------------------------------------------------------*/
+
+/* A simple socket client using the Socket class                              */
 
 /*  instantiate an instance of the socket class  */
     sock = .socket~new()
@@ -69,10 +67,7 @@
     /*  get message from server  */
         ret = sock~recv(1024)
         if ret = .nil then do
-            if sock~errno() < 0 then
-                say 'Recv failed:' sock~errno
-            else
-                say 'Socket closed:' sock~errno
+            say 'Recv failed:' sock~errno
             leave
         end
         say 'Server responded:' ret

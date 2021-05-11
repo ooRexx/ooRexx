@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -336,18 +336,17 @@ RexxRoutine0(RexxStringObject, SockGetHostId)
 {
     in_addr ia;
 #ifdef WIN32
-    char     pszBuff[64];                    // buffer for ip address
+    char     pszBuff[256];                   // hostnames should be 255 chars or less
     PHOSTENT pHostEnt;                       // ptr to hostent structure
-    /*
-     *   Retrieve my ip address.  Assuming the hosts file in
-     *   in %systemroot%/system/drivers/etc/hosts contains my computer name.
-     */                                      //get our name
+
+    // get our local hostname
     if (gethostname(pszBuff, sizeof(pszBuff)))
     {
         // set the errno information
         cleanup(context);
         return context->String("0.0.0.0");
     }
+    pszBuff[255] = '\0';                     // belt and braces
     pHostEnt = gethostbyname(pszBuff);       // get our ip address
     if (!pHostEnt)
     {
@@ -361,17 +360,18 @@ RexxRoutine0(RexxStringObject, SockGetHostId)
 #if defined(OPSYS_AIX) || defined(OPSYS_LINUX)
 #define h_addr h_addr_list[0]
 
-    char     pszBuff[64];                    /* buffer for ip address*/
-    struct hostent * pHostEnt;               /* ptr to hostent structure*/
+    char   pszBuff[256];                     // hostnames should be 255 chars or less
+    struct hostent *pHostEnt;                // ptr to hostent structure
 
-    /*get our name*/
+    // get our local hostname
     if (gethostname(pszBuff, sizeof(pszBuff)))
     {
         // set the errno information
         cleanup(context);
         return context->String("0.0.0.0");
     }
-    pHostEnt = gethostbyname(pszBuff);     /* get our ip address */
+    pszBuff[255] = '\0';                     // belt and braces
+    pHostEnt = gethostbyname(pszBuff);       // get our ip address
     // set the errno information
     cleanup(context);
     if (!pHostEnt)
@@ -397,14 +397,11 @@ RexxRoutine0(RexxStringObject, SockGetHostId)
  *------------------------------------------------------------------*/
 RexxRoutine0(RexxStringObject, SockGetHostName)
 {
-    char pszBuff[256];             /* host names are limited to 255 bytes */
+    char pszBuff[256];             // host names should be 255 chars or less
     *pszBuff = '\0';
 
-    /*
-     *   Assuming the hosts file in
-     *   in %systemroot%/system/drivers/etc/hosts contains my computer name.
-     */
     int rc = gethostname(pszBuff, sizeof(pszBuff));
+    pszBuff[255] = '\0';           // belt and braces
 
     // set the errno information
     cleanup(context);

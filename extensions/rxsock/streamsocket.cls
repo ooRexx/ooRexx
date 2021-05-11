@@ -1,8 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Description: Simple classes to encalsulate stream sockets.                 */
-/*                                                                            */
-/* Copyright (c) 2007-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2007-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -35,10 +33,7 @@
 /* NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS         */
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
-/* Author: W. David Ashley                                                    */
-/*                                                                            */
 /*----------------------------------------------------------------------------*/
-
 
 ::requires 'socket.cls'
 
@@ -54,13 +49,6 @@
 /*----------------------------------------------------------------------------*/
 /*----------------------------------------------------------------------------*/
 /* Class: StreamSocket                                                        */
-/*        Class methods                                                       */
-/*----------------------------------------------------------------------------*/
-/*----------------------------------------------------------------------------*/
-
-/*----------------------------------------------------------------------------*/
-/*----------------------------------------------------------------------------*/
-/* Class: StreamSocket                                                        */
 /*        Private methods                                                     */
 /*----------------------------------------------------------------------------*/
 /*----------------------------------------------------------------------------*/
@@ -69,8 +57,8 @@
 ::method port     attribute private -- the host port
 ::method s        attribute private -- the socket instance
 ::method opened   attribute private -- open flag
-::method rcvbuf   attribute private -- the recieve buffer
-::method bufsize  attribute private -- the recieve buffer size
+::method rcvbuf   attribute private -- the receive buffer
+::method bufsize  attribute private -- the receive buffer size
 
 /*----------------------------------------------------------------------------*/
 /* Method: Read                                                               */
@@ -229,7 +217,7 @@ return (state || ':' description)~strip()
 /* Arguments:                                                                 */
 /*         host    - the hostname or ip address                               */
 /*         port    - the port number                                          */
-/*         bufsize - (optional) the recieve buffer size                       */
+/*         bufsize - (optional) the receive buffer size                       */
 /*----------------------------------------------------------------------------*/
 
 ::method init
@@ -248,11 +236,10 @@ else do
    use strict arg hostname, port, bufsize = 4096
    opened = .false
    s = .Socket~new('AF_INET', 'SOCK_STREAM', 0)
-   if s~errno <> '' then do
+   if s~errno <> "0" then do
       state = 'ERROR'
       description = s~errno
-      raise error 5 array('Socket') return
-      return
+      raise syntax 5.900 array("System resources exhausted: Socket" description) return
       end
    end
 rcvbuf = .mutablebuffer~new(, bufsize)
