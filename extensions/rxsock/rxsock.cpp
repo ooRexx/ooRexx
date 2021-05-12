@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -450,11 +450,22 @@ int stringToSockOpt(const char * pszOptName)
 /*------------------------------------------------------------------
  * set errno
  *------------------------------------------------------------------*/
-void setErrno(RexxCallContext *context)
+void setErrno(RexxCallContext *context, bool noError)
 {
     char szBuff[20];
     const char *pszErrno = szBuff;
     int   theErrno;
+
+    // h_errno is obsolete, but we still set it to 0
+    RexxStringObject zero = context->String("0");
+    context->SetContextVariable("h_errno", zero);
+
+    // if the function succeeded, errno has no meaning
+    if (noError)
+    {
+        context->SetContextVariable("errno", zero);
+        return;
+    }
 
 #if defined(WIN32)
     theErrno = WSAGetLastError();
@@ -465,12 +476,12 @@ void setErrno(RexxCallContext *context)
     switch (theErrno)
     {
 #ifdef WIN32
-        case WSAEINTR              : pszErrno = "EINTR";                break;
-        case WSAEBADF              : pszErrno = "EBADF";                break;
-        case WSAEACCES             : pszErrno = "EACCES";               break;
-        case WSAEFAULT             : pszErrno = "EFAULT";               break;
-        case WSAEINVAL             : pszErrno = "EINVAL";               break;
-        case WSAEMFILE             : pszErrno = "EMFILE";               break;
+        case WSAEINTR           : pszErrno = "EINTR";                break;
+        case WSAEBADF           : pszErrno = "EBADF";                break;
+        case WSAEACCES          : pszErrno = "EACCES";               break;
+        case WSAEFAULT          : pszErrno = "EFAULT";               break;
+        case WSAEINVAL          : pszErrno = "EINVAL";               break;
+        case WSAEMFILE          : pszErrno = "EMFILE";               break;
         case WSAEWOULDBLOCK     : pszErrno = "EWOULDBLOCK";          break;
         case WSAEINPROGRESS     : pszErrno = "EINPROGRESS";          break;
         case WSAEALREADY        : pszErrno = "EALREADY";             break;
@@ -502,12 +513,12 @@ void setErrno(RexxCallContext *context)
         case WSAENAMETOOLONG    : pszErrno = "ENAMETOOLONG";         break;
         case WSAEHOSTDOWN       : pszErrno = "EHOSTDOWN";            break;
         case WSAEHOSTUNREACH    : pszErrno = "EHOSTUNREACH";         break;
-        case WSASYSNOTREADY               : pszErrno = "WSASYSNOTREADY";       break;
-        case WSAVERNOTSUPPORTED   : pszErrno = "WSASAVERNOTSUPPORTED"; break;
-        case WSANOTINITIALISED    : pszErrno = "WSANOTINITIALISED";    break;
+        case WSASYSNOTREADY     : pszErrno = "WSASYSNOTREADY";       break;
+        case WSAVERNOTSUPPORTED : pszErrno = "WSASAVERNOTSUPPORTED"; break;
+        case WSANOTINITIALISED  : pszErrno = "WSANOTINITIALISED";    break;
         case WSAHOST_NOT_FOUND  : pszErrno = "HOST_NOT_FOUND";       break;
-        case WSATRY_AGAIN       : pszErrno = "TRY_AGAIN";           break;
-        case WSANO_RECOVERY          : pszErrno = "NO_RECOVERY";          break;
+        case WSATRY_AGAIN       : pszErrno = "TRY_AGAIN";            break;
+        case WSANO_RECOVERY     : pszErrno = "NO_RECOVERY";          break;
         case WSANO_DATA         : pszErrno = "NO_DATA";              break;
 #else
 
@@ -551,36 +562,6 @@ void setErrno(RexxCallContext *context)
     context->SetContextVariable("errno", context->String(pszErrno));
 }
 
-
-/*------------------------------------------------------------------
- * set h_errno
- *------------------------------------------------------------------*/
-void setH_Errno(RexxCallContext *context)
-{
-    char szBuff[10];
-    const char *pszErrno = szBuff;
-    int   theErrno = 0;
-
-    // The code that was here previous to version 5.0 was completely bogus.
-    // There used to be calls to the herrno and hstrerrno functions here but
-    // those functions have been obsolete for a long time.
-    //
-    // To correct the bug of always setting the h_errno Rexx variable to 1514
-    // unconditionally (thus always returning an error) we will now set it to zero.
-
-    sprintf(szBuff,"%d",theErrno);
-    context->SetContextVariable("h_errno", context->String(pszErrno));
-}
-
-
-/*------------------------------------------------------------------
- * set the error variables at function cleanup.
- *------------------------------------------------------------------*/
-void cleanup(RexxCallContext *context)
-{
-    setErrno(context);
-    setH_Errno(context);
-}
 
 /*-/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\-*/
 /*-\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/-*/

@@ -143,7 +143,7 @@ RexxRoutine2(int, SockAccept, int, sock, OPTIONAL_RexxObjectPtr, stemSource)
     int rc = (int)accept(sock, (struct sockaddr *)&addr, &nameLen);
 
     // set the errno variables
-    cleanup(context);
+    setErrno(context, rc >= 0);
 
     /*---------------------------------------------------------------
      * set addr, if asked for
@@ -190,7 +190,7 @@ RexxRoutine2(int, SockBind, int, sock, RexxObjectPtr, stemSource)
      *---------------------------------------------------------------*/
     int rc = bind(sock, (struct sockaddr *)&addr, sizeof(addr));
     // make sure the errno variables are set
-    cleanup(context);
+    setErrno(context, rc >= 0);
     return rc;
 }
 
@@ -212,7 +212,7 @@ RexxRoutine1(int, SockClose, int, sock)
     int rc = close(sock);
 #endif
     // set the errno information
-    cleanup(context);
+    setErrno(context, rc >= 0);
 
     return rc;
 }
@@ -244,7 +244,7 @@ RexxRoutine2(int, SockConnect, int, sock, RexxObjectPtr, stemSource)
      *---------------------------------------------------------------*/
     int rc = connect(sock,(struct sockaddr *)&addr, sizeof(addr));
     // set the errno information
-    cleanup(context);
+    setErrno(context, rc >= 0);
 
     return rc;
 }
@@ -279,7 +279,7 @@ RexxRoutine3(int, SockGetHostByAddr, CSTRING, addrArg, RexxObjectPtr, stemSource
      *---------------------------------------------------------------*/
     pHostEnt = gethostbyaddr((char*)&addr, sizeof(addr), domain);
     // set the errno information
-    cleanup(context);
+    setErrno(context, pHostEnt != NULL);
 
     if (!pHostEnt)
     {
@@ -313,7 +313,7 @@ RexxRoutine2(int, SockGetHostByName, CSTRING, name, RexxObjectPtr, stemSource)
      *---------------------------------------------------------------*/
     pHostEnt = gethostbyname(name);
     // set the errno information
-    cleanup(context);
+    setErrno(context, pHostEnt != NULL);
 
     if (!pHostEnt)
     {
@@ -343,7 +343,7 @@ RexxRoutine0(RexxStringObject, SockGetHostId)
     if (gethostname(pszBuff, sizeof(pszBuff)))
     {
         // set the errno information
-        cleanup(context);
+        setErrno(context, false);
         return context->String("0.0.0.0");
     }
     pszBuff[255] = '\0';                     // belt and braces
@@ -351,7 +351,7 @@ RexxRoutine0(RexxStringObject, SockGetHostId)
     if (!pHostEnt)
     {
         // set the errno information
-        cleanup(context);
+        setErrno(context, false);
         return context->String("0.0.0.0");
     }
     ia.s_addr = (*(uint32_t *)pHostEnt->h_addr);// in network byte order already
@@ -367,15 +367,15 @@ RexxRoutine0(RexxStringObject, SockGetHostId)
     if (gethostname(pszBuff, sizeof(pszBuff)))
     {
         // set the errno information
-        cleanup(context);
+        setErrno(context, false);
         return context->String("0.0.0.0");
     }
     pszBuff[255] = '\0';                     // belt and braces
     pHostEnt = gethostbyname(pszBuff);       // get our ip address
     // set the errno information
-    cleanup(context);
     if (!pHostEnt)
     {
+        setErrno(context, false);
         return context->String("0.0.0.0");
     }
     ia.s_addr = (*(uint32_t *)pHostEnt->h_addr);// in network byte order already
@@ -383,7 +383,7 @@ RexxRoutine0(RexxStringObject, SockGetHostId)
 #else
     ia.s_addr = htonl(gethostid());
     // set the errno information
-    cleanup(context);
+    setErrno(context, true);
     return context->String(inet_ntoa(ia));
 #endif
 #endif
@@ -404,7 +404,7 @@ RexxRoutine0(RexxStringObject, SockGetHostName)
     pszBuff[255] = '\0';           // belt and braces
 
     // set the errno information
-    cleanup(context);
+    setErrno(context, rc >= 0);
 
     return context->String(pszBuff);
 }
@@ -433,7 +433,7 @@ RexxRoutine2(int, SockGetPeerName, int, sock, RexxObjectPtr, stemSource)
     int rc = getpeername(sock,(struct sockaddr *)&addr,&nameLen);
 
     // set the errno information
-    cleanup(context);
+    setErrno(context, rc >= 0);
 
     /*---------------------------------------------------------------
      * write address to stem
@@ -469,7 +469,7 @@ RexxRoutine2(int, SockGetSockName, int, sock, RexxObjectPtr, stemSource)
     nameLen = sizeof(addr);
     int rc = getsockname(sock,(struct sockaddr *)&addr,&nameLen);
     // set the errno information
-    cleanup(context);
+    setErrno(context, rc >= 0);
 
     /*---------------------------------------------------------------
      * write address to stem
@@ -530,7 +530,7 @@ RexxRoutine4(int, SockGetSockOpt, int, sock, CSTRING, level, CSTRING, option, CS
     int rc = getsockopt(sock,SOL_SOCKET,opt,(char *)ptr,&len);
 
     // set the errno information
-    cleanup(context);
+    setErrno(context, rc >= 0);
 
     /*---------------------------------------------------------------
      * set return value
@@ -609,7 +609,7 @@ RexxRoutine3(int, SockIoctl, int, sock, CSTRING, command, RexxObjectPtr, var)
 #endif
 
     // set the errno information
-    cleanup(context);
+    setErrno(context, rc >= 0);
 
     /*---------------------------------------------------------------
      * set output for FIONREAD
@@ -636,7 +636,7 @@ RexxRoutine2(int, SockListen, int, sock, int, backlog)
     int rc = listen(sock, backlog);
 
     // set the errno information
-    cleanup(context);
+    setErrno(context, rc >= 0);
     return rc;
 }
 
@@ -690,7 +690,7 @@ RexxRoutine4(int, SockRecv, int, sock, CSTRING, var, int, dataLen, OPTIONAL_CSTR
     rc = recv(sock, pBuffer, dataLen, flags);
 
     // set the errno information
-    cleanup(context);
+    setErrno(context, rc >= 0);
 
     if (-1 == rc)
     {
@@ -782,7 +782,7 @@ RexxRoutine5(int, SockRecvFrom, int, sock, CSTRING, var, int, dataLen, RexxObjec
     int rc = recvfrom(sock,pBuffer,dataLen,flags,(struct sockaddr *)&addr,&addr_size);
 
     // set the errno information
-    cleanup(context);
+    setErrno(context, rc >= 0);
 
     if (-1 == rc)
     {
@@ -919,7 +919,7 @@ RexxRoutine4(int, SockSelect, OPTIONAL_RexxObjectPtr, array1, OPTIONAL_RexxObjec
     rc = select(max+1,rSet,wSet,eSet,timeOutP);
 
     // set the errno information
-    cleanup(context);
+    setErrno(context, rc >= 0);
 
     /*---------------------------------------------------------------
      * fix up the socket arrays
@@ -1050,7 +1050,7 @@ RexxRoutine3(int, SockSend, int, sock, RexxStringObject, dataObj, OPTIONAL_CSTRI
     int rc = send(sock, data, (int)dataLen, flags);
 
     // set the errno information
-    cleanup(context);
+    setErrno(context, rc >= 0);
 
     /*---------------------------------------------------------------
      * set return code
@@ -1122,7 +1122,7 @@ RexxRoutine4(int, SockSendTo, int, sock, RexxStringObject, dataObj, RexxObjectPt
     int rc = sendto(sock, data, (int)dataLen, flags, (struct sockaddr *)&addr, sizeof(addr));
 
     // set the errno information
-    cleanup(context);
+    setErrno(context, rc >= 0);
 
     /*---------------------------------------------------------------
      * set return code
@@ -1196,7 +1196,7 @@ RexxRoutine4(int, SockSetSockOpt, int, sock, CSTRING, target, CSTRING, option, C
     int rc = setsockopt(sock,SOL_SOCKET,opt,(const char *)ptr,len);
 
     // set the errno information
-    cleanup(context);
+    setErrno(context, rc >= 0);
 
     /*---------------------------------------------------------------
      * set return code
@@ -1218,7 +1218,7 @@ RexxRoutine2(int, SockShutDown, int, sock, int, how)
     int rc = shutdown(sock, how);
 
     // set the errno information
-    cleanup(context);
+    setErrno(context, rc >= 0);
 
     /*---------------------------------------------------------------
      * set return code
@@ -1243,7 +1243,7 @@ RexxRoutine0(int, SockInit)
     int rc = 0;
 #endif
     // set the errno information
-    cleanup(context);
+    setErrno(context, rc == 0);
 
     /*---------------------------------------------------------------
      * set return code
@@ -1314,7 +1314,7 @@ RexxRoutine3(int, SockSocket, CSTRING, domainArg, CSTRING, typeArg, CSTRING, pro
     // (int) cast avoids C4244 on Windows 64-bit
     int rc = (int)socket(domain, type, protocol);
     // set the errno information
-    cleanup(context);
+    setErrno(context, rc >= 0);
 
     /*---------------------------------------------------------------
      * set return code

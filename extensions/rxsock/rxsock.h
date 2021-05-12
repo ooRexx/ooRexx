@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* https://www.oorexx.org/license.html                         */
+/* https://www.oorexx.org/license.html                                        */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -93,17 +93,7 @@ int stringToSockOpt(const char *pszOptName);
 /*------------------------------------------------------------------
  * set errno
  *------------------------------------------------------------------*/
-void setErrno(RexxCallContext *context);
-
-/*------------------------------------------------------------------
- * set h_errno
- *------------------------------------------------------------------*/
-void SetH_Errno(RexxCallContext *context);
-
-/*------------------------------------------------------------------
- * perform end-of-function processing (mostly setting error info
- *------------------------------------------------------------------*/
-void cleanup(RexxCallContext *context);
+void setErrno(RexxCallContext *context, bool noError);
 
 /*------------------------------------------------------------------
  * portable caseless compare function.
