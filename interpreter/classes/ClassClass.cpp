@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -547,7 +547,7 @@ RexxObject *RexxClass::defineMethodsRexx(RexxObject *newMethods)
 
 /**
  * Inherit the instance methods from another class definition.
- * This is not an true inherit operation where the class is part
+ * This is not a true inherit operation where the class is part
  * of the hierarchy.  This directly grabs the instance methods
  * defined directly by the other class and merges them into the
  * class method dictionary.  This is a special method that is
@@ -588,7 +588,7 @@ void RexxClass::inheritInstanceMethods(RexxClass *source)
 
 /**
  * Inherit the instance methods from another class definition.
- * This is not an true inherit operation where the class is part
+ * This is not a true inherit operation where the class is part
  * of the hierarchy.  This directly grabs the instance methods
  * defined directly by the other class and merges them into the
  * class method dictionary.  This is a special method that is
@@ -718,7 +718,7 @@ void RexxClass::buildFinalClassBehaviour()
     superClasses = new_array();
     // create the subclasses list
     subClasses = new_list();
-    // is this is not the object classs, we have superclass information to add
+    // if this is not the object class, we have superclass information to add
     if (this != TheObjectClass)
     {
         // The instance superclasses for all except OBJECT is OBJECT
@@ -779,7 +779,7 @@ void RexxClass::buildFinalClassBehaviour(RexxClass *superClass)
     setField(classMethodDictionary, getBehaviourDictionary());
     // The merge of the mdict's is order specific. By processing OBJECT
     // first then CLASS and then the rest of the subclassable classes
-    // the mdict's will be set up correctly.In this way merging the CLASS
+    // the mdict's will be set up correctly.  In this way merging the CLASS
     // behaviour will only be the CLASS instance methods when OBJECT is
     // processed, but will be CLASS's and OBJECT's after CLASS is
     // processed                          */
@@ -814,7 +814,7 @@ void RexxClass::buildFinalClassBehaviour(RexxClass *superClass)
  * @param method_object
  *               The associated method object.
  *
- * @return Aways returns nothing.
+ * @return Always returns nothing.
  */
 RexxObject *RexxClass::defineMethod(RexxString *method_name, RexxObject *methodSource)
 {
@@ -848,7 +848,7 @@ RexxObject *RexxClass::defineMethod(RexxString *method_name, RexxObject *methodS
         methodObject = MethodClass::newMethodObject(method_name, methodSource, this, "method");
     }
     // if we have a real method object, then the scope has already been set
-    // and alse check if this is an uninit method, which is a special case.
+    // and also check if this is an uninit method, which is a special case.
     if ((MethodClass *)TheNilObject != methodObject)
     {
         if (method_name->strCompare("UNINIT"))
@@ -909,7 +909,7 @@ void RexxClass::removeClassMethod(RexxString *method_name)
 
     // propagate to all subclasses
     ArrayClass *subclass_list = getSubClasses();
-    for (size_t i = 1; i < subclass_list->size(); i++)
+    for (size_t i = 1; i <= subclass_list->items(); i++)
     {
         ((RexxClass *)subclass_list->get(i))->removeClassMethod(method_name);
     }
@@ -1056,7 +1056,7 @@ void  RexxClass::updateSubClasses()
     // we're updated, now nudge each of our subclasses
     // to let them know they need to update too.
     Protected<ArrayClass> subClassList = getSubClasses();
-    for (size_t index = 1; index <= subClassList->size(); index++)
+    for (size_t index = 1; index <= subClassList->items(); index++)
     {
         // each of our subclasses will do the same thing we just did
         ((RexxClass *)subClassList->get(index))->updateSubClasses();
@@ -1079,7 +1079,7 @@ void RexxClass::updateInstanceSubClasses()
 
     // tell all of our subclasses to do this same step
     Protected<ArrayClass> subClassList = getSubClasses();
-    for (size_t index = 1; index <= subClassList->size(); index++)
+    for (size_t index = 1; index <= subClassList->items(); index++)
     {
         ((RexxClass *)subClassList->get(index))->updateInstanceSubClasses();
     }
@@ -1104,7 +1104,7 @@ void RexxClass::createClassBehaviour(RexxBehaviour *target_class_behaviour)
     {
         RexxClass *superclass = (RexxClass *)superClasses->get(index);
         // if there is a superclass and this hasn't been added into this
-        // behaviour yet, ask it to merge it's information into this.  We
+        // behaviour yet, ask it to merge its information into this.  We
         // can have dups when mixin classes are involved, since we inherit the
         // same baseClass chain from each mixin.
         if (!target_class_behaviour->hasScope(superclass))
@@ -1325,7 +1325,7 @@ RexxObject *RexxClass::inherit(RexxClass *mixin_class, RexxClass  *position)
         reportException(Error_Execution_baseclass, this, mixin_class, mixin_class->getBaseClass());
     }
 
-    // and also the instance class hiearchy (slight different because of metaclasses)
+    // and also the instance class hierarchy (slightly different because of metaclasses)
     if (!instanceBehaviour->hasScope(mixin_class->getBaseClass()))
     {
         reportException(Error_Execution_baseclass, this, mixin_class, mixin_class->getBaseClass());
@@ -1356,7 +1356,7 @@ RexxObject *RexxClass::inherit(RexxClass *mixin_class, RexxClass  *position)
     // tell the mixin class that it has a new subclass
     mixin_class->addSubClass(this);
 
-    // now we need to to rebuild the behaviour and also
+    // now we need to rebuild the behaviour and also
     // propagate the change to the subclasses.
     updateSubClasses();
 
@@ -1394,7 +1394,7 @@ RexxObject *RexxClass::uninherit(RexxClass  *mixin_class)
     }
 
     // this class must be a superclass of this class, but not the
-    // immeidate superclass.
+    // immediate superclass.
     size_t instance_index = superClasses->indexOf(mixin_class);
 
     // if good for both, go ahead and remove
@@ -1435,7 +1435,7 @@ void RexxClass::removeSubclass(RexxClass *c)
  * @param args     The array of arguments to the method.
  * @param argCount The count of method arguments.
  *
- * @return The inhanced object instance.
+ * @return The enhanced object instance.
  */
 RexxObject *RexxClass::enhanced(RexxObject **args, size_t argCount)
 {
@@ -1590,7 +1590,7 @@ RexxClass  *RexxClass::subclass(PackageClass *package, RexxString *class_id,
         new_class->metaClass = this;
     }
 
-    // set up the new_class behaviour to match the subclass reciever
+    // set up the new_class behaviour to match the subclass receiver
     new_class->instanceBehaviour->subclass(instanceBehaviour);
     // set this class as the superclass new class superclass list
     new_class->superClass = this;
@@ -1830,7 +1830,7 @@ RexxClass  *RexxClass::newRexx(RexxObject **args, size_t argCount)
     new_class->instanceBehaviour->addScope(TheObjectClass);
     // don't give access to this class' ovd's
     new_class->objectVariables = OREF_NULL;
-    // set the new class as it's own baseclass
+    // set the new class as its own baseclass
     new_class->baseClass = new_class;
     // clear the info area except for uninit
     new_class->setInitialFlagState();
@@ -1949,7 +1949,7 @@ void RexxClass::processNewArgs(RexxObject **arg_array, size_t argCount, RexxObje
 
 
 /**
- * Copy the instance method dicitionary for a class
+ * Copy the instance method dictionary for a class
  *
  * @return The array of all scopes
  */
