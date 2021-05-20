@@ -557,7 +557,7 @@ endif ()
 #/* Build targets                                                              */
 #/*----------------------------------------------------------------------------*/
 
-# 2019-01-04: macro to create and install symbolic links on Unix
+# macro to create and install symbolic links on Unix
 macro(create_install_symlink target)
    if (UNIX)   # checking for UNIX here simplifies invocation of this macro (no need to check operating system for the invoker)
       set(baseName   "${CMAKE_SHARED_LIBRARY_PREFIX}${target}")
@@ -1409,8 +1409,8 @@ if (WIN32)
    set (OOD_MINOR 2)
    set (OOD_MOD_LVL 4)
    set (OOD_BLD_LVL 11861)
-   set (OOD_VER_STR "4.2.4.11861")
-   set (OOD_COPY_YEAR "2005-2019")
+   set (OOD_VER_STR "4.2.4.12250")
+   set (OOD_COPY_YEAR "2005-2021")
 
    #################### ooshapes.dll ################
    # Sources for ooshapes.dll
@@ -2203,6 +2203,37 @@ if (BUILD_DEB)
    endif ()
    # The DEB generator does not support a multi-line description.
    set(CPACK_DEBIAN_PACKAGE_DESCRIPTION "Open Object Rexx is an object-oriented scripting language.")
+endif ()
+
+# Build for FREEBSD
+if (BUILD_FREEBSD)
+   set(CPACK_GENERATOR FREEBSD)
+   set(CPACK_FREEBSD_PACKAGE_NAME ooRexx)
+   if (DEFINED PROD)
+      set(CPACK_PACKAGE_RELEASE 1)
+   else ()
+      set(CPACK_PACKAGE_RELEASE ${ORX_BLD_LVL})
+   endif ()
+   set(CPACK_FREEBSD_PACKAGE_MAINTAINER "sahananda@users.sf.net")
+   set(CPACK_PACKAGING_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
+   if (DEFINED OS_DIST)
+      set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL}-${CPACK_PACKAGE_RELEASE}.${OS_DIST}.${CMAKE_HOST_SYSTEM_PROCESSOR}")
+   else ()
+      set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL}-${CPACK_PACKAGE_RELEASE}.${CMAKE_HOST_SYSTEM_PROCESSOR}")
+   endif ()
+   set(CPACK_FREEBSD_PACKAGE_LICENSE "CPL")
+   set(CPACK_FREEBSD_PACKAGE_DESCRIPTION
+"Open Object Rexx is an object-oriented scripting language. The language
+is designed for both beginners and experienced Rexx programmers. It is
+easy to learn and use, and provides an excellent vehicle to enter the
+world of object-oriented programming without much effort.
+
+It extends the procedural way of Rexx programming with object-oriented
+features that allow you to gradually change your programming style as
+you learn more about objects.
+
+For more information on ooRexx, visit https://www.oorexx.org/
+For more information on Rexx, visit https://www.rexxla.org/")
 endif ()
 
 # Build for Apple macOS
