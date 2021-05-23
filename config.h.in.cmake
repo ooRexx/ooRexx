@@ -159,7 +159,9 @@
 #cmakedefine HAVE_UNISTD_H
 
 /* Define to 1 if you have the <ncurses.h> header file. */
-#cmakedefine HAVE_NCURSES_H
+#cmakedefine CURSES_HAVE_NCURSES_H
+/* Define to 1 if you have the <ncurses/ncurses.h> header file. */
+#cmakedefine CURSES_HAVE_NCURSES_NCURSES_H
 
 /* Name of package */
 #define PACKAGE ${PACKAGE}

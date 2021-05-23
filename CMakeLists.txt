@@ -422,6 +422,10 @@ if (NOT WIN32)
                            return 0;}"
                           HAVE_UNION_SEMUN)
   check_include_file(unistd.h HAVE_UNISTD_H)
+  set (CURSES_NEED_NCURSES TRUE)
+  include(FindCurses) # sets CURSES_HAVE_NCURSES_H and CURSES_HAVE_NCURSES_NCURSES_H
+  message(STATUS "CURSES_HAVE_NCURSES_H is ${CURSES_HAVE_NCURSES_H}")
+  message(STATUS "CURSES_HAVE_NCURSES_NCURSES_H is ${CURSES_HAVE_NCURSES_NCURSES_H}")
   if (CMAKE_SYSTEM_NAME MATCHES "(SunOS|Solaris)")
     check_library_exists(socket getaddrinfo "" HAVE_LIBSOCKET)
     if (HAVE_LIBSOCKET)
@@ -439,14 +443,6 @@ if (NOT WIN32)
     if (HAVE_LIBRT)
       set(CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES} rt)
     endif (HAVE_LIBRT)
-    check_include_file(ncurses/ncurses.h NCURSES_H_)
-    if (NOT NCURSES_H_)
-      check_include_file(ncurses.h HAVE_NCURSES_H)
-    else ()
-      include_directories(/usr/include/ncurses)
-    endif (NOT NCURSES_H_)
-  else ()
-    check_include_file(ncurses.h HAVE_NCURSES_H)
   endif ()
 endif ()
 set (PACKAGE ${PROJECT_NAME})
@@ -1347,7 +1343,7 @@ install(TARGETS rxunixsys RUNTIME DESTINATION ${INSTALL_LIB_DIR}
 endif ()
 
 #################### liborxncurses.so ################
-if (HAVE_NCURSES_H)
+if (NOT WIN32)
    # need to copy this to the binary dir
    copy_build_file(ncurses.cls ${build_extensions_orxncurses_dir})
    # Sources for liborxncurses.so

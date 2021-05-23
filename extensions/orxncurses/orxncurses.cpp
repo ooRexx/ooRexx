@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2010-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2010-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -33,27 +33,20 @@
 /* NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS         */
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
-/* Authors;                                                                   */
-/*       W. David Ashley <dashley@us.ibm.com>                                 */
-/*                                                                            */
 /*----------------------------------------------------------------------------*/
-
 
 #ifdef HAVE_CONFIG_H
 # include "config.h"
 #endif
 
 #include <oorexxapi.h>
-#ifdef HAVE_NCURSES_H
+#if defined CURSES_HAVE_NCURSES_H
 #include <ncurses.h>
+#elif defined CURSES_HAVE_NCURSES_NCURSES_H
+#include <ncurses/ncurses.h>
 #else
 #include <curses.h>
 #endif
-
-/*----------------------------------------------------------------------------*/
-/* Global variables                                                           */
-/*----------------------------------------------------------------------------*/
-
 
 /*----------------------------------------------------------------------------*/
 /* Local Definitions/variables                                                */
@@ -64,21 +57,6 @@
 bool onebased = true;
 #define ADDONE(x)        (onebased ? x + 1 : x)
 #define SUBTRACTONE(x)   (onebased ? x - 1 : x)
-
-/*============================================================================*/
-/* Private Functions                                                          */
-/*============================================================================*/
-
-
-/*============================================================================*/
-/* Public Functions                                                           */
-/*============================================================================*/
-
-
-/*============================================================================*/
-/* Private Methods                                                            */
-/*============================================================================*/
-
 
 /*============================================================================*/
 /* Public Methods                                                             */
@@ -94,14 +72,14 @@ bool onebased = true;
 RexxMethod0(RexxObjectPtr,             // Return type
             OrxCurVersion)             // Object_method name
 {
-    
+
     return (RexxObjectPtr)context->NewStringFromAsciiz(VERSTRING(VMAJOR, VMINOR, VREL));
 }
 
 /**
  * Method:  OrxCurSetBase
  *
- * Set whether or not the library uses one-based indexes or 
+ * Set whether or not the library uses one-based indexes or
  * zero-based indexes. The default is one-based.
  *
  * @param base    1 = one-based, 0 = zero-based
@@ -129,7 +107,7 @@ RexxMethod1(logical_t,                 // Return type
 RexxMethod0(POINTER,                   // Return type
             OrxCurInitscr)             // Object_method name
 {
-    
+
     initscr();
     context->SetObjectVariable("CSELF", context->NewPointer(stdscr));
     return context->NewPointer(stdscr);
@@ -157,9 +135,9 @@ RexxMethod4(int,                       // Return type
             int, begin_y,
             int, begin_x)
 {
-    
+
     context->SetObjectVariable("CSELF", context->NewPointer(newwin(nlines, ncols,
-                                                                   SUBTRACTONE(begin_y), 
+                                                                   SUBTRACTONE(begin_y),
                                                                    SUBTRACTONE(begin_x))));
     return 0;
 }
@@ -177,7 +155,7 @@ RexxMethod1(RexxObjectPtr,             // Return type
             OrxCurNewwinfromptr,       // Object_method name
             POINTER, ptr)
 {
-    
+
     context->SetObjectVariable("CSELF", context->NewPointer(ptr));
     return 0;
 }
@@ -192,7 +170,7 @@ RexxMethod1(RexxObjectPtr,             // Return type
 RexxMethod0(int,                       // Return type
             OrxCurEndwin)              // Object_method name
 {
-    
+
     return endwin();
 }
 
@@ -207,7 +185,7 @@ RexxMethod1(int,                       // Return type
             OrxCurRefresh,             // Object_method name
             CSELF, cself)              // Self
 {
-    
+
     if (cself == NULL) {
         context->RaiseException2(Rexx_Error_Incorrect_method_noclass,
                                  context->WholeNumberToObject(1),
@@ -220,7 +198,7 @@ RexxMethod1(int,                       // Return type
 /**
  * Method:  OrxCurAddch
  *
- * Add a single character to the screen. 
+ * Add a single character to the screen.
  *
  * @param str     Character to be added.
  *
@@ -231,7 +209,7 @@ RexxMethod2(int,                       // Return type
             CSTRING, str,              // Character
             CSELF, cself)              // Self
 {
-    
+
     if (cself == NULL) {
         context->RaiseException2(Rexx_Error_Incorrect_method_noclass,
                                  context->WholeNumberToObject(1),
@@ -261,7 +239,7 @@ RexxMethod4(int,                       // Return type
             CSTRING, str,              // Character
             CSELF, cself)              // Self
 {
-    
+
     if (cself == NULL) {
         context->RaiseException2(Rexx_Error_Incorrect_method_noclass,
                                  context->WholeNumberToObject(1),
@@ -274,7 +252,7 @@ RexxMethod4(int,                       // Return type
 /**
  * Method:  OrxCurAddchstr
  *
- * Add a chtype character string to the screen. 
+ * Add a chtype character string to the screen.
  *
  * @param str     String to be added.
  *
@@ -285,7 +263,7 @@ RexxMethod2(int,                       // Return type
             CSTRING, str,              // Character
             CSELF, cself)              // Self
 {
-    
+
     if (cself == NULL) {
         context->RaiseException2(Rexx_Error_Incorrect_method_noclass,
                                  context->WholeNumberToObject(1),
@@ -298,8 +276,8 @@ RexxMethod2(int,                       // Return type
 /**
  * Method:  OrxCurMvaddchstr
  *
- * Add a chtype character string to the screen after moving the 
- * cursor. 
+ * Add a chtype character string to the screen after moving the
+ * cursor.
  *
  * @param y       Y position.
  *
@@ -316,7 +294,7 @@ RexxMethod4(int,                       // Return type
             CSTRING, str,              // Character
             CSELF, cself)              // Self
 {
-    
+
     if (cself == NULL) {
         context->RaiseException2(Rexx_Error_Incorrect_method_noclass,
                                  context->WholeNumberToObject(1),
@@ -329,7 +307,7 @@ RexxMethod4(int,                       // Return type
 /**
  * Method:  OrxCurAddchnstr
  *
- * Add a chtype character string to the screen. 
+ * Add a chtype character string to the screen.
  *
  * @param str     String to be added.
  *
@@ -343,7 +321,7 @@ RexxMethod3(int,                       // Return type
             int, n,                    // Number of characters
             CSELF, cself)              // Self
 {
-    
+
     if (cself == NULL) {
         context->RaiseException2(Rexx_Error_Incorrect_method_noclass,
                                  context->WholeNumberToObject(1),
@@ -356,8 +334,8 @@ RexxMethod3(int,                       // Return type
 /**
  * Method:  OrxCurMvaddchnstr
  *
- * Add a chtype character string to the screen after moving the 
- * cursor. 
+ * Add a chtype character string to the screen after moving the
+ * cursor.
  *
  * @param y       Y position.
  *
@@ -377,7 +355,7 @@ RexxMethod5(int,                       // Return type
             int, n,                    // Number of characters
             CSELF, cself)              // Self
 {
-    
+
     if (cself == NULL) {
         context->RaiseException2(Rexx_Error_Incorrect_method_noclass,
                                  context->WholeNumberToObject(1),
@@ -390,7 +368,7 @@ RexxMethod5(int,                       // Return type
 /**
  * Method:  OrxCurAddstr
  *
- * Add a character string to the screen. 
+ * Add a character string to the screen.
  *
  * @param str     String to be added.
  *
@@ -401,7 +379,7 @@ RexxMethod2(int,                       // Return type
             CSTRING, str,              // Character
             CSELF, cself)              // Self
 {
-    
+
     if (cself == NULL) {
         context->RaiseException2(Rexx_Error_Incorrect_method_noclass,
                                  context->WholeNumberToObject(1),
@@ -431,7 +409,7 @@ RexxMethod4(int,                       // Return type
             CSTRING, str,              // Character
             CSELF, cself)              // Self
 {
-    
+
     if (cself == NULL) {
         context->RaiseException2(Rexx_Error_Incorrect_method_noclass,
                                  context->WholeNumberToObject(1),
@@ -444,7 +422,7 @@ RexxMethod4(int,                       // Return type
 /**
  * Method:  OrxCurAddnstr
  *
- * Add a character string to the screen. 
+ * Add a character string to the screen.
  *
  * @param str     String to be added.
  *
@@ -458,7 +436,7 @@ RexxMethod3(int,                       // Return type
             int, n,                    // Number of characters
             CSELF, cself)              // Self
 {
-    
+
     if (cself == NULL) {
         context->RaiseException2(Rexx_Error_Incorrect_method_noclass,
                                  context->WholeNumberToObject(1),
@@ -491,7 +469,7 @@ RexxMethod5(int,                       // Return type
             int, n,                    // Number of characters
             CSELF, cself)              // Self
 {
-    
+
     if (cself == NULL) {
         context->RaiseException2(Rexx_Error_Incorrect_method_noclass,
                                  context->WholeNumberToObject(1),
@@ -517,7 +495,7 @@ RexxMethod2(int,                       // Return type
             int, fg,                   // fg color
             int, bg)                   // bg color
 {
-    
+
     return assume_default_colors(fg, bg);
 }
 
@@ -535,7 +513,7 @@ RexxMethod2(int,                       // Return type
             int, attr,                 // Attribute(s)
             CSELF, cself)              // Self
 {
-    
+
     if (cself == NULL) {
         context->RaiseException2(Rexx_Error_Incorrect_method_noclass,
                                  context->WholeNumberToObject(1),
@@ -559,7 +537,7 @@ RexxMethod2(int,                       // Return type
             int, attr,                 // Attribute(s)
             CSELF, cself)              // Self
 {
-    
+
     if (cself == NULL) {
         context->RaiseException2(Rexx_Error_Incorrect_method_noclass,
                                  context->WholeNumberToObject(1),
@@ -583,7 +561,7 @@ RexxMethod2(int,                       // Return type
             int, attr,                 // Attribute(s)
             CSELF, cself)              // Self
 {
-    
+
     if (cself == NULL) {
         context->RaiseException2(Rexx_Error_Incorrect_method_noclass,
                                  context->WholeNumberToObject(1),
@@ -603,7 +581,7 @@ RexxMethod2(int,                       // Return type
 RexxMethod0(int,                       // Return type
             OrxCurBaudrate)            // Object_method name
 {
-    
+
     return baudrate();
 }
 
@@ -617,7 +595,7 @@ RexxMethod0(int,                       // Return type
 RexxMethod0(int,                       // Return type
             OrxCurBeep)                // Object_method name
 {
-    
+
     return beep();
 }
 
@@ -635,7 +613,7 @@ RexxMethod2(int,                       // Return type
             int, attr,             // Attribute(s)
             CSELF, cself)              // Self
 {
-    
+
     if (cself == NULL) {
         context->RaiseException2(Rexx_Error_Incorrect_method_noclass,
                                  context->WholeNumberToObject(1),
@@ -659,7 +637,7 @@ RexxMethod2(int,                       // Return type
             int, attr,                 // Attribute(s)
             CSELF, cself)              // Self
 {
-    
+
     if (cself == NULL) {
         context->RaiseException2(Rexx_Error_Incorrect_method_noclass,
                                  context->WholeNumberToObject(1),
@@ -705,7 +683,7 @@ RexxMethod9(int,                       // Return type
             int, br,
             CSELF, cself)              // Self
 {
-    
+
     if (cself == NULL) {
         context->RaiseException2(Rexx_Error_Incorrect_method_noclass,
                                  context->WholeNumberToObject(1),
@@ -750,7 +728,7 @@ RexxMethod3(int,                       // Return type
             int, horch,
             CSELF, cself)              // Self
 {
-    
+
     if (cself == NULL) {
         context->RaiseException2(Rexx_Error_Incorrect_method_noclass,
                                  context->WholeNumberToObject(1),
@@ -822,7 +800,7 @@ RexxMethod4(int,                       // Return type
             int, color,
             CSELF, cself)              // Self
 {
-    
+
     if (cself == NULL) {
         context->RaiseException2(Rexx_Error_Incorrect_method_noclass,
                                  context->WholeNumberToObject(1),
@@ -858,7 +836,7 @@ RexxMethod6(int,                       // Return type
             int, color,
             CSELF, cself)              // Self
 {
-    
+
     if (cself == NULL) {
         context->RaiseException2(Rexx_Error_Incorrect_method_noclass,
                                  context->WholeNumberToObject(1),
@@ -880,7 +858,7 @@ RexxMethod1(int,                       // Return type
             OrxCurClear,               // Object_method name
             CSELF, cself)              // Self
 {
-    
+
     if (cself == NULL) {
         context->RaiseException2(Rexx_Error_Incorrect_method_noclass,
                                  context->WholeNumberToObject(1),
@@ -904,7 +882,7 @@ RexxMethod2(int,                       // Return type
             logical_t, bf,
             CSELF, cself)              // Self
 {
-    
+
     if (cself == NULL) {
         context->RaiseException2(Rexx_Error_Incorrect_method_noclass,
                                  context->WholeNumberToObject(1),
@@ -925,7 +903,7 @@ RexxMethod1(int,                       // Return type
             OrxCurClrtobot,            // Object_method name
             CSELF, cself)              // Self
 {
-    
+
     if (cself == NULL) {
         context->RaiseException2(Rexx_Error_Incorrect_method_noclass,
                                  context->WholeNumberToObject(1),
@@ -946,7 +924,7 @@ RexxMethod1(int,                       // Return type
             OrxCurClrtoeol,            // Object_method name
             CSELF, cself)              // Self
 {
-    
+
     if (cself == NULL) {
         context->RaiseException2(Rexx_Error_Incorrect_method_noclass,
                                  context->WholeNumberToObject(1),
@@ -967,7 +945,7 @@ RexxMethod1(int,                       // Return type
  **/
 RexxMethod1(int,                       // Return type
             OrxCurColor_set,           // Object_method name
-            int, num)  
+            int, num)
 {
 
     // don't use the SUBTRACTONE macro on num!
@@ -1066,14 +1044,14 @@ RexxMethod9(int,                       // Return type
             logical_t, overlay,
             CSELF, cself)              // Self
 {
-    
+
     if (cself == NULL) {
         context->RaiseException2(Rexx_Error_Incorrect_method_noclass,
                                  context->WholeNumberToObject(1),
                                  context->NewStringFromAsciiz("Window"));
         return 0;
     }
-    return copywin((WINDOW *)context->ObjectToCSelf(swin), (WINDOW *)cself, 
+    return copywin((WINDOW *)context->ObjectToCSelf(swin), (WINDOW *)cself,
                    SUBTRACTONE(sminrow), SUBTRACTONE(smincol), SUBTRACTONE(dminrow),
                    SUBTRACTONE(dmincol), SUBTRACTONE(dmaxrow), SUBTRACTONE(dmaxcol),
                    (int)overlay);
@@ -1113,8 +1091,8 @@ RexxMethod0(RexxObjectPtr,             // Return type
 /**
  * Method:  OrxCurDelch
  *
- * Delete the character under the cursor and slide remaining 
- * characters on the line one position to the left. 
+ * Delete the character under the cursor and slide remaining
+ * characters on the line one position to the left.
  *
  * @return        Zero.
  **/
@@ -1122,7 +1100,7 @@ RexxMethod1(int,                       // Return type
             OrxCurDelch,               // Object_method name
             CSELF, cself)              // Self
 {
-    
+
     if (cself == NULL) {
         context->RaiseException2(Rexx_Error_Incorrect_method_noclass,
                                  context->WholeNumberToObject(1),
@@ -1135,7 +1113,7 @@ RexxMethod1(int,                       // Return type
 /**
  * Method:  OrxCurDeleteln
  *
- * Delete the line under the cursor and slide remaining lines 
+ * Delete the line under the cursor and slide remaining lines
  * below the cursor up one line.
  *
  * @return        Zero.
@@ -1144,7 +1122,7 @@ RexxMethod1(int,                       // Return type
             OrxCurDeleteln,            // Object_method name
             CSELF, cself)              // Self
 {
-    
+
     if (cself == NULL) {
         context->RaiseException2(Rexx_Error_Incorrect_method_noclass,
                                  context->WholeNumberToObject(1),
@@ -1165,7 +1143,7 @@ RexxMethod1(int,                       // Return type
             OrxCurDelwin,              // Object_method name
             CSELF, cself)              // Self
 {
-    
+
     if (cself == NULL) {
         context->RaiseException2(Rexx_Error_Incorrect_method_noclass,
                                  context->WholeNumberToObject(1),
@@ -1218,7 +1196,7 @@ RexxMethod1(RexxObjectPtr,             // Return type
             OrxCurDupwinprivate,       // Object_method name
             CSELF, cself)              // Self
 {
-    
+
     if (cself == NULL) {
         context->RaiseException2(Rexx_Error_Incorrect_method_noclass,
                                  context->WholeNumberToObject(1),
@@ -1376,8 +1354,8 @@ RexxMethod0(int,                       // Return type
 /**
  * Method:  OrxCurGetbegyx
  *
- * Get the y & x screen coordinate for the top left corner of 
- * the window. 
+ * Get the y & x screen coordinate for the top left corner of
+ * the window.
  *
  * @return        Zero.
  **/
@@ -1506,8 +1484,8 @@ RexxMethod1(RexxObjectPtr,             // Return type
 /**
  * Method:  OrxCurGetparyx
  *
- * Get the width and height of a window relative to the parent 
- * window. 
+ * Get the width and height of a window relative to the parent
+ * window.
  *
  * @return        Zero.
  **/
@@ -1689,7 +1667,7 @@ RexxMethod1(RexxObjectPtr,             // Return type
 {
     FILE *wfile;
     WINDOW *win;
-    
+
     wfile = fopen(filename, "r");
     win = getwin(wfile);
     fclose(wfile);
@@ -1901,8 +1879,8 @@ RexxMethod1(int,                  // Return type
 /**
  * Method:  OrxCurMvinch
  *
- * Return the attr/char under the cursor after moving the 
- * cursor. 
+ * Return the attr/char under the cursor after moving the
+ * cursor.
  *
  * @param y       New cursor y position.
  *
@@ -1955,8 +1933,8 @@ RexxMethod1(RexxObjectPtr,             // Return type
 /**
  * Method:  OrxCurMvinchstr
  *
- * Return the attr/char under the cursor after moving the 
- * cursor. 
+ * Return the attr/char under the cursor after moving the
+ * cursor.
  *
  * @param y       New cursor y position.
  *
@@ -2017,8 +1995,8 @@ RexxMethod2(RexxObjectPtr,             // Return type
 /**
  * Method:  OrxCurMvinchnstr
  *
- * Return the attr/char under the cursor after moving the 
- * cursor. 
+ * Return the attr/char under the cursor after moving the
+ * cursor.
  *
  * @param y       New cursor y position.
  *
@@ -2126,8 +2104,8 @@ RexxMethod2(int,                       // Return type
 /**
  * Method:  OrxCurMvinsch
  *
- * Insert the attr/char under the cursor after moving the 
- * cursor. 
+ * Insert the attr/char under the cursor after moving the
+ * cursor.
  *
  * @param y       New cursor y position.
  *
@@ -2365,7 +2343,7 @@ RexxMethod2(RexxObjectPtr,             // Return type
 }
 
 /**
- * Method:  OrxCurMvinstr 
+ * Method:  OrxCurMvinstr
 
  * Read a string from the terminal after moving the cursor.
  *
@@ -2430,8 +2408,8 @@ RexxMethod4(RexxObjectPtr,             // Return type
 /**
  * Method:  OrxCurIntrflush
  *
- * Turn on/off input queue flushing when a interrupt key is 
- * typed at the keyboard. 
+ * Turn on/off input queue flushing when a interrupt key is
+ * typed at the keyboard.
  *
  * @param bf      Boolean
  *
@@ -2489,7 +2467,7 @@ RexxMethod0(logical_t,                 // Return type
 /**
  * Method:  OrxCurIs_linetouched
  *
- * Determine if a line has been changed since the last refresh. 
+ * Determine if a line has been changed since the last refresh.
  *
  * @param n       Line number.
  *
@@ -2513,8 +2491,8 @@ RexxMethod2(logical_t,                 // Return type
 /**
  * Method:  OrxCurIs_wintouched
  *
- * Determine if a window has been changed since the last 
- * refresh. 
+ * Determine if a window has been changed since the last
+ * refresh.
  *
  * @return        Zero.
  **/
@@ -2592,8 +2570,8 @@ RexxMethod0(RexxObjectPtr,             // Return type
 /**
  * Method:  OrxCurLeaveok
  *
- * Turn on/off synchrnizing the logical and the hardware cursor 
- * location after a refresh. 
+ * Turn on/off synchrnizing the logical and the hardware cursor
+ * location after a refresh.
  *
  * @param bf      Boolean.
  *
@@ -2860,7 +2838,7 @@ RexxMethod2(int,                       // Return type
             int, nlines,
             int, ncols)
 {
-    
+
     context->SetObjectVariable("CSELF", context->NewPointer(newpad(nlines, ncols)));
     return 0;
 }
@@ -2875,7 +2853,7 @@ RexxMethod2(int,                       // Return type
 RexxMethod0(int,                       // Return type
             OrxCurNl)                  // Object_method name
 {
-    
+
     return nl();
 }
 
@@ -2889,7 +2867,7 @@ RexxMethod0(int,                       // Return type
 RexxMethod0(int,                       // Return type
             OrxCurNonl)                // Object_method name
 {
-    
+
     return nonl();
 }
 
@@ -2907,7 +2885,7 @@ RexxMethod2(int,                       // Return type
             logical_t, bf,
             CSELF, cself)              // Self
 {
-    
+
     if (cself == NULL) {
         context->RaiseException2(Rexx_Error_Incorrect_method_noclass,
                                  context->WholeNumberToObject(1),
@@ -2931,7 +2909,7 @@ RexxMethod2(int,                       // Return type
             logical_t, bf,
             CSELF, cself)              // Self
 {
-    
+
     if (cself == NULL) {
         context->RaiseException2(Rexx_Error_Incorrect_method_noclass,
                                  context->WholeNumberToObject(1),
@@ -2955,7 +2933,7 @@ RexxMethod2(int,                       // Return type
             RexxObjectPtr, rxdwin,
             CSELF, cself)              // Self
 {
-    
+
     if (cself == NULL) {
         context->RaiseException2(Rexx_Error_Incorrect_method_noclass,
                                  context->WholeNumberToObject(1),
@@ -2980,7 +2958,7 @@ RexxMethod2(int,                       // Return type
             RexxObjectPtr, rxdwin,
             CSELF, cself)              // Self
 {
-    
+
     if (cself == NULL) {
         context->RaiseException2(Rexx_Error_Incorrect_method_noclass,
                                  context->WholeNumberToObject(1),
@@ -3123,7 +3101,7 @@ RexxMethod7(int,                       // Return type
             int, smaxcol,
             CSELF, cself)              // Pad
 {
-    
+
     if (cself == NULL) {
         context->RaiseException2(Rexx_Error_Incorrect_method_noclass,
                                  context->WholeNumberToObject(1),
@@ -3150,7 +3128,7 @@ RexxMethod2(int,                       // Return type
             CSELF, cself)              // Self
 {
     FILE *wfile;
-    
+
     if (cself == NULL) {
         context->RaiseException2(Rexx_Error_Incorrect_method_noclass,
                                  context->WholeNumberToObject(1),
@@ -3173,7 +3151,7 @@ RexxMethod2(int,                       // Return type
 RexxMethod0(int,                       // Return type
             OrxCurQiflush)             // Object_method name
 {
-    
+
     qiflush();
     return 0;
 }
@@ -3188,7 +3166,7 @@ RexxMethod0(int,                       // Return type
 RexxMethod0(int,                       // Return type
             OrxCurNoqiflush)           // Object_method name
 {
-    
+
     noqiflush();
     return 0;
 }
@@ -3203,7 +3181,7 @@ RexxMethod0(int,                       // Return type
 RexxMethod0(int,                       // Return type
             OrxCurRaw)                 // Object_method name
 {
-    
+
     return raw();
 }
 
@@ -3217,7 +3195,7 @@ RexxMethod0(int,                       // Return type
 RexxMethod0(int,                       // Return type
             OrxCurNoraw)               // Object_method name
 {
-    
+
     return noraw();
 }
 
@@ -3232,7 +3210,7 @@ RexxMethod1(int,                       // Return type
             OrxCurRedrawwin,           // Object_method name
             CSELF, cself)              // Self
 {
-    
+
     if (cself == NULL) {
         context->RaiseException2(Rexx_Error_Incorrect_method_noclass,
                                  context->WholeNumberToObject(1),
@@ -3255,7 +3233,7 @@ RexxMethod1(int,                       // Return type
             OrxCurScr_dump,            // Object_method name
             CSTRING, fname)
 {
-    
+
     return scr_dump(fname);
 }
 
@@ -3272,7 +3250,7 @@ RexxMethod1(int,                       // Return type
             OrxCurScr_restore,         // Object_method name
             CSTRING, fname)
 {
-    
+
     return scr_restore(fname);
 }
 
@@ -3290,7 +3268,7 @@ RexxMethod2(int,                       // Return type
             int, n,
             CSELF, cself)              // Self
 {
-    
+
     if (cself == NULL) {
         context->RaiseException2(Rexx_Error_Incorrect_method_noclass,
                                  context->WholeNumberToObject(1),
@@ -3311,7 +3289,7 @@ RexxMethod1(int,                       // Return type
             OrxCurScroll,              // Object_method name
             CSELF, cself)              // Self
 {
-    
+
     if (cself == NULL) {
         context->RaiseException2(Rexx_Error_Incorrect_method_noclass,
                                  context->WholeNumberToObject(1),
@@ -3335,7 +3313,7 @@ RexxMethod2(int,                       // Return type
             logical_t, bf,
             CSELF, cself)              // Self
 {
-    
+
     if (cself == NULL) {
         context->RaiseException2(Rexx_Error_Incorrect_method_noclass,
                                  context->WholeNumberToObject(1),
@@ -3362,7 +3340,7 @@ RexxMethod3(int,                       // Return type
             int, bot,
             CSELF, cself)              // Self
 {
-    
+
     if (cself == NULL) {
         context->RaiseException2(Rexx_Error_Incorrect_method_noclass,
                                  context->WholeNumberToObject(1),
@@ -3382,7 +3360,7 @@ RexxMethod3(int,                       // Return type
 RexxMethod0(int,                  // Return type
             OrxCurSlk_attr)            // Object_method name
 {
-    
+
     return slk_attr();
 }
 
@@ -3399,7 +3377,7 @@ RexxMethod1(int,                       // Return type
             OrxCurSlk_attroff,         // Object_method name
             int, attr)
 {
-    
+
     return slk_attroff(attr);
 }
 
@@ -3416,7 +3394,7 @@ RexxMethod1(int,                       // Return type
             OrxCurSlk_attron,          // Object_method name
             int, attr)
 {
-    
+
     return slk_attron(attr);
 }
 
@@ -3433,7 +3411,7 @@ RexxMethod1(int,                       // Return type
             OrxCurSlk_attrset,         // Object_method name
             int, attr)
 {
-    
+
     return slk_attrset(attr);
 }
 
@@ -3447,7 +3425,7 @@ RexxMethod1(int,                       // Return type
 RexxMethod0(int,                       // Return type
             OrxCurSlk_clear)           // Object_method name
 {
-    
+
     return slk_clear();
 }
 
@@ -3464,7 +3442,7 @@ RexxMethod1(int,                       // Return type
             OrxCurSlk_color,           // Object_method name
             int, color)
 {
-    
+
     return slk_color((short)color);
 }
 
@@ -3481,7 +3459,7 @@ RexxMethod1(int,                       // Return type
             OrxCurSlk_init,            // Object_method name
             int, fmt)
 {
-    
+
     return slk_init(fmt);
 }
 
@@ -3498,7 +3476,7 @@ RexxMethod1(RexxObjectPtr,             // Return type
             OrxCurSlk_label,           // Object_method name
             int, num)
 {
-    
+
     return (RexxObjectPtr)context->NewStringFromAsciiz(slk_label(num));
 }
 
@@ -3512,7 +3490,7 @@ RexxMethod1(RexxObjectPtr,             // Return type
 RexxMethod0(int,                       // Return type
             OrxCurSlk_noutrefresh)     // Object_method name
 {
-    
+
     return slk_noutrefresh();
 }
 
@@ -3526,7 +3504,7 @@ RexxMethod0(int,                       // Return type
 RexxMethod0(int,                       // Return type
             OrxCurSlk_refresh)         // Object_method name
 {
-    
+
     return slk_refresh();
 }
 
@@ -3540,7 +3518,7 @@ RexxMethod0(int,                       // Return type
 RexxMethod0(int,                       // Return type
             OrxCurSlk_restore)         // Object_method name
 {
-    
+
     return slk_restore();
 }
 
@@ -3561,7 +3539,7 @@ RexxMethod3(int,                       // Return type
             CSTRING, text,
             int, fmt)
 {
-    
+
     return slk_set(num, text, fmt);
 }
 
@@ -3575,7 +3553,7 @@ RexxMethod3(int,                       // Return type
 RexxMethod0(int,                       // Return type
             OrxCurSlk_touch)           // Object_method name
 {
-    
+
     return slk_touch();
 }
 
@@ -3590,7 +3568,7 @@ RexxMethod1(int,                       // Return type
             OrxCurStandend,            // Object_method name
             CSELF, cself)              // Self
 {
-    
+
     if (cself == NULL) {
         context->RaiseException2(Rexx_Error_Incorrect_method_noclass,
                                  context->WholeNumberToObject(1),
@@ -3611,7 +3589,7 @@ RexxMethod1(int,                       // Return type
             OrxCurStandout,            // Object_method name
             CSELF, cself)              // Self
 {
-    
+
     if (cself == NULL) {
         context->RaiseException2(Rexx_Error_Incorrect_method_noclass,
                                  context->WholeNumberToObject(1),
@@ -3631,7 +3609,7 @@ RexxMethod1(int,                       // Return type
 RexxMethod0(int,                       // Return type
             OrxCurStart_color)         // Object_method name
 {
-    
+
     return start_color();
 }
 
@@ -3708,7 +3686,7 @@ RexxMethod2(int,                       // Return type
             logical_t, bf,
             CSELF, cself)              // Self
 {
-    
+
     if (cself == NULL) {
         context->RaiseException2(Rexx_Error_Incorrect_method_noclass,
                                  context->WholeNumberToObject(1),
@@ -3740,15 +3718,15 @@ RexxMethod1(int,                       // Return type
 /**
  * Method:  OrxCurTermattrs
  *
- * Return the which attributes the terminal is capable of 
- * producing. 
+ * Return the which attributes the terminal is capable of
+ * producing.
  *
  * @return        Zero.
  **/
 RexxMethod0(int,                       // Return type
             OrxCurTermattrs)           // Object_method name
 {
-    
+
     return (int) termattrs();
 }
 
@@ -3762,7 +3740,7 @@ RexxMethod0(int,                       // Return type
 RexxMethod0(RexxObjectPtr,             // Return type
             OrxCurTermname)            // Object_method name
 {
-    
+
     return (RexxObjectPtr)context->NewStringFromAsciiz(termname());
 }
 
@@ -3779,7 +3757,7 @@ RexxMethod1(int,                       // Return type
             OrxCurTimeout,             // Object_method name
             int, tmout)
 {
-    
+
     timeout(tmout);
     return 0;
 }
@@ -3799,7 +3777,7 @@ RexxMethod3(int,                       // Return type
             int, cnt,
             CSELF, cself)              // Self
 {
-    
+
     if (cself == NULL) {
         context->RaiseException2(Rexx_Error_Incorrect_method_noclass,
                                  context->WholeNumberToObject(1),
@@ -3820,7 +3798,7 @@ RexxMethod1(int,                       // Return type
             OrxCurTouchwin,            // Object_method name
             CSELF, cself)              // Self
 {
-    
+
     if (cself == NULL) {
         context->RaiseException2(Rexx_Error_Incorrect_method_noclass,
                                  context->WholeNumberToObject(1),
@@ -3843,7 +3821,7 @@ RexxMethod1(int,                       // Return type
             OrxCurTypeahead,           // Object_method name
             int, fd)
 {
-    
+
     return typeahead(fd);
 }
 
@@ -3860,7 +3838,7 @@ RexxMethod1(RexxObjectPtr,             // Return type
             OrxCurUnctrl,              // Object_method name
             int, ch)
 {
-    
+
     return (RexxObjectPtr)context->NewStringFromAsciiz(unctrl((chtype)ch));
 }
 
@@ -3877,7 +3855,7 @@ RexxMethod1(int,                       // Return type
             OrxCurUngetch,             // Object_method name
             CSTRING, ch)
 {
-    
+
     return ungetch((int)*ch);
 }
 
@@ -3892,7 +3870,7 @@ RexxMethod1(int,                       // Return type
             OrxCurUntouchwin,          // Object_method name
             CSELF, cself)              // Self
 {
-    
+
     if (cself == NULL) {
         context->RaiseException2(Rexx_Error_Incorrect_method_noclass,
                                  context->WholeNumberToObject(1),
@@ -3912,7 +3890,7 @@ RexxMethod1(int,                       // Return type
 RexxMethod0(int,                       // Return type
             OrxCurUse_default_colors)  // Object_method name
 {
-    
+
     return use_default_colors();
 }
 
@@ -3927,7 +3905,7 @@ RexxMethod1(int,                       // Return type
             OrxCurUse_env,             // Object_method name
             logical_t, bf)
 {
-    
+
     use_env(bf);
     return 0;
 }
@@ -3949,7 +3927,7 @@ RexxMethod3(int,                       // Return type
             int, n,
             CSELF, cself)              // Self
 {
-    
+
     if (cself == NULL) {
         context->RaiseException2(Rexx_Error_Incorrect_method_noclass,
                                  context->WholeNumberToObject(1),
@@ -3982,7 +3960,7 @@ RexxMethod5(int,                       // Return type
             int, n,
             CSELF, cself)              // Self
 {
-    
+
     if (cself == NULL) {
         context->RaiseException2(Rexx_Error_Incorrect_method_noclass,
                                  context->WholeNumberToObject(1),
@@ -4009,7 +3987,7 @@ RexxMethod3(int,                       // Return type
             int, x,
             CSELF, cself)              // Self
 {
-    
+
     if (cself == NULL) {
         context->RaiseException2(Rexx_Error_Incorrect_method_noclass,
                                  context->WholeNumberToObject(1),
@@ -4030,7 +4008,7 @@ RexxMethod1(int,                       // Return type
             OrxCurWnoutrefresh,        // Object_method name
             CSELF, cself)              // Self
 {
-    
+
     if (cself == NULL) {
         context->RaiseException2(Rexx_Error_Incorrect_method_noclass,
                                  context->WholeNumberToObject(1),
@@ -4057,7 +4035,7 @@ RexxMethod3(int,                       // Return type
             int, n,
             CSELF, cself)              // Self
 {
-    
+
     if (cself == NULL) {
         context->RaiseException2(Rexx_Error_Incorrect_method_noclass,
                                  context->WholeNumberToObject(1),
@@ -4070,8 +4048,8 @@ RexxMethod3(int,                       // Return type
 /**
  * Method:  OrxCurWsyncdown
  *
- * Ensure subwindows are touched when the main window is 
- * touched. 
+ * Ensure subwindows are touched when the main window is
+ * touched.
  *
  * @return        Zero.
  **/
@@ -4079,7 +4057,7 @@ RexxMethod1(int,                       // Return type
             OrxCurWsyncdown,           // Object_method name
             CSELF, cself)              // Self
 {
-    
+
     if (cself == NULL) {
         context->RaiseException2(Rexx_Error_Incorrect_method_noclass,
                                  context->WholeNumberToObject(1),
@@ -4093,8 +4071,8 @@ RexxMethod1(int,                       // Return type
 /**
  * Method:  OrxCurWsyncup
  *
- * Ensure parent windows are touched when the sub window is 
- * touched. 
+ * Ensure parent windows are touched when the sub window is
+ * touched.
  *
  * @return        Zero.
  **/
@@ -4102,7 +4080,7 @@ RexxMethod1(int,                       // Return type
             OrxCurWsyncup,             // Object_method name
             CSELF, cself)              // Self
 {
-    
+
     if (cself == NULL) {
         context->RaiseException2(Rexx_Error_Incorrect_method_noclass,
                                  context->WholeNumberToObject(1),
@@ -4133,7 +4111,7 @@ RexxMethod4(int,                       // Return type
             logical_t, bf,
             CSELF, cself)              // Self
 {
-    
+
     if (cself == NULL) {
         context->RaiseException2(Rexx_Error_Incorrect_method_noclass,
                                  context->WholeNumberToObject(1),
