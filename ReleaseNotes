@@ -3,27 +3,25 @@
                               Release Notes
                               Version 5.0.0
 
-  Copyright 2005-2018 Rexx Language Association.  All rights reserved.
+  Copyright 2005-2021 Rexx Language Association.  All rights reserved.
 
 Note
 ====
-ooRexx 5.0.0 is both an enhancement-release and a bug fixes--release.
+ooRexx 5.0.0 is both an enhancement-release and a bug fixes-release.
 
 Fixed bugs and implemented feature requests opened through the SourceForge
 Tracker for the ooRexx project are listed in the CHANGES document.
 
 File List
 =========
+Linux rpm and deb package names contain the distribution name, version of
+the system they were built on, and the hardware platform of the interpreter.
 
+For instance, ooRexx-5.0.0-12250.raspbian94.armv7l.deb was built on
+Raspbian Linux 9.4 for the armv7l processor and is a 32 bit interpreter.
 
-Linux rpm and deb packages contain the distribution name, version of the
-system they were built on, and an indicator of the bitness of the interpreter.
-For instance, ooRexx-5.0.0-0.x86_64.ubuntu1604.deb was built on
-Ubuntu 16.04 and is a 64 bit interpreter.
-
-All package names contain an indication if the package is built as a 32-bit
-or 64-bit binary.  Usually this indicator is x86_32 or x86_64.  For a 32-bit
-binary, these indicators are sometimes used: i386, i586, etc..
+The ooRexx-5.0.0-12250.centos8.x86_64.rpm installer package was built on
+CentOS 8 for an x86_64 processor and is a 64 bit interpreter.
 
 Pick the package closest to the system you intend to install on.  If the
 package is not an exact match and will not install, or the interpreter will
@@ -89,22 +87,23 @@ installer automatically.  In this case it is strongly advised that the
 uninstallation program be run first to completely uninstall the current
 version of ooRexx and then the new installer be run.
 
-A Note on Linux packages:
--------------------------
+A Note on Unix packages:
+------------------------
 
-The generically named rpm packages should install on any modern distribution
-that uses RPM as a package manager.  Likewise, the generically named deb
-packages will install on any modern debian-based systems.
+The provided package installers adhere to the default installation layout
+as defined by CMake's GNUInstallDirs module.  Thus on most systems the
+interpreter will be installed to /usr/local, but your package installer may
+allow relocating the package to a different prefix during installation.
 
-When it is known that the generic package has problems on a distribution,
-the ooRexx team may build an additional package for that specific
-distribution.  In which case, the installation package will have the
-targeted distribution in its file name.
+Rexx shebangs (e. g. in provided samples) default to #!/usr/bin/env rexx
+except for systems where the brp-mangle-shebangs function rejects such a
+shebang specification (e. g. on more recent Fedora or CentOS system).  For
+these systems systems the installers are built to use shebang
+#!/usr/local/bin/rexx.
 
-Please use the generically named rpm and deb packages.  If there is a
-problem on your distribution, report it by opening up a Tracker bug.
-Depending on resources, the ooRexx team may be able to build a specific
-package for that distribution.
+When building from source, both the default installation prefix and the Rexx
+shebang can be overridden by using the CMake options -DCMAKE_INSTALL_PREFIX
+resp. -DORX_SHEBANG.
 
 
 Changes in ooRexx 5.0.0
@@ -135,42 +134,4 @@ search for ticket number 200, enter: ticket_num:200
 Changes in ooRexx 5.0.0 for Windows Only:
 -----------------------------------------
 
-The version of ooDialog distributed in ooRexx 5.0.0 is ooDialog 4.2.3.
-
-Beginning with ooDialog version 4.2.0, released August 2012, both the
-ooDialog version number and the installation of ooDialog itself have been
-decoupled from the ooRexx interpreter.
-
-Any version of ooDialog from version 4.0.0 to version 4.2.3 can be installed
-into an ooRexx 5.0.0 installation.  The ooDialog version installed completely
-replaces whatever version of ooDialog is currently installed.
-
-ooDialog versions can be downloaded from SourceForge at:
-
-https://sourceforge.net/projects/oorexx/files/ooDialog/
-
-ooDialog version 4.2.0 was completely rewritten from the original IBM
-implementation to take advantage of the powerful new native APIs provided by
-ooRexx 4.0.0.  ooDialog 4.2.3 is far more powerful, has many more features,
-and is more capable than the orignal ooDialog.
-
-While every effort has been made to ensure that ooDialog 4.2.0 and later is
-entirely backwards compatible with the original IBM implementation, there
-are a few reports of some small number of existing ooDialog programs that
-have problems under ooDialog 4.2.3.
-
-It is the intention of the development team that ooDialog 4.2.3 is backwards
-compatible with previous versions of ooDialog.  If an ooDialog programmer or
-user discovers a case where this is not so, he or she should open up a bug
-report on SourceForge, or at the very least discuss the problem on the
-ooRexx Users list.
-
-If the problem can be fixed, it will be.  If it can not be fixed, the reason
-for that will be explained.
-
-It is the intent that the version of ooDialog distributed with each new
-release of ooRexx be the current officially released version of ooDialog.
-If any ooDialog programmer or user is unhappy with the backwards
-compatibility of that version of ooDialog, and they do not find the new
-features of ooDialog compelling enough, they are advised to install one of
-the earlier versions of ooDialog available on SourceForge.
+The version of ooDialog distributed in ooRexx 5.0.0 is ooDialog 4.2.4.
