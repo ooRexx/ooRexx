@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2010-2020 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2010-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -135,12 +135,12 @@ return buffer~string
 
 ::method parseRexxString private
     expose buffer eJS
-    use strict arg rexxObject
+    use strict arg rexxObject, quoted = .false
 
     if rexxObject~length == 0 then buffer~append('""')
     else do
         if rexxObject~dataType('n') then do
-            if arg(2, 'e') then buffer~append('"'rexxObject'"')
+            if quoted then buffer~append('"'rexxObject'"')
             else buffer~append(rexxObject)
         end
         else do
