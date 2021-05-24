@@ -167,12 +167,10 @@ endif ()
 include_directories(BEFORE api api/${ORX_PLATFORM_DIR})
 
 
-# Rexx search path
-set (CMAKE_REXXPATH ${CMAKE_CURRENT_BINARY_DIR}/bin)
+# defining ORX_REXXPATH will set a default for the REXX_PATH environment variable
 if (ORX_REXXPATH)
-    message(STATUS "Setting REXX search path to ${ORX_REXXPATH}")
+    message(STATUS "Setting REXX_PATH default to ${ORX_REXXPATH}")
     set (CMAKE_REXXPATH ${ORX_REXXPATH})
-
 endif ()
 
 
