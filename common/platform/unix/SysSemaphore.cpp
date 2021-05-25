@@ -52,19 +52,11 @@
 #include <stdio.h>
 #include <sys/time.h>
 #include <algorithm>
-#ifdef AIX
-#include <sys/sched.h>
-#include <time.h>
-#endif
-
-#if defined(OPSYS_SUN) || defined(__HAIKU__)
-#include <sched.h>
-#endif
-
 #include <errno.h>
 
 #include "SysSemaphore.hpp"
 
+// on Darwin MacOS 10.14 we have no pthread_mutex_timedlock
 #ifndef HAVE_PTHREAD_MUTEX_TIMEDLOCK
 
 // we test every 10 milliseconds
@@ -183,29 +175,18 @@ void SysSemaphore::create()
 
     if (!created)
     {
-        // Clear mutex/cond prior to init
-        //  this->semMutex = NULL;
-        //  this->semCond = NULL;
-
-        /* The original settings for pthread_mutexattr_settype() were:
-           AIX  : PTHREAD_MUTEX_RECURSIVE
-           SUNOS: PTHREAD_MUTEX_ERRORCHECK
-           LINUX: PTHREAD_MUTEX_RECURSIVE_NP
-        */
-
 #if defined( HAVE_PTHREAD_MUTEXATTR_SETTYPE )
         pthread_mutexattr_t mutexattr;
 
         iRC = pthread_mutexattr_init(&mutexattr);
         if (iRC == 0)
         {
-#if defined( HAVE_PTHREAD_MUTEX_RECURSIVE ) /* Linux most likely */
+#if defined( HAVE_PTHREAD_MUTEX_RECURSIVE )
             iRC = pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_RECURSIVE);
 #elif defined( HAVE_PTHREAD_MUTEX_ERRORCHECK )
             iRC = pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_ERRORCHECK);
-            // no valid mutex errors found, likely a config.h problem
 #else
-#error Configuration error for pthread semaphores.  Check the defines in config.h
+#error Configuration error for pthread semaphores.  Neither HAVE_PTHREAD_MUTEX_RECURSIVE nor PTHREAD_MUTEX_ERRORCHECK is defined
 #endif
         }
         if (iRC == 0)
@@ -274,21 +255,13 @@ void SysSemaphore::post()
 void SysSemaphore::wait()
 {
     int rc;
-    int schedpolicy, i_prio;
-    struct sched_param schedparam;
 
-    pthread_getschedparam(pthread_self(), &schedpolicy, &schedparam);
-    i_prio = schedparam.sched_priority;
-    schedparam.sched_priority = 100;
-    pthread_setschedparam(pthread_self(), SCHED_OTHER, &schedparam);
     rc = pthread_mutex_lock(&(this->semMutex));      // Lock access to semaphore
     if (this->postedCount == 0)                      // Has it been posted?
     {
         rc = pthread_cond_wait(&(this->semCond), &(this->semMutex)); // Nope, then wait on it.
     }
     pthread_mutex_unlock(&(this->semMutex));    // Release mutex lock
-    schedparam.sched_priority = i_prio;
-    pthread_setschedparam(pthread_self(), SCHED_OTHER, &schedparam);
 }
 
 
@@ -387,22 +360,18 @@ void SysMutex::create(bool critical)
     }
     int iRC = 0;
 
-/* The original settings for pthread_mutexattr_settype() were:
-   SUNOS: PTHREAD_MUTEX_ERRORCHECK
-   LINUX: PTHREAD_MUTEX_RECURSIVE_NP
-*/
 #if defined( HAVE_PTHREAD_MUTEXATTR_SETTYPE )
     pthread_mutexattr_t mutexattr;
 
     iRC = pthread_mutexattr_init(&mutexattr);
     if (iRC == 0)
     {
-#if defined( HAVE_PTHREAD_MUTEX_RECURSIVE ) /* Linux most likely */
+#if defined( HAVE_PTHREAD_MUTEX_RECURSIVE )
         iRC = pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_RECURSIVE);
 #elif defined( HAVE_PTHREAD_MUTEX_ERRORCHECK )
         iRC = pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_ERRORCHECK);
 #else
-        fprintf(stderr, " *** ERROR: Unknown 2nd argument to pthread_mutexattr_settype()!\n");
+#error Configuration error for pthread semaphores.  Neither HAVE_PTHREAD_MUTEX_RECURSIVE nor PTHREAD_MUTEX_ERRORCHECK is defined
 #endif
     }
     if (iRC == 0)
@@ -418,7 +387,7 @@ void SysMutex::create(bool critical)
 #endif
     if (iRC != 0)
     {
-        fprintf(stderr, " *** ERROR: At RexxMutex(), pthread_mutex_init - RC = %d !\n", iRC);
+        fprintf(stderr, " *** ERROR: At SysMutex::create, pthread_mutex_init - RC = %d !\n", iRC);
     }
 
     created = true;
