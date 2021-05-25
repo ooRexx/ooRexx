@@ -113,7 +113,7 @@ bool SysFileSystem::searchFileName(const char *name, FileNameBuffer &fullName)
         return false;
     }
     // now add on to the front of the name
-    fullName += "/";
+    fullName += '/';
     fullName += name;
 
     // if the file exists, then return it
@@ -136,7 +136,7 @@ bool SysFileSystem::searchFileName(const char *name, FileNameBuffer &fullName)
         /* try each entry in the PATH */
         int i = sep - currentPath;
         fullName.set(currentPath, i);
-        fullName += "/";
+        fullName += '/';
         fullName += name;
         if (fileExists(fullName) == true)
         {
@@ -486,7 +486,7 @@ bool SysFileSystem::searchPath(const char *name, const char *path, FileNameBuffe
 
     const char *p = path;
     const char *q = strchr(p, ':');
-    /* For every dir in searchpath*/
+    // for each directory in searchpath
     for (; p < pathEnd; p = q + 1, q = strchr(p, ':'))
     {
         // it's possible we've hit the end, in which case, point the delimiter marker past the end of the
@@ -496,9 +496,17 @@ bool SysFileSystem::searchPath(const char *name, const char *path, FileNameBuffe
             q = pathEnd;
         }
         size_t subLength = q - p;
+        if (subLength == 0)
+        {
+            // case "::" in path
+            continue;
+        }
 
         resolvedName.set(p, subLength);
-        resolvedName += "/";
+        if (!resolvedName.endsWith('/'))
+        {
+            resolvedName += '/';
+        }
         resolvedName += name;
 
         // take care of any special conditions in the name structure
@@ -606,7 +614,7 @@ bool SysFileSystem::resolveTilde(FileNameBuffer &name)
 bool SysFileSystem::canonicalizeName(FileNameBuffer &name)
 {
     // the nullstring is an invalid filename; nothing we can do here
-    if (name == "")
+    if (name.isEmpty())
     {
         return false;
     }
@@ -630,7 +638,7 @@ bool SysFileSystem::canonicalizeName(FileNameBuffer &name)
         {
             return false;
         }
-        name += "/";
+        name += '/';
         name += tempName;
     }
 

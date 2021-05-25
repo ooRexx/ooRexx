@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -242,6 +242,21 @@ class FileNameBuffer
          }
 
          return strcmp(buffer + (len - slen), s) == 0;
+     }
+
+     inline bool isEmpty()
+     {
+         return buffer[0] == '\0';
+     }
+
+     inline void appendPathSeparator()
+     {
+         // except for the null string, add a ':' or ';' path separator
+         // if we don't already have one
+         if (!isEmpty() && !endsWith(SysFileSystem::getPathSeparator()))
+         {
+             *this += SysFileSystem::getPathSeparator();
+         }
      }
 
      inline void addFinalPathDelimiter()
