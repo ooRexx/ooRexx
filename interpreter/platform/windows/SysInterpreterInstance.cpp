@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -239,20 +239,21 @@ SysSearchPath::SysSearchPath(const char *parentDir, const char *extensionPath)
     // parent directory
     addPath(parentDir);
     // add on the current directory
-    addPath(".;");
-
+    addPath(".");
+    // next comes the extension path defined on the instance
     addPath(extensionPath);
 
-    // add on the Rexx path, then the normal path
-    GetEnvironmentVariable("REXX_PATH", (char *)path + path.length(), (DWORD)rexxPathSize + 1);
+    // followed by the REXX_PATH
     if (!path.endsWith(';'))
     {
         path += ";";
     }
+    GetEnvironmentVariable("REXX_PATH", (char *)path + path.length(), (DWORD)rexxPathSize + 1);
 
-    GetEnvironmentVariable("PATH", (char *)path + path.length(), (DWORD)pathSize + 1);
-    if (path.at(path.length() - 1) != ';')
+    // and finally the PATH
+    if (!path.endsWith(';'))
     {
         path += ";";
     }
+    GetEnvironmentVariable("PATH", (char *)path + path.length(), (DWORD)pathSize + 1);
 }
