@@ -42,13 +42,27 @@
 message(STATUS "CMake version is ${CMAKE_VERSION}")
 if (APPLE)
 # apple build with lower cmake version have an @rpath problem
-    cmake_minimum_required (VERSION 3.12)
+    cmake_minimum_required (VERSION ${CMAKE_VERSION} )
 else ()
 #for other platforms
     cmake_minimum_required (VERSION 2.8.12)
 endif ()
 cmake_policy(VERSION 2.8...3.3)
+
+#[[ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  must come before the project command 13.6 high Sierra the lowest system supported
+#]]
+if( APPLE AND BUILD_OSX_UNIVERSAL_BINARIES )
+  set( CMAKE_OSX_DEPLOYMENT_TARGET 13.6 CACHE STRING  "" FORCE)
+endif()
+
 project (ooRexx)
+#[[ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#]]
+if( APPLE AND BUILD_OSX_UNIVERSAL_BINARIES )
+  set( CMAKE_OSX_ARCHITECTURES arm64 x86_64 )
+endif()
+
 include(CheckIncludeFile)
 include(CheckLibraryExists)
 include(CheckFunctionExists)
