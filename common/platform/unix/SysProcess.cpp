@@ -49,14 +49,11 @@
 # include <pwd.h>
 #endif
 
-#ifdef HAVE_UNISTD_H
-# include <unistd.h>
-#endif
-
 #ifdef HAVE_DLFCN_H
 # include <dlfcn.h>
 #endif
 
+#include <unistd.h>
 #include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
@@ -73,6 +70,9 @@
 #endif
 #ifdef HAVE_NSGETEXECUTABLEPATH
 # include <mach-o/dyld.h>
+#endif
+#ifdef HAVE_KERN_PROC_PATHNAME
+# include <sys/sysctl.h>
 #endif
 
 
@@ -127,22 +127,30 @@ const char* SysProcess::getExecutableFullPath()
         path[0] = '\0';
     }
 #elif defined HAVE_GETEXECNAME
-    // SunOS, Solaris, OpenIndiana et al.
+    // Solaris/OpenIndiana
     path_p = getexecname();
     if (path_p == NULL)
     {
         path_p = path;
         path[0] = '\0';
     }
+#elif defined HAVE_KERN_PROC_PATHNAME
+    // OpenBSD, FreeBSD
+    int mib[4] = {CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1};
+    size_t len = PATH_MAX;
+    if (sysctl(mib, 4, path, &len, NULL, 0) != 0)
+    {
+        path[0] = '\0';
+    }
 #else
     const char *procfs[4];
     char proc_path[32];
 
-    procfs[0] = "/proc/self/exe";     // LINUX
-    procfs[1] = "/proc/curproc/exe";  // BSD
+    procfs[0] = "/proc/self/exe";     // Linux, NetBSD
+    procfs[1] = "/proc/curproc/exe";  // NetBSD
     procfs[2] = "/proc/curproc/file"; // FreeBSD, DragonFly BSD
     snprintf(proc_path, sizeof(proc_path), "/proc/%d/path/a.out", getpid());
-    procfs[3] = proc_path;            // Solaris, OpenIndiana
+    procfs[3] = proc_path;            // Solaris/OpenIndiana
 
     ssize_t bytes = 0;
     for (int i = 0; i < sizeof(procfs) / sizeof(procfs[0]) && bytes == 0; i++)

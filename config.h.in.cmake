@@ -98,6 +98,9 @@
 /* Define to 1 if getexecname is a valid function */
 #cmakedefine HAVE_GETEXECNAME
 
+/* Define to 1 if KERN_PROC_PATHNAME is a valid symbol */
+#cmakedefine HAVE_KERN_PROC_PATHNAME
+
 /* Define to 1 if struct lstat has a member st_mtim */
 #cmakedefine HAVE_STAT_ST_MTIM
 
@@ -154,9 +157,6 @@
 
 /* Define to 1 if union semun is defined in sys/sem.h */
 #cmakedefine HAVE_UNION_SEMUN
-
-/* Define to 1 if you have the <unistd.h> header file. */
-#cmakedefine HAVE_UNISTD_H
 
 /* Define to 1 if you have the <ncurses.h> header file. */
 #cmakedefine CURSES_HAVE_NCURSES_H
