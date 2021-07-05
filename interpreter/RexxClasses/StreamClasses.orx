@@ -237,6 +237,9 @@ notready:                              /* standard notready handler         */
   end
 
 notready:
+  if \var(array) then do
+      array = .array~new(0)
+  end
   return array
 
 ::METHOD line_arrayin PRIVATE EXTERNAL 'LIBRARY REXX stream_arrayin'
