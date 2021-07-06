@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -177,15 +177,6 @@
 #include "RexxUtilCommon.hpp"
 #include "Utilities.hpp"
 #include "RexxInternalApis.h"
-
-#if !defined( HAVE_UNION_SEMUN )
-union semun
-{
-     int val;
-     struct semid_ds *buf;
-     unsigned short *array;
-};
-#endif
 
 #if defined __APPLE__
 #define open64 open

@@ -65,17 +65,8 @@
 /* Define to 1 if you have the <pthread.h> header file. */
 #cmakedefine HAVE_PTHREAD_H
 
-/* Define to 1 if you have pthread_mutexattr_settype function */
-#cmakedefine HAVE_PTHREAD_MUTEXATTR_SETTYPE
-
 /* Define to 1 if you have pthread_mutex_timedlock function */
 #cmakedefine HAVE_PTHREAD_MUTEX_TIMEDLOCK
-
-/* Define to 1 if PTHREAD_MUTEX_ERRORCHECK is a valid value */
-#cmakedefine HAVE_PTHREAD_MUTEX_ERRORCHECK
-
-/* Define to 1 if PTHREAD_MUTEX_RECURSIVE is a valid value */
-#cmakedefine HAVE_PTHREAD_MUTEX_RECURSIVE
 
 /* Define to 1 if DLADDR is a valid value */
 #cmakedefine HAVE_DLADDR
@@ -154,9 +145,6 @@
 
 /* Define to 1 if you have the <time.h> header file. */
 #cmakedefine HAVE_TIME_H
-
-/* Define to 1 if union semun is defined in sys/sem.h */
-#cmakedefine HAVE_UNION_SEMUN
 
 /* Define to 1 if you have the <ncurses.h> header file. */
 #cmakedefine CURSES_HAVE_NCURSES_H

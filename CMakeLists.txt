@@ -383,22 +383,7 @@ if (NOT WIN32)
   check_include_file(pthread.h HAVE_PTHREAD_H)
   set(CMAKE_REQUIRED_LIBRARIES pthread)
   set(CMAKE_REQUIRED_DEFINITIONS "-D_GNU_SOURCE=1")
-  check_function_exists(pthread_mutexattr_settype HAVE_PTHREAD_MUTEXATTR_SETTYPE)
   check_function_exists(pthread_mutex_timedlock HAVE_PTHREAD_MUTEX_TIMEDLOCK)
-# Some platforms use an enum for these values rather than defines
-# so we cannot use the simpler check_symbol_exists test to check for these.
-  check_c_source_compiles("#include <pthread.h>
-                           int main(int arg, char **argv) {
-                           int tryme;
-                           tryme = PTHREAD_MUTEX_ERRORCHECK;
-                           return 0;}"
-                          HAVE_PTHREAD_MUTEX_ERRORCHECK)
-  check_c_source_compiles("#include <pthread.h>
-                           int main(int arg, char **argv) {
-                           int tryme;
-                           tryme = PTHREAD_MUTEX_RECURSIVE;
-                           return 0;}"
-                          HAVE_PTHREAD_MUTEX_RECURSIVE)
   # this requires -ldl on the link
   set(CMAKE_REQUIRED_LIBRARIES ${CMAKE_DL_LIBS})
   check_c_source_compiles("#include <dlfcn.h>
@@ -428,12 +413,6 @@ if (NOT WIN32)
   check_include_file(sys/time.h HAVE_SYS_TIME_H)
   check_include_file(sys/utsname.h HAVE_SYS_UTSNAME_H)
   check_include_file(sys/wait.h HAVE_SYS_WAIT_H)
-  check_c_source_compiles("#include <sys/types.h>
-                           #include <sys/sem.h>
-                           int main(int arg, char **argv) {
-                           union semun semopts;
-                           return 0;}"
-                          HAVE_UNION_SEMUN)
   set (CURSES_NEED_NCURSES TRUE)
   include(FindCurses) # sets CURSES_HAVE_NCURSES_H and CURSES_HAVE_NCURSES_NCURSES_H
   message(STATUS "CURSES_HAVE_NCURSES_H is ${CURSES_HAVE_NCURSES_H}")
