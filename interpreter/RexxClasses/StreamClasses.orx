@@ -221,25 +221,22 @@ notready:                              /* standard notready handler         */
   else
       raise syntax 93.915 array ("CL", type)
 
-  signal on notready                   -- the notready trap is a better means of
-                                       -- handling this.
   if linein then do
       array = .array~new(self~lines)
       -- delegate this to the native method, which will trigger a notready
       -- when done reading.  It will fill in values as it goes.
+      signal on notready
       self~line_arrayin(array)
   end
   else do
       array = .Array~new(self~chars)
+      signal on notready
       loop
           array~append(self~charin)
       end
   end
 
 notready:
-  if \var(array) then do
-      array = .array~new(0)
-  end
   return array
 
 ::METHOD line_arrayin PRIVATE EXTERNAL 'LIBRARY REXX stream_arrayin'
