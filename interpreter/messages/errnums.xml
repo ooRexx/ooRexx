@@ -3240,12 +3240,6 @@ special character (such as a parenthesis).
 </listitem>
 </varlistentry>
 <varlistentry>
-<term>916</term>
-<listitem>
-<para>Method argument <emphasis role="italic">argument</emphasis> must have a string value.</para>
-</listitem>
-</varlistentry>
-<varlistentry>
 <term>917</term>
 <listitem>
 <para>Method <emphasis role="italic">method</emphasis> does not exist.</para>

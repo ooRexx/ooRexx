@@ -529,7 +529,6 @@ ERROR_MAP Message_map_table[] = {     /* table of major and minor errors   */
       MINOR(Error_Incorrect_method_symbol)
       MINOR(Error_Incorrect_method_list)
       MINOR(Error_Incorrect_method_option)
-      MINOR(Error_Incorrect_method_string)
       MINOR(Error_Incorrect_method_methodname)
       MINOR(Error_Incorrect_method_index)
       MINOR(Error_Incorrect_method_array)

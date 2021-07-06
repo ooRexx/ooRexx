@@ -530,7 +530,6 @@ ERROR_MESSAGE Message_table[] = {      /* table of major and minor errors   */
     MESSAGE(Error_Incorrect_method_symbol, "Method argument &1 must be a valid symbol; found \"&2\".")
     MESSAGE(Error_Incorrect_method_list, "Method argument &1 must be one of &2; found \"&3\".")
     MESSAGE(Error_Incorrect_method_option, "Method option must be one of \"&1\"; found \"&2\".")
-    MESSAGE(Error_Incorrect_method_string, "Method argument &1 must have a string value.")
     MESSAGE(Error_Incorrect_method_methodname, "Method &1 does not exist.")
     MESSAGE(Error_Incorrect_method_index, "Incorrect list index \"&1\".")
     MESSAGE(Error_Incorrect_method_array, "Incorrect array position \"&1\".")

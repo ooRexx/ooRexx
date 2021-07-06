@@ -1376,7 +1376,7 @@ RexxString *RexxInternalObject::requiredString(size_t position )
     // if this did not convert, give the error message
     if (string_value == TheNilObject)
     {
-        reportException(Error_Incorrect_method_nostring, position);
+        reportException(Error_Invalid_argument_string, position);
     }
 
     // we should have a real string object here.

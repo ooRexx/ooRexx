@@ -4562,15 +4562,6 @@ special character (such as a parenthesis).
       </SubMessage>
       <SubMessage>
         <Code>93</Code>
-        <Subcode>916</Subcode>
-        <MessageNumber>445</MessageNumber>
-        <Component>Rexx</Component>
-        <Severity>Warning</Severity>
-        <SymbolicName>Error_Incorrect_method_string</SymbolicName>
-        <Text>Method argument <Sub position="1" name="argument"/> must have a string value.</Text>
-      </SubMessage>
-      <SubMessage>
-        <Code>93</Code>
         <Subcode>917</Subcode>
         <MessageNumber>446</MessageNumber>
         <Component>Rexx</Component>

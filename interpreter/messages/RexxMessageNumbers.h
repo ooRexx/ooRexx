@@ -381,7 +381,6 @@
 #define Error_Incorrect_method_symbol_msg                            442
 #define Error_Incorrect_method_list_msg                              443
 #define Error_Incorrect_method_option_msg                            444
-#define Error_Incorrect_method_string_msg                            445
 #define Error_Incorrect_method_methodname_msg                        446
 #define Error_Incorrect_method_index_msg                             447
 #define Error_Incorrect_method_array_msg                             448
