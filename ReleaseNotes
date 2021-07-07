@@ -18,10 +18,10 @@ Linux rpm and deb package names contain the distribution name, version of
 the system they were built on, and the hardware platform of the interpreter.
 
 For instance, ooRexx-5.0.0-12250.raspbian94.armv7l.deb was built on
-Raspbian Linux 9.4 for the armv7l processor and is a 32 bit interpreter.
+Raspbian Linux 9.4 for the armv7l processor and is a 32-bit interpreter.
 
 The ooRexx-5.0.0-12250.centos8.x86_64.rpm installer package was built on
-CentOS 8 for an x86_64 processor and is a 64 bit interpreter.
+CentOS 8 for an x86_64 processor and is a 64-bit interpreter.
 
 Pick the package closest to the system you intend to install on.  If the
 package is not an exact match and will not install, or the interpreter will
@@ -76,7 +76,7 @@ Windows Only Note:
 ------------------
 
 On Windows only, the installer will detect a previous installation and
-launch the uninstalltion program automatically.  The uninstall program will
+launch the uninstallation program automatically.  The uninstall program will
 completely uninstall the previous version of ooRexx and then return control
 to the installer.
 
@@ -97,9 +97,8 @@ allow relocating the package to a different prefix during installation.
 
 Rexx shebangs (e. g. in provided samples) default to #!/usr/bin/env rexx
 except for systems where the brp-mangle-shebangs function rejects such a
-shebang specification (e. g. on more recent Fedora or CentOS system).  For
-these systems systems the installers are built to use shebang
-#!/usr/local/bin/rexx.
+shebang specification (e. g. on more recent Fedora or CentOS systems).  For
+these systems the installers are built to use shebang #!/usr/local/bin/rexx.
 
 When building from source, both the default installation prefix and the Rexx
 shebang can be overridden by using the CMake options -DCMAKE_INSTALL_PREFIX
@@ -128,7 +127,7 @@ The Documentation Bugs tracker is located at:
   https://sourceforge.net/p/oorexx/documentation/
 
 To search for a single ticket number, in any of the trackers, enter
-ticket_num:Number in the search field of the tracker.  For instance to
+ticket_num:Number in the search field of the tracker.  For instance, to
 search for ticket number 200, enter: ticket_num:200
 
 Changes in ooRexx 5.0.0 for Windows Only:
