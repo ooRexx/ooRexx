@@ -45,13 +45,15 @@
 /* Define to 1 if you have the <alloca.h> header file. */
 #cmakedefine HAVE_ALLOCA_H
 
+/* crypt() is known to be unavailable on Android */
+/* Define to 1 if you have the 'crypt' function. */
+#cmakedefine HAVE_CRYPT
+
+/* wordexp() is known to be unavailable on OpenBSD and Android */
 /* Define to 1 if you have the <wordexp.h> header file. */
 #cmakedefine HAVE_WORDEXP_H
 /* Define to 1 if you have the 'wordexp' function. */
 #cmakedefine HAVE_WORDEXP
-
-/* Define to 1 if you have the <memory.h> header file. */
-#cmakedefine HAVE_MEMORY_H
 
 /* Define to 1 if you have nanosleep function */
 #cmakedefine HAVE_NANOSLEEP

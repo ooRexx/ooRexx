@@ -1015,6 +1015,7 @@ RexxRoutine3(RexxObjectPtr,
 }
 
 
+#ifdef HAVE_WORDEXP
 /**
  * Method:        SysWordexp
  *
@@ -1024,7 +1025,6 @@ RexxRoutine3(RexxObjectPtr,
  *
  * @return        Array of file names.
  */
-#if !defined(OPENBSD)
 RexxRoutine1(RexxObjectPtr,
              SysWordexp,
              CSTRING, inexp)
@@ -1501,6 +1501,7 @@ RexxRoutine1(RexxObjectPtr,
 }
 
 
+#ifdef HAVE_CRYPT
 /**
  * Method:        SysCrypt
  *
@@ -1540,6 +1541,7 @@ RexxRoutine2(RexxObjectPtr,
     }
     return (RexxObjectPtr)context->NewStringFromAsciiz(es);
 }
+#endif
 
 
 /**
@@ -1701,7 +1703,9 @@ RexxRoutineEntry orxnixclib_routines[] = {
     REXX_TYPED_ROUTINE(SysChmod, SysChmod),
     REXX_TYPED_ROUTINE(SysGeterrno, SysGeterrno),
     REXX_TYPED_ROUTINE(SysGeterrnomsg, SysGeterrnomsg),
+#ifdef HAVE_CRYPT
     REXX_TYPED_ROUTINE(SysCrypt, SysCrypt),
+#endif
     REXX_TYPED_ROUTINE(SysMkdirUnix, SysMkdir),
     REXX_TYPED_ROUTINE(SysRmdirUnix, SysRmdir),
     REXX_TYPED_ROUTINE(SysGetdirlist, SysGetdirlist),
@@ -1720,7 +1724,7 @@ RexxMethodEntry orxnixclib_methods[] = {
 RexxPackageEntry orxnixclib_package_entry = {
     STANDARD_PACKAGE_HEADER
     REXX_INTERPRETER_4_0_0,              // anything after 4.0.0 will work
-    "rxunixsys",                        // name of the package
+    "rxunixsys",                         // name of the package
     "1.0.0",                             // package information
     orxnixclib_loader,                   // load function
     NULL,                                // unload function
