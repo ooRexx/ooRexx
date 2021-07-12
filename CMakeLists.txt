@@ -41,24 +41,22 @@
 #/*----------------------------------------------------------------------------*/
 message(STATUS "CMake version is ${CMAKE_VERSION}")
 if (APPLE)
-# apple build with lower cmake version have an @rpath problem
-    cmake_minimum_required (VERSION ${CMAKE_VERSION} )
+    # apple builds with prior cmake version have an @rpath problem
+    cmake_minimum_required (VERSION 3.12)
 else ()
-#for other platforms
+    # for other platforms
     cmake_minimum_required (VERSION 2.8.12)
 endif ()
-cmake_policy(VERSION 2.8...3.3)
+cmake_policy(VERSION 2.8...3.20)
 
-#[[ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  must come before the project command 13.6 high Sierra the lowest system supported
-#]]
+# must come before the project command
+# 13.6 High Sierra is the minimum system supported
 if( APPLE AND BUILD_OSX_UNIVERSAL_BINARIES )
   set( CMAKE_OSX_DEPLOYMENT_TARGET 13.6 CACHE STRING  "" FORCE)
 endif()
 
 project (ooRexx)
-#[[ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#]]
+
 if( APPLE AND BUILD_OSX_UNIVERSAL_BINARIES )
   set( CMAKE_OSX_ARCHITECTURES arm64 x86_64 )
 endif()
@@ -308,31 +306,6 @@ endif ()
 
 include_directories(${PROJECT_BINARY_DIR})
 if (WIN32)
-   add_definitions(/DORX_VER=${ORX_MAJOR}
-            /DORX_REL=${ORX_MINOR}
-            /DORX_MOD=${ORX_MOD_LVL}
-            /DORX_BLD=${ORX_BLD_LVL}
-            /DORX_VER_STR=${ORX_VER_STR}
-            /DOOREXX_COPY_YEAR="${ORX_COPY_YEAR}"
-            /DORX_SYS_STR="${ORX_SYS_STR}"
-            /DORX_SHARED_LIBRARY_EXT="${CMAKE_SHARED_LIBRARY_SUFFIX}"
-            /DORX_REXXPATH="${CMAKE_REXXPATH}"
-# we build for Vista or higher; no more XP support
-# (this define restricts us to the Win 6.0 APIs; anything higher will fail)
-            /D_WIN32_WINNT=0x0600
-# suppress CRT_SECURE warnings
-# (we might instead use the secure versions, by using these two DEFINEs:
-#           /D_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1
-#           /D_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1
-            /D_CRT_SECURE_NO_DEPRECATE
-            /D_CRT_SECURE_NO_WARNINGS
-            /D_CRT_NONSTDC_NO_DEPRECATE
-            /DNOMINMAX
-# suppress warning C4291: no matching operator delete found; memory will not be freed if initialization throws an exception
-            /wd4291
-# give errors for missing override specifications or method hiding with warning level 3
-#           /w34263 /w34266
-            /DWIN32 /D_WINDOWS /DHAVE_CONFIG_H)
    if (${ORX_ARCHITECTURE} STREQUAL "64")
       set (EXE_MANIFEST_FILE ${CMAKE_CURRENT_SOURCE_DIR}/${ORX_PLATFORM_DIR}/rexx64.exe.manifest)
       set (NSIS_CPU "x86_64")
@@ -342,6 +315,32 @@ if (WIN32)
    endif ()
    file(TO_NATIVE_PATH ${EXE_MANIFEST_FILE} EXE_MANIFEST_FILE)
    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /STACK:524288")
+   add_definitions(/DORX_VER=${ORX_MAJOR}
+            /DORX_REL=${ORX_MINOR}
+            /DORX_MOD=${ORX_MOD_LVL}
+            /DORX_BLD=${ORX_BLD_LVL}
+            /DORX_VER_STR=${ORX_VER_STR}
+            /DOOREXX_COPY_YEAR="${ORX_COPY_YEAR}"
+            /DORX_SYS_STR="${ORX_SYS_STR}"
+            /DORX_SHARED_LIBRARY_EXT="${CMAKE_SHARED_LIBRARY_SUFFIX}"
+            /DORX_SYSTEM_PROCESSOR="${NSIS_CPU}"
+            /DORX_REXXPATH="${CMAKE_REXXPATH}"
+            # we build for Vista or higher; no more XP support
+            # (this define restricts us to the Win 6.0 APIs; anything higher will fail)
+            /D_WIN32_WINNT=0x0600
+            # suppress CRT_SECURE warnings
+            # (we might instead use the secure versions, by using these two DEFINEs:
+#           /D_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1
+#           /D_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1
+            /D_CRT_SECURE_NO_DEPRECATE
+            /D_CRT_SECURE_NO_WARNINGS
+            /D_CRT_NONSTDC_NO_DEPRECATE
+            /DNOMINMAX
+            # suppress warning C4291: no matching operator delete found; memory will not be freed if initialization throws an exception
+            /wd4291
+# give errors for missing override specifications or method hiding with warning level 3
+#           /w34263 /w34266
+            /DWIN32 /D_WINDOWS /DHAVE_CONFIG_H)
 else ()
    add_definitions(-DORX_VER=${ORX_MAJOR} -DORX_REL=${ORX_MINOR} -DORX_MOD=${ORX_MOD_LVL} -DORX_BLD=${ORX_BLD_LVL}
 
@@ -349,6 +348,7 @@ else ()
             -DORX_SYS_STR="${ORX_SYS_STR}"
              -D_GNU_SOURCE
             -DORX_SHARED_LIBRARY_EXT="${CMAKE_SHARED_LIBRARY_SUFFIX}"
+            -DORX_SYSTEM_PROCESSOR="${CMAKE_SYSTEM_PROCESSOR}"
             -DORX_REXXPATH="${CMAKE_REXXPATH}"
             -D${ORX_SYS_STR} -DOPSYS_${ORX_SYS_STR} -DHAVE_CONFIG_H)
     set (ORX_SYSLIB_DL ${CMAKE_DL_LIBS})
@@ -359,14 +359,17 @@ endif ()
 check_include_file(xlocale.h HAVE_XLOCALE_H)
 check_include_file(malloc.h HAVE_MALLOC_H)
 check_include_file(alloca.h HAVE_ALLOCA_H)
-check_function_exists(nsleep HAVE_NSLEEP)
 check_include_file(signal.h HAVE_SIGNAL_H)
 check_include_file(time.h HAVE_TIME_H)
-check_function_exists(nanosleep HAVE_NANOSLEEP)
 check_include_file(inttypes.h HAVE_INTTYPES_H)
 check_include_file(stdint.h HAVE_STDINT_H)
 if (NOT WIN32)
-  set(CMAKE_REQUIRED_LIBRARIES crypt)
+  check_function_exists(nsleep HAVE_NSLEEP)
+  check_function_exists(nanosleep HAVE_NANOSLEEP)
+  check_library_exists(crypt crypt "" HAVE_LIBCRYPT)
+  if (HAVE_LIBCRYPT)
+    set(CMAKE_REQUIRED_LIBRARIES crypt)
+  endif ()
   check_function_exists(crypt HAVE_CRYPT)
   check_symbol_exists(wordexp "wordexp.h;stdlib.h" HAVE_WORDEXP)
   check_include_file(wordexp.h HAVE_WORDEXP_H)
@@ -375,8 +378,6 @@ if (NOT WIN32)
   check_include_file(dlfcn.h HAVE_DLFCN_H)
   check_include_file(features.h HAVE_FEATURES_H)
   check_include_file(filehdr.h HAVE_FILEHDR_H)
-  check_function_exists(getpwuid HAVE_GETPWUID)
-  check_function_exists(IDtouser HAVE_IDTOUSER)
   check_function_exists(euidaccess HAVE_EUIDACCESS)
   find_library(HAVE_LIBPTHREAD pthread)
   find_library(HAVE_LIBRT rt)
@@ -2133,11 +2134,11 @@ if (BUILD_RPM)
    set(CPACK_PACKAGING_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
    set(CPACK_RPM_PACKAGE_SUMMARY "Open Object Rexx is an object-oriented scripting language.")
 
-   set(CPACK_RPM_PACKAGE_ARCHITECTURE ${CMAKE_HOST_SYSTEM_PROCESSOR})
+   set(CPACK_RPM_PACKAGE_ARCHITECTURE ${CMAKE_SYSTEM_PROCESSOR})
    if (DEFINED OS_DIST)
-      set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL}-${CPACK_PACKAGE_RELEASE}.${OS_DIST}.${CMAKE_HOST_SYSTEM_PROCESSOR}")
+      set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL}-${CPACK_PACKAGE_RELEASE}.${OS_DIST}.${CMAKE_SYSTEM_PROCESSOR}")
    else ()
-      set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL}-${CPACK_PACKAGE_RELEASE}.${CMAKE_HOST_SYSTEM_PROCESSOR}")
+      set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL}-${CPACK_PACKAGE_RELEASE}.${CMAKE_SYSTEM_PROCESSOR}")
    endif ()
    set(CPACK_RPM_PACKAGE_DESCRIPTION
 "Open Object Rexx is an object-oriented scripting language. The language
@@ -2185,9 +2186,9 @@ if (BUILD_DEB)
    set(CPACK_DEBIAN_PACKAGE_MAINTAINER "sahananda@users.sf.net")
    set(CPACK_PACKAGING_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
    if (DEFINED OS_DIST)
-      set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL}-${CPACK_PACKAGE_RELEASE}.${OS_DIST}.${CMAKE_HOST_SYSTEM_PROCESSOR}")
+      set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL}-${CPACK_PACKAGE_RELEASE}.${OS_DIST}.${CMAKE_SYSTEM_PROCESSOR}")
    else ()
-      set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL}-${CPACK_PACKAGE_RELEASE}.${CMAKE_HOST_SYSTEM_PROCESSOR}")
+      set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL}-${CPACK_PACKAGE_RELEASE}.${CMAKE_SYSTEM_PROCESSOR}")
    endif ()
    # The DEB generator does not support a multi-line description.
    set(CPACK_DEBIAN_PACKAGE_DESCRIPTION "Open Object Rexx is an object-oriented scripting language.")
@@ -2205,9 +2206,9 @@ if (BUILD_FREEBSD)
    set(CPACK_FREEBSD_PACKAGE_MAINTAINER "sahananda@users.sf.net")
    set(CPACK_PACKAGING_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
    if (DEFINED OS_DIST)
-      set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL}-${CPACK_PACKAGE_RELEASE}.${OS_DIST}.${CMAKE_HOST_SYSTEM_PROCESSOR}")
+      set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL}-${CPACK_PACKAGE_RELEASE}.${OS_DIST}.${CMAKE_SYSTEM_PROCESSOR}")
    else ()
-      set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL}-${CPACK_PACKAGE_RELEASE}.${CMAKE_HOST_SYSTEM_PROCESSOR}")
+      set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL}-${CPACK_PACKAGE_RELEASE}.${CMAKE_SYSTEM_PROCESSOR}")
    endif ()
    set(CPACK_FREEBSD_PACKAGE_LICENSE "CPL")
    set(CPACK_FREEBSD_PACKAGE_DESCRIPTION
@@ -2241,9 +2242,9 @@ if (BUILD_DMG)
    endif ()
 
    if (DEFINED OS_DIST)
-      set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL}-${CPACK_PACKAGE_RELEASE}.${OS_DIST}.${CMAKE_HOST_SYSTEM_PROCESSOR}")
+      set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL}-${CPACK_PACKAGE_RELEASE}.${OS_DIST}.${CMAKE_SYSTEM_PROCESSOR}")
    else ()
-      set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL}-${CPACK_PACKAGE_RELEASE}.${CMAKE_HOST_SYSTEM_PROCESSOR}")
+      set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL}-${CPACK_PACKAGE_RELEASE}.${CMAKE_SYSTEM_PROCESSOR}")
    endif ()
 
    message(STATUS "CPACK_PACKAGE_FILE_NAME ${CPACK_PACKAGE_FILE_NAME}")

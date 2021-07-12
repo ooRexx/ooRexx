@@ -61,18 +61,10 @@
 RexxString *SystemInterpreter::getUserid()
 {
     char account_buffer[ACCOUNT_BUFFER_SIZE];
-#if defined( HAVE_GETPWUID )
-    struct passwd * pstUsrDat;
-#endif
+    struct passwd *pstUsrDat;
 
     account_buffer[ACCOUNT_BUFFER_SIZE-1] = '\0'; /* Max delimiter            */
-#if defined( HAVE_GETPWUID )
     pstUsrDat = getpwuid(geteuid());
-    strncpy( account_buffer,  pstUsrDat->pw_name, ACCOUNT_BUFFER_SIZE-1);
-#elif defined( HAVE_IDTOUSER )
-    strncpy( account_buffer, IDtouser(geteuid()), ACCOUNT_BUFFER_SIZE-1);
-#else
-    strcpy( account_buffer, "unknown" );
-#endif
+    strncpy(account_buffer, pstUsrDat->pw_name, ACCOUNT_BUFFER_SIZE-1);
     return new_string(account_buffer);
 }

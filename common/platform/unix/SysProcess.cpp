@@ -84,22 +84,15 @@ const char *SysProcess::libraryLocation = NULL;
 /**
  * Get the current user name information.
  *
- * @param buffer The buffer (of at least MAX_USERID_LENGTH characters) into which the userid is copied.
+ * @param buffer The buffer (of at least MAX_USERID_LENGTH characters) into
+ * which the userid is copied.
  */
 void SysProcess::getUserID(char *buffer)
 {
-#if defined( HAVE_GETPWUID )
-    struct passwd * pstUsrDat;
-#endif
+    struct passwd *pstUsrDat;
 
-#if defined( HAVE_GETPWUID )
     pstUsrDat = getpwuid(geteuid());
-    strncpy( buffer,  pstUsrDat->pw_name, MAX_USERID_LENGTH-1);
-#elif defined( HAVE_IDTOUSER )
-    strncpy( buffer, IDtouser(geteuid()), MAX_USERID_LENGTH-1);
-#else
-    strcpy( buffer, "unknown" );
-#endif
+    strncpy(buffer, pstUsrDat->pw_name, MAX_USERID_LENGTH-1);
 }
 
 

@@ -18,14 +18,8 @@
 /* Define to 1 if you have the <filehdr.h> header file. */
 #cmakedefine HAVE_FILEHDR_H
 
-/* Define to 1 if you have the 'getpwuid' function. */
-#cmakedefine HAVE_GETPWUID
-
 /* Define to 1 if you have the 'getuserattr' function. */
 #cmakedefine HAVE_GETUSERATTR
-
-/* Define to 1 if you have the 'IDtouser' function. */
-#cmakedefine HAVE_IDTOUSER
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #cmakedefine HAVE_INTTYPES_H
