@@ -249,11 +249,11 @@ name = name~upper()
 if .SocketOptions~optionNames~hasItem(name) = .false then ,
  raise syntax 93.914 array (1, .SocketOptions~optionNames~makeArray~toString, name)
 -- get the value
-retc = SockGetSockOpt(s, 'SOL_SOCKET', name, 'xxx')
+retc = SockGetSockOpt(s, 'SOL_SOCKET', name, "value")
 -- some values may not be gettable
 if retc = -1 then
    return .nil
-return retc
+return value
 
 /*----------------------------------------------------------------------------*/
 /* Method: getPeerName                                                        */

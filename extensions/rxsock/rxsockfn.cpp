@@ -494,6 +494,9 @@ RexxRoutine4(int, SockGetSockOpt, int, sock, CSTRING, level, CSTRING, option, CS
     socklen_t      len;
     void          *ptr;
     char           buffer[30];
+#ifndef WIN32
+    struct timeval tv;
+#endif
 
 
     if (caselessCompare("SOL_SOCKET", level) != 0)
@@ -518,6 +521,16 @@ RexxRoutine4(int, SockGetSockOpt, int, sock, CSTRING, level, CSTRING, option, CS
             ptr = &lingStruct;
             len = sizeof(lingStruct);
             break;
+
+#ifndef WIN32
+        // on Windows SO_RCVTIMEO and SO_SNDTIMEO expect a milliseconds
+        // DWORD argument, whereas on Unix a struct timeval is expected
+        case SO_RCVTIMEO:
+        case SO_SNDTIMEO:
+            ptr = &tv;
+            len = sizeof(tv);
+            break;
+#endif
 
         default:
             ptr = &intVal;
@@ -550,6 +563,15 @@ RexxRoutine4(int, SockGetSockOpt, int, sock, CSTRING, level, CSTRING, option, CS
                 default:          strcpy(buffer,"UNKNOWN");
             }
             break;
+
+#ifndef WIN32
+        // on Windows SO_RCVTIMEO and SO_SNDTIMEO expect a milliseconds
+        // DWORD argument, whereas on Unix a struct timeval is expected
+        case SO_RCVTIMEO:
+        case SO_SNDTIMEO:
+            sprintf(buffer, "%d", (int)(tv.tv_sec * 1000 + tv.tv_usec / 1000));
+            break;
+#endif
 
         default:
             sprintf(buffer,"%d", intVal);
@@ -1143,6 +1165,9 @@ RexxRoutine4(int, SockSetSockOpt, int, sock, CSTRING, target, CSTRING, option, C
     socklen_t      lenVal;
     int            len;
     void          *ptr;
+#ifndef WIN32
+    struct timeval tv;
+#endif
 
 
     if (caselessCompare("SOL_SOCKET", target))
@@ -1184,6 +1209,19 @@ RexxRoutine4(int, SockSetSockOpt, int, sock, CSTRING, target, CSTRING, option, C
 
             sscanf(arg, "%d", &lenVal);
             break;
+
+#ifndef WIN32
+        // on Windows SO_RCVTIMEO and SO_SNDTIMEO expect a milliseconds
+        // DWORD argument, whereas on Unix a struct timeval is expected
+        case SO_RCVTIMEO:
+        case SO_SNDTIMEO:
+            ptr = &tv;
+            len = sizeof(tv);
+            sscanf(arg, "%d", &intVal);
+            tv.tv_sec = intVal / 1000;
+            tv.tv_usec = (intVal - tv.tv_sec * 1000) * 1000 + 333;
+            break;
+#endif
 
         case SO_ERROR:
         case SO_TYPE:
