@@ -488,7 +488,13 @@ RexxObject* RexxActivation::run(RexxObject *_receiver, RexxString *name, RexxObj
             else
             {
                 // guarded methods need to reserve the object scope
-                if (isGuarded())
+                // but we can still run them unguarded if they don't
+                // acquire object variables by using EXPOSE or USE LOCAL
+                // as their first instruction
+                if (isGuarded()
+                    && current != NULL
+                    && current->getType() != KEYWORD_EXPOSE
+                    && current->getType() != KEYWORD_USE_LOCAL)
                 {
                     // get the object variables and reserve these
                     settings.objectVariables = receiver->getObjectVariables(scope);
