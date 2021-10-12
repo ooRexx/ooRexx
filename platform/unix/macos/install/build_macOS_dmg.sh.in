@@ -47,18 +47,18 @@ ln -sfvh /Applications $cmake_binary_dir/temp_dmg_dir
 mkdir -p $cmake_binary_dir/temp_dmg_dir/Documentation
 
 # use cURL to download the latest documentation (this takes some time)
-curl -L https://sourceforge.net/projects/oorexx/files/oorexx-docs/5.0.0beta/rexxref.pdf > $cmake_binary_dir/temp_dmg_dir/Documentation/rexxref.pdf
-curl -L https://sourceforge.net/projects/oorexx/files/oorexx-docs/5.0.0beta/rexxapi.pdf > $cmake_binary_dir/temp_dmg_dir/Documentation/rexxapi.pdf
-curl -L https://sourceforge.net/projects/oorexx/files/oorexx-docs/5.0.0beta/rexxpg.pdf > $cmake_binary_dir/temp_dmg_dir/Documentation/rexxpg.pdf
-curl -L https://sourceforge.net/projects/oorexx/files/oorexx-docs/5.0.0beta/rexxextensions.pdf > $cmake_binary_dir/temp_dmg_dir/Documentation/rexxextensions.pdf
-curl -L https://sourceforge.net/projects/oorexx/files/oorexx-docs/5.0.0beta/unixextensions.pdf > $cmake_binary_dir/temp_dmg_dir/Documentation/unixextensions.pdf
-curl -L https://sourceforge.net/projects/oorexx/files/oorexx-docs/5.0.0beta/rxsock.pdf  > $cmake_binary_dir/temp_dmg_dir/Documentation/xsock.pdf
-curl -L https://sourceforge.net/projects/oorexx/files/oorexx-docs/5.0.0beta/rxmath.pdf > $cmake_binary_dir/temp_dmg_dir/Documentation/rxmath.pdf
-curl -L https://sourceforge.net/projects/oorexx/files/oorexx-docs/5.0.0beta/rxftp.pdf > $cmake_binary_dir/temp_dmg_dir/Documentation/rxftp.pdf
-curl -L https://sourceforge.net/projects/oorexx/files/oorexx-docs/5.0.0beta/rexxgtk.pdf > $cmake_binary_dir/temp_dmg_dir/Documentation/rexxgtk.pdf
-curl -L https://sourceforge.net/projects/oorexx/files/oorexx-docs/5.0.0beta/orxncurses.pdf > $cmake_binary_dir/temp_dmg_dir/Documentation/orxncurses.pdf
-curl -L https://sourceforge.net/projects/oorexx/files/oorexx-docs/5.0.0beta/readme.pdf > $cmake_binary_dir/temp_dmg_dir/Documentation/readme.pdf
-curl -L https://sourceforge.net/projects/oorexx/files/oorexx-docs/5.0.0beta/ReadMe.txt > $cmake_binary_dir/temp_dmg_dir/Documentation/ReadMe.txt
+curl -L --insecure https://sourceforge.net/projects/oorexx/files/oorexx-docs/5.0.0beta/rexxref.pdf > $cmake_binary_dir/temp_dmg_dir/Documentation/rexxref.pdf
+curl -L --insecure https://sourceforge.net/projects/oorexx/files/oorexx-docs/5.0.0beta/rexxapi.pdf > $cmake_binary_dir/temp_dmg_dir/Documentation/rexxapi.pdf
+curl -L --insecure https://sourceforge.net/projects/oorexx/files/oorexx-docs/5.0.0beta/rexxpg.pdf > $cmake_binary_dir/temp_dmg_dir/Documentation/rexxpg.pdf
+curl -L --insecure https://sourceforge.net/projects/oorexx/files/oorexx-docs/5.0.0beta/rexxextensions.pdf > $cmake_binary_dir/temp_dmg_dir/Documentation/rexxextensions.pdf
+curl -L --insecure https://sourceforge.net/projects/oorexx/files/oorexx-docs/5.0.0beta/unixextensions.pdf > $cmake_binary_dir/temp_dmg_dir/Documentation/unixextensions.pdf
+curl -L --insecure https://sourceforge.net/projects/oorexx/files/oorexx-docs/5.0.0beta/rxsock.pdf  > $cmake_binary_dir/temp_dmg_dir/Documentation/xsock.pdf
+curl -L --insecure https://sourceforge.net/projects/oorexx/files/oorexx-docs/5.0.0beta/rxmath.pdf > $cmake_binary_dir/temp_dmg_dir/Documentation/rxmath.pdf
+curl -L --insecure https://sourceforge.net/projects/oorexx/files/oorexx-docs/5.0.0beta/rxftp.pdf > $cmake_binary_dir/temp_dmg_dir/Documentation/rxftp.pdf
+curl -L --insecure https://sourceforge.net/projects/oorexx/files/oorexx-docs/5.0.0beta/rexxgtk.pdf > $cmake_binary_dir/temp_dmg_dir/Documentation/rexxgtk.pdf
+curl -L --insecure https://sourceforge.net/projects/oorexx/files/oorexx-docs/5.0.0beta/orxncurses.pdf > $cmake_binary_dir/temp_dmg_dir/Documentation/orxncurses.pdf
+curl -L --insecure https://sourceforge.net/projects/oorexx/files/oorexx-docs/5.0.0beta/readme.pdf > $cmake_binary_dir/temp_dmg_dir/Documentation/readme.pdf
+curl -L --insecure https://sourceforge.net/projects/oorexx/files/oorexx-docs/5.0.0beta/ReadMe.txt > $cmake_binary_dir/temp_dmg_dir/Documentation/ReadMe.txt
 
 # Put a copy of the documentation also inside the "App"
 cp -R $cmake_binary_dir/temp_dmg_dir/Documentation $cmake_binary_dir/temp_dmg_dir/$cpack_package_name$orx_major/Documentation
