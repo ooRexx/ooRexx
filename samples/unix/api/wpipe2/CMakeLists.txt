@@ -61,4 +61,6 @@ target_include_directories(wpipe2 PUBLIC
             ${build_api_platform_dir})
 # Extra link library definitions
 target_link_libraries(wpipe2 rexx rexxapi)
-install(TARGETS wpipe2 LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+install(TARGETS wpipe2 LIBRARY DESTINATION ${INSTALL_SAMPLES_DIR}/api/wpipe2)
+install(FILES rexxasp2.c COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/wpipe2)
+install(PROGRAMS ${PROJECT_SOURCE_DIR}/aspitest2.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/wpipe2)

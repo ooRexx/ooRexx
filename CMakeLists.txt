@@ -290,7 +290,8 @@ else ()
    set (INSTALL_EXECUTABLE_DIR ${CMAKE_INSTALL_PREFIX}/bin)
    set (INSTALL_CLS_DIR ${INSTALL_EXECUTABLE_DIR})
    set (INSTALL_INCLUDE_DIR ${CMAKE_INSTALL_PREFIX}/include)
-   set (INSTALL_SAMPLES_DIR ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME})
+   set (INSTALL_SAMPLES_DIR ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME}/samples)
+   set (INSTALL_DOC_DIR ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME}/doc)
    set (INSTALL_MAN_DIR ${CMAKE_INSTALL_PREFIX}/share/man)
 endif ()
 
@@ -1803,7 +1804,7 @@ if (NOT WIN32)
    add_manpage (rxqueue 1)
    add_manpage (rxsubcom 1)
 
-   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_samples_dir}/readme.txt DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME})
+   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_samples_dir}/readme.txt DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME}/samples)
 endif ()
 
 
@@ -1822,7 +1823,9 @@ add_subdirectory (testbinaries)
 
 # The Windows installer assumes we have the docs available.  Don't try building
 # any of the installer stuff if this is not available.
-if (WIN32 AND DOC_SOURCE_DIR)
+if (DOC_SOURCE_DIR)
+
+ if (WIN32) 
    # Add the install directory to the module path so the custom template can be located.
    set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/install ${CMAKE_MODULE_PATH})
 
@@ -2077,6 +2080,29 @@ if (WIN32 AND DOC_SOURCE_DIR)
           WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
           COMMENT "Removing NSIS installer build files")
    endif()
+
+   else () # Unix 
+	   # install each of the doc files
+	   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/CHANGES COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR} RENAME CHANGES.txt)
+	   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/ReleaseNotes COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR} RENAME ReleaseNotes.txt)
+
+	   install(FILES ${DOC_SOURCE_DIR}/readme.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+	   install(FILES ${DOC_SOURCE_DIR}/ootest.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+	   install(FILES ${DOC_SOURCE_DIR}/orxncurses.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+	   
+	   install(FILES ${DOC_SOURCE_DIR}/rexxapi.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+	   install(FILES ${DOC_SOURCE_DIR}/rexxextensions.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+	   install(FILES ${DOC_SOURCE_DIR}/rexxgtk.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+	   
+	   install(FILES ${DOC_SOURCE_DIR}/rexxpg.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+	   install(FILES ${DOC_SOURCE_DIR}/rexxref.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+	   install(FILES ${DOC_SOURCE_DIR}/rxmath.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+	   install(FILES ${DOC_SOURCE_DIR}/rxsock.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+	   install(FILES ${DOC_SOURCE_DIR}/rxftp.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+
+	   install(FILES ${DOC_SOURCE_DIR}/unixextensions.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+
+   endif()	   
 endif ()
 
 

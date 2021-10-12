@@ -62,8 +62,10 @@ target_include_directories(callrexx1 PUBLIC
             ${build_api_dir}
             ${build_api_platform_dir})
 # Extra link library definitions
-target_link_libraries(callrexx1 rexx ${platform_callrexx1_libs})
-install(TARGETS callrexx1 RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+target_link_libraries(callrexx1 rexx rexxapi)
+install(TARGETS callrexx1 RUNTIME DESTINATION ${INSTALL_SAMPLES_DIR}/api/callrexx)
+install(FILES callrexx1.cpp COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/callrexx)
+
 
 #################### callrexx2 (executable) #########################
 # additional source files required by specific platforms
@@ -75,5 +77,11 @@ target_include_directories(callrexx2 PUBLIC
             ${build_api_dir}
             ${build_api_platform_dir})
 # Extra link library definitions
-target_link_libraries(callrexx2 rexx)
-install(TARGETS callrexx2 RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+target_link_libraries(callrexx2 rexx rexxapi)
+install(TARGETS callrexx2 RUNTIME DESTINATION ${INSTALL_SAMPLES_DIR}/api/callrexx)
+install(FILES callrexx2.c COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/callrexx)
+
+
+#################### Rexx scripts invoked by the executables #########################
+install(PROGRAMS del_macro.rex example.rex load_macro.rex macros.rex startrx1.rex startrx2.rex startrx3.rex 
+              COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/callrexx)
