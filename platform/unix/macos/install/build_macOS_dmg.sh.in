@@ -68,7 +68,7 @@ rm -f $cmake_binary_dir/$cpack_package_name$orx_major.dmg
 
 hdiutil create -fs HFS+ -volname $cpack_package_name$orx_major -srcfolder $cmake_binary_dir/temp_dmg_dir $cmake_binary_dir/$cpack_package_name$orx_major.dmg
 
-/usr/local/bin/fileicon set $cmake_binary_dir/$cpack_package_name$orx_major.dmg $cmake_source_dir/platform/unix/macos/install/oorexx.png
+fileicon set $cmake_binary_dir/$cpack_package_name$orx_major.dmg $cmake_source_dir/platform/unix/macos/install/oorexx.png
 
 cp $cmake_binary_dir/$cpack_package_name$orx_major.dmg $cmake_binary_dir/$cpack_package_file_name.dmg
 
