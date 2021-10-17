@@ -1,6 +1,6 @@
 #/*----------------------------------------------------------------------------*/
 #/*                                                                            */
-#/* Copyright (c) 2008-2014 Rexx Language Association. All rights reserved.    */
+#/* Copyright (c) 2008-2021 Rexx Language Association. All rights reserved.    */
 #/*                                                                            */
 #/* This program and the accompanying materials are made available under       */
 #/* the terms of the Common Public License v1.0 which accompanies this         */
@@ -36,29 +36,19 @@
 #/*----------------------------------------------------------------------------*/
 
 
-# A pretty simple make file that should work on most Unix-like platforms that
-# have gcc.
+# A pretty simple make file that should work on most Unix-like platforms that have gcc.
 
-DLL_LFLAGS = --export-dynamic -shared -nostartfiles
-EXE_LFLAGS = -L. -ldl
-OOREXX_CFLAGS =  -fPIC
-
+OOREXX_LFLAGS = -lrexx -lrexxapi  # needs to follow after file for which link resoultion is needed
 
 # What we want to build.
 all: runRexxProgram stackOverflow
 
-runRexxProgram.o: runRexxProgram.cpp
-	gcc -c $(OOREXX_CFLAGS) -o runRexxProgram.o runRexxProgram.cpp
+runRexxProgram: runRexxProgram.cpp
+	gcc runRexxProgram.cpp ${OOREXX_LFLAGS} -o runRexxProgram 
 
-runRexxProgram: runRexxProgram.o
-	gcc $(EXE_LFLAGS) -lrexx -lrexxapi runRexxProgram.o -o runRexxProgram
-
-stackOverflow.o: stackOverflow.cpp
-	gcc -c $(OOREXX_CFLAGS) -o stackOverflow.o stackOverflow.cpp
-
-stackOverflow: stackOverflow.o
-	gcc $(EXE_LFLAGS) -lrexx -lrexxapi stackOverflow.o -o stackOverflow
+stackOverflow: stackOverflow.cpp
+	gcc stackOverflow.cpp  $(OOREXX_LFLAGS) -o stackOverflow 
 
 clean:
-	rm -f *.so *.o stackOverflow runRexxProgram
+	rm -f stackOverflow runRexxProgram
 
