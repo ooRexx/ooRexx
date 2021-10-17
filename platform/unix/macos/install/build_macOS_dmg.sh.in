@@ -41,7 +41,7 @@ cp $cmake_source_dir/CPLv1.0.txt $cmake_binary_dir/temp_dmg_dir/$cpack_package_n
 ln -sfvh /Applications $cmake_binary_dir/temp_dmg_dir
 
 # fileicon is open source, install with brew install fileicon if missing
-/usr/local/bin/fileicon set $cmake_binary_dir/temp_dmg_dir/$cpack_package_name$orx_major $cmake_source_dir/platform/unix/macos/install/oorexx.png
+fileicon set $cmake_binary_dir/temp_dmg_dir/$cpack_package_name$orx_major $cmake_source_dir/platform/unix/macos/install/oorexx.png
 
 # Make a documentation directory to go with the build
 mkdir -p $cmake_binary_dir/temp_dmg_dir/Documentation

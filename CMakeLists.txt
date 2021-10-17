@@ -50,9 +50,9 @@ endif ()
 cmake_policy(VERSION 2.8...3.20)
 
 # must come before the project command
-# 13.6 High Sierra is the minimum system supported
+# 10.13.6 High Sierra is the minimum system supported
 if( APPLE AND BUILD_OSX_UNIVERSAL_BINARIES )
-  set( CMAKE_OSX_DEPLOYMENT_TARGET 13.6 CACHE STRING  "" FORCE)
+  set( CMAKE_OSX_DEPLOYMENT_TARGET 10.13.6 CACHE STRING  "" FORCE)
 endif()
 
 project (ooRexx)
