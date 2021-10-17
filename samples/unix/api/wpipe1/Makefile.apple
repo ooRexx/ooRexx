@@ -1,6 +1,6 @@
 #/*----------------------------------------------------------------------------*/
 #/*                                                                            */
-#/* Copyright (c) 2014-2021 Rexx Language Association. All rights reserved.    */
+#/* Copyright (c) 2021 Rexx Language Association. All rights reserved.         */
 #/*                                                                            */
 #/* This program and the accompanying materials are made available under       */
 #/* the terms of the Common Public License v1.0 which accompanies this         */
@@ -35,42 +35,21 @@
 #/*                                                                            */
 #/*----------------------------------------------------------------------------*/
 
-#/*----------------------------------------------------------------------------*/
-#/* Global settings                                                            */
-#/*----------------------------------------------------------------------------*/
-if (APPLE)
-# apple build with lower cmake version have an @rpath problem
-    cmake_minimum_required (VERSION 3.12)
-else()
-#for other platforms
-    cmake_minimum_required (VERSION 2.8.12)
-endif()
-cmake_policy(VERSION 2.8...3.3)
+# A make file that should work on most Unix-like platforms that have gcc
 
-#/*----------------------------------------------------------------------------*/
-#/* Project settings                                                           */
-#/*----------------------------------------------------------------------------*/
-project (wpipe1)
+OOREXX_CFLAGS = -fPIC
+OOREXX_LFLAGS = -shared -lrexx -lrexxapi
 
-#################### wpipe1 (executable) #########################
-# Sources for wpipe1
-add_library(wpipe1 SHARED ${PROJECT_SOURCE_DIR}/rexxapi1)
-# Include file definition
-target_include_directories(wpipe1 PUBLIC
-            ${build_api_dir}
-            ${build_api_platform_dir})
-# Extra link library definitions
-target_link_libraries(wpipe1 rexx rexxapi)
-set_target_properties(wpipe1 PROPERTIES OUTPUT_NAME "rexxapi1")
-install(TARGETS wpipe1     LIBRARY           DESTINATION ${INSTALL_SAMPLES_DIR}/api/wpipe1 
-	PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
-			   )
-install(FILES   rexxapi1.c readme.txt COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/wpipe1)
-if (APPLE)
-	install(FILES Makefile.apple  COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/wpipe1)
-else ()
-	install(FILES Makefile.linux  COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/wpipe1)
-endif()	
-install(PROGRAMS ${PROJECT_SOURCE_DIR}/apitest1.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/wpipe1)
 
+# What we want to build.
+all: librexxapi1.dylib
+
+rexxapi1.o: rexxapi1.c
+	gcc -c rexxapi1.c $(OOREXX_CFLAGS) -o rexxapi1.o
+
+librexxapi1.dylib: rexxapi1.o
+	gcc rexxapi1.o ${OOREXX_LFLAGS} -o librexxapi1.dylib
+
+clean:
+	rm -f *.so *.o librexxapi1.dylib
 

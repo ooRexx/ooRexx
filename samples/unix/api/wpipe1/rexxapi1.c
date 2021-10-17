@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -55,7 +55,7 @@
 /* Numeric Return calls                                              */
 /*********************************************************************/
 
-#define  INVALID_ROUTINE 10            /* Raise Rexx error           */
+#define  INVALID_ROUTINE 40            /* Raise Rexx error           */
 #define  VALID_ROUTINE    0            /* Successful completion      */
 
 #ifdef __cplusplus
@@ -63,99 +63,103 @@ extern "C" {
 #endif
 
 /*********************************************************************/
-/* AspiFncTable                                                      */
+/* ApiFncTable                                                       */
 /*   Array of names of the REXXASP1 functions.                       */
 /*   This list is used for registration and deregistration.          */
 /*********************************************************************/
-static const char *AspiFncTable[] =
+static const char *ApiFncTable[] =
    {
-      "Aspi_Output_From_C",
-      "Aspi_Output_From_REXX",
-      "Aspi_Exchange_Data",
-      "AspiDeregFunc"
+      "Api_Output_From_C",
+      "Api_Output_From_REXX",
+      "Api_Exchange_Data",
+      "ApiDeregFunc"
    };
 
 
 /*************************************************************************
-* Function:  AspiLoadFuncs                                               *
+* Function:  ApiLoadFuncs                                                *
 *                                                                        *
-* Syntax:    call AspiLoadFuncs                                          *
+* Syntax:    call ApiLoadFuncs                                           *
 *                                                                        *
 * Params:    none                                                        *
 *                                                                        *
 * Return:    null string                                                 *
 *************************************************************************/
 
-RexxReturnCode REXXENTRY AspiLoadFuncs(
+RexxReturnCode REXXENTRY ApiLoadFuncs(
     const char *name,                    /* Function name              */
     size_t numargs,                      /* Number of arguments        */
     CONSTRXSTRING args[],                /* Argument array             */
     const char * queuename,              /* Current queue              */
     PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-  int    entries;                      /* Num of entries             */
-  int    j;                            /* Counter                    */
+  int    entries;                        /* Num of entries             */
+  int    j;                              /* Counter                    */
 
 
-  entries = sizeof(AspiFncTable)/sizeof(const char *);
+  entries = sizeof(ApiFncTable)/sizeof(const char *);
 
   for (j = 0; j < entries; j++)
   {
-    RexxRegisterFunctionDll(AspiFncTable[j], "rexxasp1", AspiFncTable[j]);
+    RexxRegisterFunctionDll(ApiFncTable[j], "rexxapi1", ApiFncTable[j]);
   }
+
+  retstr->strlength = 0;                 /* return null string          */
+
   return VALID_ROUTINE;
 }
 
 
 
 /*************************************************************************
-* Function:  AspiDeregFunc                                               *
+* Function:  ApiDeregFunc                                                *
 *                                                                        *
-* Syntax:    call AspiDeregFuncs                                         *
+* Syntax:    call ApiDeregFuncs                                          *
 *                                                                        *
 * Params:    none                                                        *
 *                                                                        *
-* Return:    null string                                                 *
+* Return:    no return value                                             *
 *************************************************************************/
 
-RexxReturnCode REXXENTRY AspiDeregFunc(
+RexxReturnCode REXXENTRY ApiDeregFunc(
     const char *name,                    /* Function name              */
     size_t numargs,                      /* Number of arguments        */
     CONSTRXSTRING args[],                /* Argument array             */
     const char * queuename,              /* Current queue              */
     PRXSTRING retstr )                   /* Return RXSTRING            */
 {
-  int    entries;                      /* Num of entries             */
-  int    j;                            /* Counter                    */
+  int    entries;                        /* Num of entries             */
+  int    j;                              /* Counter                    */
 
-  retstr->strlength = 0;               /* set return value           */
+  retstr->strptr = NULL;                 /* no  return value           */
 
   if (numargs > 0)
     return INVALID_ROUTINE;
 
 
-  entries = sizeof(AspiFncTable)/sizeof(const char *);
+  entries = sizeof(ApiFncTable)/sizeof(const char *);
 
   for (j = 0; j < entries; j++)
   {
-    RexxDeregisterFunction(AspiFncTable[j]);
+    RexxDeregisterFunction(ApiFncTable[j]);
   }
+
   return VALID_ROUTINE;
 }
 
 
 
 /*************************************************************************
-* Function:  Aspi_Output_From_C                                          *
+* Function:  Api_Output_From_C                                           *
 *                                                                        *
-* Syntax:    call Aspi_Output_From_C                                     *
+* Syntax:    call Api_Output_From_C                                      *
 *                                                                        *
 * Params:    none                                                        *
 *                                                                        *
-* Return:    Version of this ASPI support DLL                            *
+* Return:    Version of this Api support DLL                             *
 *************************************************************************/
 
-RexxReturnCode REXXENTRY Aspi_Output_From_C(
+RexxReturnCode REXXENTRY Api_Output_From_C(
     const char *name,                    /* Function name              */
     size_t numargs,                      /* Number of arguments        */
     CONSTRXSTRING args[],                /* Argument array             */
@@ -165,28 +169,32 @@ RexxReturnCode REXXENTRY Aspi_Output_From_C(
 
   if (numargs > 0)
   {
-    strcpy(retstr->strptr, "Aspi_OutPut_From_C does not support any Arguments");
+    strcpy(retstr->strptr, "Api_OutPut_From_C does not support any Arguments");
     retstr->strlength = strlen(retstr->strptr);
     return VALID_ROUTINE;
   }
 
-  printf("This Output is generated and displayed by the C-function Aspi_Output_From_C\n");
+  printf("This Output is generated and displayed by the C-function Api_Output_From_C\n");
   fflush(NULL);
+
+  strcpy(retstr->strptr, "1.0");        /* set return value to be "1.0" */
+  retstr->strlength = 3;
+
   return VALID_ROUTINE;
 }
 
 
 /*************************************************************************
-* Function:  Aspi_Output_From_REXX                                       *
+* Function:  Api_Output_From_REXX                                        *
 *                                                                        *
-* Syntax:    call Aspi_Output_From_C                                     *
+* Syntax:    call Api_Output_From_C                                      *
 *                                                                        *
 * Params:    none                                                        *
 *                                                                        *
-* Return:    Version of this ASPI support DLL                            *
+* Return:    String to be output by Rexx                                 *
 *************************************************************************/
 
-RexxReturnCode REXXENTRY Aspi_Output_From_REXX(
+RexxReturnCode REXXENTRY Api_Output_From_REXX(
     const char *name,                    /* Function name              */
     size_t numargs,                      /* Number of arguments        */
     CONSTRXSTRING args[],                /* Argument array             */
@@ -195,20 +203,21 @@ RexxReturnCode REXXENTRY Aspi_Output_From_REXX(
 {
   if (numargs > 0)
   {
-    strcpy(retstr->strptr, "Aspi_OutPut_From_REXX does not support any Arguments");
+    strcpy(retstr->strptr, "Api_Output_From_REXX does not support any Arguments");
     retstr->strlength = strlen(retstr->strptr);
     return VALID_ROUTINE;
   }
-  strcpy(retstr->strptr, "This Output is generated by the C-function Aspi_Output_From_REXX and displayed by REXX");
+  strcpy(retstr->strptr, "This Output is generated by the C-function Api_Output_From_REXX and displayed by REXX");
   retstr->strlength = strlen(retstr->strptr);
+
   return VALID_ROUTINE;
 }
 
 
 /*************************************************************************
-* Function:  Aspi_Exchange_Data                                          *
+* Function:  Api_Exchange_Data                                           *
 *                                                                        *
-* Syntax:    call Aspi_Exchange_Data startsect, numsects, outbuf         *
+* Syntax:    call Api_Exchange_Data startsect, numsects, outbuf          *
 *                                                                        *
 * Params:    parm1 - numeric value given by REXX                         *
 *            parm2 - numeric value given by REXX                         *
@@ -217,7 +226,7 @@ RexxReturnCode REXXENTRY Aspi_Output_From_REXX(
 * Return:    0 - success, 1 - failure                                    *
 *************************************************************************/
 
-RexxReturnCode REXXENTRY Aspi_Exchange_Data(
+RexxReturnCode REXXENTRY Api_Exchange_Data(
     const char *name,                    /* Function name              */
     size_t numargs,                      /* Number of arguments        */
     CONSTRXSTRING args[],                /* Argument array             */
@@ -232,13 +241,12 @@ RexxReturnCode REXXENTRY Aspi_Exchange_Data(
 
   if (numargs != 3 )
   {
-    strcpy(retstr->strptr, "Aspi_Exchange_Data function expects 3 arguments");
-    retstr->strlength = strlen(retstr->strptr);
+    printf("Api_Exchange_Data function expects 3 arguments, instead received: %lu\n", numargs);
+    fflush(NULL);
+    strcpy(retstr->strptr, "1");  // return failure
+    retstr->strlength = 1;
     return VALID_ROUTINE;
   }
-
-  strcpy(retstr->strptr, "\0");
-  retstr->strlength = strlen(retstr->strptr);
 
   /* read the values from the parameters */
 
@@ -246,9 +254,12 @@ RexxReturnCode REXXENTRY Aspi_Exchange_Data(
   parm2 = atoi(args[1].strptr);
   strcpy(outbuf, args[2].strptr);
 
-  printf("Aspi_Exchange_Data function has received following arguments:\nArgument 1: %d\nArgument 2: %d\nArgument 3: %s\n",
+  printf("Api_Exchange_Data function has received following arguments:\n\tArgument 1: %d\n\tArgument 2: %d\n\tArgument 3: %s\n",
          parm1, parm2, outbuf);
   fflush(NULL);
+
+  strcpy(retstr->strptr, "0");  // return success
+  retstr->strlength = 1;
 
   return VALID_ROUTINE;
 }

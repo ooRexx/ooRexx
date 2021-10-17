@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -37,7 +37,7 @@
 /*----------------------------------------------------------------------------*/
 /***************************************************************************/
 /*                                                                         */
-/*  aspitest1.rex       Open Object Rexx samples                           */
+/*  apitest1.rex       Open Object Rexx samples                            */
 /*                                                                         */
 /* ----------------------------------------------------------------------- */
 /*                                                                         */
@@ -45,19 +45,34 @@
 /*                                                                         */
 /***************************************************************************/
 
-Call RxFuncAdd "AspiLoadFuncs", "rexxasp1", "AspiLoadFuncs"
-Call AspiLoadFuncs
+say "1a) 'call RxFuncAdd', expecting '0' as result"
+Call RxFuncAdd "ApiLoadFuncs", "rexxapi1", "ApiLoadFuncs"
+say "1b) result:" result
+say "---"
 
-call Aspi_Output_From_C
+say "2a) 'call ApiLoadFuncs', null (empty) string expected as result"
+Call ApiLoadFuncs
+say "2b) result:" result
+say "---"
 
-call Aspi_Output_From_REXX
-say RESULT
+say "3a) 'call Api_Output_From_C', library version '1.0' expected as result"
+call Api_Output_From_C
+say "3b) result:" result
+say "---"
 
+say "4a) 'call Api_Output_FROM_REXX', expecting string as result"
+call Api_Output_From_REXX
+say "4b) result:" result
+say "---"
+
+say "5a) 'res=Api_Exchange_Data(23456,888, a)', expecting '0' as result"
 a = 'This is a String'
+res=Api_Exchange_Data(23456,888, a)
+say "5b) res:" res
+say "---"
 
-Say Aspi_Exchange_Data(23456,888, a)
+say "6a) 'call ApiDeregFunc', no result expected"
+call ApiDeregFunc
+say "6b) result:" result
+say "---"
 
-call AspiDeregFunc
-
-
-exit
