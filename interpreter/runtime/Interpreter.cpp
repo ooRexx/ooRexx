@@ -331,7 +331,7 @@ InterpreterInstance *Interpreter::createInterpreterInstance(RexxOption *options)
     // stack
     Activity *rootActivity = ActivityManager::getRootActivity();
     // ok, we have an active activity here, so now we can allocate a new instance and bootstrap everything.
-    InterpreterInstance *instance = new InterpreterInstance();
+    Protected<InterpreterInstance> instance = new InterpreterInstance();
 
     {
         ResourceSection lock;
