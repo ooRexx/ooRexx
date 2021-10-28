@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2010-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2010-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -35,8 +35,8 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 
-  	ReadMe
-    ======
+    readme.txt 
+    ==========
 
     This subdirectory provides two examples: runRexxProgram and
     stackOverflow.  Both programs will compile and run on any platform
@@ -51,7 +51,7 @@
     your have problems and / or to see how to build a debug version (the
     default) or a non-debug version of the samples.
 
-    Makefile.linux
+    Makefile.unix
     --------------
     This make file should build the examples on any Unix-like system that
     has gcc installed.

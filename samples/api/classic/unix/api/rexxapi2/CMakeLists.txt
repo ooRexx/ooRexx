@@ -50,51 +50,17 @@ cmake_policy(VERSION 2.8...3.3)
 #/*----------------------------------------------------------------------------*/
 #/* Project settings                                                           */
 #/*----------------------------------------------------------------------------*/
-project (call.example)
+project (rexxapi2)
 
-#################### callrxnt (executable) #########################
-# additional source files required by specific platforms
-set (platform_libs ${ORX_SYSLIB_DL})
-# Sources for call.example
-add_executable(stackOverflow
-    ${PROJECT_SOURCE_DIR}/stackOverflow.cpp)
+#################### rexxapi2 (executable) #########################
+# Sources for rexxapi2
+add_library(rexxapi2 SHARED ${PROJECT_SOURCE_DIR}/rexxapi2)
 # Include file definition
-target_include_directories(stackOverflow PUBLIC
+target_include_directories(rexxapi2 PUBLIC
             ${build_api_dir}
             ${build_api_platform_dir})
-target_link_libraries(stackOverflow rexx rexxapi ${ORX_SYSLIB_DL})
-
-add_executable(runRexxProgram
-    ${PROJECT_SOURCE_DIR}/runRexxProgram.cpp)
-# Include file definition
-target_include_directories(runRexxProgram PUBLIC
-            ${build_api_dir}
-            ${build_api_platform_dir})
-target_link_libraries(runRexxProgram rexx rexxapi ${ORX_SYSLIB_DL})
-
-target_link_libraries(runRexxProgram rexx rexxapi ${platform_callrxnt_libs})
-
-#install the directory files
-install(TARGETS stackOverflow RUNTIME COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/native.api/
-	  PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
-install(FILES ${PROJECT_SOURCE_DIR}/stackOverflow.cpp COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/native.api
-          PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
-install(TARGETS runRexxProgram RUNTIME COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/native.api/
-	  PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
-install(FILES ${PROJECT_SOURCE_DIR}/runRexxProgram.cpp COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/native.api
-          PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
-install(PROGRAMS ${PROJECT_SOURCE_DIR}/HelloWorld.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/native.api
-          PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
-install(PROGRAMS ${PROJECT_SOURCE_DIR}/backward.fnc COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/native.api
-          PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
-install(PROGRAMS ${PROJECT_SOURCE_DIR}/tooRecursiveTrapped.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/native.api
-          PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
-install(PROGRAMS ${PROJECT_SOURCE_DIR}/tooRecursiveUnhandled.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/native.api
-          PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
-install(FILES ${PROJECT_SOURCE_DIR}/ReadMe.txt COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/native.api
-          PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
-if (WIN32)
-  install(FILES ${PROJECT_SOURCE_DIR}/Makefile.windows COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/native.api)
-else()
-  install(FILES ${PROJECT_SOURCE_DIR}/Makefile.linux COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/native.api)
-endif()
+# Extra link library definitions
+target_link_libraries(rexxapi2 rexx rexxapi)
+install(TARGETS rexxapi2 LIBRARY DESTINATION ${INSTALL_SAMPLES_DIR}/api/classic/rexxapi2)
+install(FILES rexxapi2.c readme.txt Makefile.linux Makefile.apple COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/classic/rexxapi2)
+install(PROGRAMS ${PROJECT_SOURCE_DIR}/apitest2.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/classic/rexxapi2)

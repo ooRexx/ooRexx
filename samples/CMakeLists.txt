@@ -52,10 +52,10 @@ cmake_policy(VERSION 2.8...3.3)
 #/*----------------------------------------------------------------------------*/
 project (samples)
 
-add_subdirectory(native.api)
+add_subdirectory(api)
 
 if (WIN32)
     add_subdirectory (windows)
-else ()
-    add_subdirectory (unix)
+    # else ()
+    #    add_subdirectory (unix)
 endif ()

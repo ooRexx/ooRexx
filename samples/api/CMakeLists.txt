@@ -50,17 +50,9 @@ cmake_policy(VERSION 2.8...3.3)
 #/*----------------------------------------------------------------------------*/
 #/* Project settings                                                           */
 #/*----------------------------------------------------------------------------*/
-project (wpipe2)
+project (samples-api)
 
-#################### wpipe2 (executable) #########################
-# Sources for wpipe2
-add_library(wpipe2 SHARED ${PROJECT_SOURCE_DIR}/rexxasp2)
-# Include file definition
-target_include_directories(wpipe2 PUBLIC
-            ${build_api_dir}
-            ${build_api_platform_dir})
-# Extra link library definitions
-target_link_libraries(wpipe2 rexx rexxapi)
-install(TARGETS wpipe2 LIBRARY DESTINATION ${INSTALL_SAMPLES_DIR}/api/wpipe2)
-install(FILES rexxasp2.c COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/wpipe2)
-install(PROGRAMS ${PROJECT_SOURCE_DIR}/aspitest2.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/wpipe2)
+add_subdirectory(c++)
+add_subdirectory(classic)
+
+install(FILES readme.txt COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api )

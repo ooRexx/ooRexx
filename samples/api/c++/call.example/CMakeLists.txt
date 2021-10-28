@@ -50,9 +50,44 @@ cmake_policy(VERSION 2.8...3.3)
 #/*----------------------------------------------------------------------------*/
 #/* Project settings                                                           */
 #/*----------------------------------------------------------------------------*/
-project (samples-unix-api)
+project (call.example)
 
-add_subdirectory (callrexx)
-add_subdirectory (wpipe1)
-add_subdirectory (wpipe2)
-add_subdirectory (wpipe3)
+#################### callrxnt (executable) #########################
+# additional source files required by specific platforms
+set (platform_libs ${ORX_SYSLIB_DL})
+# Sources for call.example
+add_executable(stackOverflow  ${PROJECT_SOURCE_DIR}/stackOverflow.cpp)
+# Include file definition
+target_include_directories(stackOverflow PUBLIC
+            ${build_api_dir}
+            ${build_api_platform_dir})
+target_link_libraries(stackOverflow rexx rexxapi ${ORX_SYSLIB_DL})
+
+add_executable(runRexxProgram ${PROJECT_SOURCE_DIR}/runRexxProgram.cpp)
+# Include file definition
+target_include_directories(runRexxProgram PUBLIC
+            ${build_api_dir}
+            ${build_api_platform_dir})
+target_link_libraries(runRexxProgram rexx rexxapi ${ORX_SYSLIB_DL})
+
+target_link_libraries(runRexxProgram rexx rexxapi ${platform_callrxnt_libs})
+
+#install the directory files
+install(TARGETS stackOverflow RUNTIME COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/c++/callsample
+	  PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+install(FILES stackOverflow.cpp COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/c++/callsample
+          PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
+install(TARGETS runRexxProgram RUNTIME COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/c++/callsample
+	  PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+install(FILES runRexxProgram.cpp COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/c++/callsample
+          PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
+install(PROGRAMS HelloWorld.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/c++/callsample
+          PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
+install(PROGRAMS backward.fnc COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/c++/callsample
+          PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
+install(PROGRAMS tooRecursiveTrapped.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/c++/callsample
+          PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
+install(PROGRAMS tooRecursiveUnhandled.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/c++/callsample
+          PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
+
+  install(FILES readme.txt Makefile.windows Makefile.unix COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/c++/callsample )

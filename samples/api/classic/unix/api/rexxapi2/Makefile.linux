@@ -1,6 +1,6 @@
 #/*----------------------------------------------------------------------------*/
 #/*                                                                            */
-#/* Copyright (c) 2014-2021 Rexx Language Association. All rights reserved.    */
+#/* Copyright (c) 2021 Rexx Language Association. All rights reserved.         */
 #/*                                                                            */
 #/* This program and the accompanying materials are made available under       */
 #/* the terms of the Common Public License v1.0 which accompanies this         */
@@ -35,22 +35,21 @@
 #/*                                                                            */
 #/*----------------------------------------------------------------------------*/
 
-#/*----------------------------------------------------------------------------*/
-#/* Global settings                                                            */
-#/*----------------------------------------------------------------------------*/
-if (APPLE)
-# apple build with lower cmake version have an @rpath problem
-    cmake_minimum_required (VERSION 3.12)
-else()
-#for other platforms
-    cmake_minimum_required (VERSION 2.8.12)
-endif()
-cmake_policy(VERSION 2.8...3.3)
+# A make file that should work on most Unix-like platforms that have gcc
 
-#/*----------------------------------------------------------------------------*/
-#/* Project settings                                                           */
-#/*----------------------------------------------------------------------------*/
-project (samples-windows)
+OOREXX_CFLAGS = -fPIC
+OOREXX_LFLAGS = -export-dynamic -shared -nostartfiles
 
-# add_subdirectory (api)
+
+# What we want to build.
+all: librexxapi2.so
+
+rexxapi2.o: rexxapi2.c
+	gcc -c rexxapi2.c $(OOREXX_CFLAGS) -o rexxapi2.o
+
+librexxapi2.so: rexxapi2.o
+	gcc rexxapi2.o ${OOREXX_LFLAGS} -o librexxapi2.so
+
+clean:
+	rm -f *.so *.o librexxapi2.so
 

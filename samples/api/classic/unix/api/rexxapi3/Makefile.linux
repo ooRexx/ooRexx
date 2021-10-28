@@ -1,6 +1,6 @@
 #/*----------------------------------------------------------------------------*/
 #/*                                                                            */
-#/* Copyright (c) 2014-2021 Rexx Language Association. All rights reserved.    */
+#/* Copyright (c) 2021 Rexx Language Association. All rights reserved.         */
 #/*                                                                            */
 #/* This program and the accompanying materials are made available under       */
 #/* the terms of the Common Public License v1.0 which accompanies this         */
@@ -35,53 +35,21 @@
 #/*                                                                            */
 #/*----------------------------------------------------------------------------*/
 
-#/*----------------------------------------------------------------------------*/
-#/* Global settings                                                            */
-#/*----------------------------------------------------------------------------*/
-if (APPLE)
-# apple build with lower cmake version have an @rpath problem
-    cmake_minimum_required (VERSION 3.12)
-else()
-#for other platforms
-    cmake_minimum_required (VERSION 2.8.12)
-endif()
-cmake_policy(VERSION 2.8...3.3)
+# A make file that should work on most Unix-like platforms that have gcc
 
-#/*----------------------------------------------------------------------------*/
-#/* Project settings                                                           */
-#/*----------------------------------------------------------------------------*/
-project (callrexx)
-
-#################### callrexx1 (executable) #########################
-# additional source files required by specific platforms
-set (platform_callrexx1_libs ${ORX_SYSLIB_DL})
-# Sources for callrexx1
-add_executable(callrexx1 ${PROJECT_SOURCE_DIR}/callrexx1)
-# Include file definition
-target_include_directories(callrexx1 PUBLIC
-            ${build_api_dir}
-            ${build_api_platform_dir})
-# Extra link library definitions
-target_link_libraries(callrexx1 rexx rexxapi)
-install(TARGETS callrexx1 RUNTIME DESTINATION ${INSTALL_SAMPLES_DIR}/api/callrexx)
-install(FILES callrexx1.cpp COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/callrexx)
+OOREXX_CFLAGS = -fPIC
+OOREXX_LFLAGS = -export-dynamic -shared -nostartfiles
 
 
-#################### callrexx2 (executable) #########################
-# additional source files required by specific platforms
-#set (platform_callrexx2_libs ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
-# Sources for callrexx2
-add_executable(callrexx2 ${PROJECT_SOURCE_DIR}/callrexx2)
-# Include file definition
-target_include_directories(callrexx2 PUBLIC
-            ${build_api_dir}
-            ${build_api_platform_dir})
-# Extra link library definitions
-target_link_libraries(callrexx2 rexx rexxapi)
-install(TARGETS callrexx2 RUNTIME DESTINATION ${INSTALL_SAMPLES_DIR}/api/callrexx)
-install(FILES callrexx2.c COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/callrexx)
+# What we want to build.
+all: librexxapi3.so
 
+rexxapi3.o: rexxapi3.c
+	gcc -c rexxapi3.c $(OOREXX_CFLAGS) -o rexxapi3.o
 
-#################### Rexx scripts invoked by the executables #########################
-install(PROGRAMS del_macro.rex example.rex load_macro.rex macros.rex startrx1.rex startrx2.rex startrx3.rex 
-              COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/callrexx)
+librexxapi3.so: rexxapi3.o
+	gcc rexxapi3.o ${OOREXX_LFLAGS} -o librexxapi3.so
+
+clean:
+	rm -f *.so *.o librexxapi3.so
+

@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -37,7 +37,7 @@
 /*----------------------------------------------------------------------------*/
 /***************************************************************************/
 /*                                                                         */
-/*  rexxasp3.c          Open Object Rexx samples                           */
+/*  rexxapi3.c          Open Object Rexx samples                           */
 /*                                                                         */
 /* ----------------------------------------------------------------------- */
 /*                                                                         */
@@ -64,30 +64,30 @@ extern "C" {
 
 
 /*********************************************************************/
-/* AspiFncTable                                                      */
-/*   Array of names of the REXXASPI functions.                       */
+/* ApiFncTable                                                       */
+/*   Array of names of the REXXAPI functions.                        */
 /*   This list is used for registration and deregistration.          */
 /*********************************************************************/
-static const char *AspiFncTable[] =
+static const char *ApiFncTable[] =
    {
-      "Aspi_Exchange_Data",
-      "AspiDeregFunc3",
-      "Aspi_Read_All_Variables_From_REXX_VP",
-      "Aspi_Read_All_Elements_Of_A_Specific_Stem_From_REXX_VP"
+      "Api_Exchange_Data",
+      "ApiDeregFunc3",
+      "Api_Read_All_Variables_From_REXX_VP",
+      "Api_Read_All_Elements_Of_A_Specific_Stem_From_REXX_VP"
    };
 
 
 /*************************************************************************
-* Function:  AspiLoadFuncs                                               *
+* Function:  ApiLoadFuncs                                               *
 *                                                                        *
-* Syntax:    call AspiLoadFuncs                                          *
+* Syntax:    call ApiLoadFuncs                                           *
 *                                                                        *
 * Params:    none                                                        *
 *                                                                        *
 * Return:    null string                                                 *
 *************************************************************************/
 
-RexxReturnCode REXXENTRY AspiLoadFuncs3(
+RexxReturnCode REXXENTRY ApiLoadFuncs3(
     const char *name,                    /* Function name              */
     size_t numargs,                      /* Number of arguments        */
     CONSTRXSTRING args[],                /* Argument array             */
@@ -98,27 +98,27 @@ RexxReturnCode REXXENTRY AspiLoadFuncs3(
   int    j;                            /* Counter                    */
 
 
-  entries = sizeof(AspiFncTable)/sizeof(const char *);
+  entries = sizeof(ApiFncTable)/sizeof(const char *);
 
   for (j = 0; j < entries; j++)
   {
-    RexxRegisterFunctionDll(AspiFncTable[j], "rexxasp3", AspiFncTable[j]);
+    RexxRegisterFunctionDll(ApiFncTable[j], "rexxapi3", ApiFncTable[j]);
   }
   return VALID_ROUTINE;
 }
 
 
 /*************************************************************************
-* Function:  AspiDeregFunc                                               *
+* Function:  ApiDeregFunc                                                *
 *                                                                        *
-* Syntax:    call AspiDeregFuncs                                         *
+* Syntax:    call ApiDeregFuncs                                          *
 *                                                                        *
 * Params:    none                                                        *
 *                                                                        *
 * Return:    null string                                                 *
 *************************************************************************/
 
-RexxReturnCode REXXENTRY AspiDeregFunc3(
+RexxReturnCode REXXENTRY ApiDeregFunc3(
     const char *name,                    /* Function name              */
     size_t numargs,                      /* Number of arguments        */
     CONSTRXSTRING args[],                /* Argument array             */
@@ -134,21 +134,21 @@ RexxReturnCode REXXENTRY AspiDeregFunc3(
     return INVALID_ROUTINE;
 
 
-  entries = sizeof(AspiFncTable)/sizeof(const char *);
+  entries = sizeof(ApiFncTable)/sizeof(const char *);
 
   for (j = 0; j < entries; j++)
   {
-    RexxDeregisterFunction(AspiFncTable[j]);
+    RexxDeregisterFunction(ApiFncTable[j]);
   }
   return VALID_ROUTINE;
 }
 
 /*************************************************************************
-* Function:  Aspi_Read_All_Variables_From_REXX_VP                        *
+* Function:  Api_Read_All_Variables_From_REXX_VP                         *
 *                                                                        *
-* Syntax:    call Aspi_Read_All_Variables_From_REXX_VP                   *
+* Syntax:    call Api_Read_All_Variables_From_REXX_VP                    *
 *                                                                        *
-* Params:    No parameter required. The function is called by ASPITEST.  *
+* Params:    No parameter required. The function is called by APITEST.   *
 *            It uses a while loop to read all the variables in the active*
 *            REXX-variable pool. The shared variable block request code  *
 *            is RXSHV_NEXTV. Be aware that with this request code REXX   *
@@ -162,7 +162,7 @@ RexxReturnCode REXXENTRY AspiDeregFunc3(
 * Return:    0 - success, 1 - failure                                    *
 *************************************************************************/
 
-RexxReturnCode REXXENTRY Aspi_Read_All_Variables_From_REXX_VP(
+RexxReturnCode REXXENTRY Api_Read_All_Variables_From_REXX_VP(
     const char *name,                    /* Function name              */
     size_t numargs,                      /* Number of arguments        */
     CONSTRXSTRING args[],                /* Argument array             */
@@ -243,9 +243,9 @@ RexxReturnCode REXXENTRY Aspi_Read_All_Variables_From_REXX_VP(
 }
 
 /*************************************************************************
-* Function:  Aspi_Read_All_Elements_Of_A_Specific_Stem_From_REXX_VP      *
+* Function:  Api_Read_All_Elements_Of_A_Specific_Stem_From_REXX_VP       *
 *                                                                        *
-* Syntax:    call Aspi_Read_All_Elements_Of_A_Specific_Stem_From_REXX_VP *
+* Syntax:    call Api_Read_All_Elements_Of_A_Specific_Stem_From_REXX_VP  *
 *            with the stem variable the values should be returned        *
 *                                                                        *
 * Params:    A stem where all values of the stem variables should be     *
@@ -262,7 +262,7 @@ RexxReturnCode REXXENTRY Aspi_Read_All_Variables_From_REXX_VP(
 * Return:    0 - success, 1 - failure                                    *
 *************************************************************************/
 
-RexxReturnCode REXXENTRY Aspi_Read_All_Elements_Of_A_Specific_Stem_From_REXX_VP(
+RexxReturnCode REXXENTRY Api_Read_All_Elements_Of_A_Specific_Stem_From_REXX_VP(
     const char *name,                    /* Function name              */
     size_t numargs,                      /* Number of arguments        */
     CONSTRXSTRING args[],                /* Argument array             */
@@ -294,7 +294,7 @@ RexxReturnCode REXXENTRY Aspi_Read_All_Elements_Of_A_Specific_Stem_From_REXX_VP(
    rc = RexxVariablePool(prxshv);
    if (rc)
    {
-      strcpy(retstr->strptr, "ASPIFETCH failed \n");
+      strcpy(retstr->strptr, "APIFETCH failed \n");
       retstr->strlength = strlen(retstr->strptr);
       return VALID_ROUTINE;
    }

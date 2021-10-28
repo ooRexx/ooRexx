@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -37,19 +37,19 @@
 /*----------------------------------------------------------------------------*/
 /*********************************************************************************/
 /*                                                                               */
-/*  aspitest3.rex       Open Object Rexx samples                                 */
+/*  apitest3.rex       Open Object Rexx samples                                  */
 /*                                                                               */
 /* ----------------------------------------------------------------------------- */
 /*                                                                               */
 /* Description:                                                                  */
 /*                                                                               */
-/* REXX calls the Function Aspi_Read_All_Elements_Of_A_Specific_Stem_From_REXX_VP*/
+/* REXX calls the Function Api_Read_All_Elements_Of_A_Specific_Stem_From_REXX_VP */
 /* and hands over the name of a stem. The C-function is able to access the       */
 /* variable pool of a running Rexx program and read all elements of that stem.   */
 /*********************************************************************************/
 
-Call RxFuncAdd "AspiLoadFuncs3", "rexxasp3", "AspiLoadFuncs3"
-Call AspiLoadFuncs3
+Call RxFuncAdd "ApiLoadFuncs3", "rexxapi3", "ApiLoadFuncs3"
+Call ApiLoadFuncs3
 
 
 do j = 1 to 100
@@ -58,10 +58,10 @@ end
 
 x.0 = 100
 
---call Aspi_Read_All_Variables_From_REXX_VP
+--call Api_Read_All_Variables_From_REXX_VP
 
-call Aspi_Read_All_Elements_Of_A_Specific_Stem_From_REXX_VP("x.0")
+call Api_Read_All_Elements_Of_A_Specific_Stem_From_REXX_VP("x.0")
 
-call AspiDeregFunc3
+call ApiDeregFunc3
 
 exit

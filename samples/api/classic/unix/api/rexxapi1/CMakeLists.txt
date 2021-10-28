@@ -50,27 +50,21 @@ cmake_policy(VERSION 2.8...3.3)
 #/*----------------------------------------------------------------------------*/
 #/* Project settings                                                           */
 #/*----------------------------------------------------------------------------*/
-project (wpipe1)
+project (rexxapi1)
 
-#################### wpipe1 (executable) #########################
-# Sources for wpipe1
-add_library(wpipe1 SHARED ${PROJECT_SOURCE_DIR}/rexxapi1)
+#################### rexxapi1 (executable) #########################
+# Sources for rexxapi1
+add_library(rexxapi1 SHARED ${PROJECT_SOURCE_DIR}/rexxapi1)
 # Include file definition
-target_include_directories(wpipe1 PUBLIC
+target_include_directories(rexxapi1 PUBLIC
             ${build_api_dir}
             ${build_api_platform_dir})
 # Extra link library definitions
-target_link_libraries(wpipe1 rexx rexxapi)
-set_target_properties(wpipe1 PROPERTIES OUTPUT_NAME "rexxapi1")
-install(TARGETS wpipe1     LIBRARY           DESTINATION ${INSTALL_SAMPLES_DIR}/api/wpipe1 
+target_link_libraries(rexxapi1 rexx rexxapi)
+set_target_properties(rexxapi1 PROPERTIES OUTPUT_NAME "rexxapi1")
+install(TARGETS rexxapi1     LIBRARY           DESTINATION ${INSTALL_SAMPLES_DIR}/api/classic/rexxapi1 
 	PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
 			   )
-install(FILES   rexxapi1.c readme.txt COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/wpipe1)
-if (APPLE)
-	install(FILES Makefile.apple  COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/wpipe1)
-else ()
-	install(FILES Makefile.linux  COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/wpipe1)
-endif()	
-install(PROGRAMS ${PROJECT_SOURCE_DIR}/apitest1.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/wpipe1)
-
-
+install(FILES   rexxapi1.c readme.txt COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/classic/rexxapi1)
+install(FILES Makefile.apple Makefile.linux  COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/classic/rexxapi1)
+install(PROGRAMS ${PROJECT_SOURCE_DIR}/apitest1.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/classic/rexxapi1)

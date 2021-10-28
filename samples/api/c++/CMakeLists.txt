@@ -1,6 +1,6 @@
 #/*----------------------------------------------------------------------------*/
 #/*                                                                            */
-#/* Copyright (c) 2010-2014 Rexx Language Association. All rights reserved.    */
+#/* Copyright (c) 2014-2021 Rexx Language Association. All rights reserved.    */
 #/*                                                                            */
 #/* This program and the accompanying materials are made available under       */
 #/* the terms of the Common Public License v1.0 which accompanies this         */
@@ -35,9 +35,23 @@
 #/*                                                                            */
 #/*----------------------------------------------------------------------------*/
 
-.NOTPARALLEL:
+#/*----------------------------------------------------------------------------*/
+#/* Global settings                                                            */
+#/*----------------------------------------------------------------------------*/
+if (APPLE)
+# apple build with lower cmake version have an @rpath problem
+    cmake_minimum_required (VERSION 3.12)
+else()
+#for other platforms
+    cmake_minimum_required (VERSION 2.8.12)
+endif()
+cmake_policy(VERSION 2.8...3.3)
 
-MAINTAINERCLEANFILES 	= Makefile.in *~
+#/*----------------------------------------------------------------------------*/
+#/* Project settings                                                           */
+#/*----------------------------------------------------------------------------*/
+project (samples-native-api)
 
-EXTRA_DIST = ReadMe.txt *.linux *.windows *.rex *.fnc *.cpp
+add_subdirectory (call.example)
 
+install(FILES readme.txt COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/c++)

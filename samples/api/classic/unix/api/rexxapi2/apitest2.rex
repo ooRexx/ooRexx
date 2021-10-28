@@ -37,7 +37,7 @@
 /*----------------------------------------------------------------------------*/
 /***************************************************************************/
 /*                                                                         */
-/*  aspitest2.rex       Open Object Rexx samples                           */
+/*  apitest2.rex       Open Object Rexx samples                            */
 /*                                                                         */
 /* ----------------------------------------------------------------------- */
 /*                                                                         */
@@ -48,18 +48,18 @@
 /*                                                                         */
 /***************************************************************************/
 
-Call RxFuncAdd "AspiLoadFuncs2", "rexxasp2", "AspiLoadFuncs2"
-Call AspiLoadFuncs2
+Call RxFuncAdd "ApiLoadFuncs2", "rexxapi2", "ApiLoadFuncs2"
+Call ApiLoadFuncs2
 
-call Aspi_Fill_REXX_Variable_Pool "ReadBuf"
+call Api_Fill_REXX_Variable_Pool "ReadBuf"
 Say 'Length of Buffer allocated by the C-function: ' Length(ReadBuf)
 
-Say 'The C-function Aspi_Fill_REXX_Variable_Pool has put the following data into the buffer: '
+Say 'The C-function Api_Fill_REXX_Variable_Pool has put the following data into the buffer: '
 
 Do i = 1 To Length(ReadBuf)
   Say 'Position in buffer:' i 'Decimal Value:' C2D(SubStr(ReadBuf, i, 1)) 'Hex Value: ' C2X(SubStr(ReadBuf, i, 1))
 End
 
-call AspiDeregFunc2
+call ApiDeregFunc2
 
 exit

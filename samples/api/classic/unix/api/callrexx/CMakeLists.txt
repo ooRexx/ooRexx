@@ -50,17 +50,38 @@ cmake_policy(VERSION 2.8...3.3)
 #/*----------------------------------------------------------------------------*/
 #/* Project settings                                                           */
 #/*----------------------------------------------------------------------------*/
-project (wpipe3)
+project (callrexx)
 
-#################### wpipe3 (executable) #########################
-# Sources for wpipe3
-add_library(wpipe3 SHARED ${PROJECT_SOURCE_DIR}/rexxasp3)
+#################### callrexx1 (executable) #########################
+# additional source files required by specific platforms
+set (platform_callrexx1_libs ${ORX_SYSLIB_DL})
+# Sources for callrexx1
+add_executable(callrexx1 ${PROJECT_SOURCE_DIR}/callrexx1)
 # Include file definition
-target_include_directories(wpipe3 PUBLIC
+target_include_directories(callrexx1 PUBLIC
             ${build_api_dir}
             ${build_api_platform_dir})
 # Extra link library definitions
-target_link_libraries(wpipe3 rexx rexxapi)
-install(TARGETS wpipe3 LIBRARY DESTINATION ${INSTALL_SAMPLES_DIR}/api/wpipe3)
-install(FILES ${PROJECT_SOURCE_DIR}/rexxasp3.c COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/wpipe3)
-install(PROGRAMS ${PROJECT_SOURCE_DIR}/aspitest3.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/wpipe3)
+target_link_libraries(callrexx1 rexx rexxapi)
+install(TARGETS callrexx1 RUNTIME DESTINATION ${INSTALL_SAMPLES_DIR}/api/classic/callrexx)
+install(FILES callrexx1.cpp COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/classic/callrexx)
+
+
+#################### callrexx2 (executable) #########################
+# additional source files required by specific platforms
+#set (platform_callrexx2_libs ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
+# Sources for callrexx2
+add_executable(callrexx2 ${PROJECT_SOURCE_DIR}/callrexx2)
+# Include file definition
+target_include_directories(callrexx2 PUBLIC
+            ${build_api_dir}
+            ${build_api_platform_dir})
+# Extra link library definitions
+target_link_libraries(callrexx2 rexx rexxapi)
+install(TARGETS callrexx2 RUNTIME DESTINATION ${INSTALL_SAMPLES_DIR}/api/classic/callrexx)
+install(FILES callrexx2.c COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/classic/callrexx)
+
+
+#################### Rexx scripts invoked by the executables #########################
+install(PROGRAMS del_macro.rex example.rex load_macro.rex macros.rex startrx1.rex startrx2.rex startrx3.rex 
+              COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/classic/callrexx)

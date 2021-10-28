@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -64,28 +64,28 @@ extern "C" {
 
 
 /*********************************************************************/
-/* AspiFncTable                                                      */
-/*   Array of names of the REXXASPI functions.                       */
+/* ApiFncTable                                                       */
+/*   Array of names of the REXXAPI functions.                        */
 /*   This list is used for registration and deregistration.          */
 /*********************************************************************/
-static const char *AspiFncTable[] =
+static const char *ApiFncTable[] =
    {
-      "AspiDeregFunc2",
-      "Aspi_Fill_REXX_Variable_Pool"
+      "ApiDeregFunc2",
+      "Api_Fill_REXX_Variable_Pool"
    };
 
 
 /*************************************************************************
-* Function:  AspiLoadFuncs2                                              *
+* Function:  ApiLoadFuncs2                                               *
 *                                                                        *
-* Syntax:    call AspiLoadFuncs2                                         *
+* Syntax:    call ApiLoadFuncs2                                          *
 *                                                                        *
 * Params:    none                                                        *
 *                                                                        *
 * Return:    null string                                                 *
 *************************************************************************/
 
-RexxReturnCode REXXENTRY AspiLoadFuncs2(
+RexxReturnCode REXXENTRY ApiLoadFuncs2(
     const char *name,                    /* Function name              */
     size_t numargs,                      /* Number of arguments        */
     CONSTRXSTRING args[],                /* Argument array             */
@@ -96,27 +96,27 @@ RexxReturnCode REXXENTRY AspiLoadFuncs2(
   int    j;                            /* Counter                    */
 
 
-  entries = sizeof(AspiFncTable)/sizeof(const char *);
+  entries = sizeof(ApiFncTable)/sizeof(const char *);
 
   for (j = 0; j < entries; j++)
   {
-    RexxRegisterFunctionDll(AspiFncTable[j], "rexxasp2", AspiFncTable[j]);
+    RexxRegisterFunctionDll(ApiFncTable[j], "rexxapi2", ApiFncTable[j]);
   }
   return VALID_ROUTINE;
 }
 
 
 /*************************************************************************
-* Function:  AspiDeregFunc2                                              *
+* Function:  ApiDeregFunc2                                               *
 *                                                                        *
-* Syntax:    call AspiDeregFuncs2                                        *
+* Syntax:    call ApiDeregFuncs2                                         *
 *                                                                        *
 * Params:    none                                                        *
 *                                                                        *
 * Return:    null string                                                 *
 *************************************************************************/
 
-RexxReturnCode REXXENTRY AspiDeregFunc2(
+RexxReturnCode REXXENTRY ApiDeregFunc2(
     const char *name,                    /* Function name              */
     size_t numargs,                      /* Number of arguments        */
     CONSTRXSTRING args[],                /* Argument array             */
@@ -132,11 +132,11 @@ RexxReturnCode REXXENTRY AspiDeregFunc2(
     return INVALID_ROUTINE;
 
 
-  entries = sizeof(AspiFncTable)/sizeof(const char *);
+  entries = sizeof(ApiFncTable)/sizeof(const char *);
 
   for (j = 0; j < entries; j++)
   {
-    RexxDeregisterFunction(AspiFncTable[j]);
+    RexxDeregisterFunction(ApiFncTable[j]);
   }
   return VALID_ROUTINE;
 }
@@ -144,15 +144,15 @@ RexxReturnCode REXXENTRY AspiDeregFunc2(
 
 
 /*************************************************************************
-* Function:  AspiRead                                                    *
+* Function:  ApiRead                                                     *
 *                                                                        *
-* Syntax:    call Aspi_Fill_REXX_Variable_Pool                           *
+* Syntax:    call Api_Fill_REXX_Variable_Pool                            *
 *                                                                        *
 * Params:    outbuf - variable that will be filled with data             *
 * Return:    0 - success, 1 - failure                                    *
 *************************************************************************/
 
-RexxReturnCode REXXENTRY Aspi_Fill_REXX_Variable_Pool(
+RexxReturnCode REXXENTRY Api_Fill_REXX_Variable_Pool(
     const char *name,                    /* Function name              */
     size_t numargs,                      /* Number of arguments        */
     CONSTRXSTRING args[],                /* Argument array             */
@@ -168,7 +168,7 @@ RexxReturnCode REXXENTRY Aspi_Fill_REXX_Variable_Pool(
 
   if (numargs != 1 )                    /* validate arg count         */
   {
-    strcpy(retstr->strptr, "Aspi_Fill_REXX_Variable_Pool expects 1 Arguments");
+    strcpy(retstr->strptr, "Api_Fill_REXX_Variable_Pool expects 1 Arguments");
     retstr->strlength = strlen(retstr->strptr);
     return VALID_ROUTINE;
   }
@@ -181,7 +181,7 @@ RexxReturnCode REXXENTRY Aspi_Fill_REXX_Variable_Pool(
   outbuf = (char *) malloc(300);
   if (outbuf == NULL)
   {
-    strcpy(retstr->strptr, "Aspi_Fill_REXX_Variable_Pool received a allocation fault");
+    strcpy(retstr->strptr, "Api_Fill_REXX_Variable_Pool received a allocation fault");
     retstr->strlength = strlen(retstr->strptr);
     return VALID_ROUTINE;
   }

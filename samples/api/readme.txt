@@ -1,12 +1,11 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2021 Rexx Language Association. All rights reserved.         */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* https://www.oorexx.org/license.html                         */
+/* https://www.oorexx.org/license.html                                        */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -35,32 +34,21 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-The API samples in the directories WPIPE1, WPIPE2, WPIPE3 demonstrate how to:
-
-- Register external functions from within external functions
-- How you can provide external functions (written in C) in a library that can
-  be accessed from Open Object Rexx (after they have been registered)
-- How data can be returned from external functions
-- How the REXX Variable Pool Interface can be used to access and modify Open
-  Object Rexx variables
-
-WPIPE1
-======
-Start: "REXX APITEST1"
-Description: This sample registers a few functions that produce some screen output or
-             return some data
-
-WPIPE2
-======
-Start: "REXX APITEST2"
-Description: Sets the value of a variable by using the Rexx Variable Pool Interface
 
 
-WPIPE3
-======
-Start: "REXX APITEST3"
-Description: A more extensive use of the Rexx Variable Pool Interface
 
+readme.txt
+----------
 
-For more information about the Open Object Rexx API read Appendix A in the
-Open Object Rexx Programming Guide.
+This directory contains examples that demonstrate how to interact with ooRexx
+via the classic ("SAA") application programming interfaces (APIs) and 
+the powerful ooRexx C++ APIs introduced with ooRexx 4.0.
+
+The ooRexx API documentation can be found in rexxapi.pdf:
+
+	Chapter 1. Rexx C++ Application Programming Interfaces
+	Chapter 2. Classic Rexx Application Programming Interfaces
+
+Clearly, the subdirectory "c++" demonstrates C++ APIs and the subdirectory 
+"classic" demonstrates the classic SAA APIs.
+

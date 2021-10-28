@@ -19,7 +19,7 @@
     ooRexx.  Subdirectories, with the exception of samples\native.api,
     contain examples that use Windows only extensions.
 
-    samples\api\
+    samples\api\classic\
 
     This directory contains Windows only examples using the old API to
     write Rexx extensions.  The use of the old API to write new Rexx
@@ -31,7 +31,7 @@
     This directory contains miscellaneous Windows only examples that do not
     fit well in the other categories.
 
-    samples\native.api\
+    samples\api\c++\
 
     This directory contains platform independent samples using the C++ API
     introduced in ooRexx 4.0.0 to write ooRexx extensions.  nMake
