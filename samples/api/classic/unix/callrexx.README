@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -36,29 +36,15 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 
-In General:
-
 The API samples in the "callrexx" directory demonstrate how to
 invoke the interpreter from within an application.
 
 The callrexx1 sample (callrexx1.cpp) demonstrates the dynamic linking of
-the REXXSTART-command which is only possible from a calling C++ program.
+the REXXSTART-command.
 
 The callrexx2 sample demonstrates the dynamic loading of the
 REXXSTART command via dlopen and dlsym functions from a calling
-C program (use callrexx2c.mak) as well as from a calling C++
-program (use callrexx2cpp.mak).
-
-The big advantage of dynamic loading lies in exchanging of the librexx.so
-library without recompiling the calling C or C++ programs.
-
-Especially:
-
-The directory contains
-
-- Makefiles for the C rsp C++ programs
-- C-source code which needs to be compiled using the makefiles
-- Open Object Rexx interface programs
+C program.
 
 The examples show
 
@@ -67,14 +53,12 @@ The examples show
 - How to use the instore feature
 - How to use the Macrospace feature
 
+To build:
+        make -f Makefile.unix clean
+        make -f Makefile.unix
 
-CALLREXX1
-=========
-Build: "make -f callrexx1.mak"      to build the C++version
-Start: "callrexx1"
+To run:
 
-CALLREXX2
-=========
-Build: "make -f callrexx2c.mak"     to build the C-version
-Build: "make -f callrexx2cpp.mak"   to build the C++-version
-Start: "callrexx2"
+        ./callrexx1
+        ./callrexx2
+

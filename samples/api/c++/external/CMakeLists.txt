@@ -1,6 +1,6 @@
 #/*----------------------------------------------------------------------------*/
 #/*                                                                            */
-#/* Copyright (c) 2014-2021 Rexx Language Association. All rights reserved.    */
+#/* Copyright (c) 2021 Rexx Language Association. All rights reserved.         */
 #/*                                                                            */
 #/* This program and the accompanying materials are made available under       */
 #/* the terms of the Common Public License v1.0 which accompanies this         */
@@ -50,9 +50,73 @@ cmake_policy(VERSION 2.8...3.3)
 #/*----------------------------------------------------------------------------*/
 #/* Project settings                                                           */
 #/*----------------------------------------------------------------------------*/
-project (samples-native-api)
+project (external-sample)
 
-add_subdirectory (call.example)
-add_subdirectory (external)
+# installation target for all samples
+set (DEST ${INSTALL_SAMPLES_DIR}/api/c++/external)
 
-install(FILES readme.txt COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/c++)
+# allow group write permissions as well
+set (PERM PERMISSIONS OWNER_READ OWNER_WRITE
+                      GROUP_READ GROUP_WRITE
+                      WORLD_READ             )
+# add execute bit
+set (PERM_EXE ${PERM} OWNER_EXECUTE GROUP_EXECUTE WORLD_EXECUTE)
+
+install(FILES readme.txt Makefile.unix Makefile.windows
+                                          COMPONENT Samples DESTINATION ${DEST} ${PERM})
+
+#################### external_routines (library) #########################
+# Sources for external_routines sample
+add_library(external_routines SHARED external_routines.cpp)
+# Include file definition
+target_include_directories(external_routines PUBLIC
+            ${build_api_dir}
+            ${build_api_platform_dir})
+target_link_libraries(external_routines rexxapi)
+
+if (WIN32)
+        install(TARGETS external_routines RUNTIME COMPONENT Samples DESTINATION ${DEST})
+else()
+        install(TARGETS external_routines LIBRARY COMPONENT Samples DESTINATION ${DEST} ${PERM_EXE} )
+endif()
+install(FILES   external_routines.cpp     COMPONENT Samples DESTINATION ${DEST} ${PERM})
+install(PROGRAMS useExternalRoutines.rex useExternalRoutines2.rex
+                                          COMPONENT Samples DESTINATION ${DEST} ${PERM_EXE})
+
+
+#################### external_methods (library) #########################
+# Sources for external_methods sample
+add_library(external_methods SHARED external_methods.cpp)
+# Include file definition
+target_include_directories(external_methods PUBLIC
+            ${build_api_dir}
+            ${build_api_platform_dir})
+target_link_libraries(external_methods rexxapi)
+
+if (WIN32)
+        install(TARGETS external_methods RUNTIME COMPONENT Samples DESTINATION ${DEST})
+else()
+        install(TARGETS external_methods LIBRARY COMPONENT Samples DESTINATION ${DEST} ${PERM_EXE})
+endif()
+install(FILES   external_methods.cpp     COMPONENT Samples DESTINATION ${DEST} ${PERM})
+install(PROGRAMS useExternalMethods.rex  COMPONENT Samples DESTINATION ${DEST} ${PERM_EXE})
+
+
+#################### external_methods_routines (library) #########################
+# Sources for external_methods_routines sample
+add_library(external_methods_routines SHARED external_methods_routines.cpp)
+# Include file definition
+target_include_directories(external_methods_routines PUBLIC
+            ${build_api_dir}
+            ${build_api_platform_dir})
+target_link_libraries(external_methods_routines rexxapi)
+
+if (WIN32)
+        install(TARGETS external_methods_routines RUNTIME COMPONENT Samples DESTINATION ${DEST})
+else()
+        install(TARGETS external_methods_routines LIBRARY COMPONENT Samples DESTINATION ${DEST} ${PERM_EXE} )
+endif()
+install(FILES   external_methods_routines.cpp     COMPONENT Samples DESTINATION ${DEST} ${PERM})
+install(PROGRAMS useExternalMethodsRoutines.rex   COMPONENT Samples DESTINATION ${DEST} ${PERM_EXE})
+
+

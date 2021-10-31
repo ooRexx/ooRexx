@@ -59,3 +59,11 @@
     execute, and obtain the result from Rexx programs.  The other
     dynamically creates a Rexx routine and calls that routine.
 
+    external
+    --------
+    This subdirectory has three examples to create DLLs/shared libraries
+    with external routines and methods that can be directly used from
+    ooRexx programs. One example creates external routines only, the next
+    external methods only and one example creates external routines and
+    methods in the same DLL/shared library.
+

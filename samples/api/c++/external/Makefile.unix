@@ -1,6 +1,6 @@
 #/*----------------------------------------------------------------------------*/
 #/*                                                                            */
-#/* Copyright (c) 2014-2021 Rexx Language Association. All rights reserved.    */
+#/* Copyright (c) 2021 Rexx Language Association. All rights reserved.         */
 #/*                                                                            */
 #/* This program and the accompanying materials are made available under       */
 #/* the terms of the Common Public License v1.0 which accompanies this         */
@@ -35,24 +35,36 @@
 #/*                                                                            */
 #/*----------------------------------------------------------------------------*/
 
-#/*----------------------------------------------------------------------------*/
-#/* Global settings                                                            */
-#/*----------------------------------------------------------------------------*/
-if (APPLE)
-# apple build with lower cmake version have an @rpath problem
-    cmake_minimum_required (VERSION 3.12)
-else()
-#for other platforms
-    cmake_minimum_required (VERSION 2.8.12)
-endif()
-cmake_policy(VERSION 2.8...3.3)
+# A make file that should work on most Unix-like platforms that have gcc
 
-#/*----------------------------------------------------------------------------*/
-#/* Project settings                                                           */
-#/*----------------------------------------------------------------------------*/
-project (samples-native-api)
+OOREXX_CFLAGS = -fPIC
+OOREXX_LFLAGS = -export-dynamic -shared -nostartfiles
 
-add_subdirectory (call.example)
-add_subdirectory (external)
+# determine extension, default to Linux style
+EXT = so
+UNAME := $(shell uname -s)
+ifeq ($(UNAME),Darwin)  # if Apple adjust accordingly
+	EXT = dylib
+endif
 
-install(FILES readme.txt COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/c++)
+# What we want to build.
+all:  external_routines external_methods external_methods_routines
+
+external_routines:
+	@echo "building [$@] ..."
+	gcc -c $@.cpp $(OOREXX_CFLAGS) -o $@.o
+	gcc $@.o ${OOREXX_LFLAGS} -o lib$@.$(EXT)
+
+external_methods:
+	@echo "building [$@] ..."
+	gcc -c $@.cpp $(OOREXX_CFLAGS) -o $@.o
+	gcc $@.o ${OOREXX_LFLAGS} -o lib$@.$(EXT)
+
+external_methods_routines:
+	@echo "building [$@] ..."
+	gcc -c $@.cpp $(OOREXX_CFLAGS) -o $@.o
+	gcc $@.o ${OOREXX_LFLAGS} -o lib$@.$(EXT)
+
+clean:
+	rm -f *.so *.o lib*.$(EXT)
+
