@@ -50,6 +50,11 @@ cmake_policy(VERSION 2.8...3.3)
 #/*----------------------------------------------------------------------------*/
 #/* Project settings                                                           */
 #/*----------------------------------------------------------------------------*/
-project (samples-unix)
+project (samples-api-classic-unix)
 
-add_subdirectory (api)
+add_subdirectory (callrexx)
+add_subdirectory (rexxapi1)
+add_subdirectory (rexxapi2)
+add_subdirectory (rexxapi3)
+
+install(FILES rexxapi.README callrexx.README COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/classic )
