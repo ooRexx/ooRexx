@@ -1,7 +1,7 @@
 #/*----------------------------------------------------------------------------*/
 #/*                                                                            */
 #/* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-#/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+#/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 #/*                                                                            */
 #/* This program and the accompanying materials are made available under       */
 #/* the terms of the Common Public License v1.0 which accompanies this         */
@@ -35,18 +35,28 @@
 #/* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 #/*                                                                            */
 #/*----------------------------------------------------------------------------*/
-# NMAKE-compatible MAKE file to build the REXX sample REXXAPI1.DLL
+# NMAKE-compatible MAKE file to build the REXX sample program rexxapi2.dll
 #
 # Notes:
 #    Uses /D_CRT_SECURE_NO_DEPRECATE to eliminate deprecation warnings under
 #    MS Visual Studio 2005
 
-rexxapi1.dll:     rexxapi1.obj
-    link     rexxapi1.obj \
+!IF DEFINED(REXX_HOME)
+INCLUDE = $(INCLUDE);$(REXX_HOME)\api
+LIB = $(LIB);$(REXX_HOME)\api
+!ENDIF
+
+all: rexxapi2.dll
+
+rexxapi2.dll:     rexxapi2.obj
+    link     rexxapi2.obj \
              /NOLOGO user32.lib comdlg32.lib gdi32.lib kernel32.lib \
-             rexx.lib rexxapi.lib /DLL /DEF:REXXAPI1.DEF
+             rexx.lib rexxapi.lib /DLL /DEF:REXXAPI2.DEF
 
+rexxapi2.obj:     rexxapi2.c
+    cl  rexxapi2.c /nologo /D:_X86_ /DWIN32 /D_CRT_SECURE_NO_DEPRECATE /W3 /I. -c -G3
 
-rexxapi1.obj:     rexxapi1.c
-    cl  rexxapi1.c /nologo /D:_X86_ /DWIN32 /D_CRT_SECURE_NO_DEPRECATE /W3 /I. -c -G3
+clean:
+    del *.exe *.dll *.obj *.ilk *.pdb *.lib *.exp *.suo *.cod 1>nul 2>&1
+
 

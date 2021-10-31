@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -110,24 +110,25 @@ The API samples in the directories WPIPE1, WPIPE2, WPIPE3 demonstrate:
 - How the REXX Variable Pool Interface can be used to access and modify Open
   Object Rexx variables
 
-WPIPE1
-======
-Start: "REXX APITEST1"
+rexxapi1
+========
+Start: "rexx apitest1"
 Description: Registers a number of functions that produce some screen output or
              return some data.
 
-WPIPE2
-======
-Start: "REXX APITEST2"
+rexxapi2
+========
+Start: "rexx apitest2"
 Description: Sets the value of a variable by using the REXX Variable Pool
              Interface
 
-WPIPE3
-======
-Start: "REXX APITEST3"
+rexxapi3
+========
+Start: "rexx apitest3"
 Description: Demonstrates a more extensive use of the REXX Variable Pool
              Interface
 
-For more information about the Open Object Rexx API, see Chapter 10, "Classic
-Rexx Application Programming Intefaces" in the Open Object Rexx Programming
-Guide.
+The demonstrated Open Object Rexx APIs are documented in "Chapter 2.
+Classic Rexx Application Programming Interfaces" in rexxapi.pdf, "ooRexx
+APIs (Application Programming Interfaces)".
+

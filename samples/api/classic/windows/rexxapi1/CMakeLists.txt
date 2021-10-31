@@ -50,18 +50,19 @@ cmake_policy(VERSION 2.8...3.3)
 #/*----------------------------------------------------------------------------*/
 #/* Project settings                                                           */
 #/*----------------------------------------------------------------------------*/
-project (wpipe2)
+project (rexxapi1)
 
-#################### wpipe1 (executable) #########################
-# Sources for wpipe2
-add_library(rexxapi2 SHARED ${PROJECT_SOURCE_DIR}/rexxapi2.c
-                            ${PROJECT_SOURCE_DIR}/rexxapi2.def)
+#################### rexxapi1 (executable) #########################
+# Sources for rexxapi1
+add_library(rexxapi1 SHARED rexxapi1.c rexxapi1.def)
 # Include file definition
-target_include_directories(rexxapi2 PUBLIC
+target_include_directories(rexxapi1 PUBLIC
             ${build_api_dir}
             ${build_api_platform_dir})
 # Extra link library definitions
-target_link_libraries(rexxapi2 rexx rexxapi)
-install(TARGETS rexxapi2 RUNTIME COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/wpipe2)
-install(FILES rexxapi2.c rexxapi2.def rexxapi2.mak COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/wpipe2)
-install(PROGRAMS ${PROJECT_SOURCE_DIR}/apitest2.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/wpipe2)
+set (DEST ${INSTALL_SAMPLES_DIR}/api/classic/rexxapi1)
+target_link_libraries(rexxapi1 rexx rexxapi)
+install(TARGETS rexxapi1 RUNTIME COMPONENT Samples DESTINATION ${DEST})
+install(FILES rexxapi1.c rexxapi1.def rexxapi1.mak COMPONENT Samples DESTINATION  ${DEST})
+install(PROGRAMS apitest1.rex    COMPONENT Samples DESTINATION ${DEST})
+

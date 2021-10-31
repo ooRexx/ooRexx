@@ -53,19 +53,15 @@ cmake_policy(VERSION 2.8...3.3)
 project (rexxexit)
 
 #################### rexxexit (executable) #########################
-# additional source files required by specific platforms
-set (platform_rexxexit_libs ${ORX_SYSLIB_DL})
 # Sources for rexxexit
-add_executable(rexxexit
-    ${PROJECT_SOURCE_DIR}/rexxexit.c
-    ${PROJECT_SOURCE_DIR}/rexxexit.ico)
+add_executable(rexxexit rexxexit.c rexxexit.ico)
 # Include file definition
 target_include_directories(rexxexit PUBLIC
             ${build_api_dir}
             ${build_api_platform_dir})
 # Extra link library definitions
-target_link_libraries(rexxexit rexx ${platform_rexxexit_libs})
-install(TARGETS rexxexit RUNTIME COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/rexxexit)
-install(FILES ${PROJECT_SOURCE_DIR}/rexxexit.c COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/rexxexit)
-install(FILES ${PROJECT_SOURCE_DIR}/rexxexit.ico COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/rexxexit)
-install(PROGRAMS ${PROJECT_SOURCE_DIR}/testRexxExit COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/rexxexit)
+target_link_libraries(rexxexit rexx rexxapi)
+set (DEST ${INSTALL_SAMPLES_DIR}/api/classic/rexxexit)
+install(TARGETS  rexxexit RUNTIME        COMPONENT Samples DESTINATION ${DEST})
+install(FILES    rexxexit.c rexxexit.ico rexxexit.mak COMPONENT Samples DESTINATION ${DEST})
+install(PROGRAMS testRexxExit            COMPONENT Samples DESTINATION ${DEST})

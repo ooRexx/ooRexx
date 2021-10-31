@@ -1,7 +1,7 @@
 #/*----------------------------------------------------------------------------*/
 #/*                                                                            */
 #/* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-#/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+#/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 #/*                                                                            */
 #/* This program and the accompanying materials are made available under       */
 #/* the terms of the Common Public License v1.0 which accompanies this         */
@@ -45,10 +45,14 @@
 #  - Uses /D_CRT_SECURE_NO_DEPRECATE to eliminate deprecation warnings under
 #    MS Visual Studio 2005
 
+!IF DEFINED(REXX_HOME)
+INCLUDE = $(INCLUDE);$(REXX_HOME)\api
+LIB = $(LIB);$(REXX_HOME)\api
+!ENDIF
+
 TARGET=callrxwn
 
 all: $(TARGET).exe
-
 
 callrxwn.exe:     callrxwn.obj callrxwn.res
     link     callrxwn.obj callrxwn.res \
@@ -56,7 +60,6 @@ callrxwn.exe:     callrxwn.obj callrxwn.res
              comdlg32.lib advapi32.lib ole32.lib oleaut32.lib uuid.lib    \
              shell32.lib kernel32.lib \
              rexx.lib rexxapi.lib
-
 
 callrxwn.obj:     callrxwn.c
     @ECHO Compiling $(@B).c
@@ -67,3 +70,6 @@ callrxwn.obj:     callrxwn.c
 callrxwn.res: callrxwn.rc callrxwn.h
     @ECHO ResourceCompiling $(@B).res
         rc /DWIN32 -r -fo callrxwn.res callrxwn.rc
+
+clean:
+    del *.exe *.dll *.obj *.ilk *.pdb *.lib *.exp *.suo *.cod 1>nul 2>&1

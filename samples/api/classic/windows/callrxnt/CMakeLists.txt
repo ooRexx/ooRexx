@@ -54,19 +54,15 @@ project (callrxnt)
 
 #################### callrxnt (executable) #########################
 # additional source files required by specific platforms
-set (platform_callrxnt_libs ${ORX_SYSLIB_DL})
 # Sources for callrxnt
-add_executable(callrxnt
-    ${PROJECT_SOURCE_DIR}/callrxnt.c
-    ${PROJECT_SOURCE_DIR}/callrxnt.ico)
+add_executable(callrxnt callrxnt.c callrxnt.ico)
 # Include file definition
 target_include_directories(callrxnt PUBLIC
             ${build_api_dir}
             ${build_api_platform_dir})
 # Extra link library definitions
-target_link_libraries(callrxnt rexx ${platform_callrxnt_libs})
-install(TARGETS callrxnt RUNTIME COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/callrxnt)
-install(FILES ${PROJECT_SOURCE_DIR}/callrxnt.c COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/callrxnt)
-install(FILES ${PROJECT_SOURCE_DIR}/callrxnt.ico COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/callrxnt)
-install(FILES ${PROJECT_SOURCE_DIR}/callrxnt.mak COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/callrxnt)
-install(PROGRAMS ${PROJECT_SOURCE_DIR}/backward.fnc COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/callrxnt)
+target_link_libraries(callrxnt rexx rexxapi)
+set (DEST ${INSTALL_SAMPLES_DIR}/api/classic/callrxnt)
+install(TARGETS callrxnt RUNTIME                    COMPONENT Samples DESTINATION ${DEST})
+install(FILES callrxnt.c callrxnt.ico callrxnt.mak  COMPONENT Samples DESTINATION ${DEST})
+install(PROGRAMS ${PROJECT_SOURCE_DIR}/backward.fnc COMPONENT Samples DESTINATION ${DEST})

@@ -1,7 +1,7 @@
 #/*----------------------------------------------------------------------------*/
 #/*                                                                            */
 #/* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-#/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+#/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 #/*                                                                            */
 #/* This program and the accompanying materials are made available under       */
 #/* the terms of the Common Public License v1.0 which accompanies this         */
@@ -41,13 +41,23 @@
 #    Uses /D_CRT_SECURE_NO_DEPRECATE to eliminate deprecation warnings under
 #    MS Visual Studio 2005
 
+
+!IF DEFINED(REXX_HOME)
+INCLUDE = $(INCLUDE);$(REXX_HOME)\api
+LIB = $(LIB);$(REXX_HOME)\api
+!ENDIF
+
+all: rexxexit.exe
+
 rexxexit.exe:     rexxexit.obj
     link     rexxexit.obj \
              /NOLOGO /SUBSYSTEM:Console user32.lib comdlg32.lib gdi32.lib kernel32.lib \
              rexx.lib rexxapi.lib
 
-
 rexxexit.obj:     rexxexit.c
     cl /Tprexxexit.c \
        /nologo /D:_X86_ /DWIN32 /D_CRT_SECURE_NO_DEPRECATE /W3 /I. -c -G3
+
+clean:
+    del *.exe *.dll *.obj *.ilk *.pdb *.lib *.exp *.suo *.cod 1>nul 2>&1
 

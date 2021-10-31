@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2010-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2010-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -35,7 +35,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 
-  	ReadMe
+    ReadMe
     ======
 
     ooRexx 4.0.0 introduced a new (at the time) C++ API for writing
@@ -52,12 +52,10 @@
 
     The subdirectories:
 
-    call.example
-    ------------
+    callsample
+    ----------
     This subdirectory has several examples of creating an interpreter
     instance.  One example uses the interpreter instance to call,
     execute, and obtain the result from Rexx programs.  The other
     dynamically creates a Rexx routine and calls that routine.
-
-
 

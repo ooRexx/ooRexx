@@ -1,6 +1,7 @@
 #/*----------------------------------------------------------------------------*/
 #/*                                                                            */
-#/* Copyright (c) 2014-2021 Rexx Language Association. All rights reserved.    */
+#/* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
+#/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 #/*                                                                            */
 #/* This program and the accompanying materials are made available under       */
 #/* the terms of the Common Public License v1.0 which accompanies this         */
@@ -34,35 +35,26 @@
 #/* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 #/*                                                                            */
 #/*----------------------------------------------------------------------------*/
+# NMAKE-compatible MAKE file to build the REXX sample program rexxapi3.dll
+#
+# Notes:
+#    Uses /D_CRT_SECURE_NO_DEPRECATE to eliminate deprecation warnings under
+#    MS Visual Studio 2005
 
-#/*----------------------------------------------------------------------------*/
-#/* Global settings                                                            */
-#/*----------------------------------------------------------------------------*/
-if (APPLE)
-# apple build with lower cmake version have an @rpath problem
-    cmake_minimum_required (VERSION 3.12)
-else()
-#for other platforms
-    cmake_minimum_required (VERSION 2.8.12)
-endif()
-cmake_policy(VERSION 2.8...3.3)
+!IF DEFINED(REXX_HOME)
+INCLUDE = $(INCLUDE);$(REXX_HOME)\api
+LIB = $(LIB);$(REXX_HOME)\api
+!ENDIF
 
-#/*----------------------------------------------------------------------------*/
-#/* Project settings                                                           */
-#/*----------------------------------------------------------------------------*/
-project (callrxwn)
+all: rexxapi3.dll
 
-#################### callrxwn (executable) #########################
-# Sources for callrxwn
-add_executable(callrxwn WIN32 callrxwn.c callrxwn.rc callrxwn.ico)
-# Include file definition
-target_include_directories(callrxwn PUBLIC
-            ${build_api_dir}
-            ${build_api_platform_dir})
-# Extra link library definitions
-target_link_libraries(callrxwn rexx)
-set (DEST ${INSTALL_SAMPLES_DIR}/api/classic/callrxwn)
-install(TARGETS callrxwn RUNTIME COMPONENT Samples DESTINATION ${DEST})
-install(FILES callrxwn.c callrxwn.h callrxwn.ico callrxwn.mak callrxwn.rc
-                                 COMPONENT Samples DESTINATION ${DEST})
-install(PROGRAMS backward.fnc    COMPONENT Samples DESTINATION ${DEST})
+rexxapi3.dll:     rexxapi3.obj
+    link     rexxapi3.obj \
+             /NOLOGO user32.lib comdlg32.lib gdi32.lib kernel32.lib \
+             rexx.lib rexxapi.lib /DLL /DEF:REXXAPI3.DEF
+
+rexxapi3.obj:     rexxapi3.c
+    cl  rexxapi3.c /nologo /D:_X86_ /DWIN32 /D_CRT_SECURE_NO_DEPRECATE /W3 /I. -c -G3
+
+clean:
+    del *.exe *.dll *.obj *.ilk *.pdb *.lib *.exp *.suo *.cod 1>nul 2>&1
