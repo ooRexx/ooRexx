@@ -5,6 +5,19 @@
 # unhash to enable tracing
 # set -x
 
+# accomodate for fileicon being in different places
+FILEICON="$(which fileicon)"
+
+if  [ "${FILEICON}".  == "". ] ; then
+  if    test -f "/usr/local/bin/fileicon" ; then
+    FILEICON="/usr/local/bin/fileicon"
+  elif  test -f "/opt/homebrew/bin/fileicon" ; then
+    FILEICON="/opt/homebrew/bin/fileicon"
+  else
+    echo "unable to attach icons to files/directories"
+  fi
+fi
+
 # the data passed from CMAKE
 cpack_package_name="@CPACK_PACKAGE_NAME@"
 
@@ -41,7 +54,9 @@ cp $cmake_source_dir/CPLv1.0.txt $cmake_binary_dir/temp_dmg_dir/$cpack_package_n
 ln -sfvh /Applications $cmake_binary_dir/temp_dmg_dir
 
 # fileicon is open source, install with brew install fileicon if missing
-/usr/local/bin/fileicon set $cmake_binary_dir/temp_dmg_dir/$cpack_package_name$orx_major $cmake_source_dir/platform/unix/macos/install/oorexx.png
+if  [ "${FILEICON}".  != "". ] ; then
+  ${FILEICON} set $cmake_binary_dir/temp_dmg_dir/$cpack_package_name$orx_major $cmake_source_dir/platform/unix/macos/install/oorexx.png
+fi
 
 # Make a documentation directory to go with the build
 mkdir -p $cmake_binary_dir/temp_dmg_dir/Documentation
@@ -68,7 +83,9 @@ rm -f $cmake_binary_dir/$cpack_package_name$orx_major.dmg
 
 hdiutil create -fs HFS+ -volname $cpack_package_name$orx_major -srcfolder $cmake_binary_dir/temp_dmg_dir $cmake_binary_dir/$cpack_package_name$orx_major.dmg
 
-/usr/local/bin/fileicon set $cmake_binary_dir/$cpack_package_name$orx_major.dmg $cmake_source_dir/platform/unix/macos/install/oorexx.png
+if  [ "${FILEICON}".  != "". ] ; then
+  ${FILEICON} set $cmake_binary_dir/$cpack_package_name$orx_major.dmg $cmake_source_dir/platform/unix/macos/install/oorexx.png
+fi
 
 cp $cmake_binary_dir/$cpack_package_name$orx_major.dmg $cmake_binary_dir/$cpack_package_file_name.dmg
 
