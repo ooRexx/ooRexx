@@ -106,7 +106,7 @@ RexxRoutineEntry orxtest_funcs[] = {
 
 RexxPackageEntry DemoExternalRoutines_package_entry = {
     STANDARD_PACKAGE_HEADER
-    REXX_INTERPRETER_5_0_0,         // ooRexx version 5.0.0 or higher
+    REXX_INTERPRETER_4_0_0,         // ooRexx version 4.0.0 or higher required
     "ExternalRoutinesDemo",         // name of the package
     "1.0.0",                        // package information
     NULL,                           // no load function

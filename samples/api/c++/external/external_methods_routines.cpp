@@ -63,7 +63,7 @@ RexxMethodEntry orxtest_meths[] = {
 
 RexxPackageEntry DemoExternalLibrary_package_entry = {
     STANDARD_PACKAGE_HEADER
-    REXX_INTERPRETER_5_0_0,         // ooRexx version 5.0.0 or higher
+    REXX_CURRENT_INTERPRETER_VERSION,  // ooRexx version at compilation time or higher
     "ExternalMethodsRoutinesDemo",  // name of the package
     "1.0.0",                        // package information
     NULL,                           // no load function
