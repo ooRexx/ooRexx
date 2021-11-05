@@ -67,7 +67,7 @@ curl -L --insecure https://sourceforge.net/projects/oorexx/files/oorexx-docs/5.0
 curl -L --insecure https://sourceforge.net/projects/oorexx/files/oorexx-docs/5.0.0beta/rexxpg.pdf > $cmake_binary_dir/temp_dmg_dir/Documentation/rexxpg.pdf
 curl -L --insecure https://sourceforge.net/projects/oorexx/files/oorexx-docs/5.0.0beta/rexxextensions.pdf > $cmake_binary_dir/temp_dmg_dir/Documentation/rexxextensions.pdf
 curl -L --insecure https://sourceforge.net/projects/oorexx/files/oorexx-docs/5.0.0beta/unixextensions.pdf > $cmake_binary_dir/temp_dmg_dir/Documentation/unixextensions.pdf
-curl -L --insecure https://sourceforge.net/projects/oorexx/files/oorexx-docs/5.0.0beta/rxsock.pdf  > $cmake_binary_dir/temp_dmg_dir/Documentation/xsock.pdf
+curl -L --insecure https://sourceforge.net/projects/oorexx/files/oorexx-docs/5.0.0beta/rxsock.pdf  > $cmake_binary_dir/temp_dmg_dir/Documentation/rxsock.pdf
 curl -L --insecure https://sourceforge.net/projects/oorexx/files/oorexx-docs/5.0.0beta/rxmath.pdf > $cmake_binary_dir/temp_dmg_dir/Documentation/rxmath.pdf
 curl -L --insecure https://sourceforge.net/projects/oorexx/files/oorexx-docs/5.0.0beta/rxftp.pdf > $cmake_binary_dir/temp_dmg_dir/Documentation/rxftp.pdf
 curl -L --insecure https://sourceforge.net/projects/oorexx/files/oorexx-docs/5.0.0beta/rexxgtk.pdf > $cmake_binary_dir/temp_dmg_dir/Documentation/rexxgtk.pdf
