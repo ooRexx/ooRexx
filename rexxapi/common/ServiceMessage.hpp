@@ -349,7 +349,7 @@ public:
         // if no data provided, don't copy anything.
         if (messageDataLength == 0)
         {
-            messageDataLength = 0;
+            data.strlength = 0;     // make sure we set the length to zero in case a result buffer has been provided.
         }
         // if provided a buffer, then use it if large enough
         else if (data.strptr != NULL && messageDataLength < data.strlength)
