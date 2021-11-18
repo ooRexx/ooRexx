@@ -1346,9 +1346,10 @@ if (NOT WIN32)
    target_include_directories(orxncurses PUBLIC
              ${build_api_dir}
              ${build_api_platform_dir}
-             ${build_extensions_dir}/orxncurses)
+             ${build_extensions_dir}/orxncurses
+             ${CURSES_INCLUDE_DIRS})
    # Extra link library definitions
-   target_link_libraries(orxncurses rexx rexxapi ncurses ${CMAKE_REQUIRED_LIBRARIES})
+   target_link_libraries(orxncurses rexx rexxapi  ${CURSES_LIBRARIES} ${CMAKE_REQUIRED_LIBRARIES})
    # Make sure ncurses.cls gets copied
    add_custom_target(ncurses_cls  ALL DEPENDS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/ncurses.cls)
    set_target_properties(orxncurses PROPERTIES SOVERSION ${ORX_API_LEVEL})
