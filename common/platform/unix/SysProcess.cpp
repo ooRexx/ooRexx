@@ -112,6 +112,10 @@ const char* SysProcess::getExecutableFullPath()
     char path[PATH_MAX];
     const char *path_p = path;
 
+    // run Darwin/Solaris/BSD-specific functions to retrieve the path
+    // in some cases they may failed to retrieve a valid path (e. g. on
+    // NetBSD where HAVE_KERN_PROC_PATHNAME is defined, sysctl succeeds,
+    // but returns len == 0)
 #ifdef HAVE_NSGETEXECUTABLEPATH
     // Darwin
     uint32_t length = sizeof(path);
@@ -131,31 +135,36 @@ const char* SysProcess::getExecutableFullPath()
     // OpenBSD, FreeBSD
     int mib[4] = {CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1};
     size_t len = PATH_MAX;
-    if (sysctl(mib, 4, path, &len, NULL, 0) != 0)
+    if (sysctl(mib, 4, path, &len, NULL, 0) != 0 || len == 0)
     {
+        // sysctl has failed or len was returned as zero
         path[0] = '\0';
     }
-#else
-    const char *procfs[4];
-    char proc_path[32];
-
-    procfs[0] = "/proc/self/exe";     // Linux, NetBSD
-    procfs[1] = "/proc/curproc/exe";  // NetBSD
-    procfs[2] = "/proc/curproc/file"; // FreeBSD, DragonFly BSD
-    snprintf(proc_path, sizeof(proc_path), "/proc/%d/path/a.out", getpid());
-    procfs[3] = proc_path;            // Solaris/OpenIndiana
-
-    ssize_t bytes = 0;
-    for (int i = 0; i < sizeof(procfs) / sizeof(procfs[0]) && bytes == 0; i++)
-    {
-        bytes = readlink(procfs[i], path, sizeof(path));
-        if (bytes == -1 || bytes == sizeof(path))
-        {
-            bytes = 0;
-        }
-    }
-    path[bytes] = '\0'; // we must always add a trailing NUL
 #endif
+
+    // if we still have no path, try procfs
+    if (path[0] == '\0')
+    {
+        const char *procfs[4];
+        char proc_path[32];
+
+        procfs[0] = "/proc/self/exe";     // Linux, NetBSD
+        procfs[1] = "/proc/curproc/exe";  // NetBSD
+        procfs[2] = "/proc/curproc/file"; // FreeBSD, DragonFly BSD
+        snprintf(proc_path, sizeof(proc_path), "/proc/%d/path/a.out", getpid());
+        procfs[3] = proc_path;            // Solaris/OpenIndiana
+
+        ssize_t bytes = 0;
+        for (int i = 0; i < sizeof(procfs) / sizeof(procfs[0]) && bytes == 0; i++)
+        {
+            bytes = readlink(procfs[i], path, sizeof(path));
+            if (bytes == -1 || bytes == sizeof(path))
+            {
+                bytes = 0;
+            }
+        }
+        path[bytes] = '\0'; // we must always add a trailing NUL
+    }
 
     // this is the file location with any symbolic links resolved.
     char *modulePath = realpath(path_p, NULL);
