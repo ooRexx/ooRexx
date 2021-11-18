@@ -60,7 +60,7 @@
 #include <sys/types.h>
 #include <errno.h>
 
-#if !defined(WIN32)
+#ifndef WIN32
 #include <netdb.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -357,8 +357,8 @@ RexxRoutine0(RexxStringObject, SockGetHostId)
     ia.s_addr = (*(uint32_t *)pHostEnt->h_addr);// in network byte order already
     return context->String(inet_ntoa(ia));
 #else
-#if defined(OPSYS_AIX) || defined(OPSYS_LINUX)
-#define h_addr h_addr_list[0]
+#ifndef WIN32                                 // temporary measure to cater for all *NIXes
+#define h_addr h_addr_list[0]                 // NOTE the #else never active -> REVISE
 
     char   pszBuff[256];                     // hostnames should be 255 chars or less
     struct hostent *pHostEnt;                // ptr to hostent structure
