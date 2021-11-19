@@ -109,11 +109,11 @@ const char* SysProcess::getExecutableFullPath()
         return executableFullPath;
     }
 
-    char path[PATH_MAX];
+    char path[PATH_MAX] = ""; // we have no valid path yet
     const char *path_p = path;
 
     // run Darwin/Solaris/BSD-specific functions to retrieve the path
-    // in some cases they may failed to retrieve a valid path (e. g. on
+    // in some cases they may fail to retrieve a valid path (e. g. on
     // NetBSD where HAVE_KERN_PROC_PATHNAME is defined, sysctl succeeds,
     // but returns len == 0)
 #ifdef HAVE_NSGETEXECUTABLEPATH
@@ -132,7 +132,7 @@ const char* SysProcess::getExecutableFullPath()
         path[0] = '\0';
     }
 #elif defined HAVE_KERN_PROC_PATHNAME
-    // OpenBSD, FreeBSD
+    // NetBSD, FreeBSD
     int mib[4] = {CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1};
     size_t len = PATH_MAX;
     if (sysctl(mib, 4, path, &len, NULL, 0) != 0 || len == 0)
@@ -142,7 +142,8 @@ const char* SysProcess::getExecutableFullPath()
     }
 #endif
 
-    // if we still have no path, try procfs
+    // if we have no OS-specific functions defined, or they failed to
+    // retrieve a valid path, try procfs
     if (path[0] == '\0')
     {
         const char *procfs[4];
