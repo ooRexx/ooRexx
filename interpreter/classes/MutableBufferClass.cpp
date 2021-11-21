@@ -1321,7 +1321,7 @@ MutableBuffer *MutableBuffer::lower(RexxInteger *_start, RexxInteger *_length)
     // now uppercase in place
     for (size_t i = 0; i < rangeLength; i++)
     {
-        *bufferData = tolower(*bufferData);
+        *bufferData = Utilities::toLower(*bufferData);
         bufferData++;
     }
     return this;
@@ -1361,7 +1361,7 @@ MutableBuffer *MutableBuffer::upper(RexxInteger *_start, RexxInteger *_length)
     // now uppercase in place
     for (size_t i = 0; i < rangeLength; i++)
     {
-        *bufferData = toupper(*bufferData);
+        *bufferData = Utilities::toUpper(*bufferData);
         bufferData++;
     }
     return this;
@@ -1716,13 +1716,13 @@ RexxObject *MutableBuffer::caselessMatchChar(RexxInteger *position_, RexxString 
 
     size_t _setLength = matchSet->getLength();
     char         _matchChar = getChar(position - 1);
-    _matchChar = toupper(_matchChar);
+    _matchChar = Utilities::toUpper(_matchChar);
 
     // iterate through the match set looking for a match, using a
     // caseless compare
     for (size_t i = 0; i < _setLength; i++)
     {
-        if (_matchChar == toupper(matchSet->getChar(i)))
+        if (_matchChar == Utilities::toUpper(matchSet->getChar(i)))
         {
             return TheTrueObject;
         }

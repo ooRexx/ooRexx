@@ -90,7 +90,7 @@ const char *Utilities::locateCharacter(const char *string, const char *set, size
  */
 int Utilities::strCaselessCompare(const char *op1, const char *op2)
 {
-    while (tolower(*op1) == tolower(*op2))
+    while (toLower(*op1) == toLower(*op2))
     {
         if (*op1 == 0)
         {
@@ -100,7 +100,7 @@ int Utilities::strCaselessCompare(const char *op1, const char *op2)
         op2++;
     }
 
-    return(tolower(*op1) - tolower(*op2));
+    return (tolower(*op1) - toLower(*op2));
 }
 
 /**
@@ -119,9 +119,9 @@ int Utilities::memicmp(const void *mem1, const void *mem2, size_t len)
     const char *op2 = (const char *)mem2;
     while(len != 0)
     {
-        if (tolower(*op1) != tolower(*op2))
+        if (toLower(*op1) != toLower(*op2))
         {
-            return tolower(*op1) - tolower(*op2);
+            return toLower(*op1) - toLower(*op2);
 
         }
         op1++;
@@ -142,7 +142,7 @@ void Utilities::strupper(char *str)
 {
     while (*str)
     {
-        *str = toupper(*str);
+        *str = toUpper(*str);
         str++;
     }
 
@@ -161,7 +161,7 @@ void Utilities::strlower(char *str)
 {
     while (*str)
     {
-        *str = tolower(*str);
+        *str = toLower(*str);
         str++;
     }
 

@@ -227,7 +227,7 @@ RexxInteger *RexxString::caselessCompare(RexxString *other, RexxString *pad)
     other = stringArgument(other, ARG_ONE);
     size_t length2 = other->getLength();
     // since this is caseless, uppercase the pad character
-    char padChar = toupper(optionalPadArgument(pad, ' ', ARG_TWO));
+    char padChar = Utilities::toUpper(optionalPadArgument(pad, ' ', ARG_TWO));
 
     const char *string1;
     const char *string2;
@@ -256,7 +256,7 @@ RexxInteger *RexxString::caselessCompare(RexxString *other, RexxString *pad)
     {
         // if the strings do not compare equal, return this index position
         // as the result.
-        if (toupper(string1[i]) != toupper(string2[i]))
+        if (Utilities::toUpper(string1[i]) != Utilities::toUpper(string2[i]))
         {
             return new_integer(i + 1);
         }
@@ -267,7 +267,7 @@ RexxInteger *RexxString::caselessCompare(RexxString *other, RexxString *pad)
     for (size_t i = 0; i < padLength; i++)
     {
         // if this does not match the pad character, return the position
-        if (toupper(string1[i]) != padChar)
+        if (Utilities::toUpper(string1[i]) != padChar)
         {
             return new_integer(leadLength + i + 1);
         }
@@ -1048,13 +1048,13 @@ RexxObject *RexxString::caselessMatchChar(RexxInteger *position_, RexxString *ma
 
     size_t _setLength = matchSet->getLength();
     char         _matchChar = getChar(position - 1);
-    _matchChar = toupper(_matchChar);
+    _matchChar = Utilities::toUpper(_matchChar);
 
     // iterate through the match set looking for a match, using a
     // caseless compare
     for (size_t i = 0; i < _setLength; i++)
     {
-        if (_matchChar == toupper(matchSet->getChar(i)))
+        if (_matchChar == Utilities::toUpper(matchSet->getChar(i)))
         {
             return TheTrueObject;
         }

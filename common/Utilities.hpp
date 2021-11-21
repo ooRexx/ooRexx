@@ -45,6 +45,10 @@
 class Utilities
 {
 public:
+    static inline bool isUpper(char c) { return c >= 'A' && c <= 'Z'; }
+    static inline bool isLower(char c) { return c >= 'a' && c <= 'z'; }
+    static inline char toUpper(char c) { return isLower(c) ? c & ~0x20 : c; }
+    static inline char toLower(char c) { return isUpper(c) ? c | 0x20 : c; }
     static int strCaselessCompare(const char *opt1, const char *opt2);
     static int memicmp(const void *opt1, const void *opt2, size_t len);
     static void strupper(char *str);

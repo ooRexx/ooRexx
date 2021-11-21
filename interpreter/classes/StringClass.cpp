@@ -1545,7 +1545,7 @@ bool RexxString::checkLower()
     {
         // if we have a lower case character, mark as having lower
         // case characters and return
-        if (*data != toupper(*data))
+        if (Utilities::isLower(*data))
         {
             setHasLower();
             return true;
@@ -1574,7 +1574,7 @@ bool RexxString::checkUpper()
     {
         // if we have a upper case character, mark as having lower
         // case characters and return
-        if (*data != tolower(*data))
+        if (Utilities::isUpper(*data))
         {
             setHasUpper();
             return true;
@@ -1608,7 +1608,7 @@ RexxString *RexxString::upper()
         // copy the data over, uppercasing as we go.
         while (data < endData)
         {
-            *outdata++ = toupper(*data++);
+            *outdata++ = Utilities::toUpper(*data++);
         }
         // we know this string does not contain lowercase characters
         newstring->setUpperOnly();
@@ -1690,7 +1690,7 @@ RexxString *RexxString::lower()
         // copy the data over, lowercasing as we go.
         while (data < endData)
         {
-            *outdata++ = tolower(*data++);
+            *outdata++ = Utilities::toLower(*data++);
         }
         // we know this string does not contain uppercase characters
         newstring->setLowerOnly();
@@ -1789,7 +1789,7 @@ RexxString *RexxString::lower(size_t offset, size_t _length)
     // now lowercase in place
     for (size_t i = 0; i < _length; i++)
     {
-        *data = tolower(*data);
+        *data = Utilities::toLower(*data);
         data++;
     }
     return newstring;
@@ -1819,7 +1819,7 @@ RexxString *RexxString::upper(size_t offset, size_t _length)
     // now uppercase in place
     for (size_t i = 0; i < _length; i++)
     {
-        *data = toupper(*data);
+        *data = Utilities::toUpper(*data);
         data++;
     }
     return newstring;
@@ -2235,7 +2235,7 @@ RexxString *RexxString::newUpperString(const char * string, size_t length)
 
     while (indata < endData)
     {
-        *outdata++ = toupper(*indata++);
+        *outdata++ = Utilities::toUpper(*indata++);
     }
     // flag as containing only uppercase characters
     newObj->setUpperOnly();

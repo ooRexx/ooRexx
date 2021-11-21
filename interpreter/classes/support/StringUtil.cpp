@@ -662,7 +662,7 @@ int  StringUtil::caselessCompare(const char *string1, const char *string2, size_
     // need to do this the hard way
     while (length--)
     {
-        int rc = toupper(*string1++) - toupper(*string2++);
+        int rc = Utilities::toUpper(*string1++) - Utilities::toUpper(*string2++);
         if (rc != 0)
         {
             return rc < 0 ? -1 : 1;
