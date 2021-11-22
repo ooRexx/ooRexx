@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -844,7 +844,7 @@ bool  RexxDateTime::parseDateTimeFormat(const char *date, const char *format, co
                     // it's a digit, which will determine our length to scan.
                     int numberLength = 1;
 
-                    if (isdigit(*(inputscan + 1)))
+                    if (Utilities::isDigit(*(inputscan + 1)))
                     {
                         numberLength = 2;
                     }
@@ -1013,7 +1013,7 @@ bool  RexxDateTime::parseDateTimeFormat(const char *date, const char *format, co
                     // it's a digit, which will determine our length to scan.
                     int numberLength = 1;
 
-                    if (isdigit(*(inputscan +1)))
+                    if (Utilities::isDigit(*(inputscan +1)))
                     {
                         numberLength = 2;
                     }
@@ -1105,7 +1105,7 @@ bool RexxDateTime::getNumber(const char *input, wholenumber_t length, int *targe
     {
         char digit = *input;
         // add to the accumulator
-        if (isdigit(digit))
+        if (Utilities::isDigit(digit))
         {
             value = (value * 10) + (digit - '0');
         }

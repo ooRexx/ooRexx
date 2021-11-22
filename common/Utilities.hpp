@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -45,6 +45,8 @@
 class Utilities
 {
 public:
+    static inline bool isDigit(char c) { return c >= '0' && c <= '9'; }
+    static inline bool isAlpha(char c) { return isUpper(c) || isLower(c); }
     static inline bool isUpper(char c) { return c >= 'A' && c <= 'Z'; }
     static inline bool isLower(char c) { return c >= 'a' && c <= 'z'; }
     static inline char toUpper(char c) { return isLower(c) ? c & ~0x20 : c; }

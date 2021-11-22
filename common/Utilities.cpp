@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -100,7 +100,7 @@ int Utilities::strCaselessCompare(const char *op1, const char *op2)
         op2++;
     }
 
-    return (tolower(*op1) - toLower(*op2));
+    return (toLower(*op1) - toLower(*op2));
 }
 
 /**

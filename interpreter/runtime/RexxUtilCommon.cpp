@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -493,7 +493,7 @@ bool TreeFinder::goodOpts(const char *opts)
 {
     while (*opts)
     {
-        switch (toupper(*opts))
+        switch (Utilities::toUpper(*opts))
         {
             case 'S':                      // recurse into subdirectories
                 options[RECURSE] = true;
@@ -800,7 +800,7 @@ const char* mystrstr(const char *haystack, const char *needle, size_t hlen, size
     else
     {
         // we scan, looking for a hit on the first character
-        char firstChar = toupper(needle[0]);
+        char firstChar = Utilities::toUpper(needle[0]);
 
         size_t current = 0;
         // this is maximum number of places we can get a hit
@@ -808,7 +808,7 @@ const char* mystrstr(const char *haystack, const char *needle, size_t hlen, size
         for (current = 0; current < limit; current++)
         {
             // if we have a hit on the first character, check the entire string
-            if (firstChar == toupper(haystack[current]))
+            if (firstChar == Utilities::toUpper(haystack[current]))
             {
                 // if everything compares, return the hit
                 if (Utilities::memicmp(haystack + current, needle, nlen) == 0)
@@ -1724,7 +1724,7 @@ RexxRoutine4(CSTRING, SysFileSearch, RexxStringObject, needle, CSTRING, file, Re
     {
         for (size_t i = 0; i < strlen(opts); i++)
         {
-            switch (toupper(opts[i]))
+            switch (Utilities::toUpper(opts[i]))
             {
                 case 'N':
                 {
@@ -1840,7 +1840,7 @@ RexxRoutine3(RexxStringObject, SysSearchPath, CSTRING, path, CSTRING, file, OPTI
     char opt = 'C'; // this is the default
     if (options != NULL)
     {
-        opt = toupper(options[0]);
+        opt = Utilities::toUpper(options[0]);
         if (opt != 'C' && opt != 'N')
         {
             invalidOptionException(context, "SysSearchPath", "option", "'C' or 'N'", options);

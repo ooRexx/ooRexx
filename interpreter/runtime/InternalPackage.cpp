@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -101,24 +101,24 @@ RexxRoutine2(RexxStringObject, sysFilespec, CSTRING, option, CSTRING, name)
     // this one needs a little adjustment for the case where this is all name
     const char *nameStart = pathEnd == name ? name : pathEnd;
 
-    switch (toupper(*option))              /* process each option               */
+    switch (Utilities::toUpper(*option)) // process each option
     {
-        case FILESPEC_PATH:                /* extract the path                  */
+        case FILESPEC_PATH:              // extract the path (without drive)
         {
             return context->String(pathStart, pathEnd - pathStart);
         }
 
-        case FILESPEC_NAME:                  /* extract the file name               */
-        {                                /* everything to right of slash        */
+        case FILESPEC_NAME:              // extract the file name
+        {
             return context->String(nameStart, endPtr - nameStart);
         }
 
-        case FILESPEC_LOCATION:          /* extract the file name               */
-        {                                /* everything to left of slash        */
+        case FILESPEC_LOCATION:          // extract the path (including drive)
+        {
             return context->String(name, pathEnd - name);
         }
 
-        case FILESPEC_DRIVE:               /* extract the drive                 */
+        case FILESPEC_DRIVE:             // extract the drive
         {
             // this will return a null string if nothing is before the pathStart
             return context->String(name, pathStart - name);

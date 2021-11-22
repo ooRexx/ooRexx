@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -1850,7 +1850,7 @@ StringSymbolType LanguageParser::scanSymbol(RexxString *string)
         // this character must be a 'e' or 'E' and the rest of
         // the string must only be digits
 
-        if (toupper(*(scan - 1)) != 'E')
+        if (Utilities::toUpper(*(scan - 1)) != 'E')
         {
             return STRING_BAD_VARIABLE;
         }
@@ -1859,7 +1859,7 @@ StringSymbolType LanguageParser::scanSymbol(RexxString *string)
         scan++;
         while (scan < linend)
         {
-            if (!isdigit(*scan))
+            if (!Utilities::isDigit(*scan))
             {
                 return STRING_BAD_VARIABLE;
             }
@@ -1871,7 +1871,7 @@ StringSymbolType LanguageParser::scanSymbol(RexxString *string)
     // we've scanned the entire string and it is "provisionally" valid.
 
     // now check for different types.  firs check for potential numbers
-    if (string->getChar(0) == '.' || isdigit(string->getChar(0)))
+    if (string->getChar(0) == '.' || Utilities::isDigit(string->getChar(0)))
     {
         // only a period?
         if (compound == 1 && stringLength == 1)
@@ -1901,7 +1901,7 @@ StringSymbolType LanguageParser::scanSymbol(RexxString *string)
             while (scan < linend)
             {
                 // stop scanning on first non-numeric
-                if (!isdigit(*scan) && *scan != '.')
+                if (!Utilities::isDigit(*scan) && *scan != '.')
                 {
                     break;
                 }
@@ -1916,7 +1916,7 @@ StringSymbolType LanguageParser::scanSymbol(RexxString *string)
 
             // found a potential exponent.  If the next characater is
             // "+" or "-", we already validated everything past that point
-            if (toupper(*scan) == 'E')
+            if (Utilities::toUpper(*scan) == 'E')
             {
                 scan++;
                 if (*scan == '-' || *scan == '+')
@@ -1929,7 +1929,7 @@ StringSymbolType LanguageParser::scanSymbol(RexxString *string)
                 {
                     // stop scanning on first non-numeric
                     // this cannot be a number any longer
-                    if (!isdigit(*scan))
+                    if (!Utilities::isDigit(*scan))
                     {
                         return STRING_LITERAL;
                     }

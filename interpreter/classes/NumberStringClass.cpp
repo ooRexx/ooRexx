@@ -1339,7 +1339,7 @@ bool numberStringScan(const char *number, size_t length)
     }
 
     // we're at a non-digit.  Check for the start of an exponent.
-    if (toupper(*inPtr) == 'E')
+    if (*inPtr == 'E' || *inPtr == 'e')
     {
         // we must have digits after this...fail if this the end of the string.
         if (++inPtr >= endData)

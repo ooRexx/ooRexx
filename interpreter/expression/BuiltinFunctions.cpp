@@ -931,7 +931,7 @@ BUILTIN(ARG)
         size_t position = n->getValue();
         positive_integer(position, ARG, IntegerOne);
 
-        switch (toupper(option->getChar(0)))
+        switch (Utilities::toUpper(option->getChar(0)))
         {
             // 'A'rray
             case 'A':
@@ -1040,7 +1040,7 @@ BUILTIN(DATE)
         }
         else
         {
-            style = toupper(option->getChar(0));
+            style = Utilities::toUpper(option->getChar(0));
         }
     }
 
@@ -1059,7 +1059,7 @@ BUILTIN(DATE)
         }
         else
         {
-            style2 = toupper(option2->getChar(0));
+            style2 = Utilities::toUpper(option2->getChar(0));
         }
     }
 
@@ -1343,7 +1343,7 @@ BUILTIN(TIME)
             reportException(Error_Incorrect_call_list, "TIME", IntegerOne, "CEFHLMNORST", option);
         }
         // we only use the first character
-        style = toupper(option->getChar(0));
+        style = Utilities::toUpper(option->getChar(0));
     }
 
     // now repeat with the input style
@@ -1362,7 +1362,7 @@ BUILTIN(TIME)
         {
             reportException(Error_Incorrect_call_list, "TIME", IntegerThree, "CFHLMNOST", option2);
         }
-        style2 = toupper(option2->getChar(0));
+        style2 = Utilities::toUpper(option2->getChar(0));
     }
 
     // we have an input time, so we need to parse this
@@ -2351,7 +2351,7 @@ BUILTIN(LINES)
     if (option != OREF_NULL)
     {
         // get the first character
-        opt = toupper(option->getChar(0));
+        opt = Utilities::toUpper(option->getChar(0));
         if (opt != 'C' && opt != 'N')
         {
             reportException(Error_Incorrect_call_list, "ARG", IntegerTwo, "NC", option);
@@ -2451,7 +2451,7 @@ BUILTIN(STREAM)
         {
             reportException(Error_Incorrect_call_list, "STREAM", IntegerTwo, "SDC", action);
         }
-        action_char = toupper(action->getChar(0));
+        action_char = Utilities::toUpper(action->getChar(0));
     }
 
     switch (action_char)
@@ -2607,7 +2607,7 @@ BUILTIN(CONDITION)
             reportException(Error_Incorrect_call_list, "CONDITION", IntegerOne, "ACDIORS", option);
         }
 
-        style = toupper(option->getChar(0));
+        style = Utilities::toUpper(option->getChar(0));
     }
 
     // get the current trapped condition
@@ -2809,7 +2809,7 @@ BUILTIN(RXQUEUE)
     RexxString *queueName = optional_string(RXQUEUE, name);
     ProtectedObject result;
 
-    switch (toupper(option->getChar(0)))
+    switch (Utilities::toUpper(option->getChar(0)))
     {
         // 'G'et the current queue name
         case 'G':

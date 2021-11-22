@@ -155,7 +155,7 @@ public:
                 char *scanner = prefix;
                 while (*scanner != '\0')
                 {
-                    *scanner = toupper(*scanner);
+                    *scanner = toupper((unsigned)(*scanner));
                     scanner++;
                 }
                 RexxStringObject stemPortion = context->String(stemName, (dotPos - stemName) + 1);

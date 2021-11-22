@@ -296,7 +296,7 @@ RexxRoutine1(RexxStringObject, SysDriveInfo, OPTIONAL_CSTRING, drive)
         // We just let the Windows APIs handle all the different ways to
         // specify a volume, like d:\, \\?\d:, \\localhost\path, etc.  But
         // on top of that we support a single-character drive d.
-        if (d.length() == 1 && isalpha(d.at(0)))
+        if (d.length() == 1 && Utilities::isAlpha(d.at(0)))
         {
             // make this a valid drive specification
             d += ":\\";
@@ -372,7 +372,7 @@ RexxRoutine2(RexxStringObject, SysDriveMap, OPTIONAL_CSTRING, drive, OPTIONAL_CS
         }
 
         // make sure this is in range
-        start = toupper(drive[0]) - 'A' + 1;
+        start = Utilities::toUpper(drive[0]) - 'A' + 1;
         if (start < 1 || start > 26)
         {
             context->ThrowException1(Rexx_Error_Incorrect_call_user_defined, context->String("Invalid drive specification"));
@@ -1738,7 +1738,7 @@ RexxRoutine1(RexxStringObject, SysFileSystemType, OPTIONAL_CSTRING, drive)
         // We just let the Windows APIs handle all the different ways to
         // specify a volume, like d:\, \\?\d:, \\localhost\path, etc.  But
         // on top of that we support a single-character drive d.
-        if (d.length() == 1 && isalpha(d.at(0)))
+        if (d.length() == 1 && Utilities::isAlpha(d.at(0)))
         {
             // make this a valid drive specification
             d += ":\\";
@@ -1783,7 +1783,7 @@ RexxRoutine1(RexxStringObject, SysVolumeLabel, OPTIONAL_CSTRING, drive)
         // We just let the Windows APIs handle all the different ways to
         // specify a volume, like d:\, \\?\d:, \\localhost\path, etc.  But
         // on top of that we support a single-character drive d.
-        if (d.length() == 1 && isalpha(d.at(0)))
+        if (d.length() == 1 && Utilities::isAlpha(d.at(0)))
         {
             // make this a valid drive specification
             d += ":\\";

@@ -107,7 +107,7 @@
  *------------------------------------------------------------------*/
 int caselessCompare(const char *op1, const char *op2)
 {
-    for (; tolower(*op1) == tolower(*op2); op1++,op2++)
+    for (; toupper((unsigned)(*op1)) == toupper((unsigned)(*op2)); op1++,op2++)
     {
         if (*op1 == 0)
         {
@@ -115,7 +115,7 @@ int caselessCompare(const char *op1, const char *op2)
         }
     }
 
-    return(tolower(*op1) - tolower(*op2));
+    return toupper((unsigned)(*op1)) - toupper((unsigned)(*op2));
 }
 
 /*------------------------------------------------------------------
