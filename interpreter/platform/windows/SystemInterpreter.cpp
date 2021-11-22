@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -51,6 +51,10 @@
 #include "Interpreter.hpp"
 #include "FileNameBuffer.hpp"
 
+#include <fcntl.h>
+#include <io.h>
+
+
 ULONG SystemInterpreter::exceptionHostProcessId = 0;
 HANDLE SystemInterpreter::exceptionHostProcess = NULL;
 bool SystemInterpreter::exceptionConsole = false;
@@ -62,6 +66,43 @@ class InterpreterInstance;
 
 HINSTANCE SystemInterpreter::moduleHandle = 0;      // handle to the interpeter DLL
 
+BOOL __stdcall WinConsoleCtrlHandler(DWORD dwCtrlType)
+/******************************************************************************/
+/* Arguments:  Report record, registration record, context record,            */
+/*             dispatcher context                                             */
+/*                                                                            */
+/* DESCRIPTION : For Control Break conditions issue a halt to activation      */
+/*               Control-C or control-Break is pressed.                       */
+/*                                                                            */
+/*  Returned:  Action code                                                    */
+/******************************************************************************/
+{
+    // check to condition for all threads of this process */
+
+    if ((dwCtrlType == CTRL_CLOSE_EVENT) || (dwCtrlType == CTRL_SHUTDOWN_EVENT))
+    {
+        return false;  /* send to system */
+    }
+
+    /* if RXCTRLBREAK=NO then ignore SIGBREAK exception */
+    if (dwCtrlType == CTRL_BREAK_EVENT || dwCtrlType == CTRL_LOGOFF_EVENT)
+    {
+        char envp[65];
+        if (GetEnvironmentVariable("RXCTRLBREAK", envp, sizeof(envp)) > 0 && strcmp("NO", envp) == 0)
+        {
+            return true;    /* ignore signal */
+        }
+    }
+
+    if (dwCtrlType == CTRL_LOGOFF_EVENT)
+    {
+        return false;    /* send to system */
+    }
+
+    // we need to do something about this one, let the system interpreter handle
+    return SystemInterpreter::processSignal(dwCtrlType);
+}
+
 /**
  * Handle system-specific once-per-process startup tasks.
  *
@@ -72,6 +113,63 @@ void SystemInterpreter::processStartup(HINSTANCE mod)
     moduleHandle = mod;
     // now do the platform independent startup
     Interpreter::processStartup();
+    // Allow Rexx console output to use virtual terminal (VT) sequences.
+    // This is based on the examples Microsoft gives in
+    // https://docs.microsoft.com/en-us/windows/console/console-virtual-terminal-sequences
+    // The Microsoft example shows
+    // a) SetConsoleMode STD_OUTPUT_HANDLE or'ing in ENABLE_VIRTUAL_TERMINAL_PROCESSING and DISABLE_NEWLINE_AUTO_RETURN
+    // b) SetConsoleMode STD_INPUT_HANDLE or'ing in ENABLE_VIRTUAL_TERMINAL_INPUT
+    // In addition to a) we also run SetConsoleMode for STD_ERROR_HANDLE
+    // but we don't do b) because this breaks PULL line editing (cursor
+    // keys emit ANSI characters instead of moving around).
+
+    // VT support was added around 10.0.10586, so we might or might not
+    // have some of these defines.  If missing, make them nop's.
+#ifndef ENABLE_VIRTUAL_TERMINAL_PROCESSING
+#define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0
+#endif
+#ifndef DISABLE_NEWLINE_AUTO_RETURN
+#define DISABLE_NEWLINE_AUTO_RETURN 0
+#endif
+
+    DWORD mode;
+    HANDLE h;
+
+    h = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (h != NULL && h != INVALID_HANDLE_VALUE && GetConsoleMode(h, &mode) != 0)
+    {
+        SetConsoleMode(h, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING | DISABLE_NEWLINE_AUTO_RETURN);
+    }
+    h = GetStdHandle(STD_ERROR_HANDLE);
+    if (h != NULL && h != INVALID_HANDLE_VALUE && GetConsoleMode(h, &mode) != 0)
+    {
+        SetConsoleMode(h, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING | DISABLE_NEWLINE_AUTO_RETURN);
+    }
+
+    // Because of using the stand-alone runtime library or when using different compilers,
+    // the std-streams of the calling program and the REXX.DLL might be located at different
+    // addresses and therefore _file might be -1. If so, std-streams are reassigned to the
+    // file standard handles returned by the system
+    if ((_fileno(stdin) < 0) && (GetFileType(GetStdHandle(STD_INPUT_HANDLE)) != FILE_TYPE_UNKNOWN))
+    {
+        *stdin = *_fdopen(_open_osfhandle((intptr_t)GetStdHandle(STD_INPUT_HANDLE), _O_RDONLY), "r");
+    }
+    if ((_fileno(stdout) < 0) && (GetFileType(GetStdHandle(STD_OUTPUT_HANDLE)) != FILE_TYPE_UNKNOWN))
+    {
+        *stdout = *_fdopen(_open_osfhandle((intptr_t)GetStdHandle(STD_OUTPUT_HANDLE), _O_APPEND), "a");
+    }
+    if ((_fileno(stderr) < 0) && (GetFileType(GetStdHandle(STD_ERROR_HANDLE)) != FILE_TYPE_UNKNOWN))
+    {
+        *stderr = *_fdopen(_open_osfhandle((intptr_t)GetStdHandle(STD_ERROR_HANDLE), _O_APPEND), "a");
+    }
+    // enable trapping for CTRL_C exceptions
+    SetConsoleCtrlHandler(&WinConsoleCtrlHandler, true);
+
+    // we never want to see a critical-error-handler message box.
+    // according to MS docs: "Best practice is that all applications call
+    // the process-wide SetErrorMode function with a parameter of
+    // SEM_FAILCRITICALERRORS at startup
+    SetErrorMode(SEM_FAILCRITICALERRORS);
 }
 
 
@@ -82,6 +180,8 @@ void SystemInterpreter::processShutdown()
 {
     // now do the platform independent shutdown
     Interpreter::processShutdown();
+    // disable the exception handler
+    SetConsoleCtrlHandler(&WinConsoleCtrlHandler, false);
 }
 
 
