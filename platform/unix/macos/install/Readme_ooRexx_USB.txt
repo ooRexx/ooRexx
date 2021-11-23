@@ -21,7 +21,7 @@ For more information on Rexx, visit   https://www.rexxla.org/
 How To install ooRexx 5 on a USB Stick for use with macOS
 
 1. Copy the ooRexx5 image (.dmg file) to the desktop or to a folder. Image name
-   will show version and revision such as ooRexx-5.0.0-12149.macOS.x86_64
+   will show version and revision such as ooRexx-5.0.0-12313.macOS.arm64.x86_64
 2. Mount the image by double clicking on it
 3. format a USB Stick and give it the name OOREXX5
 4. Copy ooRexx5 folder from image to USB Stick
@@ -36,9 +36,9 @@ To use the USB installation
    Use the process monitor to check that no rexx or rxapi processes
    are still running. Kill them using kill <PID> if they are still running.
 
-6. Open a Terminal and enter: export PATH="/Volumes/OOREXX5/bin:$PATH"
+6. Open a Terminal and enter: export PATH=/Volumes/OOREXX5/bin:$PATH
 
-Confirm that the installation works by entering one of:
+Confirm that the installation is working by entering one of:
 
 rexx -v (display version of Rexx)
 
@@ -47,7 +47,7 @@ rexx (show syntax)
 rexx /Volumes/OOREXX5/ooRexx5/share/ooRexx/rexxcps (benchmark)
 
 
-When done, to stop using the USB install:
+7. When done, to stop using ooRexx from USB Stick:
 
 - kill any rexx or rxapi process using kill <PID>
 
@@ -55,8 +55,13 @@ When done, to stop using the USB install:
 
 - eject USB stick
 
+- eject ooRexx5 image
+
 (for safety reboot)
 
 PLEASE ALSO NOTE:
 ooRexx 5 can be installed anywhere, without any elevated rights, i.e. it is
 "sudo free" as long as it is installed where the user has R/W rights.
+
+On MacOS Mojave and beyond you may need to remove the extended quarantine
+attributes see the Readme_ooRexx.txt for details.

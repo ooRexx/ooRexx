@@ -1037,7 +1037,7 @@ add_custom_command(OUTPUT ${ORX_IMAGE_OUTPUT_LOCATION}/rexx.img
            WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 
 add_custom_target(rexx_img ALL DEPENDS ${ORX_IMAGE_OUTPUT_LOCATION}/rexx.img)
-install(PROGRAMS ${ORX_IMAGE_OUTPUT_LOCATION}/rexx.img COMPONENT Core DESTINATION ${INSTALL_LIB_DIR} PERMISSIONS OWNER_EXECUTE GROUP_EXECUTE WORLD_EXECUTE OWNER_READ GROUP_READ WORLD_READ)
+install(PROGRAMS ${ORX_IMAGE_OUTPUT_LOCATION}/rexx.img COMPONENT Core DESTINATION ${INSTALL_LIB_DIR} PERMISSIONS OWNER_EXECUTE GROUP_EXECUTE WORLD_EXECUTE OWNER_WRITE OWNER_READ GROUP_READ WORLD_READ)
 
 #################### rxapi (executable) #########################
 # additional source files required by specific platforms
@@ -1797,7 +1797,7 @@ if (NOT WIN32)
       add_custom_target(${name}_man ALL DEPENDS ${name}.${cat}.gz)
       install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${name}.${cat}.gz
           DESTINATION ${INSTALL_MAN_DIR}/man${cat}
-          PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
+          PERMISSIONS OWNER_READ GROUP_READ WORLD_READ OWNER_WRITE)
    endmacro (add_manpage)
 
    add_manpage (rexx 1)
