@@ -249,6 +249,9 @@ void Activity::runThread()
         // make sure we clean up any mutexes we hold
         cleanupMutexes();
 
+        // make sure we're not anchoring no longer needed objects
+        cleanupPoolResources();
+
         // reset our semaphores
         runSem.reset();
         guardSem.reset();
@@ -265,6 +268,21 @@ void Activity::runThread()
     }
     // tell the activity manager we're going away
     ActivityManager::activityEnded(this);
+}
+
+
+/**
+ * clear references when an activity is added to the pool so that
+ * the activity doesn't inappropriately keep objects alive.
+ */
+void Activity::cleanupPoolResources()
+{
+    instance = OREF_NULL;
+    oldActivity = OREF_NULL;
+    conditionobj = OREF_NULL;
+    dispatchMessage = OREF_NULL;
+    waitingObject = OREF_NULL;
+    nestedActivity = OREF_NULL;
 }
 
 
