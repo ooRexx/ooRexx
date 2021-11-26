@@ -20,13 +20,18 @@ For more information on Rexx, visit   https://www.rexxla.org/
 
 How To install ooRexx 5 on a USB Stick for use with macOS
 
-1. Copy the ooRexx5 image (.dmg file) to the desktop or to a folder. Image name
-   will show version and revision such as ooRexx-5.0.0-12313.macOS.arm64.x86_64
-2. Mount the image by double clicking on it
-3. format a USB Stick and give it the name OOREXX5
-4. Copy ooRexx5 folder from image to USB Stick
+1. Copy the latest ooRexx5 image (.dmg file) from Sourceforge to the desktop
+   or to a folder. The image name will show version and revision such as
+   ooRexx-5.0.0-12317.macOS.arm64.x86_64.
 
-To use the USB installation
+2. Mount the image by double clicking on it.
+
+3. format a USB Stick and give it the name OOREXX
+
+4. Copy the ooRexx5 folder from the mounted image to the USB Stick using
+   drag & drop.
+
+To use the USB installation:
 
 5a. On a MAC with no ooRexx installed -> go to 6
 
@@ -36,18 +41,30 @@ To use the USB installation
    Use the process monitor to check that no rexx or rxapi processes
    are still running. Kill them using kill <PID> if they are still running.
 
-6. Open a Terminal and enter: export PATH=/Volumes/OOREXX5/bin:$PATH
+6. Open a Terminal and enter: export PATH=/Volumes/OOREXX/ooRexx5/bin:$PATH
 
-Confirm that the installation is working by entering one of:
+7. On at least Mojave and beyond Apple has decided to set a "Quarantine"
+extended attribute on files downloaded from the Internet. Check if
+this is the case from the terminal (/Applications/Utilities/Console.app):
+
+xattr -r /Volumes/OOREXX/ooRexx5
+
+If you see any "com.apple.quarantine" you need to remove them manually
+from the commandline:
+
+xattr -dr com.apple.quarantine /Volumes/OOREXX/ooRexx5
+
+
+8. Confirm that the installation is working by entering one of:
 
 rexx -v (display version of Rexx)
 
 rexx (show syntax)
 
-rexx /Volumes/OOREXX5/ooRexx5/share/ooRexx/rexxcps (benchmark)
+rexx /Volumes/OOREXX/ooRexx5/share/ooRexx/samples/rexxcps (benchmark)
 
 
-7. When done, to stop using ooRexx from USB Stick:
+9. When done, to stop using ooRexx from USB Stick:
 
 - kill any rexx or rxapi process using kill <PID>
 
@@ -57,11 +74,6 @@ rexx /Volumes/OOREXX5/ooRexx5/share/ooRexx/rexxcps (benchmark)
 
 - eject ooRexx5 image
 
-(for safety reboot)
-
 PLEASE ALSO NOTE:
 ooRexx 5 can be installed anywhere, without any elevated rights, i.e. it is
 "sudo free" as long as it is installed where the user has R/W rights.
-
-On MacOS Mojave and beyond you may need to remove the extended quarantine
-attributes see the Readme_ooRexx.txt for details.
