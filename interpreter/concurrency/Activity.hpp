@@ -182,7 +182,6 @@ class Activity : public RexxInternalObject
     void        setupCurrentActivity();
     void        checkStackSpace();
     void        cleanupActivityResources();
-    void        cleanupPoolResources();
     void        terminatePoolActivity();
     thread_id_t threadIdMethod();
     bool isThread(thread_id_t id) { return currentThread.equals(id); }

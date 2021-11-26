@@ -249,9 +249,6 @@ void Activity::runThread()
         // make sure we clean up any mutexes we hold
         cleanupMutexes();
 
-        // make sure we're not anchoring no longer needed objects
-        cleanupPoolResources();
-
         // reset our semaphores
         runSem.reset();
         guardSem.reset();
@@ -268,21 +265,6 @@ void Activity::runThread()
     }
     // tell the activity manager we're going away
     ActivityManager::activityEnded(this);
-}
-
-
-/**
- * clear references when an activity is added to the pool so that
- * the activity doesn't inappropriately keep objects alive.
- */
-void Activity::cleanupPoolResources()
-{
-    instance = OREF_NULL;
-    oldActivity = OREF_NULL;
-    conditionobj = OREF_NULL;
-    dispatchMessage = OREF_NULL;
-    waitingObject = OREF_NULL;
-    nestedActivity = OREF_NULL;
 }
 
 
@@ -416,7 +398,7 @@ void Activity::reset()
  *
  * @return The newly created activity.
  */
-Activity *Activity::spawnReply()
+Activity* Activity::spawnReply()
 {
     // recreate a new activiy in the same instance
     return instance->spawnActivity(this);
@@ -540,7 +522,7 @@ wholenumber_t Activity::displayCondition(DirectoryClass *errorInfo)
 
     // set the default return code value in case we don't have a
     // good one in the condition object.
-    wholenumber_t rc = Error_Interpretation/1000;
+    wholenumber_t rc = Error_Interpretation / 1000;
     // try to convert.  Leaves unchanged if not value
     errorInfo->get(GlobalNames::RC)->numberValue(rc);
     return rc;
@@ -557,7 +539,7 @@ wholenumber_t Activity::displayCondition(DirectoryClass *errorInfo)
  */
 wholenumber_t Activity::errorNumber(DirectoryClass *conditionObject)
 {
-    wholenumber_t rc = Error_Interpretation/1000;
+    wholenumber_t rc = Error_Interpretation / 1000;
     if (conditionObject != OREF_NULL)
     {
         // try to convert.  Leaves unchanged if not value
@@ -590,23 +572,23 @@ bool Activity::raiseCondition(RexxString *condition, RexxObject *rc, RexxObject 
     {
         if (activation->isErrorSyntaxEnabled() && condition->strCompare(ERRORNAME))
         {
-           reportException(Error_Execution_error_syntax, description, result);
+            reportException(Error_Execution_error_syntax, description, result);
         }
         else if (activation->isFailureSyntaxEnabled() && condition->strCompare(FAILURE))
         {
-           reportException(Error_Execution_failure_syntax, description, result);
+            reportException(Error_Execution_failure_syntax, description, result);
         }
         else if (activation->isLostdigitsSyntaxEnabled() && condition->strCompare(LOSTDIGITS))
         {
-           reportException(Error_Execution_lostdigits_syntax, description);
+            reportException(Error_Execution_lostdigits_syntax, description);
         }
         else if (activation->isNostringSyntaxEnabled() && condition->strCompare(NOSTRING))
         {
-           reportException(Error_Execution_nostring_syntax, description);
+            reportException(Error_Execution_nostring_syntax, description);
         }
         else if (activation->isNotreadySyntaxEnabled() && condition->strCompare(NOTREADY))
         {
-           reportException(Error_Execution_notready_syntax, description);
+            reportException(Error_Execution_notready_syntax, description);
         }
     }
 
@@ -636,7 +618,9 @@ bool Activity::raiseCondition(RexxString *condition, RexxObject *rc, RexxObject 
 bool Activity::checkCondition(RexxString *condition)
 {
     // unwind the stack frame calling trap until we reach the first real Rexx activation
-    for (ActivationBase *activation = getTopStackFrame() ; !activation->isStackBase(); activation = activation->getPreviousStackFrame())
+    for (ActivationBase *activation = getTopStackFrame();
+         !activation->isStackBase();
+         activation = activation->getPreviousStackFrame())
     {
         // see if there is an activation interested in trapping this.
         if (activation->willTrap(condition))
@@ -673,7 +657,9 @@ bool Activity::raiseCondition(DirectoryClass *conditionObj)
     RexxString *condition = (RexxString *)conditionObj->get(GlobalNames::CONDITION);
 
     // unwind the stack frame calling trap until we reach the first real Rexx activation
-    for (ActivationBase *activation = getTopStackFrame() ; !activation->isStackBase(); activation = activation->getPreviousStackFrame())
+    for (ActivationBase *activation = getTopStackFrame();
+         !activation->isStackBase();
+         activation = activation->getPreviousStackFrame())
     {
         // see if there is an activation interested in trapping this.
         handled = activation->trap(condition, conditionObj);
@@ -704,7 +690,7 @@ bool Activity::raiseCondition(DirectoryClass *conditionObj)
  *
  * @return The constructed condition object (a directory).
  */
-DirectoryClass *Activity::createConditionObject(RexxString *condition, RexxObject *rc, RexxObject *description, RexxObject *additional, RexxObject *result)
+DirectoryClass* Activity::createConditionObject(RexxString *condition, RexxObject *rc, RexxObject *description, RexxObject *additional, RexxObject *result)
 {
     // condition objects are directories
     DirectoryClass *conditionObj = new_directory();
@@ -753,7 +739,7 @@ void Activity::reportAnException(RexxErrorCodes errcode)
  * @param substitution1
  *                The substitution value.
  */
-void Activity::reportAnException(RexxErrorCodes errcode, RexxObject *substitution1 )
+void Activity::reportAnException(RexxErrorCodes errcode, RexxObject *substitution1)
 {
     raiseException(errcode, OREF_NULL, new_array(substitution1), OREF_NULL);
 }
@@ -768,7 +754,7 @@ void Activity::reportAnException(RexxErrorCodes errcode, RexxObject *substitutio
  * @param substitution2
  *                Another substitution value.
  */
-void Activity::reportAnException(RexxErrorCodes errcode, RexxObject *substitution1, RexxObject *substitution2 )
+void Activity::reportAnException(RexxErrorCodes errcode, RexxObject *substitution1, RexxObject *substitution2)
 {
     raiseException(errcode, OREF_NULL, new_array(substitution1, substitution2), OREF_NULL);
 }
@@ -786,7 +772,7 @@ void Activity::reportAnException(RexxErrorCodes errcode, RexxObject *substitutio
  */
 void Activity::reportAnException(RexxErrorCodes errcode, RexxObject *substitution1, RexxObject *substitution2, RexxObject *substitution3)
 {
-  raiseException(errcode, OREF_NULL, new_array(substitution1, substitution2, substitution3), OREF_NULL);
+    raiseException(errcode, OREF_NULL, new_array(substitution1, substitution2, substitution3), OREF_NULL);
 }
 
 
@@ -800,7 +786,7 @@ void Activity::reportAnException(RexxErrorCodes errcode, RexxObject *substitutio
  *                Another substitution value.
  */
 void Activity::reportAnException(RexxErrorCodes errcode, RexxObject *substitution1, RexxObject *substitution2,
-    RexxObject *substitution3, RexxObject *substitution4 )
+                                 RexxObject *substitution3, RexxObject *substitution4)
 {
     raiseException(errcode, OREF_NULL, new_array(substitution1, substitution2, substitution3, substitution4), OREF_NULL);
 }
@@ -816,7 +802,7 @@ void Activity::reportAnException(RexxErrorCodes errcode, RexxObject *substitutio
  *                Another substitution value.
  */
 void Activity::reportAnException(RexxErrorCodes errcode, const char *substitution1, RexxObject *substitution2,
-    const char *substitution3, RexxObject *substitution4)
+                                 const char *substitution3, RexxObject *substitution4)
 {
     raiseException(errcode, OREF_NULL, new_array(new_string(substitution1), substitution2, new_string(substitution3), substitution4), OREF_NULL);
 }
@@ -839,7 +825,7 @@ void Activity::reportAnException(RexxErrorCodes errcode, const char *string1, co
 }
 
 
-void Activity::reportAnException(RexxErrorCodes errcode, const char *string, wholenumber_t  integer )
+void Activity::reportAnException(RexxErrorCodes errcode, const char *string, wholenumber_t  integer)
 {
 
     reportAnException(errcode, new_string(string), new_integer(integer));
@@ -969,8 +955,8 @@ void Activity::raiseException(RexxErrorCodes errcode, RexxString *description, A
  *
  * @return The created exception dictionary.
  */
-DirectoryClass *Activity::createExceptionObject(RexxErrorCodes errcode,
-    RexxString *description, ArrayClass *additional, RexxObject *result)
+DirectoryClass* Activity::createExceptionObject(RexxErrorCodes errcode,
+                                                RexxString *description, ArrayClass *additional, RexxObject *result)
 {
     // build an exception object for the SYNTAX error
     DirectoryClass *exobj = (DirectoryClass *)new_directory();
@@ -984,12 +970,12 @@ DirectoryClass *Activity::createExceptionObject(RexxErrorCodes errcode,
     char work[32];
 
     // get a version of the error code formatted in "dot" format.
-    sprintf(work,"%d.%1zd", errcode/1000, errcode - primary);
+    sprintf(work, "%d.%1zd", errcode / 1000, errcode - primary);
     RexxString *code = new_string(work);
     exobj->put(code, CODE);
 
     // now the primary code goes in as RC
-    wholenumber_t newVal = primary/1000;
+    wholenumber_t newVal = primary / 1000;
     RexxInteger *rc = new_integer(newVal);
     exobj->put(rc, RC);
 
@@ -1122,7 +1108,7 @@ void Activity::generateProgramInformation(DirectoryClass *exobj)
  *
  * @return An array of the stack frames in the call context.
  */
-ArrayClass *Activity::generateStackFrames(bool skipFirst)
+ArrayClass* Activity::generateStackFrames(bool skipFirst)
 {
     // create lists for both the stack frames and the traceback lines
     ArrayClass *stackFrames = new_array((size_t)0);
@@ -1138,7 +1124,8 @@ ArrayClass *Activity::generateStackFrames(bool skipFirst)
         {
             skipFirst = false;
         }
-        else {
+        else
+        {
             StackFrameClass *stackFrame = frame->createStackFrame();
             stackFrames->append(stackFrame);
         }
@@ -1158,7 +1145,7 @@ ArrayClass *Activity::generateStackFrames(bool skipFirst)
  *
  * @return The message with the substitution values inserted.
  */
-RexxString *Activity::buildMessage(wholenumber_t messageCode, ArrayClass *substitutions)
+RexxString* Activity::buildMessage(wholenumber_t messageCode, ArrayClass *substitutions)
 {
     // retrieve the secondary message
     RexxString *message = Interpreter::getMessageText(messageCode);
@@ -1182,7 +1169,7 @@ RexxString *Activity::buildMessage(wholenumber_t messageCode, ArrayClass *substi
  *
  * @return The formatted string.
  */
-RexxString *Activity::messageSubstitution(RexxString *message, ArrayClass  *additional)
+RexxString* Activity::messageSubstitution(RexxString *message, ArrayClass  *additional)
 {
     size_t substitutions = additional->size();
     // build this up into a mutable buffer.
@@ -1295,7 +1282,7 @@ void Activity::reraiseException(DirectoryClass *exobj)
     if (errornumber != primary)
     {
         char work[22];
-        sprintf(work,"%1zd%3.3zd", errornumber/1000, errornumber - primary);
+        sprintf(work, "%1zd%3.3zd", errornumber / 1000, errornumber - primary);
         errornumber = atol(work);
 
         RexxString *message = Interpreter::getMessageText(errornumber);
@@ -1441,7 +1428,8 @@ void Activity::displayDebug(DirectoryClass *exobj)
 
     // now any secondary message
     RexxString *secondary = (RexxString *)exobj->get(MESSAGE);
-    if (secondary != OREF_NULL && secondary != (RexxString *)TheNilObject) {
+    if (secondary != OREF_NULL && secondary != (RexxString *)TheNilObject)
+    {
         text = Interpreter::getMessageText(Message_Translations_debug_error);
         text = text->concatWith((RexxString *)exobj->get(CODE), ' ');
         text = text->concatWithCstring(":  ");
@@ -1493,7 +1481,7 @@ void Activity::checkActivationStack()
         // now copy all of the entries over to the new frame stack
         for (size_t i = activationStackSize; i != 0; i--)
         {
-             newstack->push(activations->peek(i-1));
+            newstack->push(activations->peek(i - 1));
         }
         // update the frame information
         activations = newstack;
@@ -1513,7 +1501,8 @@ void Activity::updateFrameMarkers()
     topStackFrame = (ActivationBase *)activations->getTop();
     // the new activation is the new top and there may or may not be
     // a rexx context to deal with
-    currentRexxFrame = topStackFrame->findRexxContext(); ;
+    currentRexxFrame = topStackFrame->findRexxContext();
+    ;
 
     // update the numeric settings
     numericSettings = topStackFrame->getNumericSettings();
@@ -1803,6 +1792,14 @@ void Activity::detachInstance()
 {
     // Undo this attached status
     instance = OREF_NULL;
+
+    // also clean up references to other objects anchored in this activity
+    oldActivity = OREF_NULL;
+    conditionobj = OREF_NULL;
+    dispatchMessage = OREF_NULL;
+    waitingObject = OREF_NULL;
+    nestedActivity = OREF_NULL;
+
     // clear the attach trackers
     attachCount = 0;
     newThreadAttached = false;
