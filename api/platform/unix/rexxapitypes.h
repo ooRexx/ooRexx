@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -39,7 +39,7 @@
 #define REXXAPITYPES_INCLUDED
 
 // The limit values for the portable int types are only included in C++ if the
-// following is defined before including stdint.h.
+// following is defined before including stdint.h (outdated as per C++11/C11).
 #define __STDC_LIMIT_MACROS
 
 #include <stdlib.h>
@@ -55,7 +55,7 @@
 #endif
 
 #ifndef SSIZE_MIN
-#define SSIZE_MIN		(-SIZE_MAX - 1)
+#define SSIZE_MIN       (-SIZE_MAX - 1)
 #endif
 
 #define REXXENTRY
@@ -65,6 +65,4 @@ typedef void *REXXPFN;
 typedef pid_t process_id_t;
 typedef pthread_t thread_id_t;
 
-#define VLARexxEntry                   /* external entry points       */
 #endif /* REXXAPITYPES_INCLUDED */
-

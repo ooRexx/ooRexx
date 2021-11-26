@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -54,17 +54,18 @@ typedef UINT_PTR  uintptr_t;
 #undef __REXX64__
 #endif
 
-/* If the platform and compiler supports the C9X 'proposed' standard for
- * integer types, and has inttypes.h, then use it by defining HAVE_INTTYPES_H.
- *
- * Visual C++ since 2010 has stdint.h, but by 2013 still does not have
- * inttypes.h.  In this case define HAVE_STDINT_H.  Otherwise use our own
- * defintions of the same types
+/* stdint.h is available on Windows since VS 2010.  We include it
+ * - if HAVE_STDINT_H is defined, or
+ * - if we have __has_include() support (available since VS 2017 15.3)
+ *   and __has_include(<stdint.h>) reports it as available
+ * Otherwise we use our own definitions of the same types
 */
-#if defined (HAVE_INTTYPES_H)
-#include <inttypes.h>
-#elif defined(HAVE_STDINT_H)
-#include <stdint.h>
+#if defined HAVE_STDINT_H
+#  include <stdint.h>
+#elif defined __has_include
+#  if __has_include(<stdint.h>)
+#    include <stdint.h>
+#  endif
 #else
 // portable ANSI types
 typedef short int16_t;
@@ -112,13 +113,10 @@ typedef size_t (REXXENTRY *REXXPFN)();
 #endif
 
 #ifndef SIZE_MAX
-#define SIZE_MAX		(~((size_t)0))
+#define SIZE_MAX        (~((size_t)0))
 #endif
 
-#define SSIZE_MAX		((ssize_t)(SIZE_MAX >> 1))
-#define SSIZE_MIN		(~SSIZE_MAX - 1)
-
-#define VLARexxEntry __cdecl           /* external entry points       */
+#define SSIZE_MAX       ((ssize_t)(SIZE_MAX >> 1))
+#define SSIZE_MIN       (~SSIZE_MAX - 1)
 
 #endif /* REXXAPITYPES_INCLUDED */
-
