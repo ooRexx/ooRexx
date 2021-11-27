@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2008-2017  Rexx Language Association. All rights reserved.   */
+/* Copyright (c) 2008-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -120,13 +120,12 @@ RexxMethod1(int,                        // Return type
 RexxMethod3(int,                        // Return type
             TestAddQueue,               // Method name
             CSTRING, qname,             // Queue name
-            CSTRING, data,              // Queue data to add
+            RexxStringObject, data,     // Queue data to add
             int, type)                  // Queue FIFO/LIFO flag
 {
     CONSTRXSTRING rxdata;
 
-    rxdata.strptr = data;
-    rxdata.strlength = strlen(data);
+    MAKERXSTRING(rxdata, context->StringData(data), context->StringLength(data));
     RexxReturnCode rc = RexxAddQueue(qname, &rxdata, type);
     context->SetObjectVariable("RETC", context->Int32ToObject(rc));
     return rc;
@@ -145,7 +144,18 @@ RexxMethod1(int,                        // Return type
     context->SetObjectVariable("RETC", context->Int32ToObject(rc));
     if (rc == RXQUEUE_OK)
     {
-        context->SetObjectVariable("FLAG", context->NewStringFromAsciiz(data.strptr));
+        context->SetObjectVariable("FLAG", context->NewString(data.strptr, data.strlength));
+
+        char stamp[1024];
+        // the time stamp comes from a struct tm
+        // year is years since 1900
+        // month is 0 .. 11
+        // hundredths and microseconds are not available
+        sprintf(stamp, "%d-%d-%d %d:%d:%d (%d, %d)",
+          1900 + timestamp.year, 1 + timestamp.month, timestamp.day,
+          timestamp.hours, timestamp.minutes, timestamp.seconds,
+          timestamp.yearday, timestamp.weekday);
+        context->SetObjectVariable("TIMESTAMP", context->NewString(stamp, strlen(stamp)));
     }
     return rc;
 }

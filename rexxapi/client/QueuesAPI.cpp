@@ -110,7 +110,7 @@ RexxReturnCode RexxEntry RexxCreateQueue(
             // must be at least big enough for the requested name
             if (strlen(userRequested) >= size)
             {
-                throw new ServiceException(MEMORY_ERROR, "Unsufficient space for created queue name");
+                throw new ServiceException(MEMORY_ERROR, "Insufficient space for created queue name");
             }
         }
         return lam->queueManager.createNamedQueue(userRequested, size, name, pdup);
@@ -276,7 +276,7 @@ RexxReturnCode RexxEntry RexxAddQueue(
                                              /* first check the flag       */
         if (flag != RXQUEUE_FIFO && flag != RXQUEUE_LIFO)
         {
-            return RXQUEUE_BADWAITFLAG;
+            return RXQUEUE_PRIORITY;
         }
         if (lam->queueManager.isSessionQueue(name))
         {

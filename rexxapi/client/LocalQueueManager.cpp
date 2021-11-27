@@ -490,6 +490,8 @@ RexxReturnCode LocalQueueManager::pullFromQueue(const char *name, RXSTRING &data
             {
                 throw new ServiceException(MEMORY_ERROR, "LocalQueueManager::pullFromQueue() Failure allocating memory");
             }
+            // add a courtesy null terminator
+            data.strptr[data.strlength] = '\0';
         }
         // if the timestamp was requested, return it.
         if (timeStamp != NULL)
