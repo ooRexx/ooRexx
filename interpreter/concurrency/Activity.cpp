@@ -1793,13 +1793,6 @@ void Activity::detachInstance()
     // Undo this attached status
     instance = OREF_NULL;
 
-    // also clean up references to other objects anchored in this activity
-    oldActivity = OREF_NULL;
-    conditionobj = OREF_NULL;
-    dispatchMessage = OREF_NULL;
-    waitingObject = OREF_NULL;
-    nestedActivity = OREF_NULL;
-
     // clear the attach trackers
     attachCount = 0;
     newThreadAttached = false;
@@ -1809,6 +1802,12 @@ void Activity::detachInstance()
         nestedActivity->setSuspended(false);
     }
     nestedActivity = OREF_NULL;
+
+    // also clean up references to other objects anchored in this activity
+    oldActivity = OREF_NULL;
+    conditionobj = OREF_NULL;
+    dispatchMessage = OREF_NULL;
+    waitingObject = OREF_NULL;
 }
 
 
