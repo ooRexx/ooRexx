@@ -301,24 +301,14 @@ class MemorySegmentSet
       }
       void addSegments(size_t requiredSpace);
 
-      inline void validateObject(size_t bytes, RexxInternalObject *o)
+      inline void validateObject(RexxInternalObject *o)
       {
 #ifdef _DEBUG
-          // does this object have an invalid size?
-          if (!Memory::isValidSize(bytes))
+          // does this object pass the basic validity tests?
+          if (!o->isValid())
           {
-              printf("GC detected invalid object size=%zd (type=%zd, min=%zd, grain=%zd)" line_end, bytes, o->getObjectTypeNumber(), Memory::MinimumObjectSize, Memory::ObjectGrain);
-              // hexdump the first 64 bytes
-              unsigned char *s = (unsigned char *)o;
-              for (int lines = 1; lines <= 2; lines++)
-              {
-                  for (int blocks = 1; blocks <= 8; blocks++)
-                  {
-                    printf("%02x%02x%02x%02x ", *s, *(s + 1), *(s + 2), *(s + 3));
-                    s += 4;
-                  }
-                  printf(line_end);
-              }
+              // provide a warning message about an invalid object
+              o->dumpObject();
           }
 #endif
       }

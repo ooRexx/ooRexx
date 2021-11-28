@@ -2701,6 +2701,66 @@ RexxInternalObject *RexxInternalObject::clone()
 }
 
 
+/**
+ * Provide a dump of the header part of an object. This is generally
+ * used when an invalid heap object is detected during garbage collection.
+ */
+void RexxInternalObject::dumpObject()
+{
+    printf("GC detected invalid object size=%zd (type=%zd, min=%zd, grain=%zd)" line_end, getObjectSize(), getObjectTypeNumber(), Memory::MinimumObjectSize, Memory::ObjectGrain);
+    // hexdump the first 64 bytes
+    unsigned char *s = (unsigned char *)this;
+    for (int lines = 1; lines <= 2; lines++)
+    {
+        for (int blocks = 1; blocks <= 8; blocks++)
+        {
+            printf("%02x%02x%02x%02x ", *s, *(s + 1), *(s + 2), *(s + 3));
+            s += 4;
+        }
+        printf(line_end);
+    }
+}
+
+
+/**
+ * Perform a simple validation on an object so we can detect corrupted
+ * objects during garbage collection
+ *
+ * @return True if the object is value, false if it fails any of the validity tests.
+ */
+bool RexxInternalObject::isValid()
+{
+    // Test #1, is the size valid
+    if (!Memory::isValidSize(getObjectSize()))
+    {
+        return false;
+    }
+
+#if 0
+    // The following tests seem line a good idea, but unfortunately
+    // it only works with live objects. A dead object on the pool
+    // has neither a valid bahaviour pointer nor a valid virtual function pointer.
+    // I'm leaving this in here just in case we figure out how to make these tests work.
+
+    size_t typeNumber = getObjectTypeNumber();
+    // Test #2 is the type indicator correct?
+    if (typeNumber > T_Last_Class_Type)
+    {
+        return false;
+    }
+    // Test #3, is the object's virtual function pointer the correct one for the type.
+    // this can detect problems where the front part of the object has been overlayed.
+    if (!checkVirtualFunctions(memoryObject.virtualFunctionTable[typeNumber]))
+    {
+        return false;
+    }
+#endif
+
+    // the object is at least consistent
+    return true;
+}
+
+
 // macros for defining the standard operator methods.  These are
 // essentially the same except for the names and the message target
 #undef operatorMethod

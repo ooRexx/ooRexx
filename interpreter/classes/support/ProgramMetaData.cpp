@@ -211,7 +211,7 @@ bool ProgramMetaData::validate(RexxString *fileName)
 
     // check all of the version specifics
     if (magicNumber != MAGICNUMBER || imageVersion != METAVERSION || wordSize != Interpreter::getWordSize() ||
-        (bigEndian != 0) != Interpreter::isBigEndian() || !LanguageParser::canExecute(requiredLevel))
+        (bigEndian != 0) != Interpreter::isBigEndian() || !LanguageParser::canExecute((LanguageLevel)requiredLevel))
     {
         // this is a version failure, mark it as such
         reportException(Error_Program_unreadable_version, fileName);

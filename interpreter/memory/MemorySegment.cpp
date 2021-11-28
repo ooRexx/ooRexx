@@ -996,7 +996,7 @@ void MemorySegmentSet::sweepSingleSegment(MemorySegment *sweepSegment)
         {
             // Get size of object for stats and do validation if in debug mode
             size_t bytes = objectPtr->getObjectSize();
-            validateObject(bytes, objectPtr);
+            validateObject(objectPtr);
             // update our live object counters
             liveObjectBytes += bytes;
             sweepSegment->liveObjects++;
@@ -1010,7 +1010,7 @@ void MemorySegmentSet::sweepSingleSegment(MemorySegment *sweepSegment)
         {
             // get the size of the first object and validate things if in debug mode.
             size_t deadLength = objectPtr->getObjectSize();
-            validateObject(deadLength, objectPtr);
+            validateObject(objectPtr);
 
             // now scan forward to sweep up as many dead objects as we can.
             RexxInternalObject *nextObjectPtr = objectPtr->nextObject();
@@ -1019,7 +1019,7 @@ void MemorySegmentSet::sweepSingleSegment(MemorySegment *sweepSegment)
             {
                 // get the size and add to the accumulator
                 size_t bytes = nextObjectPtr->getObjectSize();
-                validateObject(bytes, nextObjectPtr);
+                validateObject(nextObjectPtr);
                 deadLength += bytes;
             }
             // add this value to the accumulators we use to make
