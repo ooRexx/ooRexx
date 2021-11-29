@@ -1243,6 +1243,16 @@ void NativeActivation::removeLocalReference(RexxInternalObject *objr)
 
 
 /**
+ * Clear out the local reference table for a NativeActivation
+ */
+void NativeActivation::clearLocalReferences()
+{
+    firstSavedObject = OREF_NULL;
+    saveList = OREF_NULL;
+}
+
+
+/**
  * Run a native method or function under the context of this activation.
  *
  * @param _receiver The receiver object (NULL if not a method invocation).

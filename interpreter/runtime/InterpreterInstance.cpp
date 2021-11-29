@@ -505,6 +505,11 @@ bool InterpreterInstance::terminate()
     // This activity is currently the current activity.  We're going to run the
     // uninits on this one, so reactivate it until we're done running
     enterOnCurrentThread();
+
+    // this might be holding some local references. Make sure we clear these
+    // before running the garbage collector
+    current->clearLocalReferences();
+
     // before we update of the data structures, make sure we process any
     // pending uninit activity.
     memoryObject.collectAndUninit(Interpreter::lastInstance());

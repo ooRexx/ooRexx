@@ -296,6 +296,7 @@ class Activity : public RexxInternalObject
 
     inline RexxThreadContext *getThreadContext() { return &threadContext.threadContext; }
     inline NativeActivation *getApiContext() { return (NativeActivation *)topStackFrame; }
+           void clearLocalReferences();
 
     inline void allocateStackFrame(ExpressionStack *stack, size_t entries)
     {

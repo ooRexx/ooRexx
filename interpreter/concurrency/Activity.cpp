@@ -280,6 +280,23 @@ void Activity::cleanupActivityResources()
     currentThread.close();
     // make sure any mutexes we are holding get released
     cleanupMutexes();
+
+    // if this was the root activity for an interpreter instance or an
+    // activity created for an attach thread, the root activation could be
+    // holding references to any objects that have been returned by API
+    // calls to that context. Make sure those are cleared out so that
+    // the objects are no longer anchored
+    clearLocalReferences();
+}
+
+
+/**
+ * Clear any local references held by the root member of the
+ * activation stack.
+ */
+void Activity::clearLocalReferences()
+{
+    getApiContext()->clearLocalReferences();
 }
 
 
