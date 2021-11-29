@@ -401,7 +401,8 @@ if (NOT WIN32)
   check_symbol_exists(FS_CASEFOLD_FL linux/fs.h HAVE_FS_CASEFOLD_FL)
   check_symbol_exists(_NSGetExecutablePath mach-o/dyld.h HAVE_NSGETEXECUTABLEPATH)
   check_symbol_exists(getexecname stdlib.h HAVE_GETEXECNAME)
-  check_symbol_exists(KERN_PROC_PATHNAME sys/sysctl.h HAVE_KERN_PROC_PATHNAME)
+  check_symbol_exists(KERN_PROC_PATHNAME "sys/types.h;sys/sysctl.h" HAVE_KERN_PROC_PATHNAME)
+  check_symbol_exists(KERN_PROC_ARGV "sys/types.h;sys/sysctl.h" HAVE_KERN_PROC_ARGV)
   check_struct_has_member("struct stat" st_mtim sys/stat.h HAVE_STAT_ST_MTIM)
   check_struct_has_member("struct stat" st_mtimespec sys/stat.h HAVE_STAT_ST_MTIMESPEC)
   check_include_file(pwd.h HAVE_PWD_H)
@@ -1826,7 +1827,7 @@ add_subdirectory (testbinaries)
 # any of the installer stuff if this is not available.
 if (DOC_SOURCE_DIR)
 
- if (WIN32) 
+ if (WIN32)
    # Add the install directory to the module path so the custom template can be located.
    set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/install ${CMAKE_MODULE_PATH})
 
@@ -2082,7 +2083,7 @@ if (DOC_SOURCE_DIR)
           COMMENT "Removing NSIS installer build files")
    endif()
 
-   else () # Unix 
+   else () # Unix
 	   # install each of the doc files
 	   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/CHANGES COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR} RENAME CHANGES.txt)
 	   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/ReleaseNotes COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR} RENAME ReleaseNotes.txt)
@@ -2090,11 +2091,11 @@ if (DOC_SOURCE_DIR)
 	   install(FILES ${DOC_SOURCE_DIR}/readme.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
 	   install(FILES ${DOC_SOURCE_DIR}/ootest.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
 	   install(FILES ${DOC_SOURCE_DIR}/orxncurses.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
-	   
+	
 	   install(FILES ${DOC_SOURCE_DIR}/rexxapi.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
 	   install(FILES ${DOC_SOURCE_DIR}/rexxextensions.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
 	   install(FILES ${DOC_SOURCE_DIR}/rexxgtk.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
-	   
+	
 	   install(FILES ${DOC_SOURCE_DIR}/rexxpg.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
 	   install(FILES ${DOC_SOURCE_DIR}/rexxref.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
 	   install(FILES ${DOC_SOURCE_DIR}/rxmath.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
@@ -2103,7 +2104,7 @@ if (DOC_SOURCE_DIR)
 
 	   install(FILES ${DOC_SOURCE_DIR}/unixextensions.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
 
-   endif()	   
+   endif()	
 endif ()
 
 
@@ -2268,7 +2269,7 @@ if (BUILD_DMG)
       set(CPACK_PACKAGE_RELEASE ${ORX_BLD_LVL})
    endif ()
 
-# This was changed to cope with arm64 or x86_64 or both 
+# This was changed to cope with arm64 or x86_64 or both
    if( APPLE AND BUILD_OSX_UNIVERSAL_BINARIES )
       set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL}-${CPACK_PACKAGE_RELEASE}.${OS_DIST}.arm64.x86_64")
    else ()

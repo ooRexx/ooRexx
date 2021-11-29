@@ -71,7 +71,7 @@
 #ifdef HAVE_NSGETEXECUTABLEPATH
 # include <mach-o/dyld.h>
 #endif
-#ifdef HAVE_KERN_PROC_PATHNAME
+#if defined HAVE_KERN_PROC_PATHNAME || defined HAVE_KERN_PROC_ARGV
 # include <sys/sysctl.h>
 #endif
 
@@ -132,13 +132,41 @@ const char* SysProcess::getExecutableFullPath()
         path[0] = '\0';
     }
 #elif defined HAVE_KERN_PROC_PATHNAME
-    // NetBSD, FreeBSD
+    // FreeBSD, DragonFly BSD
     int mib[4] = {CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1};
     size_t len = PATH_MAX;
-    if (sysctl(mib, 4, path, &len, NULL, 0) != 0 || len == 0)
+    if (sysctl(mib, 4, path, &len, NULL, 0) == -1 || len == 0)
     {
-        // sysctl has failed or len was returned as zero
-        path[0] = '\0';
+        // sysctl has failed or len was returned as zero, maybe this is
+        // NetBSD which uses different arguments
+        mib[1] = KERN_PROC_ARGS;
+        mib[2] = -1;
+        mib[3] = KERN_PROC_PATHNAME;
+        len = PATH_MAX;
+        if (sysctl(mib, 4, path, &len, NULL, 0) == -1 || len == 0)
+        {
+            path[0] = '\0';
+        }
+    }
+#elif defined HAVE_KERN_PROC_ARGV
+    // OpenBSD
+    // no means to retrieve the executable path, need to resort to argv[0]
+    int mib[4] = {CTL_KERN, KERN_PROC_ARGS, getpid(), KERN_PROC_ARGV};
+    size_t len;
+    char **argv;
+    path[0] = '\0';
+    if (sysctl(mib, 4, NULL, &len, NULL, 0) != -1 &&
+       (argv = (char **)malloc(len)) != NULL)
+    {
+        if (sysctl(mib, 4, argv, &len, NULL, 0) != -1 && len > 0)
+        {
+            // to be 100% reliable, only accept an absolute path
+            if (argv[0][0] == '/')
+            {
+                strcpy(path, argv[0]);
+            }
+        }
+        free(argv);
     }
 #endif
 
