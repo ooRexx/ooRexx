@@ -520,6 +520,17 @@ bool InterpreterInstance::terminate()
     // make sure the root activity is removed by the ActivityManager;
     ActivityManager::returnRootActivity(current);
 
+    // just in case there's still a reference held to this, clear out all object reference fields
+    rootActivity = OREF_NULL;
+    securityManager = OREF_NULL;
+    allActivities = OREF_NULL;
+    defaultEnvironment = OREF_NULL;
+    searchPath = OREF_NULL;
+    searchExtensions = OREF_NULL;
+    localEnvironment = OREF_NULL;
+    commandHandlers = OREF_NULL;
+    requiresFiles = OREF_NULL;
+
     // tell the main interpreter controller we're gone.
     Interpreter::terminateInterpreterInstance(this);
     return true;
