@@ -56,7 +56,8 @@ class Memory
 {
 public:
 
-    static inline bool isObjectGrained(RexxObject *o) { return ((((size_t)o)%ObjectGrain) == 0); }
+    static inline bool isObjectGrained(RexxObject *o) { return ((((size_t)o) % ObjectGrain) == 0); }
+    static inline bool isGrained(void *o) { return ((((size_t)o) % ObjectGrain) == 0); }
     static inline bool isValidSize(size_t s) { return ((s) >= MinimumObjectSize && ((s) % ObjectGrain) == 0); }
 
     static inline size_t roundUp(size_t n, size_t to) { return ((((n)+(to-1))/(to))*to); }

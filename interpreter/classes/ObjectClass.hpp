@@ -94,86 +94,88 @@ typedef enum
  */
 class ObjectHeader
 {
-friend class MemoryObject;
-public:
-    inline ObjectHeader & operator= (ObjectHeader &h)
-    {
-        // copy the relevant state
-        objectSize = h.objectSize;
-        flags = h.flags;
-        return *this;
-    }
+     friend class MemoryObject;
+ public:
+     inline ObjectHeader & operator=(ObjectHeader &h)
+     {
+         // copy the relevant state
+         objectSize = h.objectSize;
+         flags = h.flags;
+         return *this;
+     }
 
-    inline size_t getObjectSize() { return objectSize; }
-    inline void setObjectSize(size_t l)
-    {
-        objectSize = l;
-    }
+     inline size_t getObjectSize() { return objectSize; }
+     inline void setObjectSize(size_t l)
+     {
+         objectSize = l;
+     }
 
-    inline void makeProxiedObject() { flags |= ProxiedObject; }
-    inline bool requiresProxyObject() { return (flags & ProxiedObject) != 0; }
-    inline void makeProxyObject() { flags |= ProxyObject; }
-    inline bool isProxyObject() { return (flags & ProxyObject) != 0; }
-    inline void clearObjectMark() { flags &= LiveMask; }
-    inline void setObjectMark(size_t mark) { clearObjectMark(); flags |= mark; }
-    inline bool isObjectMarked(size_t mark) { return (flags & mark) != 0; }
-    inline bool isObjectLive(size_t mark) { return ((size_t)(flags & MarkMask)) == mark; }
-    inline bool isObjectDead(size_t mark) { return ((size_t)(flags & MarkMask)) != mark; }
-    inline void clear() { objectSize = 0; flags = 0; }
-    inline void setOldSpace() { flags |= OldSpaceBit; }
-    inline void clearOldSpace() { flags &= ~OldSpaceBit; }
-    inline void setNewSpace() { clearOldSpace(); }
-    inline bool isOldSpace() { return (flags & OldSpaceBit) != 0; }
-    inline bool isNewSpace() { return (flags & OldSpaceBit) == 0; }
-    inline void setHasNoReferences() { flags |= NoRefBit; }
-    inline void setHasReferences() { flags &= ~NoRefBit; }
-    inline bool hasReferences() { return (flags & NoRefBit) == 0; }
-    inline bool hasNoReferences() { return (flags & NoRefBit) != 0; }
-    inline void setNonPrimitive() { flags |= IsNonPrimitive; }
-    inline void setPrimitive() { flags &= ~IsNonPrimitive; }
-    inline bool isNonPrimitive() { return (flags & IsNonPrimitive) != 0; }
-    inline bool isPrimitive() { return (flags & IsNonPrimitive) == 0; }
-    inline void setReadyForUninit() { flags |= UninitPending; }
-    inline bool isReadyForUninit() { return (flags & UninitPending) != 0; }
-    inline bool hasUninit() { return (flags & HasUninit) != 0; }
-    inline void setHasUninit() { flags |= HasUninit; }
-    inline void clearHasUninit() { flags &= ~HasUninit; }
-    inline bool isDeadObject() { return (flags & DeadObject) != 0; }
-    inline void setDeadObject() { flags |= DeadObject; }
-    inline void clearDeadObject() { flags &= ~DeadObject; }
-    inline void initHeader(size_t l, size_t mark)
-    {
-        objectSize = l;
-        flags = (uint16_t)mark;    // the flags are cleared except for the mark.
-    }
-    inline void initHeader(size_t mark)
-    {
-        flags = (uint16_t)mark;    // the flags are cleared except for the mark.
-    }
+     inline void makeProxiedObject() { flags |= ProxiedObject; }
+     inline bool requiresProxyObject() { return (flags & ProxiedObject) != 0; }
+     inline void makeProxyObject() { flags |= ProxyObject; }
+     inline bool isProxyObject() { return (flags & ProxyObject) != 0; }
+     inline void clearObjectMark() { flags &= LiveMask; }
+     inline void setObjectMark(size_t mark) { clearObjectMark();
+         flags |= mark; }
+     inline bool isObjectMarked(size_t mark) { return (flags & mark) != 0; }
+     inline bool isObjectLive(size_t mark) { return ((size_t)(flags & MarkMask)) == mark; }
+     inline bool isObjectDead(size_t mark) { return ((size_t)(flags & MarkMask)) != mark; }
+     inline void clear() { objectSize = 0;
+         flags = 0; }
+     inline void setOldSpace() { flags |= OldSpaceBit; }
+     inline void clearOldSpace() { flags &= ~OldSpaceBit; }
+     inline void setNewSpace() { clearOldSpace(); }
+     inline bool isOldSpace() { return (flags & OldSpaceBit) != 0; }
+     inline bool isNewSpace() { return (flags & OldSpaceBit) == 0; }
+     inline void setHasNoReferences() { flags |= NoRefBit; }
+     inline void setHasReferences() { flags &= ~NoRefBit; }
+     inline bool hasReferences() { return (flags & NoRefBit) == 0; }
+     inline bool hasNoReferences() { return (flags & NoRefBit) != 0; }
+     inline void setNonPrimitive() { flags |= IsNonPrimitive; }
+     inline void setPrimitive() { flags &= ~IsNonPrimitive; }
+     inline bool isNonPrimitive() { return (flags & IsNonPrimitive) != 0; }
+     inline bool isPrimitive() { return (flags & IsNonPrimitive) == 0; }
+     inline void setReadyForUninit() { flags |= UninitPending; }
+     inline bool isReadyForUninit() { return (flags & UninitPending) != 0; }
+     inline bool hasUninit() { return (flags & HasUninit) != 0; }
+     inline void setHasUninit() { flags |= HasUninit; }
+     inline void clearHasUninit() { flags &= ~HasUninit; }
+     inline bool isDeadObject() { return (flags & DeadObject) != 0; }
+     inline void setDeadObject() { flags |= DeadObject; }
+     inline void clearDeadObject() { flags &= ~DeadObject; }
+     inline void initHeader(size_t l, size_t mark)
+     {
+         objectSize = l;
+         flags = (uint16_t)mark;    // the flags are cleared except for the mark.
+     }
+     inline void initHeader(size_t mark)
+     {
+         flags = (uint16_t)mark;    // the flags are cleared except for the mark.
+     }
 
-protected:
-    enum
-    {
-        MarkBit1         =  0x0001,    // location of the first mark bit.  Note:  shared with IsNonPrimitive
-        MarkBit2         =  0x0002,    // Second of the mark bits
-        LiveMask         =  0xFFFC,    // mask for the checking the mark bits
-        MarkMask         =  0x0003,    // mask use for checking the mark bits
-        ProxiedObject    =  0x0004,    // This requires a proxy
-        ProxyObject      =  0x0008,    // This object is a PROXY(String) Obj
-        IsNonPrimitive   =  0x0010,    // use for flattened objects to indicated behaviour status
-        NoRefBit         =  0x0020,    // location of No References Bit.
-        OldSpaceBit      =  0x0040,    // location of the OldSpace bit
-        UninitPending    =  0x0080,    // we have an uninit operation pending
-        HasUninit        =  0x0100,    // this object has an uninit method
-        DeadObject       =  0x0200,    // this is a dead object
-    };
+ protected:
+     enum
+     {
+         MarkBit1         =  0x0001,    // location of the first mark bit.  Note:  shared with IsNonPrimitive
+         MarkBit2         =  0x0002,    // Second of the mark bits
+         LiveMask         =  0xFFFC,    // mask for the checking the mark bits
+         MarkMask         =  0x0003,    // mask use for checking the mark bits
+         ProxiedObject    =  0x0004,    // This requires a proxy
+         ProxyObject      =  0x0008,    // This object is a PROXY(String) Obj
+         IsNonPrimitive   =  0x0010,    // use for flattened objects to indicated behaviour status
+         NoRefBit         =  0x0020,    // location of No References Bit.
+         OldSpaceBit      =  0x0040,    // location of the OldSpace bit
+         UninitPending    =  0x0080,    // we have an uninit operation pending
+         HasUninit        =  0x0100,    // this object has an uninit method
+         DeadObject       =  0x0200,    // this is a dead object
+     };
 
-    size_t    objectSize;              // allocated size of the object
-    union
-    {
-        uint16_t      flags;           // the object flag/type information
-        uintptr_t     sizePadding;     // padding to make sure this is a full pointer size
-    };
+     size_t    objectSize;              // allocated size of the object
+     union
+     {
+          uint16_t      flags;           // the object flag/type information
+          uintptr_t     sizePadding;     // padding to make sure this is a full pointer size
+     };
 
 };
 
@@ -189,19 +191,19 @@ protected:
 class RexxVirtualBase
 {
  protected:
-    virtual ~RexxVirtualBase() { ; }
-    virtual void      baseVirtual() {;}
+     virtual ~RexxVirtualBase() {; }
+     virtual void      baseVirtual() {;}
 
  public:
-    // the following need to be defined at the base virtual level.  When
-    // an exception is thrown from within an object constructor, the destructors
-    // unwind and the constructed object just ends up with a virtual base
-    // vft.  If the garbage collector sees this, it will crash unless these
-    // are defined at this level.
-    virtual void live(size_t) {;}
-    virtual void liveGeneral(MarkReason reason) {;}
-    virtual void flatten(Envelope *) {;}
-    virtual RexxInternalObject *unflatten(Envelope *) { return (RexxInternalObject *)this; };
+     // the following need to be defined at the base virtual level.  When
+     // an exception is thrown from within an object constructor, the destructors
+     // unwind and the constructed object just ends up with a virtual base
+     // vft.  If the garbage collector sees this, it will crash unless these
+     // are defined at this level.
+     virtual void live(size_t) {;}
+     virtual void liveGeneral(MarkReason reason) {;}
+     virtual void flatten(Envelope *) {;}
+     virtual RexxInternalObject* unflatten(Envelope *) { return (RexxInternalObject *)this; };
 };
 
 class RexxObject;
@@ -210,19 +212,19 @@ class RexxObject;
 /* Method pointer special types                                               */
 /******************************************************************************/
 
-typedef RexxObject *  (RexxObject::*PCPPM0)();
-typedef RexxObject *  (RexxObject::*PCPPM1)(RexxObject *);
-typedef RexxObject *  (RexxObject::*PCPPM2)(RexxObject *, RexxObject *);
-typedef RexxObject *  (RexxObject::*PCPPM3)(RexxObject *, RexxObject *, RexxObject *);
-typedef RexxObject *  (RexxObject::*PCPPM4)(RexxObject *, RexxObject *, RexxObject *, RexxObject *);
-typedef RexxObject *  (RexxObject::*PCPPM5)(RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *);
-typedef RexxObject *  (RexxObject::*PCPPM6)(RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *);
-typedef RexxObject *  (RexxObject::*PCPPM7)(RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *);
-typedef RexxObject *  (RexxObject::*PCPPMA1)(ArrayClass *);
-typedef RexxObject *  (RexxObject::*PCPPMC1)(RexxObject **, size_t);
+typedef RexxObject*  (RexxObject::*PCPPM0)();
+typedef RexxObject*  (RexxObject::*PCPPM1)(RexxObject *);
+typedef RexxObject*  (RexxObject::*PCPPM2)(RexxObject *, RexxObject *);
+typedef RexxObject*  (RexxObject::*PCPPM3)(RexxObject *, RexxObject *, RexxObject *);
+typedef RexxObject*  (RexxObject::*PCPPM4)(RexxObject *, RexxObject *, RexxObject *, RexxObject *);
+typedef RexxObject*  (RexxObject::*PCPPM5)(RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *);
+typedef RexxObject*  (RexxObject::*PCPPM6)(RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *);
+typedef RexxObject*  (RexxObject::*PCPPM7)(RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *);
+typedef RexxObject*  (RexxObject::*PCPPMA1)(ArrayClass *);
+typedef RexxObject*  (RexxObject::*PCPPMC1)(RexxObject **, size_t);
 
 // pointer to a method function
-typedef RexxObject *  (RexxObject::*PCPPM)();
+typedef RexxObject*  (RexxObject::*PCPPM)();
 #define CPPM(n) ((PCPPM)&n)
 
 /**
@@ -236,23 +238,34 @@ typedef RexxObject *  (RexxObject::*PCPPM)();
 class RexxInternalObject : public RexxVirtualBase
 {
  public:
-    inline RexxInternalObject() {;};
-    /**
-     * Following constructor used to reconstruct the Virtual
-     * Functions table, o it doesn't need to do anything.
-     * Every class defined in PrimitiveClasses.xml will need
-     * to provide one of these.
-     *
-     * @param restoreType
-     *               Dummy argument used for contstructor signature matches.
-     */
-    inline RexxInternalObject(RESTORETYPE restoreType) { ; };
-    virtual ~RexxInternalObject() {;};
+     inline RexxInternalObject() {;};
+     /**
+      * Following constructor used to reconstruct the Virtual
+      * Functions table, o it doesn't need to do anything.
+      * Every class defined in PrimitiveClasses.xml will need
+      * to provide one of these.
+      *
+      * @param restoreType
+      *               Dummy argument used for contstructor signature matches.
+      */
+     inline RexxInternalObject(RESTORETYPE restoreType) {; };
+     virtual ~RexxInternalObject() {;};
 
-    inline operator RexxObject*() { return (RexxObject *)this; };
+     inline operator RexxObject*() { return (RexxObject *)this; };
 
-    inline size_t getObjectSize() { return header.getObjectSize(); }
-    inline void   setObjectSize(size_t s) { header.setObjectSize(s); }
+     inline size_t getObjectSize() { return header.getObjectSize(); }
+     inline void   setObjectSize(size_t s)
+     {
+         header.setObjectSize(s);
+#ifdef _DEBUG
+         // does this object pass the basic validity tests?
+         if (!isValid())
+         {
+             // provide a warning message about an invalid object
+             dumpObject();
+         }
+#endif
+    }
     // NB:  I hope this doesn't add any padding
     static inline size_t getObjectHeaderSize() { return sizeof(RexxInternalObject); }
     inline size_t getObjectDataSize() { return getObjectSize() - getObjectHeaderSize(); }

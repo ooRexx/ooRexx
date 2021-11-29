@@ -304,16 +304,27 @@ bool ProgramMetaData::processRestoreData(RexxString *fileName, BufferClass *buff
         data++;
     }
 
-    // pass back the pointer to the metadata location, assuming for now that
-    // here is metadata.
-    metaData = (ProgramMetaData *)data;
-
     // adjust the length for everything after the shebang
     length -= data - buffer->getData();
 
     // Now check in binary form of the compiled version
     if (length > strlen(compiledHeader) && strcmp(data, compiledHeader) == 0)
     {
+        // the problem with having a shebang in front of the data is that it opens the
+        // possibility that the flattened program data is not aligned on an object grain
+        // boundary. This can either cause invalid objects to created on the heap or even
+        // result in data exceptions if the fields are not aligned on a proper word boundary.
+        // If this is anywhere other than the front of the buffer, we need to shift it to
+        // the front.
+
+        // the returned metadata will be at the beginning
+        metaData = (ProgramMetaData *)buffer->getData();
+
+        // once we've shifted it
+        if (data != buffer->getData())
+        {
+           memmove((void *)buffer->getData(), (void *)data, length);
+        }
         return true;
     }
 
@@ -327,8 +338,13 @@ bool ProgramMetaData::processRestoreData(RexxString *fileName, BufferClass *buff
 
         size_t decodedLength;
 
+        // Note that we are decoding to the beginning of the buffer, which overwrites any
+        // shebang and the binary header while also ensuring the data is aligned on a proper
+        // object grain boundary,
+        metaData = (ProgramMetaData *)buffer->getData();
+
         // we now have the encoded data, decode it in place, overwriting the compiled header
-        if (!StringUtil::decodeBase64(beginEncodedData, encodedLength, data, decodedLength))
+        if (!StringUtil::decodeBase64(beginEncodedData, encodedLength, buffer->getData(), decodedLength))
         {
             reportException(Error_Program_unreadable_invalid_encoding, fileName);
         }
