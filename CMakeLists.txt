@@ -344,7 +344,6 @@ if (WIN32)
             /DWIN32 /D_WINDOWS /DHAVE_CONFIG_H)
 else ()
    add_definitions(-DORX_VER=${ORX_MAJOR} -DORX_REL=${ORX_MINOR} -DORX_MOD=${ORX_MOD_LVL} -DORX_BLD=${ORX_BLD_LVL}
-
             -DOOREXX_COPY_YEAR="${ORX_COPY_YEAR}"
             -DORX_SYS_STR="${ORX_SYS_STR}"
              -D_GNU_SOURCE
@@ -352,6 +351,9 @@ else ()
             -DORX_SYSTEM_PROCESSOR="${CMAKE_SYSTEM_PROCESSOR}"
             -DORX_REXXPATH="${CMAKE_REXXPATH}"
             -D${ORX_SYS_STR} -DOPSYS_${ORX_SYS_STR} -DHAVE_CONFIG_H)
+    if (NOT "${CMAKE_BUILD_TYPE}" STREQUAL "RELEASE")
+        add_definitions(-D_DEBUG)
+    endif ()
     set (ORX_SYSLIB_DL ${CMAKE_DL_LIBS})
     set (ORX_SYSLIB_PTHREAD pthread)
 endif ()
