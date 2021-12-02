@@ -319,8 +319,10 @@ bool ActivityManager::dispatchNext()
         // we're going to remove this in either case, so pop it off now.
         waitingActivities.pop_front();
 
-        // if this has not been posted yet, post now and return
-        if (!activity->hasRunPermission())
+        // if this has not been posted yet, post now and return.
+        // there are some situations where a NULL ends up in the queue, so
+        // just ignore those and keep looking
+        if (activity != OREF_NULL && !activity->hasRunPermission())
         {
             activity->postDispatch();
             return true;
