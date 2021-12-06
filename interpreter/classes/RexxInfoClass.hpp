@@ -95,6 +95,7 @@ public:
     RexxObject *getMaxArraySize();
     RexxObject *getRexxExecutable();
     RexxObject *getRexxLibrary();
+    RexxString *getDebug();
 
     RexxObject *copyRexx();
     RexxObject *newRexx(RexxObject **args, size_t argc);
@@ -112,6 +113,7 @@ public:
     RexxString *interpreterDate;       // the interpreter build date
     RexxString *languageLevel;         // the language level string
     RexxString *platformName;          // the platform string
+    RexxString *debug;                 // debug or release version
 };
 
 #endif

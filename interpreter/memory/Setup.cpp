@@ -1267,6 +1267,7 @@ AddMethod("maxPathLength", RexxInfo::getMaxPathLength, 0);
 AddMethod("maxArraySize", RexxInfo::getMaxArraySize, 0);
         AddMethod("executable", RexxInfo::getRexxExecutable, 0);
         AddMethod("libraryPath", RexxInfo::getRexxLibrary, 0);
+AddMethod("debug", RexxInfo::getDebug, 0);
 
 CompleteMethodDefinitions();
 
