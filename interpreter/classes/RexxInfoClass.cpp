@@ -124,7 +124,6 @@ void RexxInfo::live(size_t liveMark)
     memory_mark(interpreterVersion);
     memory_mark(languageLevel);
     memory_mark(platformName);
-    memory_mark(debug);
 }
 
 
@@ -146,7 +145,6 @@ void RexxInfo::liveGeneral(MarkReason reason)
     memory_mark_general(interpreterVersion);
     memory_mark_general(languageLevel);
     memory_mark_general(platformName);
-    memory_mark_general(debug);
 }
 
 
@@ -168,7 +166,6 @@ void RexxInfo::flatten(Envelope *envelope)
     flattenRef(interpreterVersion);
     flattenRef(languageLevel);
     flattenRef(platformName);
-    flattenRef(debug);
 
     cleanUpFlatten
 }
@@ -208,11 +205,6 @@ void RexxInfo::initialize()
     pathSeparator = new_string(SysFileSystem::getPathSeparator());
     platformName = new_string(SystemInterpreter::getPlatformName());
     interpreterName = Interpreter::getVersionString();
-    #ifdef _DEBUG
-       debug = new_string("1");
-    #else
-       debug = new_string("0");
-    #endif
 }
 
 
@@ -539,7 +531,11 @@ RexxObject *RexxInfo::getRexxLibrary()
  *
  * @return The end-of-line separator, as a string.
  */
-RexxString *RexxInfo::getDebug()
+RexxObject *RexxInfo::getDebug()
 {
-    return debug;
+#ifdef _DEBUG
+   return TheTrueObject;
+#else
+   return TheFalseObject;
+#endif
 }
