@@ -351,9 +351,6 @@ else ()
             -DORX_SYSTEM_PROCESSOR="${CMAKE_SYSTEM_PROCESSOR}"
             -DORX_REXXPATH="${CMAKE_REXXPATH}"
             -D${ORX_SYS_STR} -DOPSYS_${ORX_SYS_STR} -DHAVE_CONFIG_H)
-    if (NOT "${CMAKE_BUILD_TYPE}" STREQUAL "RELEASE")
-        add_definitions(-D_DEBUG)
-    endif ()
     set (ORX_SYSLIB_DL ${CMAKE_DL_LIBS})
     set (ORX_SYSLIB_PTHREAD pthread)
 endif ()
