@@ -1409,6 +1409,10 @@ RexxRoutine3(RexxStringObject, SysTextScreenRead, int, row, int, col, OPTIONAL_i
     while (lPos < len)
     {
 
+        if (len - lPos < lBufferLen)
+        {
+            lBufferLen = len - lPos;
+        }
         if (!ReadConsoleOutputCharacter(hStdout, &ptr[lPos], lBufferLen, coordLine, &dwCharsRead))
         {
             context->InvalidRoutine();
