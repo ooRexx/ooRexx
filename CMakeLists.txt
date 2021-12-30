@@ -280,19 +280,19 @@ else ()
    if (APPLE AND CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
      set (CMAKE_INSTALL_PREFIX $ENV{HOME}/Applications/ooRexx${ORX_MAJOR}
        CACHE PATH "Default install path" FORCE)
-     set (INSTALL_LIB_DIR ${CMAKE_INSTALL_PREFIX}/lib)
+     set (INSTALL_LIB_DIR lib)
    else ()
-     set (INSTALL_LIB_DIR ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR})
+     set (INSTALL_LIB_DIR ${CMAKE_INSTALL_LIBDIR})
    endif ()
    message(STATUS "CMAKE_INSTALL_PREFIX is ${CMAKE_INSTALL_PREFIX}")
    message(STATUS "INSTALL_LIB_DIR is ${INSTALL_LIB_DIR}")
 
-   set (INSTALL_EXECUTABLE_DIR ${CMAKE_INSTALL_PREFIX}/bin)
+   set (INSTALL_EXECUTABLE_DIR bin)
    set (INSTALL_CLS_DIR ${INSTALL_EXECUTABLE_DIR})
-   set (INSTALL_INCLUDE_DIR ${CMAKE_INSTALL_PREFIX}/include)
-   set (INSTALL_SAMPLES_DIR ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME}/samples)
-   set (INSTALL_DOC_DIR ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME}/doc)
-   set (INSTALL_MAN_DIR ${CMAKE_INSTALL_PREFIX}/share/man)
+   set (INSTALL_INCLUDE_DIR include)
+   set (INSTALL_SAMPLES_DIR share/${CMAKE_PROJECT_NAME}/samples)
+   set (INSTALL_DOC_DIR share/${CMAKE_PROJECT_NAME}/doc)
+   set (INSTALL_MAN_DIR share/man)
 endif ()
 
 # Set compiler and linker flags common to all build environments
@@ -1805,7 +1805,7 @@ if (NOT WIN32)
    add_manpage (rxqueue 1)
    add_manpage (rxsubcom 1)
 
-   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_samples_dir}/readme.txt DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${CMAKE_PROJECT_NAME}/samples)
+   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_samples_dir}/readme.txt DESTINATION ${INSTALL_SAMPLES_DIR})
 endif ()
 
 
@@ -2116,8 +2116,8 @@ endif ()
 # Build an RPM
 if (BUILD_RPM)
    # Set up the desktop menu
-   SET(ORX_DESKTOP_DIR     ${CMAKE_INSTALL_PREFIX}/share/applications)
-   SET(ORX_PIXMAPS_DIR     ${CMAKE_INSTALL_PREFIX}/share/icons/hicolor/48x48/apps)
+   SET(ORX_DESKTOP_DIR share/applications)
+   SET(ORX_PIXMAPS_DIR share/icons/hicolor/48x48/apps)
    configure_file(${ORX_PLATFORM_DIR}/menu/rexxtry.desktop.in ${PROJECT_BINARY_DIR}/rexxtry.desktop)
    INSTALL (FILES ${PROJECT_BINARY_DIR}/rexxtry.desktop DESTINATION ${ORX_DESKTOP_DIR})
    #INSTALL (FILES ${ORX_PLATFORM_DIR}/menu/rexxtry.xml DESTINATION ${ORX_DESKTOP_DIR})
@@ -2127,9 +2127,9 @@ if (BUILD_RPM)
    find_program(XDG-MIME_EXECUTABLE xdg-mime)
    find_program(XDG-DESKTOP-MENU_EXECUTABLE xdg-desktop-menu)
    INSTALL(CODE "
-     #execute_process(COMMAND ${XDG-MIME_EXECUTABLE} install --novendor ${ORX_DESKTOP_DIR}/rexxtry.xml)
-     execute_process(COMMAND ${XDG-DESKTOP-MENU_EXECUTABLE} install --novendor ${ORX_DESKTOP_DIR}/rexxtry.desktop)
-     execute_process(COMMAND ${XDG-MIME_EXECUTABLE} default ${ORX_DESKTOP_DIR}/rexxtry.desktop application/x-ooRexx-item)
+     #execute_process(COMMAND ${XDG-MIME_EXECUTABLE} install --novendor ${CMAKE_INSTALL_PREFIX}/${ORX_DESKTOP_DIR}/rexxtry.xml)
+     execute_process(COMMAND ${XDG-DESKTOP-MENU_EXECUTABLE} install --novendor ${CMAKE_INSTALL_PREFIX}/${ORX_DESKTOP_DIR}/rexxtry.desktop)
+     execute_process(COMMAND ${XDG-MIME_EXECUTABLE} default ${CMAKE_INSTALL_PREFIX}/${ORX_DESKTOP_DIR}/rexxtry.desktop application/x-ooRexx-item)
      ")
    # This prevents the rpm from generating these subdirectories in the install.
    set(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION
@@ -2184,8 +2184,8 @@ endif ()
 # Build a DEB
 if (BUILD_DEB)
    # Set up the desktop menu
-   SET(ORX_DESKTOP_DIR     ${CMAKE_INSTALL_PREFIX}/share/applications)
-   SET(ORX_PIXMAPS_DIR     ${CMAKE_INSTALL_PREFIX}/share/icons)
+   SET(ORX_DESKTOP_DIR share/applications)
+   SET(ORX_PIXMAPS_DIR share/icons)
    configure_file(${ORX_PLATFORM_DIR}/menu/rexxtry.desktop.in ${PROJECT_BINARY_DIR}/rexxtry.desktop)
    INSTALL (FILES ${PROJECT_BINARY_DIR}/rexxtry.desktop DESTINATION ${ORX_DESKTOP_DIR})
    #INSTALL (FILES ${ORX_PLATFORM_DIR}/menu/rexxtry.xml DESTINATION ${ORX_DESKTOP_DIR})
@@ -2195,9 +2195,9 @@ if (BUILD_DEB)
    find_program(XDG-MIME_EXECUTABLE xdg-mime)
    find_program(XDG-DESKTOP-MENU_EXECUTABLE xdg-desktop-menu)
    INSTALL(CODE "
-     #execute_process(COMMAND ${XDG-MIME_EXECUTABLE} install --novendor ${ORX_DESKTOP_DIR}/rexxtry.xml)
-     execute_process(COMMAND ${XDG-DESKTOP-MENU_EXECUTABLE} install --novendor ${ORX_DESKTOP_DIR}/rexxtry.desktop)
-     execute_process(COMMAND ${XDG-MIME_EXECUTABLE} default ${ORX_DESKTOP_DIR}/rexxtry.desktop application/x-ooRexx-item)
+     #execute_process(COMMAND ${XDG-MIME_EXECUTABLE} install --novendor ${CMAKE_INSTALL_PREFIX}/${ORX_DESKTOP_DIR}/rexxtry.xml)
+     execute_process(COMMAND ${XDG-DESKTOP-MENU_EXECUTABLE} install --novendor ${CMAKE_INSTALL_PREFIX}/${ORX_DESKTOP_DIR}/rexxtry.desktop)
+     execute_process(COMMAND ${XDG-MIME_EXECUTABLE} default ${CMAKE_INSTALL_PREFIX}/${ORX_DESKTOP_DIR}/rexxtry.desktop application/x-ooRexx-item)
      ")
    set(CPACK_GENERATOR DEB)
    # The package name MUST be in lower case.
