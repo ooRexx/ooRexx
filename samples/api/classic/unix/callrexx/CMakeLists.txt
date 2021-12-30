@@ -64,7 +64,7 @@ set (PERM_RW      PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ GROUP_WRITE WORL
 #################### callrexx1 (executable) #########################
 # additional source files required by specific platforms
 # Sources for callrexx1
-add_executable(callrexx1 ${PROJECT_SOURCE_DIR}/callrexx1)
+add_executable(callrexx1 ${PROJECT_SOURCE_DIR}/callrexx1.cpp)
 # Include file definition
 target_include_directories(callrexx1 PUBLIC
             ${build_api_dir}
@@ -79,7 +79,7 @@ install(FILES callrexx1.cpp Makefile.unix COMPONENT Samples DESTINATION ${DEST} 
 # additional source files required by specific platforms
 #set (platform_callrexx2_libs ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
 # Sources for callrexx2
-add_executable(callrexx2 ${PROJECT_SOURCE_DIR}/callrexx2)
+add_executable(callrexx2 ${PROJECT_SOURCE_DIR}/callrexx2.c)
 # Include file definition
 target_include_directories(callrexx2 PUBLIC
             ${build_api_dir}
@@ -91,13 +91,13 @@ install(FILES callrexx2.c COMPONENT Samples DESTINATION ${DEST} ${PERM_RW})
 
 
 #################### Rexx scripts invoked by the executables #########################
-# o.k. install(PROGRAMS del_macro.rex example.rex load_macro.rex macros.rex startrx1.rex startrx2.rex startrx3.rex 
+# o.k. install(PROGRAMS del_macro.rex example.rex load_macro.rex macros.rex startrx1.rex startrx2.rex startrx3.rex
 #               COMPONENT Samples DESTINATION ${DEST})
 
 # install(DIRECTORY ${PROJECT_SOURCE_DIR} COMPONENT Samples DESTINATION ${DEST} FILES_MATCHING PATTERN "*.rex" ${PERM} )
 # install(DIRECTORY ${PROJECT_SOURCE_DIR} COMPONENT Samples DESTINATION ${DEST} FILES_MATCHING PATTERN "*.rex" ${PERM} )
 
 
-install(PROGRAMS del_macro.rex example.rex load_macro.rex macros.rex startrx1.rex startrx2.rex startrx3.rex 
+install(PROGRAMS del_macro.rex example.rex load_macro.rex macros.rex startrx1.rex startrx2.rex startrx3.rex
 	COMPONENT Samples DESTINATION ${DEST} ${PERM_EXECUTE})
 

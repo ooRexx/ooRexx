@@ -54,7 +54,7 @@ project (rexxapi2)
 
 #################### rexxapi2 (executable) #########################
 # Sources for rexxapi2
-add_library(rexxapi2 SHARED ${PROJECT_SOURCE_DIR}/rexxapi2)
+add_library(rexxapi2 SHARED ${PROJECT_SOURCE_DIR}/rexxapi2.c)
 # Include file definition
 target_include_directories(rexxapi2 PUBLIC
             ${build_api_dir}

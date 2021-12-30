@@ -54,7 +54,7 @@ project (rexxapi3)
 
 #################### rexxapi3 (executable) #########################
 # Sources for rexxapi3
-add_library(rexxapi3 SHARED ${PROJECT_SOURCE_DIR}/rexxapi3)
+add_library(rexxapi3 SHARED ${PROJECT_SOURCE_DIR}/rexxapi3.c)
 # Include file definition
 target_include_directories(rexxapi3 PUBLIC
             ${build_api_dir}

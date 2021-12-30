@@ -54,7 +54,7 @@ project (rexxapi1)
 
 #################### rexxapi1 (executable) #########################
 # Sources for rexxapi1
-add_library(rexxapi1 SHARED ${PROJECT_SOURCE_DIR}/rexxapi1)
+add_library(rexxapi1 SHARED ${PROJECT_SOURCE_DIR}/rexxapi1.c)
 # Include file definition
 target_include_directories(rexxapi1 PUBLIC
             ${build_api_dir}
@@ -62,7 +62,7 @@ target_include_directories(rexxapi1 PUBLIC
 # Extra link library definitions
 target_link_libraries(rexxapi1 rexx rexxapi)
 set_target_properties(rexxapi1 PROPERTIES OUTPUT_NAME "rexxapi1")
-install(TARGETS rexxapi1     LIBRARY           DESTINATION ${INSTALL_SAMPLES_DIR}/api/classic/rexxapi1 
+install(TARGETS rexxapi1     LIBRARY           DESTINATION ${INSTALL_SAMPLES_DIR}/api/classic/rexxapi1
 	PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
 			   )
 install(FILES   rexxapi1.c readme.txt COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR}/api/classic/rexxapi1)

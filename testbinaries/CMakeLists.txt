@@ -53,13 +53,13 @@ cmake_policy(VERSION 2.8...3.3)
 project (oorexxtest)
 
 # handy macro for generating test executable targets
-macro (generate_test_library target)
-   if (WIN32 AND ${ARGC} GREATER 1)
+macro (generate_test_library target extension)
+   if (WIN32 AND ${ARGC} GREATER 2)
      set (PLATFORM_EXTRA  ${PROJECT_SOURCE_DIR}/${target}.def)
    endif ()
    add_library(${target} SHARED
       ${PLATFORM_EXTRA}
-      ${PROJECT_SOURCE_DIR}/${target})
+      ${PROJECT_SOURCE_DIR}/${target}.${extension})
    # Include file definition
    target_include_directories(${target} PUBLIC
                ${build_api_dir}
@@ -68,10 +68,10 @@ macro (generate_test_library target)
    target_link_libraries(${target} rexx rexxapi)
 endmacro (generate_test_library)
 
-generate_test_library(orxfunction)
-generate_test_library(orxmethod)
-generate_test_library(orxclassic)
-generate_test_library(orxclassic1 def)
+generate_test_library(orxfunction cpp)
+generate_test_library(orxmethod cpp)
+generate_test_library(orxclassic cpp)
+generate_test_library(orxclassic1 c def)
 
 
 # this library is linked to other test libraries
@@ -80,8 +80,8 @@ if (WIN32)
 endif ()
 add_library(orxexits SHARED
    ${PLATFORM_EXTRA}
-   ${PROJECT_SOURCE_DIR}/orxclassicexits
-   ${PROJECT_SOURCE_DIR}/orxinstance)
+   ${PROJECT_SOURCE_DIR}/orxclassicexits.cpp
+   ${PROJECT_SOURCE_DIR}/orxinstance.cpp)
 # Include file definition
 target_include_directories(orxexits PUBLIC
             ${build_api_dir}
@@ -91,7 +91,7 @@ target_link_libraries(orxexits rexx rexxapi)
 
 # this library has the orxexits dependency
 add_library(orxinvocation SHARED
-   ${PROJECT_SOURCE_DIR}/orxinvocation)
+   ${PROJECT_SOURCE_DIR}/orxinvocation.cpp)
 # Include file definition
 target_include_directories(orxinvocation PUBLIC
             ${build_api_dir}
