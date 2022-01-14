@@ -841,7 +841,7 @@ return position
 
   .Validate~classType("date", date, .DateTime)
 
-  self~setLastModifiedImpl(self~qualifiedPath, date~fullDate)
+  return self~setLastModifiedImpl(self~qualifiedPath, date~fullDate)
 
 ::ATTRIBUTE lastAccessed GET
   use strict arg
@@ -859,7 +859,7 @@ return position
 
   .Validate~classType("date", date, .DateTime)
 
-  self~setLastAccessedImpl(self~qualifiedPath, date~fullDate)
+  return self~setLastAccessedImpl(self~qualifiedPath, date~fullDate)
 
 ::METHOD lengthImpl PRIVATE EXTERNAL 'LIBRARY REXX file_length'
 

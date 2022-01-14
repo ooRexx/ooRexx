@@ -917,51 +917,88 @@ bool SysFileSystem::isLink(const char *name)
 }
 
 
-/*
-  getLastModifiedDate / setLastModifiedDate helper function
-
-  loosely based on https://stackoverflow.com/questions/283166/easy-way-to-convert-a-struct-tm-expressed-in-utc-to-time-t-type
-
-  returns local timezone offset from UTC *including* DST offest in seconds
-*/
-int get_utc_offset(time_t time)
+/**
+ * helper function to convert UTC time to local time.
+ *
+ * @param utc    Calendar time (UTC) in seconds elapsed since 1970-01-01T00:00:00Z.
+ * @param loc    Local time in microseconds since 0001-01-01T00:00:00.
+ *
+ * @return true if local time can be converted to UTC, false otherwise.
+ */
+bool utcToLocal(time_t utc, int64_t *loc)
 {
     struct tm gmt, local;
-    int one_day = 24 * 60 * 60;
-    int offset;
+    int64_t offset;
 
-    // there seems to be no easy way to find the local timezone offset from UTC,
-    // including the DST offset, for a specific UTC time
-    // to calculate the UTC/DST offset we subtract the localtime() timestamp from
-    // the gmtime() timestamp
-    // NOTE: how this does/should work during the (typically) one-hour
-    //       DST transition period, remains to be investigated
-
-    gmtime_r(&time, &gmt);               // use re-entrant gmtime() version
-    localtime_r(&time, &local);          // use re-entrant localtime() version
+    // to calculate the UTC offset (including DST) we subtract the
+    // localtime() timestamp from the gmtime() timestamp
+    if (gmtime_r(&utc, &gmt) == NULL ||
+        localtime_r(&utc, &local) == NULL)
+    {
+        return false;
+    }
 
     // if both local and UTC timestamps fall on the same day, this is the UTC/DST offset
     offset = ((local.tm_hour - gmt.tm_hour) * 60
-              + (local.tm_min - gmt.tm_min)) * 60
-        + local.tm_sec - gmt.tm_sec;
+            + (local.tm_min - gmt.tm_min)) * 60
+             + local.tm_sec - gmt.tm_sec;
 
-    // if either local year or local day_in_year is less than its UTC counterpart,
-    // we're dealing with a negative UTC/DST offset which extends into the prior day
+    // if the local day is earlier than its UTC counterpart, we're dealing with
+    // a negative UTC/DST offset which extends into the prior day
     // we'll have to subtract a full day from 'offset' to compensate
-    if ((local.tm_year < gmt.tm_year) || (local.tm_yday < gmt.tm_yday))
+    if (local.tm_year < gmt.tm_year ||
+        local.tm_year == gmt.tm_year && local.tm_yday < gmt.tm_yday)
     {
-        offset -= one_day;
+        offset -= 24 * 3600;
     }
 
     // similar to above, if we're dealing with a positive UTC/DST offset extending
     // into the next day, we'll have to add a full day to 'offset' to compensate
-    if ((local.tm_year > gmt.tm_year) || (local.tm_yday > gmt.tm_yday))
+    if (local.tm_year > gmt.tm_year ||
+        local.tm_year == gmt.tm_year && local.tm_yday > gmt.tm_yday)
     {
-        offset += one_day;
+        offset += 24 * 3600;
     }
 
-    return offset;
+    // time_t shouldn't be cast to int64_t, but seems to be no way around
+    *loc = (int64_t)utc + offset + StatEpoch;
+    return true;
 }
+
+
+/**
+ * helper function to convert local time to UTC time.
+ *
+ * @param time   Local time in microseconds since 0001-01-01T00:00:00.
+ * @param utc    Calendar time (UTC) in seconds elapsed since 1970-01-01T00:00:00Z.
+ *
+ * @return true if local time can be converted to UTC, false otherwise.
+ */
+bool localToUtc(int64_t time, time_t *utc)
+{
+    struct tm local;
+
+    // although we could (mis-)use gmtime() to break our local time into
+    // its components, it seems to be cleaner to do it manually
+    // it's enough to break out seconds, minutes and hours, as mktime()
+    // will do the hard work filling in days, months and years
+    time /= 1000000;          // ignore microseconds
+    local.tm_sec = time % 60; // seconds 0..59
+    time /= 60;
+    local.tm_min = time % 60; // minutes 0..59
+    time /= 60;
+    local.tm_hour = time;     // mktime handles any number of hours
+    local.tm_mday = 1;        // Jan 1, 0001
+    local.tm_mon = 0;         // January = 0
+    local.tm_year = 1 - 1900; // year 0001
+    local.tm_isdst = -1;      // mktime determines whether DST is in effect
+
+    *utc = mktime(&local);
+
+    // if mktime really fails it won't modify tm_hour
+    return *utc != (time_t)-1 || local.tm_hour != time;
+}
+
 
 
 /**
@@ -975,12 +1012,12 @@ int get_utc_offset(time_t time)
 int64_t SysFileSystem::getLastModifiedDate(const char *name)
 {
     struct stat64 st;
+    int64_t temp;
 
-    if (stat64(name, &st))
+    if (stat64(name, &st) || !utcToLocal(st.st_mtime, &temp))
     {
         return NoTimeStamp;
     }
-    int64_t temp = (int64_t)st.st_mtime + get_utc_offset(st.st_mtime) + StatEpoch;
     temp *= 1000000;
 
     // add microseconds, if available
@@ -1005,12 +1042,12 @@ int64_t SysFileSystem::getLastModifiedDate(const char *name)
 int64_t SysFileSystem::getLastAccessDate(const char *name)
 {
     struct stat64 st;
+    int64_t temp;
 
-    if (stat64(name, &st))
+    if (stat64(name, &st) || !utcToLocal(st.st_atime, &temp))
     {
         return NoTimeStamp;
     }
-    int64_t temp = (int64_t)st.st_atime + get_utc_offset(st.st_atime) + StatEpoch;
     temp *= 1000000;
 
     // add microseconds, if available
@@ -1086,14 +1123,16 @@ bool SysFileSystem::isHidden(const char *name)
 /**
  * Set the last modified date for a file.
  *
- * @param name   The target name.
- * @param time   The new file time (in ticks).
+ * @param name   The file or directory name.
+ * @param time   The new file time in local time given as
+ *               microseconds since 0001-01-01T00:00:00
  *
  * @return true if the filedate was set correctly, false otherwise.
  */
 bool SysFileSystem::setLastModifiedDate(const char *name, int64_t time)
 {
     struct stat64 st;
+    time_t utc;
     struct timeval times[2];
     if (stat64(name, &st) != 0)
     {
@@ -1110,8 +1149,12 @@ bool SysFileSystem::setLastModifiedDate(const char *name, int64_t time)
 
     times[0].tv_sec = st.st_atime;
     times[0].tv_usec = usec_a;
-    int64_t seconds = time / 1000000 - StatEpoch;
-    times[1].tv_sec = seconds - get_utc_offset(seconds);
+
+    if (localToUtc(time, &utc))
+    {
+        return false;
+    }
+    times[1].tv_sec = utc;
     times[1].tv_usec = time % 1000000;
     return utimes(name, times) == 0;
 }
@@ -1128,6 +1171,7 @@ bool SysFileSystem::setLastModifiedDate(const char *name, int64_t time)
 bool SysFileSystem::setLastAccessDate(const char *name, int64_t time)
 {
     struct stat64 st;
+    time_t utc;
     struct timeval times[2];
     if (stat64(name, &st) != 0)
     {
@@ -1144,8 +1188,12 @@ bool SysFileSystem::setLastAccessDate(const char *name, int64_t time)
 
     times[1].tv_sec = st.st_mtime;
     times[1].tv_usec = usec_m;
-    int64_t seconds = time / 1000000 - StatEpoch;
-    times[0].tv_sec = seconds - get_utc_offset(seconds);
+
+    if (localToUtc(time, &utc))
+    {
+        return false;
+    }
+    times[0].tv_sec = utc;
     times[0].tv_usec = time % 1000000;
     return utimes(name, times) == 0;
 }
