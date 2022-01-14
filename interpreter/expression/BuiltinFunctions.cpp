@@ -1368,8 +1368,7 @@ BUILTIN(TIME)
     // we have an input time, so we need to parse this
     if (intime != OREF_NULL)
     {
-        // the input timestamp is not valid with the elapsed time options, and
-        // using an offset as an input isn't really meaningful
+        // the input timestamp is not valid with the elapsed time options
         if (style == 'R' || style == 'E')
         {
             reportException(Error_Incorrect_call_invalid_conversion, "TIME", new_string((char *)&style, 1));
@@ -1421,20 +1420,14 @@ BUILTIN(TIME)
             case 'F':                        /* 'F'ull datetime stamp            */
             {
                 int64_t basetime;
-                if (!Numerics::objectToInt64(intime, basetime) || !timestamp.setBaseTime(basetime))
-                {
-                    reportException(Error_Incorrect_call_format_invalid, "TIME", intime, new_string((char *)&style2, 1));
-                }
+                valid = Numerics::objectToInt64(intime, basetime) && timestamp.setBaseTime(basetime);
                 break;
             }
 
             case 'T':                        /* 'T'icks datetime stamp            */
             {
                 int64_t basetime;
-                if (!Numerics::objectToInt64(intime, basetime) || !timestamp.setUnixTime(basetime))
-                {
-                    reportException(Error_Incorrect_call_format_invalid, "TIME", intime, new_string((char *)&style2, 1));
-                }
+                valid = Numerics::objectToInt64(intime, basetime) && timestamp.setUnixTime(basetime);
                 break;
             }
 
@@ -1442,8 +1435,8 @@ BUILTIN(TIME)
             {
                 // everything comes from the current time stamp, but we will adjust to the new offset
                 timestamp = current;                 // and by default we work off of that time
-                wholenumber_t i;
-                valid = intime->numberValue(i) && timestamp.adjustTimeZone(i);
+                int64_t i;
+                valid = Numerics::objectToInt64(intime, i) && timestamp.adjustTimeZone(i);
                 break;
             }
 
@@ -1454,7 +1447,7 @@ BUILTIN(TIME)
         }
         if (!valid)
         {
-            reportException(Error_Incorrect_call_format_invalid, "TIME", intime, new_string((char *)&style2, 1) );
+            reportException(Error_Incorrect_call_format_invalid, "TIME", intime, new_string((char *)&style2, 1));
         }
     }
 
