@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -68,7 +68,6 @@
 #include "Utilities.hpp"
 #include "ActivityManager.hpp"
 #include "FileNameBuffer.hpp"
-
 
 const char SysFileSystem::EOF_Marker = 0x1A;
 const char *SysFileSystem::EOL_Marker = "\n";
@@ -974,31 +973,30 @@ bool utcToLocal(time_t utc, int64_t *loc)
  *
  * @return true if local time can be converted to UTC, false otherwise.
  */
-bool localToUtc(int64_t time, time_t *utc)
+bool localToUtc(int64_t loc, time_t *utc)
 {
     struct tm local;
+    time_t seconds;
 
-    // although we could (mis-)use gmtime() to break our local time into
-    // its components, it seems to be cleaner to do it manually
-    // it's enough to break out seconds, minutes and hours, as mktime()
-    // will do the hard work filling in days, months and years
-    time /= 1000000;          // ignore microseconds
-    local.tm_sec = time % 60; // seconds 0..59
-    time /= 60;
-    local.tm_min = time % 60; // minutes 0..59
-    time /= 60;
-    local.tm_hour = time;     // mktime handles any number of hours
-    local.tm_mday = 1;        // Jan 1, 0001
-    local.tm_mon = 0;         // January = 0
-    local.tm_year = 1 - 1900; // year 0001
-    local.tm_isdst = -1;      // mktime determines whether DST is in effect
+    // we shouldn't convert int64_t to time_t, but seems to be no way around
+    seconds = loc / 1000000 - StatEpoch;
+    // (mis-)use gmtime() to break our local time into its components
+    if (gmtime_r(&seconds, &local) == NULL)
+    {
+        return false;
+    }
 
+    local.tm_isdst = -1; // mktime determines whether DST is in effect
     *utc = mktime(&local);
-
-    // if mktime really fails it won't modify tm_hour
-    return *utc != (time_t)-1 || local.tm_hour != time;
+    // If mktime() fails it returns (time_t)-1, but -1 might also be the
+    // valid date 1969-12-31T23:59:59Z.  But as we may have a timezone
+    // shift of +/- 12 (or even more) hours, we have no reliable way of
+    // distinguishing those cases.  So we'll accept -1 as valid if the
+    // date was either 1969-12-31 or 1970-01-01.
+    return *utc != (time_t)-1 ||
+      local.tm_year == 1969 - 1900 && local.tm_mon == 12 - 1 && local.tm_mday == 31 ||
+      local.tm_year == 1970 - 1900 && local.tm_mon == 1 - 1 && local.tm_mday == 1;
 }
-
 
 
 /**
@@ -1150,7 +1148,7 @@ bool SysFileSystem::setLastModifiedDate(const char *name, int64_t time)
     times[0].tv_sec = st.st_atime;
     times[0].tv_usec = usec_a;
 
-    if (localToUtc(time, &utc))
+    if (!localToUtc(time, &utc))
     {
         return false;
     }
@@ -1189,7 +1187,7 @@ bool SysFileSystem::setLastAccessDate(const char *name, int64_t time)
     times[1].tv_sec = st.st_mtime;
     times[1].tv_usec = usec_m;
 
-    if (localToUtc(time, &utc))
+    if (!localToUtc(time, &utc))
     {
         return false;
     }
