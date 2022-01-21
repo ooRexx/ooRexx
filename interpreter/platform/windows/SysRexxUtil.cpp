@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -1361,72 +1361,49 @@ RexxRoutine0(RexxStringObject, SysWinVer)
 *                   rest of the screen.                                  *
 *                                                                        *
 * Return:    Characters read from text screen.                           *
+*                                                                        *
+* Note: The ReadConsoleOutputCharacter API is no longer recommended      *
 *************************************************************************/
 RexxRoutine3(RexxStringObject, SysTextScreenRead, int, row, int, col, OPTIONAL_int, len)
 {
-    int    lPos, lPosOffSet;              /* positioning                */
-    /* (132x50)                   */
-    int    lBufferLen = 16000;           /* default: 200x80 characters */
+    HANDLE h;                            // stdout handle
+    CONSOLE_SCREEN_BUFFER_INFO csbiInfo; // screen buffer size
+    AutoFree buffer;                     // return buffer
+    COORD start;                         // start coordinates
+    DWORD chars;                         // actual chars read
 
-    COORD coordLine;                     /* coordinates of where to    */
-    /* read characters from       */
-    DWORD dwCharsRead, dwSumCharsRead;    /* Handle to Standard Out     */
-    HANDLE hStdout;
-    CONSOLE_SCREEN_BUFFER_INFO csbiInfo; /* Console information        */
-
-    hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
-
-    if (!GetConsoleScreenBufferInfo(hStdout, &csbiInfo))
+    if (row < 0 || col < 0 || argumentExists(3) && len < 0 ||
+        (h = GetStdHandle(STD_OUTPUT_HANDLE)) == INVALID_HANDLE_VALUE)
     {
         context->InvalidRoutine();
         return NULLOBJECT;
     }
 
-    if (argumentOmitted(3))               /* check the length           */
+    // get screen buffer size if len argument is not given
+    if (argumentOmitted(3))
     {
+        if (GetConsoleScreenBufferInfo(h, &csbiInfo) == 0)
+        {
+            context->InvalidRoutine();
+            return NULLOBJECT;
+        }
         len = csbiInfo.dwSize.Y * csbiInfo.dwSize.X;
     }
 
-    coordLine.X = (short)col;
-    coordLine.Y = (short)row;
-
-    // allocate a new buffer
-    AutoFree ptr = (char *)malloc(len);
-    if (ptr == NULL)
+    if (len >= 0 && (buffer = (char *)malloc(len)) == NULL)
     {
         outOfMemoryException(context);
     }
 
-    if (len < lBufferLen)
+    start.X = (short)col;
+    start.Y = (short)row;
+    if (ReadConsoleOutputCharacter(h, buffer, len, start, &chars) == 0)
     {
-        lBufferLen = len;
+        context->InvalidRoutine();
+        return NULLOBJECT;
     }
 
-    lPos = 0;                                     /* current position */
-    lPosOffSet = row * csbiInfo.dwSize.X + col;   /* add offset if not started at beginning */
-    dwSumCharsRead = 0;
-
-    while (lPos < len)
-    {
-
-        if (len - lPos < lBufferLen)
-        {
-            lBufferLen = len - lPos;
-        }
-        if (!ReadConsoleOutputCharacter(hStdout, &ptr[lPos], lBufferLen, coordLine, &dwCharsRead))
-        {
-            context->InvalidRoutine();
-            return NULL;
-        }
-
-
-        lPos = lPos + lBufferLen;
-        coordLine.Y = (short)((lPos + lPosOffSet) / csbiInfo.dwSize.X);
-        coordLine.X = (short)((lPos + lPosOffSet) % csbiInfo.dwSize.X);
-        dwSumCharsRead = dwSumCharsRead + dwCharsRead;
-    }
-
-    return context->NewString(ptr, dwSumCharsRead);
+    return context->NewString(buffer, chars);
 }
 
 /*************************************************************************
