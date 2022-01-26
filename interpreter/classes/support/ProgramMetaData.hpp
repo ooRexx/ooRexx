@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -71,7 +71,7 @@ protected:
     enum
     {
         MAGICNUMBER = 11111,           // remains constant from release-to-release
-        METAVERSION = 42               // gets updated when internal form changes
+        METAVERSION = 43               // gets updated when internal form changes
     };
 
 
