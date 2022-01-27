@@ -37,7 +37,7 @@ For Catalina:
 
 5. On at least Mojave and beyond Apple has decided to set a "Quarantine"
 extended attribute on files downloaded from the Internet. Check if
-this is the case from the terminal (/Applications/Utilities/Console.app):
+this is the case from the terminal (/Applications/Utilities/Terminal.app):
 
 xattr -r /Applications/ooRexx5
 
