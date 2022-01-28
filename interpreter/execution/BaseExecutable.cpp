@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -323,7 +323,19 @@ void BaseExecutable::processNewFileExecutableArgs(RexxString *&filename,
     filename = stringArgument(filename, "name");
 
     // now process an optional sourcecontext argument
-    if (sourceContext == OREF_NULL || isOfClass(Package, sourceContext))
+    if (sourceContext == OREF_NULL)
+    {
+        // using the calling source context, so get the package from the top activation if
+        // there is one.
+        // see if we have an active context and use the current source as the basis for the lookup
+        RexxActivation *currentContext = ActivityManager::currentActivity->getCurrentRexxFrame();
+        if (currentContext != OREF_NULL)
+        {
+            sourceContext = currentContext->getPackage();
+        }
+    }
+
+    if (isOfClass(Package, sourceContext))
     {
         return;
     }
