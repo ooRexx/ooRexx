@@ -434,6 +434,9 @@ RexxString* LanguageParser::packHexLiteral(size_t start, size_t length)
     // a pointer for scanning the data
     const char *inPointer = current + start;
 
+    // update the current clause location in case there are any errors
+    clauseLocation = clause->getLocation();
+
     /* first scan is to check REXX rules for validity of grouping             */
     /* and to remove blanks                                                   */
 
@@ -454,8 +457,6 @@ RexxString* LanguageParser::packHexLiteral(size_t start, size_t length)
                 (!firstGroup &&             // ok, we've processed the first group, this must be on a boundary
                  ((groupCount & 1) != 0)))  // not evenly divisible by two...bad placement.
             {
-                // update the error information
-                clauseLocation = clause->getLocation();
                 // NOTE:  our position is origin 0, we need to report this using
                 // origin 1 position.
                 syntaxError(Error_Invalid_hex_hexblank, new_integer(i + 1));
