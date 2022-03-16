@@ -47,7 +47,8 @@ else ()
     # for other platforms
     cmake_minimum_required (VERSION 2.8.12)
 endif ()
-cmake_policy(VERSION 2.8...3.20)
+# CMP0091 introduced in 3.15 must stay OLD for our /MD -> /MT hack to work
+cmake_policy(VERSION 2.8...3.3)
 
 # must come before the project command
 # 10.13.6 High Sierra is the minimum system supported
@@ -530,6 +531,8 @@ if (WIN32)
 string(REGEX REPLACE "/EHsc" "/EHsc-" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 
 # This replaces the /MD compile flag with /MT.
+# as soon as we can require CMake minimum of 3.15 below hack should be replaced with
+# set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 set(CompilerFlags
         CMAKE_CXX_FLAGS
         CMAKE_CXX_FLAGS_DEBUG
