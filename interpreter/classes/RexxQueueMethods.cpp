@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -191,11 +191,29 @@ wholenumber_t rexx_add_queue(
 
                                        /*  move the line to the queue       */
    rc = RexxAddQueue(queue_name, &rx_string, order);
-   if (rc != 0)                        /* stream error?                     */
+   if (rc != 0)
    {
-       context->RaiseException1(Rexx_Error_System_service_service, context->NewStringFromAsciiz("SYSTEM QUEUE"));
+       char msg[64];
+       char *reason =
+           rc == RXAPI_NORXAPI       ? "RXAPI_NORXAPI" :
+           rc == RXAPI_MEMFAIL       ? "RXAPI_MEMFAIL" :
+           rc == RXQUEUE_BADQNAME    ? "RXQUEUE_BADQNAME" :
+           rc == RXQUEUE_PRIORITY    ? "RXQUEUE_PRIORITY" :
+           rc == RXQUEUE_BADWAITFLAG ? "RXQUEUE_BADWAITFLAG" :
+           rc == RXQUEUE_EMPTY       ? "RXQUEUE_EMPTY" :
+           rc == RXQUEUE_NOTREG      ? "RXQUEUE_NOTREG" :
+           rc == RXQUEUE_ACCESS      ? "RXQUEUE_ACCESS" : NULL;
+       if (reason == NULL)
+       {
+           snprintf(msg, sizeof(msg), "SYSTEM QUEUE (reason code %d)", rc);
+       }
+       else
+       {
+           snprintf(msg, sizeof(msg), "SYSTEM QUEUE (%s)", reason);
+       }
+       context->RaiseException1(Rexx_Error_System_service_service, context->NewStringFromAsciiz(msg));
    }
-   return rc;                          /* return the result                 */
+   return 0;
 }
 
 /********************************************************************************************/
@@ -241,7 +259,7 @@ RexxMethod1(RexxStringObject, rexx_create_queue,
 /********************************************************************************************/
 /* Rexx_open_queue                                                                        */
 /********************************************************************************************/
-RexxMethod1(logical_t, rexx_open_queue, CSTRING, queue_name)
+RexxMethod1(wholenumber_t, rexx_open_queue, CSTRING, queue_name)
 {
    size_t        dup_flag = 0;         /* duplicate name flag               */
                                        /* create a queue                    */
@@ -270,7 +288,7 @@ RexxMethod1(wholenumber_t, rexx_delete_queue,
 /********************************************************************************************/
 /* Rexx_clear_queue                                                                         */
 /********************************************************************************************/
-RexxMethod0(int, rexx_clear_queue)
+RexxMethod0(wholenumber_t, rexx_clear_queue)
 {
                                        /* get the queue name                */
   RexxObjectPtr queue_name = context->GetObjectVariable("NAMED_QUEUE");

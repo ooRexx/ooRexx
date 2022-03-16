@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -445,10 +445,12 @@ return position
 ::METHOD init
   expose named_queue
   use strict arg name_queue = "SESSION"
+  -- if .nil create a queue with a unique system-generated name
+  if name_queue == .nil then
+      name_queue = self~class~create
   named_queue = name_queue~upper
-  if named_queue \= 'SESSION' then do
+  if named_queue \= "SESSION" then
       self~class~open(named_queue)
-  end
   self~objectname = named_queue        /* and also set as an object name    */
 
 ::METHOD get unguarded                 /* get the queue name                */
@@ -469,9 +471,7 @@ return position
 ::method delete
   expose named_queue
   use strict arg                       /* enforce no argument               */
-  if named_queue \= 'SESSION' then do
-      self~class~delete(named_queue)
-  end
+  return self~class~delete(named_queue)
 
 ::METHOD lineout
   forward message 'QUEUE'
