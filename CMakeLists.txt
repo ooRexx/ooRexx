@@ -1,6 +1,6 @@
 #/*----------------------------------------------------------------------------*/
 #/*                                                                            */
-#/* Copyright (c) 2014-2021 Rexx Language Association. All rights reserved.    */
+#/* Copyright (c) 2014-2022 Rexx Language Association. All rights reserved.    */
 #/*                                                                            */
 #/* This program and the accompanying materials are made available under       */
 #/* the terms of the Common Public License v1.0 which accompanies this         */
@@ -165,9 +165,6 @@ set (VERSION_INFO "-version-info ${ORX_CURRENT}:${ORX_REVISION}:${ORX_AGE}")
 set (ORX_VERSION ${ORX_CURRENT}.${ORX_AGE}.${ORX_REVISION})
 
 
-# The following are general settings
-# Always create shared libraries (DLLs)
-set (CMAKE_CXX_CREATE_SHARED_MODULE 1)
 # Set the platform subdirectory name
 if (WIN32)
    set (ORX_PLATFORM_DIR platform/windows)
