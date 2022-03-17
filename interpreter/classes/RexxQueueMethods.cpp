@@ -194,7 +194,7 @@ wholenumber_t rexx_add_queue(
    if (rc != 0)
    {
        char msg[64];
-       char *reason =
+       char *reason = (char *)(
            rc == RXAPI_NORXAPI       ? "RXAPI_NORXAPI" :
            rc == RXAPI_MEMFAIL       ? "RXAPI_MEMFAIL" :
            rc == RXQUEUE_BADQNAME    ? "RXQUEUE_BADQNAME" :
@@ -202,7 +202,7 @@ wholenumber_t rexx_add_queue(
            rc == RXQUEUE_BADWAITFLAG ? "RXQUEUE_BADWAITFLAG" :
            rc == RXQUEUE_EMPTY       ? "RXQUEUE_EMPTY" :
            rc == RXQUEUE_NOTREG      ? "RXQUEUE_NOTREG" :
-           rc == RXQUEUE_ACCESS      ? "RXQUEUE_ACCESS" : NULL;
+           rc == RXQUEUE_ACCESS      ? "RXQUEUE_ACCESS" : NULL);
        if (reason == NULL)
        {
            snprintf(msg, sizeof(msg), "SYSTEM QUEUE (reason code %d)", rc);
