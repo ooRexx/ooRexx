@@ -1,6 +1,6 @@
 			Readme_ooRexx5_USB.txt
 
-Copyright 2005-2021 Rexx Language Association.  All rights reserved.
+Copyright 2005-2022 Rexx Language Association.  All rights reserved.
 
 ===================================================================
 

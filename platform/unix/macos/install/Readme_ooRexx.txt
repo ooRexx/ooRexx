@@ -1,6 +1,6 @@
 			Readme_ooRexx5.txt
 
-Copyright 2005-2021 Rexx Language Association.  All rights reserved.
+Copyright 2005-2022 Rexx Language Association.  All rights reserved.
 
 ===================================================================
 
@@ -28,10 +28,10 @@ How To install ooRexx 5 on macOS as a permanent single user installation
 
 3. Drag ooRexx5 to the Applications icon.
 
-For Mojave and before:
+For 10.14 Mojave and before:
 4a. Add "export PATH=/Applications/ooRexx5/bin:$PATH" to .bash_profile.
 
-For Catalina:
+For 10.15 Catalina and higher:
 4b. Add "export PATH=/Applications/ooRexx5/bin:$PATH" to .zshrc
 (This is dependent on what shell you are using for default).
 
