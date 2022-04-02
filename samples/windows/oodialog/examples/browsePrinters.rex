@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2013-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2013-2022 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -150,7 +150,7 @@
     -- printers option.  The operating system will not allow a new folder to be
     -- created in the virtual printers folder, so it disables the Make New
     -- Folder button.  It looks better to just remove the button altogether.
-    bff~options = 'BROWSEFORPRINTERS NONEWFOLDERBUTTON'
+    bff~options = 'BROWSEFORPRINTER NONEWFOLDERBUTTON'
 
     -- The getItemIDList() method is what actually puts up the browse for folder
     -- dialog.  Normally, by default, the getItemIDList() will release the COM
