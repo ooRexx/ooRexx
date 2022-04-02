@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -49,6 +49,7 @@
 #include "SysThread.hpp"
 #include <stdio.h>
 #include <unistd.h>
+#include <errno.h>
 
 // attach an activity to an existing thread
 void SysThread::attachThread()
@@ -183,8 +184,10 @@ void SysThread::sleep(int msecs)
  *
  * @param microseconds
  *               The number of microseconds to delay.
+ *
+ * @return The success/failure return code.
  */
-void SysThread::longSleep(uint64_t microseconds)
+int SysThread::longSleep(uint64_t microseconds)
 {
     // split into two part: secs and nanoseconds
     long secs = (long)microseconds / 1000000;
@@ -194,14 +197,14 @@ void SysThread::longSleep(uint64_t microseconds)
     struct timespec    Rqtp, Rmtp;
     Rqtp.tv_sec = secs;
     Rqtp.tv_nsec = nanoseconds;
-    nanosleep(&Rqtp, &Rmtp);
+    return nanosleep(&Rqtp, &Rmtp) == -1 ? errno : 0;
 #elif defined( HAVE_NSLEEP )
     struct timestruc_t Rqtp, Rmtp;
     Rqtp.tv_sec = secs;
     Rqtp.tv_nsec = nanoseconds;
-    nsleep(&Rqtp, &Rmtp);
+    return nsleep(&Rqtp, &Rmtp) == -1 ? errno : 0;
 #else
-    usleep(microseconds);
+    return usleep(microseconds) == -1 ? errno : 0;
 #endif
 }
 
