@@ -1993,8 +1993,13 @@ if (DOC_SOURCE_DIR)
       file(TO_NATIVE_PATH ${DOC_SOURCE_DIR} NATIVE_DOC_DIR)
 
       # Name of the installer file we're going to create
-      set(INSTALLER_FILE "ooRexx-${ORX_VERSION_NSIS}.windows.${NSIS_CPU}.exe")
-      set(INSTALLER_SCRIPT "ooRexx-${ORX_VERSION_NSIS}.windows.${NSIS_CPU}.nsi")
+      if (DEFINED OS_DIST)
+         set(INSTALLER_FILE "ooRexx-${ORX_VERSION_NSIS}.${OS_DIST}.${NSIS_CPU}.exe")
+         set(INSTALLER_SCRIPT "ooRexx-${ORX_VERSION_NSIS}.${OS_DIST}.${NSIS_CPU}.nsi")
+      else ()
+         set(INSTALLER_FILE "ooRexx-${ORX_VERSION_NSIS}.windows.${NSIS_CPU}.exe")
+         set(INSTALLER_SCRIPT "ooRexx-${ORX_VERSION_NSIS}.windows.${NSIS_CPU}.nsi")
+      endif ()
 
       # create an installer file from the template
       message(STATUS "Building NSIS template ${INSTALLER_SCRIPT}")
