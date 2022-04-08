@@ -70,6 +70,7 @@ void ActivationSettings::live(size_t liveMark)
     memory_mark(haltDescription);
     memory_mark(securityManager);
     memory_mark(scope);
+    memory_mark(fileNames);
     // local variables handle their own marking.
     localVariables.live(liveMark);
 }
@@ -96,6 +97,7 @@ void ActivationSettings::liveGeneral(MarkReason reason)
     memory_mark_general(haltDescription);
     memory_mark_general(securityManager);
     memory_mark_general(scope);
+    memory_mark_general(fileNames);
     // local variables handle their own marking.
     localVariables.liveGeneral(reason);
 }
