@@ -1855,10 +1855,6 @@ RexxObject* RexxActivation::resolveStream(RexxString *name, bool input, Protecte
     // not one of the standards...go looking for a file.
     else
     {
-        // determine if the file system is case sensitive
-            // the following temp. change made a huge difference!
-//      bool caseSensitive = false;//SysFileSystem::isCaseSensitive();
-
         RexxString *qualifiedName;
         if (notCaseSensitive()) // probably Windows
         {
