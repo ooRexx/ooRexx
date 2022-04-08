@@ -166,7 +166,7 @@ class ActivationSettings
       inline void setHaltCondition(bool v = true) { stateFlags[haltCondition] = v; }
 
       StringTable    *traps;               // enabled condition traps
-      StringTable    *ioConfigs;           // address envronment io configurations
+      StringTable    *ioConfigs;           // address environment io configurations
       DirectoryClass *conditionObj;        // current condition object
       RexxObject    **parentArgList;       // arguments to top level program
       size_t          parentArgCount;      // number of arguments to the top level program
@@ -191,6 +191,8 @@ class ActivationSettings
       int64_t elapsedTime;                 // elapsed time clock
       RexxDateTime timeStamp;              // current timestamp
       RexxLocalVariables localVariables;   // the local variables for this activation
+      StringTable    *fileNames;           // table of stream file names
+      bool caseInsensitive;                // !SysFileSystem::isCaseSensitive();
 };
 
 #endif

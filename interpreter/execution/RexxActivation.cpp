@@ -83,7 +83,6 @@
 #include "CommandIOContext.hpp"
 #include "LibraryPackage.hpp"
 
-
 /**
  * Create a new activation object
  *
@@ -1814,6 +1813,10 @@ VariableDictionary* RexxActivation::getObjectVariables()
  */
 RexxObject* RexxActivation::resolveStream(RexxString *name, bool input, Protected<RexxString> &fullName, bool *added)
 {
+    bool newName = true;
+    bool addName = false;
+    // if the file system is NOT case sensitive, remember the qualified name
+    StringTable *fileNames;
     // when the caller requires a stream table entry, then set the initial indicator.
     if (added != NULL)
     {
@@ -1852,9 +1855,38 @@ RexxObject* RexxActivation::resolveStream(RexxString *name, bool input, Protecte
     // not one of the standards...go looking for a file.
     else
     {
-        // get the fully qualified name
-        RexxString *qualifiedName = Interpreter::qualifyFileSystemName(name);
-        fullName = qualifiedName;
+        // determine if the file system is case sensitive
+            // the following temp. change made a huge difference!
+//      bool caseSensitive = false;//SysFileSystem::isCaseSensitive();
+
+        RexxString *qualifiedName;
+        if (notCaseSensitive()) // probably Windows
+        {
+            fileNames = getFileNames();
+            qualifiedName = (RexxString *)fileNames->get(name);
+            if (qualifiedName != OREF_NULL) // we have seen this name before
+            {
+                fullName = qualifiedName;
+                newName = false;    // don't redo the system calls
+            }
+            else
+            {
+                // add to fileNames only if the stream is going to be added
+                addName = (added != NULL);
+            }
+
+        }
+        if (newName)
+        {
+            // get the fully qualified name
+            qualifiedName = Interpreter::qualifyFileSystemName(name);
+            fullName = qualifiedName;
+        }
+        if (addName)
+        {
+            // add the name to the fileNames table for future requests
+            fileNames->put(qualifiedName, name);
+        }
         // see if we have this in the table already.  If not opened yet, we need
         // to try to open it.
         RexxObject *stream = (RexxObject *)streamTable->get(qualifiedName);
@@ -1925,6 +1957,8 @@ StringTable* RexxActivation::getStreams()
                 settings.streams = ((RexxActivation *)callerFrame)->getStreams();
             }
         }
+        // determine if the file system is case insensitive or not and save it
+        settings.caseInsensitive = !SysFileSystem::isCaseSensitive();
     }
     return settings.streams;
 }
@@ -4870,4 +4904,21 @@ RexxString *RexxActivation::formatSourcelessTraceLine(RexxString *packageName)
 ArrayClass *RexxActivation::getStackFrames(bool skipFirst)
 {
     return activity->generateStackFrames(skipFirst);
+}
+
+
+/**
+ * Return the associated object variables fileNames table
+ *
+ * @return The table of opened streams file names.
+ */
+StringTable* RexxActivation::getFileNames()
+{
+    // first request for a file name?  We need to
+    // create the table.
+    if (settings.fileNames == OREF_NULL)
+    {
+        settings.fileNames = new_string_table();
+    }
+    return settings.fileNames;
 }

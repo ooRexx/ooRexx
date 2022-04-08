@@ -575,6 +575,8 @@ class RexxActivation : public ActivationBase
    RexxString *pullInput();
    RexxString *lineIn();
    void queue(RexxString *, Activity::QueueOrder);
+   StringTable *getFileNames();
+   bool notCaseSensitive() { return settings.caseInsensitive; }
 
    static const size_t yieldInstructions = 50;            // the number of instructions we'll execute before a yield check
 

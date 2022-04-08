@@ -2266,11 +2266,28 @@ BUILTIN(LINEOUT)
         // resolve the stream name and send the message based on the arguments
         RexxObject *stream = context->resolveStream(name, false, fullName, &added);
         ProtectedObject result;
+        RexxObject *closeResult;
         switch (argcount)
         {
             case 0:
-            case 1:
                 return stream->sendMessage(LINEOUT, result);
+                break;
+            case 1: // a close request
+                closeResult = stream->sendMessage(LINEOUT, result);
+                // remove this from the table after the close
+                context->getStreams()->remove(fullName);
+                if (context->notCaseSensitive())
+                {
+                    // also need to remove all references to fullname from
+                    //  the fileNames table
+                    StringTable *fileNames = context->getFileNames();
+                    RexxInternalObject *removed;
+                    do
+                    {
+                        removed = fileNames->removeItem(fullName);
+                    } while (removed != OREF_NULL);
+                }
+                return closeResult;
                 break;
             case 2:
                 return stream->sendMessage(LINEOUT, string, result);
@@ -2435,6 +2452,7 @@ BUILTIN(STREAM)
     RexxString *action = optional_string(STREAM, operation);
     RexxString *command = optional_string(STREAM, command);
 
+
     char action_char = STREAM_STATUS;
     // decode the action
     if (action != OREF_NULL)
@@ -2511,6 +2529,17 @@ BUILTIN(STREAM)
                     if (!result->strCompare("READY:"))
                     {
                         context->getStreams()->remove(fullname);
+                        if (context->notCaseSensitive())
+                        {
+                            // also need to remove all references to fullname from
+                            //  the fileNames table
+                            StringTable *fileNames = context->getFileNames();
+                            RexxInternalObject *removed;
+                            do
+                            {
+                                removed = fileNames->removeItem(fullname);
+                            } while (removed != OREF_NULL);
+                        }
                     }
                     return result;
                 }
@@ -2524,11 +2553,22 @@ BUILTIN(STREAM)
                     RexxString *result = (RexxString *)stream->sendMessage(COMMAND, command, resultObj);
                     // remove this from the table after the close
                     context->getStreams()->remove(fullname);
+                    if (context->notCaseSensitive())
+                    {
+                        // also need to remove all references to fullname from
+                        //  the fileNames table
+                        StringTable *fileNames = context->getFileNames();
+                        RexxInternalObject *removed;
+                        do
+                        {
+                            removed = fileNames->removeItem(fullname);
+                        } while (removed != OREF_NULL);
+                    }
                     return result;
                 }
                 // these are real operations that might cause an implicit open
                 else if (command_upper->wordPos(new_string("SEEK"), OREF_NULL)->getValue() > 0 ||
-                    command_upper->wordPos(new_string("POSITON"), OREF_NULL)->getValue() > 0)
+                    command_upper->wordPos(new_string("POSITION"), OREF_NULL)->getValue() > 0)
                 {
                     bool added;
                     Protected<RexxString> fullname;
