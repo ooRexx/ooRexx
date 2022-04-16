@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -305,12 +305,13 @@ bool SysServerNamedPipeConnectionManager::bind()
     // generate the unique name for this user.
     generatePipeName();
     // Try to create our unique named mutex. If this fails, there must be another instance running,
-    // se we'll just shutdown right now.
+    // so we'll just shutdown right now.
     // we are the first creator of this pipe. We use this to detect if we have more
-    // than one occurance of rxapi running for a given userid.
+    // than one occurrence of rxapi running for a given userid.
     serverMutexHandle = CreateMutex(NULL, FALSE, serverMutexName);
-
-    if (serverMutexHandle == INVALID_HANDLE_VALUE)
+    // If the mutex already exists CreateMutex returns a handle to it,
+    // but GetLastError returns ERROR_ALREADY_EXISTS
+    if (serverMutexHandle == NULL || GetLastError() == ERROR_ALREADY_EXISTS)
     {
         errcode = CSERROR_CONNX_FAILED;
         return false;
@@ -328,10 +329,10 @@ bool SysServerNamedPipeConnectionManager::disconnect()
 {
     // we don't use the initial instance, but do keep the handle open to
     // ensure a second instance can't start up
-    if (serverMutexHandle != INVALID_HANDLE_VALUE)
+    if (serverMutexHandle != NULL)
     {
         CloseHandle(serverMutexHandle);
-        serverMutexHandle = INVALID_HANDLE_VALUE;
+        serverMutexHandle = NULL;
         // this is only done when the server is shutting down prior
         // to termination. We don't really need to get rid of this, but
         // it is good practice

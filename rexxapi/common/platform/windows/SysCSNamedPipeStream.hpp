@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2008-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2008-2022 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -70,7 +70,7 @@ protected:
 class SysServerNamedPipeConnectionManager : public ServerConnectionManager
 {
 public:
-    inline SysServerNamedPipeConnectionManager() : serverMutexHandle(INVALID_HANDLE_VALUE), ServerConnectionManager() { generatePipeName(); }
+    inline SysServerNamedPipeConnectionManager() : serverMutexHandle(NULL), ServerConnectionManager() { generatePipeName(); }
     inline ~SysServerNamedPipeConnectionManager() { }
 
     bool disconnect() override;
