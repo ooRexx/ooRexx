@@ -1399,9 +1399,9 @@ if (WIN32)
    set (OOD_MAJOR 4)
    set (OOD_MINOR 2)
    set (OOD_MOD_LVL 4)
-   set (OOD_BLD_LVL 11861)
-   set (OOD_VER_STR "4.2.4.12250")
-   set (OOD_COPY_YEAR "2005-2021")
+   set (OOD_BLD_LVL 12373)
+   set (OOD_VER_STR "4.2.4.12373")
+   set (OOD_COPY_YEAR "2005-2022")
 
    #################### ooshapes.dll ################
    # Sources for ooshapes.dll

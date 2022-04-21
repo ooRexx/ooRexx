@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -5541,7 +5541,7 @@ static keyPressErr_t kpMapKeys(KEYPRESSDATA *pData, CSTRING keys, uint32_t index
         }
     }
 
-    safeFree(str);
+    free(str);
     return reply;
 }
 
@@ -5618,7 +5618,7 @@ keyPressErr_t setKeyPressData(KEYPRESSDATA *pData, CSTRING method, CSTRING keys,
     goto done_out;
 
 err_out:
-    safeFree(pMethod);
+    LocalFree(pMethod);
 
 done_out:
     return result;
@@ -5828,7 +5828,7 @@ RexxMethod2(int32_t, en_disconnectKeyPress, OPTIONAL_CSTRING, methodName, CSELF,
     }
 
 done_out:
-    safeFree(tmpName);
+    free(tmpName);
     return -(int32_t)result;
 }
 

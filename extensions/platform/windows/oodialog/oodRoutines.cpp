@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -196,7 +196,7 @@ static char *searchSoundPath(CSTRING file, RexxCallContext *c)
     fullFileName = (char *)malloc(_MAX_PATH);
     if (buf == NULL || fullFileName == NULL)
     {
-        safeFree(fullFileName);
+        free(fullFileName);
         outOfMemoryException(c->threadContext);
     }
 
@@ -204,7 +204,7 @@ static char *searchSoundPath(CSTRING file, RexxCallContext *c)
     cchCWD = GetCurrentDirectory(cchCWD + 1, buf);
     if (cchCWD == 0)
     {
-        safeFree(fullFileName);
+        free(fullFileName);
         oodSetSysErrCode(c->threadContext);
         return NULL;
     }
@@ -215,7 +215,7 @@ static char *searchSoundPath(CSTRING file, RexxCallContext *c)
         cchSoundPath = GetEnvironmentVariable("SOUNDPATH", buf + cchCWD, cchSoundPath + 1);
         if (cchSoundPath == 0)
         {
-            safeFree(fullFileName);
+            free(fullFileName);
             oodSetSysErrCode(c->threadContext);
             return NULL;
         }
@@ -226,7 +226,7 @@ static char *searchSoundPath(CSTRING file, RexxCallContext *c)
 
     if (cchSoundPath == 0 || cchSoundPath >= _MAX_PATH)
     {
-        safeFree(fullFileName);
+        free(fullFileName);
         oodSetSysErrCode(c->threadContext);
         return NULL;
     }
@@ -699,9 +699,9 @@ RexxRoutine6(int, messageDialog_rtn, CSTRING, text, OPTIONAL_CSTRING, hwnd, OPTI
     }
 
 done_out:
-    safeFree(uprButton);
-    safeFree(uprIcon);
-    safeFree(uprMiscStyles);
+    free(uprButton);
+    free(uprIcon);
+    free(uprMiscStyles);
 
     return result;
 }

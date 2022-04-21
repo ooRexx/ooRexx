@@ -314,7 +314,7 @@ static uint32_t getImageFlagsArg(RexxMethodContext *context, RexxObjectPtr _flag
 
                 token = strtok(NULL, " ");
             }
-            LocalFree(dup);
+            free(dup);
         }
 
         if ( flags != OOD_NO_VALUE )
@@ -467,7 +467,7 @@ static uint32_t getImageListCreateFlagsArg(RexxMethodContext *context, RexxObjec
 
                 token = strtok(NULL, " ");
             }
-            LocalFree(dup);
+            free(dup);
         }
     }
     return flags;
@@ -516,7 +516,7 @@ uint32_t keyword2ild(RexxMethodContext *c, CSTRING flags, size_t argPos)
 
             token = strtok(NULL, " ");
         }
-        LocalFree(dup);
+        free(dup);
     }
 
     return val;

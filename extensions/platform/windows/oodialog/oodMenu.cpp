@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -1051,7 +1051,7 @@ BOOL CppMenu::maybeConnectItem(uint32_t id, CSTRING text, logical_t connect, CST
     success = TRUE;
 
 done_out:
-    safeFree(_methodName);
+    free(_methodName);
     return success;
 }
 
@@ -1750,8 +1750,8 @@ logical_t CppMenu::connectSomeCommandEvents(RexxObjectPtr rxItemIds, CSTRING met
     success = TRUE;
 
 done_out:
-    safeFree(ids);
-    safeFree(name);
+    free(ids);
+    free(name);
     return success;
 }
 
@@ -2810,7 +2810,7 @@ BOOL setSingleState(CppMenu *cMenu, RexxObjectPtr rxItemIDs, logical_t byPositio
     success = TRUE;
 
 done_out:
-    safeFree(ids);
+    free(ids);
     return success;
 }
 
@@ -3072,7 +3072,7 @@ static uint32_t menuConnectItems(HMENU hMenu, pCEventNotification pcen, RexxMeth
 
             if ( pMsg != msg )
             {
-                safeFree(pMsg);
+                free(pMsg);
             }
             if ( rc != 0 )
             {

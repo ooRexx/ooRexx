@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -572,7 +572,7 @@ RexxMethod1(RexxArrayObject, ud_getAcceleration, CSELF, pCSelf)
     }
 
 done_out:
-    safeFree(pUDA);
+    free(pUDA);
     return result;
 }
 
@@ -622,7 +622,7 @@ RexxMethod2(logical_t, ud_setAcceleration, RexxArrayObject, vals, CSELF, pCSelf)
     SendMessage(hCtrl, UDM_SETACCEL, count, (LPARAM)pUDA);
 
 done_out:
-    safeFree(pUDA);
+    free(pUDA);
     return 0;
 }
 
