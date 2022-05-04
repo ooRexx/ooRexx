@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -44,27 +44,24 @@
 /**********************************************************************/
 
 -- Initialize string to database path.
--- This line assumes there is a temp folder on the C drive - application will bomb
--- if there is not.
-strDB = "c:\temp\newdb.mdb"
+-- get TEMP directory of current user
+tempDir = value("TEMP",,"ENVIRONMENT")    -- get value of environment variable "TEMP"
+strDB = tempDir"\newDatabaseByooRexx.mdb" -- define fully qualified database name
+say "Fully qualifed database file name:" strDB
 
 -- Remove any previously created copy of this sample database
 if stream(strDB,'c','query exists') \= '' then
     do
+        say 'Database exists (from earlier run), deleting it ...'
         rv = SysFileDelete(strDB)
         if rv \= 0 then
             do
-                say 'Delete of previous database failed, existing now'
-                exit
+                say 'Delete of previous database failed, exiting now'
+                exit -1    -- return code not 0 so to indicate problem
             end
     end
 
 -- Create new instance of Microsoft Access.
--- The next line "forces" the use of Access version 8, which is outdated.
---appAccess = .OLEObject~new("Access.Application.8")
-
--- This line will allow use of whatever Access version is currently installed
--- on the user's system
 appAccess = .OLEObject~new("Access.Application")
 
 -- Open database in Microsoft Access window.
@@ -90,6 +87,7 @@ tdf~Fields~Append(fld)
 dbs~TableDefs~Append(tdf)
 
 appAccess~quit
-exit
 
-
+-- keep window open if invoked via Explorer to allow reading the output
+say "Press enter to continue ..."
+parse pull .
