@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -106,8 +106,9 @@ if rexxLinks~items < 1 then do
         "probably failed.  This happens with IE9"       || .endOfLine || -
         "on Windows 7."
   ret = RxMessageBox(msg, "Done", "OK", "INFORMATION")
-
+  signal on syntax   -- in case the user closes the MSIE window before the RxMessageBox
   myIE~quit
+syntax:
   return 99
 end
 
@@ -121,7 +122,9 @@ myIE~wait
 /* wait for user to acknowledge, then shut down example */
 call RxMessageBox "We're now at a randomly picked REXX page", "Done", "OK", "INFORMATION"
 
+signal on syntax  -- in case the user closes the MSIE window before the RxMessageBox
 myIE~quit
+syntax:
 
 exit
 
