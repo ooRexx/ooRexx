@@ -75,7 +75,8 @@ Font~Italic = .TRUE
 
 /* get the environment variable TEMP and create filename to save */
 TempDir =  VALUE( "TEMP",,ENVIRONMENT)
-FileName = TempDir || "\" || "OLERexx.docx"
+-- use ".doc" instead of ".docx" to allow older Word apps to work:
+FileName = TempDir || "\" || "WordCreatedByRexx.doc"
 
 /* "save as..." and close Word */
 Document~SaveAs(FileName)
