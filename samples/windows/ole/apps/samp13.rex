@@ -40,7 +40,7 @@
 /* SAMP13.REX: OLE Automation with Object REXX - Sample 13            */
 /*                                                                    */
 /* Using events with the Internet Explorer:                           */
-/* Search for the string "REXX" on the IBM web page and go randomly   */
+/* Search for the string "Cloud" on the IBM web page and go randomly   */
 /* to one of the found sites.                                         */
 /*                                                                    */
 /* Note that this sample no longer seems to work using IE9 on         */
@@ -60,17 +60,16 @@ myIE~wait /* wait for page to be loaded */
 
 doc = myIE~document
 
-/* set query field on the IBM page to REXX */
+/* set query field on the IBM page to Cloud */
 textInput = doc~GetElementById("q")
-if textIput == .nil then do
+if textInput == .nil then do
   say "Failed to get text input object."
   say "Website may have changed, aborting."
-
   myIE~quit
   return 99
 end
 
-textInput~value = "REXX"
+textInput~value = "Cloud"
 
 /* click on the search image to submit the query */
 submitInput = doc~getElementById("ibm-search")
@@ -90,18 +89,20 @@ myIE~wait /* wait for page to be loaded */
 doc = myIE~document
 all = doc~GetElementsByTagName("A")   /* get all <A HREF="..."> elements */
 
-/* get all links to REXX pages into a table */
-rexxlinks = .table~new
+/* get all links to Cloud pages into a table */
+cloudlinks = .table~new
 
 j = 1
 do i over all
-  if i~innertext~pos("REXX") > 0 then do
-    rexxlinks~put(i~href,j)
+  if i~innertext~pos("Cloud") > 0 |,
+     i~innertext~pos("Downloads") > 0 |,
+     i~innertext~pos("Learning") > 0 |,
+     i~innertext~pos("Produkte") > 0 then do
+    cloudlinks~put(i~href,j)
     j = j + 1
   end
 end
-
-if rexxLinks~items < 1 then do
+if cloudlinks~items < 1 then do
   msg = "No links were found.  Submitting the search"   || .endOfLine || -
         "probably failed.  This happens with IE9"       || .endOfLine || -
         "on Windows 7."
@@ -112,15 +113,17 @@ syntax:
   return 99
 end
 
-/* select one of the REXX links randomly... */
-choice = random(1,rexxlinks~items)
+/* select one of the Cloud links randomly... */
+choice = random(1,cloudlinks~items)
+hint="randomly picked Cloud page link #" choice"/"cloudlinks~items
+say "Navigating to" hint
 
 /* ...and go there */
-myIE~navigate(rexxlinks~at(choice))
+myIE~navigate(cloudlinks~at(choice))
 myIE~wait
 
 /* wait for user to acknowledge, then shut down example */
-call RxMessageBox "We're now at a randomly picked REXX page", "Done", "OK", "INFORMATION"
+call RxMessageBox "We're now at a" hint, "Done", "OK", "INFORMATION"
 
 signal on syntax  -- in case the user closes the MSIE window before the RxMessageBox
 myIE~quit
