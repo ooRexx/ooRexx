@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* https://www.oorexx.org/license.html                         */
+/* https://www.oorexx.org/license.html                                        */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -40,29 +40,36 @@
 /* SAMP01.REX: OLE Automation with Object REXX - Sample 1             */
 /*                                                                    */
 /* Start Internet Explorer and show the IBM homepage. After 10 seconds*/
-/* the IBM news page will be displayed.                               */
+/* the RexxLA events page will be displayed for 10 seconds.           */
 /*                                                                    */
 /**********************************************************************/
 
 /* create an object for IE */
 myIE = .OLEObject~New("InternetExplorer.Application")
 
-myIE~Width = 800
-myIE~Height = 256
-
-Say "Current dimensions of IE are:" myIE~Width "by" myIE~Height
+myIE~Width  = 1000
+myIE~Height = 800
+Say "current dimensions of Internet Explorer (IE) are:" myIE~Width "by" myIE~Height
 
 /* set new dimensions and browse IBM homepage */
-myIE~Width = 800
-myIE~Height = 600
-myIE~Visible = .True
-myIE~Navigate("http://www.ibm.com")
+Say "changing IE dimensions ..."
+myIE~Width  = 1280
+myIE~Height = 1024
+Say "IE dimensions changed to:" myIE~Width "by" myIE~Height
+Say "making IE visible ..."
+myIE~Visible = .True    -- now show the window
+say "navigating to:" "https://www.ibm.com"
+myIE~Navigate("https://www.ibm.com")
 
 /* wait for 10 seconds */
+say "now sleeping for 10 seconds ..."
 Call SysSleep 10
 
-myIE~Navigate("http://www.ibm.com/news")
+/* browse RexxLA event page */
+say "navigating to:" "https://www.rexxla.org/events"
+myIE~Navigate("https://www.rexxla.org/events")
 
 /* wait for 10 seconds */
+say "now sleeping for 10 seconds before quitting ..."
 Call SysSleep 10
 myIE~quit
