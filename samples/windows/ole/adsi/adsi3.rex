@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -42,12 +42,24 @@
 /*                                                                 */
 /*******************************************************************/
 
-ComputerName = value("COMPUTERNAME",,"ENVIRONMENT")
-
-container = .OLEObject~GetObject("WinNT://"ComputerName||"/Administrators")
-
+computerName = value("COMPUTERNAME",,"ENVIRONMENT")   -- alternatively: '.'
+groupName = getLocalAdministratorGroupName(computerName)
+container = .OLEObject~GetObject("WinNT://"computerName||"/"groupName",group")
 do member over container~members
-  say member~class ":" member~name "[" member~description "]"
+  say member~class ":" member~name "["member~description"]"
 end
 
-return 0
+/* Cf. (as of 2022-05-07):
+   <https://devblogs.microsoft.com/scripting/how-can-i-determine-the-name-of-the-local-administrators-group/>
+   <https://docs.microsoft.com/en-US/windows/security/identity-protection/access-control/security-identifiers>,
+*/
+
+::routine getLocalAdministratorGroupName  -- return local name of the administrator group
+  use arg computer
+  sid="S-1-5-32-544"                      -- SID for local administrator group
+  wmiService = .oleObject~getObject("winmgmts:\\"computer"\root\cimv2")
+   -- will return a collection with a single element
+  groups=wmiService~execQuery("select * from Win32_Group where LocalAccount = TRUE and sid='"sid"'")
+  if groups=.nil then return "Administrators"   -- default: return English name
+  return groups~itemIndex(0)~name         -- return local group name
+
