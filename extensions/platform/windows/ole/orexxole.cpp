@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -5193,9 +5193,9 @@ RexxMethod1(RexxObjectPtr,                // Return type
                             strcat(pszInfoBuffer,"out,");
                         if ( j >= pEventList->iParmCount - pEventList->iOptParms )
                             strcat(pszInfoBuffer,"opt,");
+                        pszInfoBuffer[strlen(pszInfoBuffer)-1]=0x00; // remove last comma
+                        strcat(pszInfoBuffer,"]");
                     }
-                    pszInfoBuffer[strlen(pszInfoBuffer)-1]=0x00; // remove last comma
-                    strcat(pszInfoBuffer,"]");
 
                     sprintf(pszSmall,"%d.!PARAMS.%d.!FLAGS",iCount,j+1);
                     context->SetStemElement(RxStem, pszSmall, context->NewStringFromAsciiz(pszInfoBuffer));
