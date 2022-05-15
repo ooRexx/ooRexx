@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -2325,6 +2325,20 @@ BOOL fExploreTypeAttr( ITypeInfo *pTypeInfo, TYPEATTR *pTypeAttr, POLECLASSINFO 
     for (iFuncVarIdx = 0; iFuncVarIdx < pTypeAttr->cVars; ++iFuncVarIdx)
     {
         hResult = pTypeInfo->GetVarDesc(iFuncVarIdx, &pVarDesc);
+
+        if (hResult==RPC_E_CALL_REJECTED)   // in case of a "RPC_E_CALL_REJECTED" a retry usually succeeds
+        {
+            for (int i=0; i<5 && hResult==RPC_E_CALL_REJECTED; i++)
+            {
+                Sleep(1);       // yield, then retry
+                hResult = pTypeInfo->GetVarDesc(iFuncVarIdx, &pVarDesc);
+            }
+        }
+
+        if (hResult!=S_OK)  // skip this variable
+        {
+            continue;
+        }
 
         hResult = pTypeInfo->GetDocumentation(pVarDesc->memid, &bstrName, NULL, NULL, NULL);
         if ( hResult == S_OK )
