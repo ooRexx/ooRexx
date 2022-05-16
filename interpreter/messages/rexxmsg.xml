@@ -5387,15 +5387,6 @@ special character (such as a parenthesis).
       </SubMessage>
       <SubMessage>
         <Code>98</Code>
-        <Subcode>938</Subcode>
-        <MessageNumber>503</MessageNumber>
-        <Component>Rexx</Component>
-        <Severity>Warning</Severity>
-        <SymbolicName>Error_Execution_super</SymbolicName>
-        <Text>Message search overrides can be used only from methods of the target object.</Text>
-      </SubMessage>
-      <SubMessage>
-        <Code>98</Code>
         <Subcode>939</Subcode>
         <MessageNumber>504</MessageNumber>
         <Component>Rexx</Component>
