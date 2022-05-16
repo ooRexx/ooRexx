@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -159,12 +159,6 @@ void RexxInstructionMessage::execute(RexxActivation *context, ExpressionStack *s
     // do we have a superclass override?
     if (super != OREF_NULL)
     {
-        // this is only allow if the target object is the same
-        // as the receiver object
-        if (_target != context->getReceiver())
-        {
-            reportException(Error_Execution_super);
-        }
         // get the superclass target
         _super = (RexxClass *)super->evaluate(context, stack);
         // we send the message using the stack, which

@@ -235,11 +235,6 @@ void RexxExpressionMessage::assign(RexxActivation *context, RexxObject *value)
     // message override?
     if (super != OREF_NULL)
     {
-        // in this context, the value needs to be SELF
-        if (_target != context->getReceiver())
-        {
-            reportException(Error_Execution_super);
-        }
         // evaluate the superclass override
         _super = (RexxClass *)super->evaluate(context, stack);
         // we need to remove this from the stack for the send operation to work.

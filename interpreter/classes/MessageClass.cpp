@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -408,7 +408,6 @@ RexxObject *MessageClass::send()
 
     // validate that the scope override is valid
     receiver->validateScopeOverride(startscope);
-    receiver->validateOverrideContext(receiver, startscope);
     // go dispatch the message
     return dispatch();
 }
@@ -534,7 +533,6 @@ RexxObject *MessageClass::start()
 
     // validate that the scope override is valid
     receiver->validateScopeOverride(startscope);
-    receiver->validateOverrideContext(receiver, startscope);
 
     // spawn a new activity off of the old activity
     Activity *oldActivity = ActivityManager::currentActivity;
@@ -627,7 +625,6 @@ MessageClass *MessageClass::reply()
 
     // validate that the scope override is valid
     receiver->validateScopeOverride(startscope);
-    receiver->validateOverrideContext(receiver, startscope);
 
     // make a copy of this object to return as an execution tracker.  This is the
     // one that gets started.

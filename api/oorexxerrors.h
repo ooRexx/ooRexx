@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -53,7 +53,7 @@
 
 /* error subcodes and message numbers                                         */
 /*      message identifier ----------------------------------- message number */
-   
+
 #define Rexx_Error_Program_unreadable                                     3000
 #define Rexx_Error_Program_unreadable_name                                3001
 #define Rexx_Error_Program_unreadable_user_defined                        3900
@@ -617,7 +617,6 @@
 #define Rexx_Error_Execution_reply                                        98935
 #define Rexx_Error_Execution_reply_return                                 98936
 #define Rexx_Error_Execution_reply_exit                                   98937
-#define Rexx_Error_Execution_super                                        98938
 #define Rexx_Error_Execution_syntax_additional                            98939
 #define Rexx_Error_Execution_error_condition                              98941
 #define Rexx_Error_Execution_mixinclass                                   98942
