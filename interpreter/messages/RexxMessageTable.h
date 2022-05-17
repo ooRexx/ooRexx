@@ -2,7 +2,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -620,6 +620,7 @@ ERROR_MAP Message_map_table[] = {     /* table of major and minor errors   */
       MINOR(Error_Execution_reply)
       MINOR(Error_Execution_reply_return)
       MINOR(Error_Execution_reply_exit)
+      MINOR(Error_Execution_super)
       MINOR(Error_Execution_syntax_additional)
       MINOR(Error_Execution_error_condition)
       MINOR(Error_Execution_mixinclass)

@@ -526,6 +526,7 @@
 #define Rexx_Error_Incorrect_method_symbol                                93913
 #define Rexx_Error_Incorrect_method_list                                  93914
 #define Rexx_Error_Incorrect_method_option                                93915
+#define Rexx_Error_Incorrect_method_string                                93916
 #define Rexx_Error_Incorrect_method_methodname                            93917
 #define Rexx_Error_Incorrect_method_index                                 93918
 #define Rexx_Error_Incorrect_method_array                                 93919
