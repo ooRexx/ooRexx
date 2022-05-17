@@ -162,6 +162,13 @@ RexxObject *RexxExpressionMessage::evaluate(RexxActivation *context, ExpressionS
     if (super != OREF_NULL)
     {
         _super = (RexxClass *)super->evaluate(context, stack);
+        // _super an instance of TheClassClass
+        if (!_super->isInstanceOf(TheClassClass))
+        {
+            reportException(Error_Invalid_argument_noclass, "SCOPE", "Class");
+        }
+        // validate the starting scope
+        _target->validateScopeOverride(_super);
         // we send the message using the stack, which
         // expects to find the target and the arguments
         // on the stack, but not the super.  We need to
