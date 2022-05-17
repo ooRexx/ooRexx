@@ -2,7 +2,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -438,6 +438,7 @@
 #define Error_Execution_reply_msg                                    500
 #define Error_Execution_reply_return_msg                             501
 #define Error_Execution_reply_exit_msg                               502
+#define Error_Execution_super_msg                                    503
 #define Error_Execution_syntax_additional_msg                        504
 #define Error_Execution_error_condition_msg                          505
 #define Error_Translation_duplicate_class_msg                        506
