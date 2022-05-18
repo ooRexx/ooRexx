@@ -920,6 +920,9 @@ RexxObject *RexxObject::messageSend(RexxString *msgname, RexxObject **arguments,
 RexxObject *RexxObject::messageSend(RexxString *msgname, RexxObject **arguments, size_t count,
     RexxClass *startscope, ProtectedObject &result)
 {
+    // validate that the scope override is valid (FORWARD uses this method, this way no need to check TO option)
+    validateScopeOverride(startscope);
+
     // perform a stack space check
     ActivityManager::currentActivity->checkStackSpace();
 
@@ -1942,9 +1945,10 @@ RexxObject *RexxObject::requestRexx(RexxString *name)
  */
 void RexxObject::validateScopeOverride(RexxClass *scope)
 {
+    // validate the starting scope if we've been given one
     if (scope != OREF_NULL)
     {
-        if (!isInstanceOf(scope))
+        if (! this->behaviour->hasScope((RexxClass *)scope))
         {
             reportException(Error_Incorrect_method_array_noclass, this, scope);
         }

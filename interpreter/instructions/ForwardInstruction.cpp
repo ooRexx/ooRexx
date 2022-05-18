@@ -166,6 +166,13 @@ void RexxInstructionForward::execute(RexxActivation *context, ExpressionStack *s
     if (superClass != OREF_NULL)
     {
         _superClass = (RexxClass *)superClass->evaluate(context, stack);
+        if (_superClass != OREF_NULL )
+        {
+            if (!_superClass->isInstanceOf(TheClassClass))
+            {
+                reportException(Error_Invalid_argument_noclass, "SCOPE", "Class");
+            }
+        }
         context->traceKeywordResult(GlobalNames::CLASS, _superClass);
     }
 
