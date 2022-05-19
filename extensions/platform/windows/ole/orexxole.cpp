@@ -46,6 +46,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <dispex.h>
+#include <comdef.h>
 
 #include "oorexxapi.h"
 #include "events.h"
@@ -123,6 +124,17 @@ int (__stdcall *creationCallback)(CLSID, IUnknown*) = NULL;
 void setCreationCallback(int (__stdcall *f)(CLSID, IUnknown*))
 {
   creationCallback = f;
+}
+
+//******************************************************************************
+// OLE (HRESULT) ErrorMessage for programmer
+//******************************************************************************
+
+// function to return a human readable string for the supplied HRESULT
+inline LPCTSTR get_HRESULT_ErrorMessage ( HRESULT hResult)
+{
+    _com_error err(hResult);
+    return err.ErrorMessage();
 }
 
 
@@ -3881,7 +3893,7 @@ RexxMethod3(RexxObjectPtr, OLEObject_Unknown, OSELF, self, CSTRING, msgName, Rex
             case DISP_E_UNKNOWNINTERFACE:
             case DISP_E_PARAMNOTFOUND:
             default:
-                sprintf(szBuffer, "%8.8X", hResult);
+                sprintf(szBuffer, "%8.8X \"%s\"", hResult, get_HRESULT_ErrorMessage(hResult));
                 context->RaiseException1(Rexx_Error_Unknown_OLE_Error, context->NewStringFromAsciiz(szBuffer));
                 break;
         }
@@ -4198,6 +4210,8 @@ static void formatDispatchException(EXCEPINFO *pInfo, char *buffer)
 {
     const char *fmt = "Code: %08x Source: %S Description: %S";
     BSTR bstrUnavail = lpAnsiToUnicode("unavailable", sizeof("unavailable"));
+    CHAR errMsg[256];
+    errMsg[0] = 0;
 
     /* If there is a deferred fill-in routine, call it */
     if ( pInfo->pfnDeferredFillIn )
@@ -4210,6 +4224,11 @@ static void formatDispatchException(EXCEPINFO *pInfo, char *buffer)
         fmt = "Code: %04x Source: %S Description: %S";
     }
 
+    if ( pInfo->scode ) // note: this HRESULT may be different and point to the real problem
+    {
+        sprintf(errMsg, " (%8.8x \"%s\")", pInfo->scode, get_HRESULT_ErrorMessage(pInfo->scode));
+    }
+
     sprintf(buffer, fmt,
             pInfo->wCode ? pInfo->wCode : pInfo->scode,
             pInfo->bstrSource == NULL ? bstrUnavail : pInfo->bstrSource,
@@ -4219,6 +4238,8 @@ static void formatDispatchException(EXCEPINFO *pInfo, char *buffer)
     SysFreeString(pInfo->bstrDescription);
     SysFreeString(pInfo->bstrHelpFile);
     ORexxOleFree(bstrUnavail);
+
+    strcat(buffer, errMsg);
 }
 
 //******************************************************************************
