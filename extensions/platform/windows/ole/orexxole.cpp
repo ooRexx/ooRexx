@@ -3457,7 +3457,7 @@ RexxMethod0(RexxObjectPtr, OLEObject_addRef_pvt)
     return NULLOBJECT;
 }
 
-/** OLEObject::hasOLEMethod()  [private]
+/** OLEObject::hasOLEMethod()
  *
  *  Does a quick check to see if the COM object has a method with the specified
  *  name.  This is used internally by the class to check if one of the .Object
@@ -3472,14 +3472,13 @@ RexxMethod0(RexxObjectPtr, OLEObject_addRef_pvt)
  *  @return  True if the COM object does have the method name, false if it does
  *           not appear to have the method.
  *
- *  @note  Currently this is a private method, but it might be useful as a
- *         public method.  Many COM objects do not have a TYPELIB, making
- *         getKnownMethods() useless.  For those COM objects, this method could
- *         provide a way for the Rexx programmer to check if a method invocation
- *         had a chance of succeeding or not.
+ *  @note  Many COM objects do not have a TYPELIB, making
+ *         getKnownMethods() useless.  For those COM objects, this method
+ *         provides a way for the Rexx programmer to check if a method invocation
+ *         has a chance of succeeding or not.
  *
  */
-RexxMethod1(logical_t, OLEObject_hasOLEMethod_pvt, CSTRING, methodName)
+RexxMethod1(logical_t, OLEObject_hasOLEMethod, CSTRING, methodName)
 {
     IDispatch    *pDispatch = NULL;
     IDispatchEx  *pDispatchEx = NULL;
@@ -6081,7 +6080,7 @@ RexxMethodEntry oleobject_methods[] = {
     REXX_METHOD(OLEObject_Init,                  OLEObject_Init),
     REXX_METHOD(OLEObject_Uninit,                OLEObject_Uninit),
     REXX_METHOD(OLEObject_addRef_pvt,            OLEObject_addRef_pvt),
-    REXX_METHOD(OLEObject_hasOLEMethod_pvt,      OLEObject_hasOLEMethod_pvt),
+    REXX_METHOD(OLEObject_hasOLEMethod,          OLEObject_hasOLEMethod),
     REXX_METHOD(OLEObject_Unknown,               OLEObject_Unknown),
     REXX_METHOD(OLEObject_Request,               OLEObject_Request),
     REXX_METHOD(OLEObject_GetVar,                OLEObject_GetVar),
