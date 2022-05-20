@@ -51,6 +51,11 @@
 #include "oorexxapi.h"
 #include "events.h"
 
+// #define DEBUG_TESTING
+
+// TODO: (2022-05)
+// in debug mode Visual C++ from time to time comes up with an assertion error popup
+// for "stricmp", seems one argument is sometimes not correct (probably NULL)
 
 //******************************************************************************
 // global data
@@ -130,11 +135,11 @@ void setCreationCallback(int (__stdcall *f)(CLSID, IUnknown*))
 // OLE (HRESULT) ErrorMessage for programmer
 //******************************************************************************
 
-// function to return a human readable string for the supplied HRESULT
-inline LPCTSTR get_HRESULT_ErrorMessage ( HRESULT hResult)
+// function that prints a human readable string for the supplied HRESULT in the supplied buffer
+inline void get_HRESULT_ErrorMessage ( HRESULT hResult, char *szBuffer)
 {
     _com_error err(hResult);
-    return err.ErrorMessage();
+    sprintf(szBuffer, "%8.8x \"%s\"", hResult, err.ErrorMessage());
 }
 
 
@@ -2940,6 +2945,64 @@ RexxMethod4(int,                             // Return type
             {
                 pDispatch->AddRef();
                 hResult = S_OK;
+                // if the IPersist interface is present, we can get at its CLSID and to its ProgID if present;
+                // if !CLSID is present, then the code assumes that a structure has been built for it,
+                // TODO: ?? which is not the case for IDISPATCH; to distinguish an IDISPATCH CLSID and ProgID the
+                {
+                    IPersist *pPersist = NULL;
+
+                    int hr = pDispatch->QueryInterface(IID_IPersist, (LPVOID*) &pPersist);
+                    if (SUCCEEDED(hr))
+                    {
+                        CLSID CLSid;
+                        pPersist->GetClassID(&CLSid);
+                        {
+                            /* now store the CLSID and ProgID with the object attributes */
+                            PSZ         pszAnsiStr = NULL;
+
+                            hResult = StringFromCLSID(CLSid, &lpOleStrBuffer);
+                            pszAnsiStr = pszUnicodeToAnsi(lpOleStrBuffer);
+                            if (SUCCEEDED(hResult))
+                            {
+                                CoTaskMemFree(lpOleStrBuffer); // memory was not freed
+                            }
+                            if (pszAnsiStr)
+                            {
+                                context->SetObjectVariable("!CLSID", context->NewStringFromAsciiz(pszAnsiStr));
+                                ORexxOleFree(pszAnsiStr); // free this memory!
+                            }
+
+                            hResult = ProgIDFromCLSID(CLSid, &lpOleStrBuffer);
+                            pszAnsiStr = pszUnicodeToAnsi(lpOleStrBuffer);
+                            if (SUCCEEDED(hResult))
+                            {
+                                CoTaskMemFree(lpOleStrBuffer); // memory was not freed
+                            }
+                            if (pszAnsiStr)
+                            {
+                                context->SetObjectVariable("!PROGID", context->NewStringFromAsciiz(pszAnsiStr));
+                                if (pClsInfo)
+                                {
+                                    if (!pClsInfo->pszProgId)
+                                    {
+                                        pClsInfo->pszProgId = pszAnsiStr;
+                                    }
+                                    else
+                                    {
+                                        ORexxOleFree(pszAnsiStr);
+                                    }
+                                }
+                                else
+                                {
+                                    ORexxOleFree(pszAnsiStr);
+                                }
+                            }
+                        }
+
+                        pPersist->Release();
+                    }
+                }
+
 #ifdef DEBUG_TESTING
                 gotIDispatch = true;
                 {
@@ -3891,8 +3954,8 @@ RexxMethod3(RexxObjectPtr, OLEObject_Unknown, OSELF, self, CSTRING, msgName, Rex
             case DISP_E_UNKNOWNLCID:
             case DISP_E_UNKNOWNINTERFACE:
             case DISP_E_PARAMNOTFOUND:
-            default:
-                sprintf(szBuffer, "%8.8X \"%s\"", hResult, get_HRESULT_ErrorMessage(hResult));
+        default:
+                get_HRESULT_ErrorMessage(hResult, szBuffer);
                 context->RaiseException1(Rexx_Error_Unknown_OLE_Error, context->NewStringFromAsciiz(szBuffer));
                 break;
         }
@@ -4225,7 +4288,9 @@ static void formatDispatchException(EXCEPINFO *pInfo, char *buffer)
 
     if ( pInfo->scode ) // note: this HRESULT may be different and point to the real problem
     {
-        sprintf(errMsg, " (%8.8x \"%s\")", pInfo->scode, get_HRESULT_ErrorMessage(pInfo->scode));
+        CHAR tmpBuf[256];
+        get_HRESULT_ErrorMessage(pInfo->scode, tmpBuf);
+        sprintf(errMsg, " (%s)", tmpBuf);
     }
 
     sprintf(buffer, fmt,
