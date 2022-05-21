@@ -107,12 +107,12 @@ Syntax:
 ::ATTRIBUTE "PROGID" GET
   expose !progid
   if var("!PROGID") then return !progid
-  return "PROGID"    -- uninitialized, return attribute name
+  return .nil
 
 ::ATTRIBUTE "CLSID"     GET
   expose !clsid
   if var("!CLSID") then return !clsid
-  return "CLSID"     -- uninitialized, return attribute name
+  return .nil
 
 ::METHOD "!OLEOBJECT" ATTRIBUTE
 
