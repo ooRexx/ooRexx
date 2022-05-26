@@ -53,10 +53,6 @@
 
 // #define DEBUG_TESTING
 
-// TODO: (2022-05)
-// in debug mode Visual C++ from time to time comes up with an assertion error popup
-// for "stricmp", seems one argument is sometimes not correct (probably NULL)
-
 //******************************************************************************
 // global data
 //******************************************************************************
@@ -1016,7 +1012,8 @@ POLEFUNCINFO AddFuncInfoBlock( POLECLASSINFO pClsInfo, MEMBERID memId, INVOKEKIN
             pCurrBlock = pClsInfo->pFuncInfo;
             if ( (pCurrBlock->memId == memId) && (pCurrBlock->invkind == invKind) &&
                  (pCurrBlock->FuncVt == funcVT) && (pCurrBlock->iParmCount == iParmCount) &&
-                 (pCurrBlock->iOptParms == iOptParms) && (pszFuncName != NULL) &&
+                 (pCurrBlock->iOptParms == iOptParms) &&
+                 (pCurrBlock->pszFuncName != NULL) && (pszFuncName != NULL) &&
                  (stricmp(pCurrBlock->pszFuncName, pszFuncName) == 0) )
             {
                 /* same memberid found, don't store data */
@@ -1031,7 +1028,8 @@ POLEFUNCINFO AddFuncInfoBlock( POLECLASSINFO pClsInfo, MEMBERID memId, INVOKEKIN
 
                 if ( (pCurrBlock->memId == memId) && (pCurrBlock->invkind == invKind) &&
                      (pCurrBlock->FuncVt == funcVT) && (pCurrBlock->iParmCount == iParmCount) &&
-                     (pCurrBlock->iOptParms == iOptParms) && (pszFuncName != NULL) &&
+                     (pCurrBlock->iOptParms == iOptParms) &&
+                     (pCurrBlock->pszFuncName != NULL) && (pszFuncName != NULL) &&
                      (stricmp(pCurrBlock->pszFuncName, pszFuncName) == 0) )
                 {
                     /* same memberid found, don't store data */
@@ -1071,7 +1069,8 @@ POLECONSTINFO AddConstInfoBlock( POLECLASSINFO pClsInfo, MEMBERID memId, PSZ psz
         {
             /* list exists, add to end of list */
             pCurrBlock = pClsInfo->pConstInfo;
-            if ( (pCurrBlock->memId == memId) && (pszConstName != NULL) &&
+            if ( (pCurrBlock->memId == memId) &&
+                 (pCurrBlock->pszConstName != NULL) && (pszConstName != NULL) &&
                  (stricmp(pCurrBlock->pszConstName, pszConstName) == 0) )
             {
                 /* same memberid and name found, don't store data */
@@ -1084,7 +1083,8 @@ POLECONSTINFO AddConstInfoBlock( POLECLASSINFO pClsInfo, MEMBERID memId, PSZ psz
             {
                 pCurrBlock = pCurrBlock->pNext;
 
-                if ( (pCurrBlock->memId == memId) && (pszConstName != NULL) &&
+                if ( (pCurrBlock->memId == memId) &&
+                     (pCurrBlock->pszConstName != NULL) && (pszConstName != NULL) &&
                      (stricmp(pCurrBlock->pszConstName, pszConstName) == 0) )
                 {
                     /* same memberid and name found, don't store data */
@@ -1128,7 +1128,8 @@ BOOL fFindFunction(const char *pszFunction, IDispatch *pDispatch, IDispatchEx *p
         pFuncInfo = pClsInfo->pFuncInfo;
         while ( pFuncInfo )
         {
-            if (stricmp(pFuncInfo->pszFuncName, pszFunction) == 0)
+            if ( (pFuncInfo->pszFuncName != NULL) && (pszFunction != NULL) &&
+                 (stricmp(pFuncInfo->pszFuncName, pszFunction) == 0) )
             {
                 /* ensure the right function description for property puts / gets */
                 if ( wFlags == DISPATCH_PROPERTYPUT )
@@ -1411,7 +1412,8 @@ BOOL fFindConstant(const char * pszConstName, POLECLASSINFO pClsInfo, PPOLECONST
     pConstInfo = pClsInfo->pConstInfo;
     while ( pConstInfo )
     {
-        if (stricmp(pConstInfo->pszConstName, pszConstName) == 0)
+        if ( (pConstInfo->pszConstName != NULL) && (pszConstName != NULL) &&
+             (stricmp(pConstInfo->pszConstName, pszConstName) == 0) )
         {
             fFound = TRUE;
             if (ppConstInfo)
@@ -2599,7 +2601,8 @@ POLEFUNCINFO2 GetEventInfo(ITypeInfo *pTypeInfo, RexxObjectPtr self, POLECLASSIN
                         {
                             while (pFuncInfo)
                             {
-                                if (!stricmp(pFuncInfo->pszFuncName,szBuffer))
+                                if ( (pFuncInfo->pszFuncName != NULL) &&
+                                     (!stricmp(pFuncInfo->pszFuncName,szBuffer)) )
                                 {
                                     sprintf(szBuffer,"OLEEvent_%S",pbStrings[0]);
                                     pFuncInfo = NULL;
@@ -2947,7 +2950,6 @@ RexxMethod4(int,                             // Return type
                 hResult = S_OK;
                 // if the IPersist interface is present, we can get at its CLSID and to its ProgID if present;
                 // if !CLSID is present, then the code assumes that a structure has been built for it,
-                // TODO: ?? which is not the case for IDISPATCH; to distinguish an IDISPATCH CLSID and ProgID the
                 {
                     IPersist *pPersist = NULL;
 
