@@ -105,13 +105,15 @@ Syntax:
     forward class (super)
 
 ::ATTRIBUTE "PROGID" GET
-  expose !progid
+  expose !progid progid_!
   if var("!PROGID") then return !progid
+  if var("PROGID_!") then return progid_! -- derived from IDISPATCH
   return .nil
 
 ::ATTRIBUTE "CLSID"     GET
-  expose !clsid
+  expose !clsid clsid_!
   if var("!CLSID") then return !clsid
+  if var("CLSID_!") then return clsid_!  -- derived from IDISPATCH
   return .nil
 
 ::METHOD "!OLEOBJECT" ATTRIBUTE

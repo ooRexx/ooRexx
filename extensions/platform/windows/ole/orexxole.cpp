@@ -2938,9 +2938,9 @@ RexxMethod4(int,                             // Return type
             pUnknown = NULL;
         }
     }
-    else
+    else   // the argument is probably an IDispatch pointer or an unknown CLSID/ProgID
     {
-        /* the argument is probably an IDispatch pointer or an unknown CLSID/ProgID */
+        /* try to get a pointer */
         if (sscanf(pszArg, "IDISPATCH=%p", &pDispatch) == 1)
         {
             /* seems to be a valid IDispatch pointer */
@@ -2959,7 +2959,10 @@ RexxMethod4(int,                             // Return type
                         CLSID CLSid;
                         pPersist->GetClassID(&CLSid);
                         {
-                            /* now store the CLSID and ProgID with the object attributes */
+                            /* now store the CLSID and ProgID with the object attributes,
+                               do not use !CLSID or !PROGID as the original authors assume
+                               that then other datastructures are initialized they refer to
+                            */
                             PSZ         pszAnsiStr = NULL;
 
                             hResult = StringFromCLSID(CLSid, &lpOleStrBuffer);
@@ -2970,7 +2973,7 @@ RexxMethod4(int,                             // Return type
                             }
                             if (pszAnsiStr)
                             {
-                                context->SetObjectVariable("!CLSID", context->NewStringFromAsciiz(pszAnsiStr));
+                                context->SetObjectVariable("CLSID_!", context->NewStringFromAsciiz(pszAnsiStr));
                                 ORexxOleFree(pszAnsiStr); // free this memory!
                             }
 
@@ -2982,22 +2985,8 @@ RexxMethod4(int,                             // Return type
                             }
                             if (pszAnsiStr)
                             {
-                                context->SetObjectVariable("!PROGID", context->NewStringFromAsciiz(pszAnsiStr));
-                                if (pClsInfo)
-                                {
-                                    if (!pClsInfo->pszProgId)
-                                    {
-                                        pClsInfo->pszProgId = pszAnsiStr;
-                                    }
-                                    else
-                                    {
-                                        ORexxOleFree(pszAnsiStr);
-                                    }
-                                }
-                                else
-                                {
-                                    ORexxOleFree(pszAnsiStr);
-                                }
+                                context->SetObjectVariable("PROGID_!", context->NewStringFromAsciiz(pszAnsiStr));
+                                ORexxOleFree(pszAnsiStr);
                             }
                         }
 
