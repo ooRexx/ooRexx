@@ -63,6 +63,14 @@ PTYPELIBLIST    pTypeLibList = NULL;
 int             iClsInfoSize = 0;
 int             iClsInfoUsed = 0;
 
+    // AutoCAD 24/2021 causes RPC_E_CALL_REJECTED, repeating function calls eventually succeds
+    // heuristics from debugging
+int             iArrSleepTimes[] = {  1,  2,  3,  5,  7,  9, 11, 13,
+                                     17, 19, 23, 29, 31, 37, 41, 43,
+                                     51, 53, 67, 71, 73,
+                                     0 };  // last element (needs to be 0)
+BOOL            bDebug_rpc_e_call_rejected = false; // true: show debug output if RPC_E_CALL_REJECTED
+
 long iInstanceCount = 0;    // count number of created OLE objects
 
 typedef enum {FailureReturn, SuccessReturn, ExceptionReturn} ThreeStateReturn;
@@ -1228,7 +1236,24 @@ static BOOL getIDByName(const char *pszFunction, IDispatch *pDispatch, IDispatch
             if ( bstrName )
             {
                 hResult = pDispatchEx->GetDispID(bstrName, fdexNameCaseInsensitive, pMemId);
+                if (hResult==RPC_E_CALL_REJECTED)   // in case of a "RPC_E_CALL_REJECTED" a retry usually succeeds
+                {
+                    for (int i=0; (hResult==RPC_E_CALL_REJECTED) && (iArrSleepTimes[i]!=0); i++)
+                    {
+                        int iSleepTime = iArrSleepTimes[i];
+                        if ( bDebug_rpc_e_call_rejected ) fprintf(stderr, "... orexxole.cpp %d %s: RPC_E_CALL_REJECTED, i=%d | now Sleep(%d) ...\n", __LINE__, __FUNCTION__, i, iSleepTime);
+                        Sleep(iSleepTime);      // yield, then retry
+                        hResult = pDispatchEx->GetDispID(bstrName, fdexNameCaseInsensitive, pMemId);
+                    }
+                }
                 SysFreeString(bstrName);
+
+                if ( bDebug_rpc_e_call_rejected && (hResult==RPC_E_CALL_REJECTED) )
+                {
+                    CHAR szTmpBuf[2048];
+                    get_HRESULT_ErrorMessage(hResult, szTmpBuf);
+                    fprintf(stderr, "... orexxole.cpp %d %s: %s \n", __LINE__, __FUNCTION__, szTmpBuf );
+                }
             }
         }
         if ( FAILED(hResult) ) // If IDispatchEx call fails, try pDispatch
@@ -1236,6 +1261,22 @@ static BOOL getIDByName(const char *pszFunction, IDispatch *pDispatch, IDispatch
             if ( pDispatch )
             {
                 hResult = pDispatch->GetIDsOfNames(IID_NULL, &unicodeName, 1, LOCALE_USER_DEFAULT, pMemId);
+                if (hResult==RPC_E_CALL_REJECTED)   // in case of a "RPC_E_CALL_REJECTED" a retry usually succeeds
+                {
+                    for (int i=0; (hResult==RPC_E_CALL_REJECTED) && (iArrSleepTimes[i]!=0); i++)
+                    {
+                        int iSleepTime = iArrSleepTimes[i];
+                        if ( bDebug_rpc_e_call_rejected ) fprintf(stderr, "... orexxole.cpp %d %s: RPC_E_CALL_REJECTED, i=%d | now Sleep(%d) ...\n", __LINE__, __FUNCTION__, i, iSleepTime);
+                        Sleep(iSleepTime);      // yield, then retry
+                        hResult = pDispatch->GetIDsOfNames(IID_NULL, &unicodeName, 1, LOCALE_USER_DEFAULT, pMemId);
+                    }
+                }
+                if ( bDebug_rpc_e_call_rejected && (hResult==RPC_E_CALL_REJECTED) )
+                {
+                    CHAR szTmpBuf[2048];
+                    get_HRESULT_ErrorMessage(hResult, szTmpBuf);
+                    fprintf(stderr, "... orexxole.cpp %d %s: %s \n", __LINE__, __FUNCTION__, szTmpBuf );
+                }
             }
         }
 
@@ -2220,7 +2261,6 @@ bool ArrayClass2SafeArray(RexxThreadContext *context, RexxObjectPtr RxArray, VAR
         }
         /* get item from ArrayClass */
         RexxItem = context->SendMessage1(RxArray, "AT", argArray);
-
         /* convert it into a VARIANT */
         VariantInit(&sVariant);
 
@@ -2292,6 +2332,23 @@ BOOL fExploreTypeAttr( ITypeInfo *pTypeInfo, TYPEATTR *pTypeAttr, POLECLASSINFO 
         if ( hResult == S_OK )
         {
             hResult = pTypeInfo->GetDocumentation(pFuncDesc->memid, &bstrName, NULL, NULL, NULL);
+            if (hResult==RPC_E_CALL_REJECTED)   // in case of a "RPC_E_CALL_REJECTED" a retry usually succeeds
+            {
+                for (int i=0; (hResult==RPC_E_CALL_REJECTED) && (iArrSleepTimes[i]!=0); i++)
+                {
+                    int iSleepTime = iArrSleepTimes[i];
+                    if ( bDebug_rpc_e_call_rejected ) fprintf(stderr, "... orexxole.cpp %d %s: RPC_E_CALL_REJECTED, i=%d | now Sleep(%d) ...\n", __LINE__, __FUNCTION__, i, iSleepTime);
+                    Sleep(iSleepTime);      // yield, then retry
+                    hResult = pTypeInfo->GetDocumentation(pFuncDesc->memid, &bstrName, NULL, NULL, NULL);
+                }
+            }
+            if ( bDebug_rpc_e_call_rejected && (hResult==RPC_E_CALL_REJECTED) )
+            {
+                CHAR szTmpBuf[2048];
+                get_HRESULT_ErrorMessage(hResult, szTmpBuf);
+                fprintf(stderr, "... orexxole.cpp %d %s: %s \n", __LINE__, __FUNCTION__, szTmpBuf );
+            }
+
             if ( hResult == S_OK )
             {
                 pszName = pszUnicodeToAnsi(bstrName);
@@ -2338,18 +2395,20 @@ BOOL fExploreTypeAttr( ITypeInfo *pTypeInfo, TYPEATTR *pTypeAttr, POLECLASSINFO 
 
             pTypeInfo->ReleaseFuncDesc(pFuncDesc);
         }
+
     } /* endfor */
 
     /* get information for all variables */
     for (iFuncVarIdx = 0; iFuncVarIdx < pTypeAttr->cVars; ++iFuncVarIdx)
     {
         hResult = pTypeInfo->GetVarDesc(iFuncVarIdx, &pVarDesc);
-
         if (hResult==RPC_E_CALL_REJECTED)   // in case of a "RPC_E_CALL_REJECTED" a retry usually succeeds
         {
-            for (int i=0; i<5 && hResult==RPC_E_CALL_REJECTED; i++)
+            for (int i=0; (hResult==RPC_E_CALL_REJECTED) && (iArrSleepTimes[i]!=0); i++)
             {
-                Sleep(1);       // yield, then retry
+                int iSleepTime = iArrSleepTimes[i];
+                if ( bDebug_rpc_e_call_rejected ) fprintf(stderr, "... orexxole.cpp %d %s: RPC_E_CALL_REJECTED, i=%d | now Sleep(%d) ...\n", __LINE__, __FUNCTION__, i, iSleepTime);
+                Sleep(iSleepTime);      // yield, then retry
                 hResult = pTypeInfo->GetVarDesc(iFuncVarIdx, &pVarDesc);
             }
         }
@@ -2360,6 +2419,23 @@ BOOL fExploreTypeAttr( ITypeInfo *pTypeInfo, TYPEATTR *pTypeAttr, POLECLASSINFO 
         }
 
         hResult = pTypeInfo->GetDocumentation(pVarDesc->memid, &bstrName, NULL, NULL, NULL);
+        if (hResult==RPC_E_CALL_REJECTED)   // in case of a "RPC_E_CALL_REJECTED" a retry usually succeeds
+        {
+            for (int i=0; (hResult==RPC_E_CALL_REJECTED) && (iArrSleepTimes[i]!=0); i++)
+            {
+                int iSleepTime = iArrSleepTimes[i];
+                if ( bDebug_rpc_e_call_rejected ) fprintf(stderr, "... orexxole.cpp %d %s: RPC_E_CALL_REJECTED, i=%d | now Sleep(%d) ...\n", __LINE__, __FUNCTION__, i, iSleepTime);
+                Sleep(iSleepTime);      // yield, then retry
+                hResult = pTypeInfo->GetDocumentation(pVarDesc->memid, &bstrName, NULL, NULL, NULL);
+            }
+        }
+        if ( bDebug_rpc_e_call_rejected && (hResult==RPC_E_CALL_REJECTED) )
+        {
+            CHAR szTmpBuf[2048];
+            get_HRESULT_ErrorMessage(hResult, szTmpBuf);
+            fprintf(stderr, "... orexxole.cpp %d %s: %s \n", __LINE__, __FUNCTION__, szTmpBuf );
+        }
+
         if ( hResult == S_OK )
         {
             pszName = pszUnicodeToAnsi(bstrName);
@@ -3651,6 +3727,23 @@ RexxMethod3(RexxObjectPtr, OLEObject_Unknown, OSELF, self, CSTRING, msgName, Rex
     }
 
     hResult = pDispatch->QueryInterface(IID_IDispatchEx, (LPVOID*)&pDispatchEx);
+    if (hResult==RPC_E_CALL_REJECTED)   // in case of a "RPC_E_CALL_REJECTED" a retry usually succeeds
+    {
+        for (int i=0; (hResult==RPC_E_CALL_REJECTED) && (iArrSleepTimes[i]!=0); i++)
+        {
+            int iSleepTime = iArrSleepTimes[i];
+            if ( bDebug_rpc_e_call_rejected ) fprintf(stderr, "... orexxole.cpp %d %s: RPC_E_CALL_REJECTED, i=%d | now Sleep(%d) ...\n", __LINE__, __FUNCTION__, i, iSleepTime);
+            Sleep(iSleepTime);      // yield, then retry
+            hResult = pDispatch->QueryInterface(IID_IDispatchEx, (LPVOID*)&pDispatchEx);
+        }
+    }
+    if ( bDebug_rpc_e_call_rejected && (hResult==RPC_E_CALL_REJECTED) )
+    {
+        CHAR szTmpBuf[2048];
+        get_HRESULT_ErrorMessage(hResult, szTmpBuf);
+        fprintf(stderr, "... orexxole.cpp %d %s: %s \n", __LINE__, __FUNCTION__, szTmpBuf );
+    }
+
     if ( pDispatchEx != NULL )
     {
         fFound = getDispatchIDByName(pszFunction, pDispatch, pDispatchEx, pTypeInfo, pClsInfo, &pFuncInfo, &MemId, &wFlags, iArgCount);
@@ -3822,11 +3915,45 @@ RexxMethod3(RexxObjectPtr, OLEObject_Unknown, OSELF, self, CSTRING, msgName, Rex
     {
         hResult = pDispatchEx->InvokeEx(MemId, LOCALE_USER_DEFAULT,
                                         wFlags, &dp, pResult, &sExc, NULL);
+        if (hResult==RPC_E_CALL_REJECTED)   // in case of a "RPC_E_CALL_REJECTED" a retry usually succeeds
+        {
+            for (int i=0; (hResult==RPC_E_CALL_REJECTED) && (iArrSleepTimes[i]!=0); i++)
+            {
+                int iSleepTime = iArrSleepTimes[i];
+                if ( bDebug_rpc_e_call_rejected ) fprintf(stderr, "... orexxole.cpp %d %s: RPC_E_CALL_REJECTED, i=%d | now Sleep(%d) ...\n", __LINE__, __FUNCTION__, i, iSleepTime);
+                Sleep(iSleepTime);      // yield, then retry
+                hResult = pDispatchEx->InvokeEx(MemId, LOCALE_USER_DEFAULT,
+                                                wFlags, &dp, pResult, &sExc, NULL);
+            }
+        }
+        if ( bDebug_rpc_e_call_rejected && (hResult==RPC_E_CALL_REJECTED) )
+        {
+            CHAR szTmpBuf[2048];
+            get_HRESULT_ErrorMessage(hResult, szTmpBuf);
+            fprintf(stderr, "... orexxole.cpp %d %s: %s \n", __LINE__, __FUNCTION__, szTmpBuf );
+        }
     }
     else
     {
         hResult = pDispatch->Invoke(MemId, IID_NULL, LOCALE_USER_DEFAULT,
                                     wFlags, &dp, pResult, &sExc, &uArgErr);
+        if (hResult==RPC_E_CALL_REJECTED)   // in case of a "RPC_E_CALL_REJECTED" a retry usually succeeds
+        {
+            for (int i=0; (hResult==RPC_E_CALL_REJECTED) && (iArrSleepTimes[i]!=0); i++)
+            {
+                int iSleepTime = iArrSleepTimes[i];
+                if ( bDebug_rpc_e_call_rejected ) fprintf(stderr, "... orexxole.cpp %d %s: RPC_E_CALL_REJECTED, i=%d | now Sleep(%d) ...\n", __LINE__, __FUNCTION__, i, iSleepTime);
+                Sleep(iSleepTime);      // yield, then retry
+                hResult = pDispatch->Invoke(MemId, IID_NULL, LOCALE_USER_DEFAULT,
+                                            wFlags, &dp, pResult, &sExc, &uArgErr);
+            }
+        }
+        if ( bDebug_rpc_e_call_rejected && (hResult==RPC_E_CALL_REJECTED) )
+        {
+            CHAR szTmpBuf[2048];
+            get_HRESULT_ErrorMessage(hResult, szTmpBuf);
+            fprintf(stderr, "... orexxole.cpp %d %s: %s \n", __LINE__, __FUNCTION__, szTmpBuf );
+        }
     }
 
     /* maybe this is a property get with arguments */
@@ -3835,6 +3962,24 @@ RexxMethod3(RexxObjectPtr, OLEObject_Unknown, OSELF, self, CSTRING, msgName, Rex
         hResult = pDispatch->Invoke(MemId, IID_NULL, LOCALE_USER_DEFAULT,
                                     wFlags | DISPATCH_PROPERTYGET, &dp,
                                     pResult, &sExc, &uArgErr);
+        if (hResult==RPC_E_CALL_REJECTED)   // in case of a "RPC_E_CALL_REJECTED" a retry usually succeeds
+        {
+            for (int i=0; (hResult==RPC_E_CALL_REJECTED) && (iArrSleepTimes[i]!=0); i++)
+            {
+                int iSleepTime = iArrSleepTimes[i];
+                if ( bDebug_rpc_e_call_rejected ) fprintf(stderr, "... orexxole.cpp %d %s: RPC_E_CALL_REJECTED, i=%d | now Sleep(%d) ...\n", __LINE__, __FUNCTION__, i, iSleepTime);
+                Sleep(iSleepTime);      // yield, then retry
+                hResult = pDispatch->Invoke(MemId, IID_NULL, LOCALE_USER_DEFAULT,
+                                            wFlags | DISPATCH_PROPERTYGET, &dp,
+                                            pResult, &sExc, &uArgErr);
+            }
+        }
+        if ( bDebug_rpc_e_call_rejected && (hResult==RPC_E_CALL_REJECTED) )
+        {
+            CHAR szTmpBuf[2048];
+            get_HRESULT_ErrorMessage(hResult, szTmpBuf);
+            fprintf(stderr, "... orexxole.cpp %d %s: %s \n", __LINE__, __FUNCTION__, szTmpBuf );
+        }
     }
 
     /* if function has no return value, try again */
@@ -3842,6 +3987,23 @@ RexxMethod3(RexxObjectPtr, OLEObject_Unknown, OSELF, self, CSTRING, msgName, Rex
     {
         hResult = pDispatch->Invoke(MemId, IID_NULL, LOCALE_USER_DEFAULT,
                                     wFlags, &dp, NULL, &sExc, &uArgErr);
+        if (hResult==RPC_E_CALL_REJECTED)   // in case of a "RPC_E_CALL_REJECTED" a retry usually succeeds
+        {
+            for (int i=0; (hResult==RPC_E_CALL_REJECTED) && (iArrSleepTimes[i]!=0); i++)
+            {
+                int iSleepTime = iArrSleepTimes[i];
+                if ( bDebug_rpc_e_call_rejected ) fprintf(stderr, "... orexxole.cpp %d %s: RPC_E_CALL_REJECTED, i=%d | now Sleep(%d) ...\n", __LINE__, __FUNCTION__, i, iSleepTime);
+                Sleep(iSleepTime);      // yield, then retry
+                hResult = pDispatch->Invoke(MemId, IID_NULL, LOCALE_USER_DEFAULT,
+                                            wFlags, &dp, NULL, &sExc, &uArgErr);
+            }
+        }
+        if ( bDebug_rpc_e_call_rejected && (hResult==RPC_E_CALL_REJECTED) )
+        {
+            CHAR szTmpBuf[2048];
+            get_HRESULT_ErrorMessage(hResult, szTmpBuf);
+            fprintf(stderr, "... orexxole.cpp %d %s: %s \n", __LINE__, __FUNCTION__, szTmpBuf );
+        }
     }
     // needed for instance of tests
     variantClass = context->FindClass("OLEVARIANT");
@@ -4377,6 +4539,25 @@ RexxMethod2(RexxObjectPtr,                // Return type
             hResult = pDispatch->Invoke(MemId, IID_NULL, LOCALE_USER_DEFAULT,
                                         DISPATCH_METHOD | DISPATCH_PROPERTYGET,
                                         &dp, &sResult, &sExc, &uArgErr);
+            if (hResult==RPC_E_CALL_REJECTED)   // in case of a "RPC_E_CALL_REJECTED" a retry usually succeeds
+            {
+                for (int i=0; (hResult==RPC_E_CALL_REJECTED) && (iArrSleepTimes[i]!=0); i++)
+                {
+                    int iSleepTime = iArrSleepTimes[i];
+                    if ( bDebug_rpc_e_call_rejected ) fprintf(stderr, "... orexxole.cpp %d %s: RPC_E_CALL_REJECTED, i=%d | now Sleep(%d) ...\n", __LINE__, __FUNCTION__, i, iSleepTime);
+                    Sleep(iSleepTime);      // yield, then retry
+                    hResult = pDispatch->Invoke(MemId, IID_NULL, LOCALE_USER_DEFAULT,
+                                                DISPATCH_METHOD | DISPATCH_PROPERTYGET,
+                                                &dp, &sResult, &sExc, &uArgErr);
+                }
+            }
+            if ( bDebug_rpc_e_call_rejected && (hResult==RPC_E_CALL_REJECTED) )
+            {
+                CHAR szTmpBuf[2048];
+                get_HRESULT_ErrorMessage(hResult, szTmpBuf);
+                fprintf(stderr, "... orexxole.cpp %d %s: %s \n", __LINE__, __FUNCTION__, szTmpBuf );
+            }
+
             if (SUCCEEDED(hResult))
             {
                 IUnknown     *pUnknown=V_UNKNOWN(&sResult);
@@ -4388,6 +4569,23 @@ RexxMethod2(RexxObjectPtr,                // Return type
 
                 // get IEnumVARIANT interface
                 hResult = pUnknown->QueryInterface(IID_IEnumVARIANT, (LPVOID*) &pEnum);
+                if (hResult==RPC_E_CALL_REJECTED)   // in case of a "RPC_E_CALL_REJECTED" a retry usually succeeds
+                {
+                    for (int i=0; (hResult==RPC_E_CALL_REJECTED) && (iArrSleepTimes[i]!=0); i++)
+                    {
+                        int iSleepTime = iArrSleepTimes[i];
+                        if ( bDebug_rpc_e_call_rejected ) fprintf(stderr, "... orexxole.cpp %d %s: RPC_E_CALL_REJECTED, i=%d | now Sleep(%d) ...\n", __LINE__, __FUNCTION__, i, iSleepTime);
+                        Sleep(iSleepTime);      // yield, then retry
+                        hResult = pUnknown->QueryInterface(IID_IEnumVARIANT, (LPVOID*) &pEnum);
+                    }
+                }
+                if ( bDebug_rpc_e_call_rejected && (hResult==RPC_E_CALL_REJECTED) )
+                {
+                    CHAR szTmpBuf[2048];
+                    get_HRESULT_ErrorMessage(hResult, szTmpBuf);
+                    fprintf(stderr, "... orexxole.cpp %d %s: %s \n", __LINE__, __FUNCTION__, szTmpBuf );
+                }
+
                 if (hResult == S_OK)
                 {
                     ULONG lFetched = 0;
@@ -4457,6 +4655,24 @@ RexxMethod2(RexxObjectPtr,                // Return type
                 hResult = pDispatch->Invoke(MemId, IID_NULL, LOCALE_USER_DEFAULT,
                                             DISPATCH_METHOD | DISPATCH_PROPERTYGET,
                                             &dp, &sResult, &sExc, &uArgErr);
+                if (hResult==RPC_E_CALL_REJECTED)   // in case of a "RPC_E_CALL_REJECTED" a retry usually succeeds
+                {
+                    for (int i=0; (hResult==RPC_E_CALL_REJECTED) && (iArrSleepTimes[i]!=0); i++)
+                    {
+                        int iSleepTime = iArrSleepTimes[i];
+                        if ( bDebug_rpc_e_call_rejected ) fprintf(stderr, "... orexxole.cpp %d %s: RPC_E_CALL_REJECTED, i=%d | now Sleep(%d) ...\n", __LINE__, __FUNCTION__, i, iSleepTime);
+                        Sleep(iSleepTime);      // yield, then retry
+                        hResult = pDispatch->Invoke(MemId, IID_NULL, LOCALE_USER_DEFAULT,
+                                                    DISPATCH_METHOD | DISPATCH_PROPERTYGET,
+                                                    &dp, &sResult, &sExc, &uArgErr);
+                    }
+                }
+                if ( bDebug_rpc_e_call_rejected && (hResult==RPC_E_CALL_REJECTED) )
+                {
+                    CHAR szTmpBuf[2048];
+                    get_HRESULT_ErrorMessage(hResult, szTmpBuf);
+                    fprintf(stderr, "... orexxole.cpp %d %s: %s \n", __LINE__, __FUNCTION__, szTmpBuf );
+                }
 
                 if (hResult == S_OK)
                 {
@@ -4500,6 +4716,24 @@ RexxMethod2(RexxObjectPtr,                // Return type
                             hResult = pDispatch->Invoke(MemId, IID_NULL, LOCALE_USER_DEFAULT,
                                                         DISPATCH_METHOD, &dp, &sResult,
                                                         &sExc, &uArgErr);
+                            if (hResult==RPC_E_CALL_REJECTED)   // in case of a "RPC_E_CALL_REJECTED" a retry usually succeeds
+                            {
+                                for (int i=0; (hResult==RPC_E_CALL_REJECTED) && (iArrSleepTimes[i]!=0); i++)
+                                {
+                                    int iSleepTime = iArrSleepTimes[i];
+                                    if ( bDebug_rpc_e_call_rejected ) fprintf(stderr, "... orexxole.cpp %d %s: RPC_E_CALL_REJECTED, i=%d | now Sleep(%d) ...\n", __LINE__, __FUNCTION__, i, iSleepTime);
+                                    Sleep(iSleepTime);      // yield, then retry
+                                    hResult = pDispatch->Invoke(MemId, IID_NULL, LOCALE_USER_DEFAULT,
+                                                                DISPATCH_METHOD, &dp, &sResult,
+                                                                &sExc, &uArgErr);
+                                }
+                            }
+                            if ( bDebug_rpc_e_call_rejected && (hResult==RPC_E_CALL_REJECTED) )
+                            {
+                                CHAR szTmpBuf[2048];
+                                get_HRESULT_ErrorMessage(hResult, szTmpBuf);
+                                fprintf(stderr, "... orexxole.cpp %d %s: %s \n", __LINE__, __FUNCTION__, szTmpBuf );
+                            }
 
                             // if Object~Item(0) failed, assume a one-based index
                             if ( FAILED(hResult) && iIdx == 0 )
@@ -4678,10 +4912,47 @@ void InsertTypeInfo(RexxMethodContext *context, ITypeInfo *pTypeInfo, TYPEATTR *
     {
         pFuncDesc = NULL;
         hResult = pTypeInfo->GetFuncDesc(iIndex,&pFuncDesc);
+        if (hResult==RPC_E_CALL_REJECTED)   // in case of a "RPC_E_CALL_REJECTED" a retry usually succeeds
+        {
+            for (int i=0; (hResult==RPC_E_CALL_REJECTED) && (iArrSleepTimes[i]!=0); i++)
+            {
+                int iSleepTime = iArrSleepTimes[i];
+                if ( bDebug_rpc_e_call_rejected ) fprintf(stderr, "... orexxole.cpp %d %s: RPC_E_CALL_REJECTED, i=%d | now Sleep(%d) ...\n", __LINE__, __FUNCTION__, i, iSleepTime);
+                Sleep(iSleepTime);      // yield, then retry
+                hResult = pTypeInfo->GetFuncDesc(iIndex,&pFuncDesc);
+            }
+        }
+        if ( bDebug_rpc_e_call_rejected && (hResult==RPC_E_CALL_REJECTED) )
+        {
+            CHAR szTmpBuf[2048];
+            get_HRESULT_ErrorMessage(hResult, szTmpBuf);
+            fprintf(stderr, "... orexxole.cpp %d %s: %s \n", __LINE__, __FUNCTION__, szTmpBuf );
+        }
+
+        if (hResult == S_OK)
+        {
+            hResult = pTypeInfo->GetDocumentation(pFuncDesc->memid,&bName,&bDocString,0,0);
+            if (hResult==RPC_E_CALL_REJECTED)   // in case of a "RPC_E_CALL_REJECTED" a retry usually succeeds
+            {
+                for (int i=0; (hResult==RPC_E_CALL_REJECTED) && (iArrSleepTimes[i]!=0); i++)
+                {
+                    int iSleepTime = iArrSleepTimes[i];
+                    if ( bDebug_rpc_e_call_rejected ) fprintf(stderr, "... orexxole.cpp %d %s: RPC_E_CALL_REJECTED, i=%d | now Sleep(%d) ...\n", __LINE__, __FUNCTION__, i, iSleepTime);
+                    Sleep(iSleepTime);      // yield, then retry
+                    hResult = pTypeInfo->GetDocumentation(pFuncDesc->memid,&bName,&bDocString,0,0);
+                }
+            }
+            if ( bDebug_rpc_e_call_rejected && (hResult==RPC_E_CALL_REJECTED) )
+            {
+                CHAR szTmpBuf[2048];
+                get_HRESULT_ErrorMessage(hResult, szTmpBuf);
+                fprintf(stderr, "... orexxole.cpp %d %s: %s \n", __LINE__, __FUNCTION__, szTmpBuf );
+            }
+        }
+
         if (hResult == S_OK)
         {
 
-            hResult = pTypeInfo->GetDocumentation(pFuncDesc->memid,&bName,&bDocString,0,0);
             // display only if this is not a restricted or hidden function and if it does not begin
             // with a _ (according to "Inside OLE" p. 664: "The leading underscore, according to OLE
             // Automation, means that the method or property is hidden and should not be shown in
@@ -4697,6 +4968,22 @@ void InsertTypeInfo(RexxMethodContext *context, ITypeInfo *pTypeInfo, TYPEATTR *
                 // get names of parameters
                 // if it fails, then output will place "<unnamed>" as the name(s)
                 hResult = pTypeInfo->GetNames(pFuncDesc->memid,pbStrings,pFuncDesc->cParams+1,&uFlags);
+                if (hResult==RPC_E_CALL_REJECTED)   // in case of a "RPC_E_CALL_REJECTED" a retry usually succeeds
+                {
+                    for (int i=0; (hResult==RPC_E_CALL_REJECTED) && (iArrSleepTimes[i]!=0); i++)
+                    {
+                        int iSleepTime = iArrSleepTimes[i];
+                        if ( bDebug_rpc_e_call_rejected ) fprintf(stderr, "... orexxole.cpp %d %s: RPC_E_CALL_REJECTED, i=%d | now Sleep(%d) ...\n", __LINE__, __FUNCTION__, i, iSleepTime);
+                        Sleep(iSleepTime);      // yield, then retry
+                        hResult = pTypeInfo->GetNames(pFuncDesc->memid,pbStrings,pFuncDesc->cParams+1,&uFlags);
+                    }
+                }
+                if ( bDebug_rpc_e_call_rejected && (hResult==RPC_E_CALL_REJECTED) )
+                {
+                    CHAR szTmpBuf[2048];
+                    get_HRESULT_ErrorMessage(hResult, szTmpBuf);
+                    fprintf(stderr, "... orexxole.cpp %d %s: %s \n", __LINE__, __FUNCTION__, szTmpBuf );
+                }
 
                 // store member id
                 sprintf(szBuffer,"%08x",pFuncDesc->memid);
@@ -4837,10 +5124,44 @@ RexxMethod1(RexxObjectPtr,                // Return type
     }
 
     hResult = pDispatch->GetTypeInfoCount(&iTypeInfoCount);
+    if (hResult==RPC_E_CALL_REJECTED)   // in case of a "RPC_E_CALL_REJECTED" a retry usually succeeds
+    {
+        for (int i=0; (hResult==RPC_E_CALL_REJECTED) && (iArrSleepTimes[i]!=0); i++)
+        {
+            int iSleepTime = iArrSleepTimes[i];
+            if ( bDebug_rpc_e_call_rejected ) fprintf(stderr, "... orexxole.cpp %d %s: RPC_E_CALL_REJECTED, i=%d | now Sleep(%d) ...\n", __LINE__, __FUNCTION__, i, iSleepTime);
+            Sleep(iSleepTime);      // yield, then retry
+            hResult = pDispatch->GetTypeInfoCount(&iTypeInfoCount);
+        }
+    }
+    if ( bDebug_rpc_e_call_rejected && (hResult==RPC_E_CALL_REJECTED) )
+    {
+        CHAR szTmpBuf[2048];
+        get_HRESULT_ErrorMessage(hResult, szTmpBuf);
+        fprintf(stderr, "... orexxole.cpp %d %s: %s \n", __LINE__, __FUNCTION__, szTmpBuf );
+    }
+
     // check if type information is available
     if (iTypeInfoCount && SUCCEEDED(hResult))
     {
         hResult = pDispatch->GetTypeInfo(0, LOCALE_USER_DEFAULT, &pTypeInfo);  // AddRef type info pointer
+        if (hResult==RPC_E_CALL_REJECTED)   // in case of a "RPC_E_CALL_REJECTED" a retry usually succeeds
+        {
+            for (int i=0; (hResult==RPC_E_CALL_REJECTED) && (iArrSleepTimes[i]!=0); i++)
+            {
+                int iSleepTime = iArrSleepTimes[i];
+                if ( bDebug_rpc_e_call_rejected ) fprintf(stderr, "... orexxole.cpp %d %s: RPC_E_CALL_REJECTED, i=%d | now Sleep(%d) ...\n", __LINE__, __FUNCTION__, i, iSleepTime);
+                Sleep(iSleepTime);      // yield, then retry
+                hResult = pDispatch->GetTypeInfo(0, LOCALE_USER_DEFAULT, &pTypeInfo);  // AddRef type info pointer
+            }
+        }
+        if ( bDebug_rpc_e_call_rejected && (hResult==RPC_E_CALL_REJECTED) )
+        {
+            CHAR szTmpBuf[2048];
+            get_HRESULT_ErrorMessage(hResult, szTmpBuf);
+            fprintf(stderr, "... orexxole.cpp %d %s: %s \n", __LINE__, __FUNCTION__, szTmpBuf );
+        }
+
         // did we get a ITypeInfo interface pointer?
         if (pTypeInfo)
         {
@@ -4849,6 +5170,23 @@ RexxMethod1(RexxObjectPtr,                // Return type
 
             // get type library
             hResult = pTypeInfo->GetContainingTypeLib(&pTypeLib,&iTypeIndex); // AddRef type lib pointer
+            if (hResult==RPC_E_CALL_REJECTED)   // in case of a "RPC_E_CALL_REJECTED" a retry usually succeeds
+            {
+                for (int i=0; (hResult==RPC_E_CALL_REJECTED) && (iArrSleepTimes[i]!=0); i++)
+                {
+                    int iSleepTime = iArrSleepTimes[i];
+                    if ( bDebug_rpc_e_call_rejected ) fprintf(stderr, "... orexxole.cpp %d %s: RPC_E_CALL_REJECTED, i=%d | now Sleep(%d) ...\n", __LINE__, __FUNCTION__, i, iSleepTime);
+                    Sleep(iSleepTime);      // yield, then retry
+                    hResult = pTypeInfo->GetContainingTypeLib(&pTypeLib,&iTypeIndex); // AddRef type lib pointer
+                }
+            }
+            if ( bDebug_rpc_e_call_rejected && (hResult==RPC_E_CALL_REJECTED) )
+            {
+                CHAR szTmpBuf[2048];
+                get_HRESULT_ErrorMessage(hResult, szTmpBuf);
+                fprintf(stderr, "... orexxole.cpp %d %s: %s \n", __LINE__, __FUNCTION__, szTmpBuf );
+            }
+
             if (hResult == S_OK && pTypeLib)
             {
                 BSTR         bName, bDoc;
@@ -4856,6 +5194,23 @@ RexxMethod1(RexxObjectPtr,                // Return type
 
                 // Get the library name and documentation
                 hResult = pTypeLib->GetDocumentation(-1,&bName,&bDoc,NULL,NULL);
+                if (hResult==RPC_E_CALL_REJECTED)   // in case of a "RPC_E_CALL_REJECTED" a retry usually succeeds
+                {
+                    for (int i=0; (hResult==RPC_E_CALL_REJECTED) && (iArrSleepTimes[i]!=0); i++)
+                    {
+                        int iSleepTime = iArrSleepTimes[i];
+                        if ( bDebug_rpc_e_call_rejected ) fprintf(stderr, "... orexxole.cpp %d %s: RPC_E_CALL_REJECTED, i=%d | now Sleep(%d) ...\n", __LINE__, __FUNCTION__, i, iSleepTime);
+                        Sleep(iSleepTime);      // yield, then retry
+                        hResult = pTypeLib->GetDocumentation(-1,&bName,&bDoc,NULL,NULL);
+                    }
+                }
+                if ( bDebug_rpc_e_call_rejected && (hResult==RPC_E_CALL_REJECTED) )
+                {
+                    CHAR szTmpBuf[2048];
+                    get_HRESULT_ErrorMessage(hResult, szTmpBuf);
+                    fprintf(stderr, "... orexxole.cpp %d %s: %s \n", __LINE__, __FUNCTION__, szTmpBuf );
+                }
+
                 if (bName)
                 {
                     sprintf(pszInfoBuffer,"%S",bName);
@@ -4871,6 +5226,23 @@ RexxMethod1(RexxObjectPtr,                // Return type
 
                 // Now get the COM class name and documentation
                 hResult = pTypeLib->GetDocumentation(iTypeIndex,&bName,&bDoc,NULL,NULL);
+                if (hResult==RPC_E_CALL_REJECTED)   // in case of a "RPC_E_CALL_REJECTED" a retry usually succeeds
+                {
+                    for (int i=0; (hResult==RPC_E_CALL_REJECTED) && (iArrSleepTimes[i]!=0); i++)
+                    {
+                        int iSleepTime = iArrSleepTimes[i];
+                        if ( bDebug_rpc_e_call_rejected ) fprintf(stderr, "... orexxole.cpp %d %s: RPC_E_CALL_REJECTED, i=%d | now Sleep(%d) ...\n", __LINE__, __FUNCTION__, i, iSleepTime);
+                        Sleep(iSleepTime);      // yield, then retry
+                        hResult = pTypeLib->GetDocumentation(iTypeIndex,&bName,&bDoc,NULL,NULL);
+                    }
+                }
+                if ( bDebug_rpc_e_call_rejected && (hResult==RPC_E_CALL_REJECTED) )
+                {
+                    CHAR szTmpBuf[2048];
+                    get_HRESULT_ErrorMessage(hResult, szTmpBuf);
+                    fprintf(stderr, "... orexxole.cpp %d %s: %s \n", __LINE__, __FUNCTION__, szTmpBuf );
+                }
+
                 if (bName)
                 {
                     sprintf(pszInfoBuffer,"%S",bName);
@@ -4883,9 +5255,43 @@ RexxMethod1(RexxObjectPtr,                // Return type
                 }
 
                 hResult = pTypeLib->GetTypeInfo(iTypeIndex,&pTypeInfo2);   // AddRef type info pointer2
+                if (hResult==RPC_E_CALL_REJECTED)   // in case of a "RPC_E_CALL_REJECTED" a retry usually succeeds
+                {
+                    for (int i=0; (hResult==RPC_E_CALL_REJECTED) && (iArrSleepTimes[i]!=0); i++)
+                    {
+                        int iSleepTime = iArrSleepTimes[i];
+                        if ( bDebug_rpc_e_call_rejected ) fprintf(stderr, "... orexxole.cpp %d %s: RPC_E_CALL_REJECTED, i=%d | now Sleep(%d) ...\n", __LINE__, __FUNCTION__, i, iSleepTime);
+                        Sleep(iSleepTime);      // yield, then retry
+                        hResult = pTypeLib->GetTypeInfo(iTypeIndex,&pTypeInfo2);   // AddRef type info pointer2
+                    }
+                }
+                if ( bDebug_rpc_e_call_rejected && (hResult==RPC_E_CALL_REJECTED) )
+                {
+                    CHAR szTmpBuf[2048];
+                    get_HRESULT_ErrorMessage(hResult, szTmpBuf);
+                    fprintf(stderr, "... orexxole.cpp %d %s: %s \n", __LINE__, __FUNCTION__, szTmpBuf );
+                }
+
                 if (pTypeInfo2)
                 {
                     hResult = pTypeInfo2->GetTypeAttr(&pTypeAttr);           // AddRef type attr pointer
+                    if (hResult==RPC_E_CALL_REJECTED)   // in case of a "RPC_E_CALL_REJECTED" a retry usually succeeds
+                    {
+                        for (int i=0; (hResult==RPC_E_CALL_REJECTED) && (iArrSleepTimes[i]!=0); i++)
+                        {
+                            int iSleepTime = iArrSleepTimes[i];
+                            if ( bDebug_rpc_e_call_rejected ) fprintf(stderr, "... orexxole.cpp %d %s: RPC_E_CALL_REJECTED, i=%d | now Sleep(%d) ...\n", __LINE__, __FUNCTION__, i, iSleepTime);
+                            Sleep(iSleepTime);      // yield, then retry
+                            hResult = pTypeInfo2->GetTypeAttr(&pTypeAttr);           // AddRef type attr pointer
+                        }
+                    }
+                    if ( bDebug_rpc_e_call_rejected && (hResult==RPC_E_CALL_REJECTED) )
+                    {
+                        CHAR szTmpBuf[2048];
+                        get_HRESULT_ErrorMessage(hResult, szTmpBuf);
+                        fprintf(stderr, "... orexxole.cpp %d %s: %s \n", __LINE__, __FUNCTION__, szTmpBuf );
+                    }
+
                     if (hResult == S_OK)
                     {
                         InsertTypeInfo(context, pTypeInfo2,pTypeAttr,RxResult,&iCount);
@@ -5142,6 +5548,23 @@ RexxMethod2(RexxObjectPtr,                      // Return type
                 RexxStemObject RxStem = context->NewStem(NULL);
 
                 hResult = pTypeLib->GetDocumentation(/*iTypeIndex*/-1,&bName,&bDoc,NULL,NULL);
+                if (hResult==RPC_E_CALL_REJECTED)   // in case of a "RPC_E_CALL_REJECTED" a retry usually succeeds
+                {
+                    for (int i=0; (hResult==RPC_E_CALL_REJECTED) && (iArrSleepTimes[i]!=0); i++)
+                    {
+                        int iSleepTime = iArrSleepTimes[i];
+                        if ( bDebug_rpc_e_call_rejected ) fprintf(stderr, "... orexxole.cpp %d %s: RPC_E_CALL_REJECTED, i=%d | now Sleep(%d) ...\n", __LINE__, __FUNCTION__, i, iSleepTime);
+                        Sleep(iSleepTime);      // yield, then retry
+                        hResult = pTypeLib->GetDocumentation(/*iTypeIndex*/-1,&bName,&bDoc,NULL,NULL);
+                    }
+                }
+                if ( bDebug_rpc_e_call_rejected && (hResult==RPC_E_CALL_REJECTED) )
+                {
+                    CHAR szTmpBuf[2048];
+                    get_HRESULT_ErrorMessage(hResult, szTmpBuf);
+                    fprintf(stderr, "... orexxole.cpp %d %s: %s \n", __LINE__, __FUNCTION__, szTmpBuf );
+                }
+
                 sprintf(pszInfoBuffer,"%S",bName);
                 context->SetStemElement(RxStem, "!LIBNAME", context->NewStringFromAsciiz(pszInfoBuffer));
                 sprintf(pszInfoBuffer,"%S",bDoc);
@@ -5154,9 +5577,24 @@ RexxMethod2(RexxObjectPtr,                      // Return type
 
                 for (iTypeIndex=0;iTypeIndex<iTypeCount;iTypeIndex++)
                 {
-
-
                     hResult = pTypeLib->GetDocumentation(iTypeIndex,&bName,&bDoc,NULL,NULL);
+                    if (hResult==RPC_E_CALL_REJECTED)   // in case of a "RPC_E_CALL_REJECTED" a retry usually succeeds
+                    {
+                        for (int i=0; (hResult==RPC_E_CALL_REJECTED) && (iArrSleepTimes[i]!=0); i++)
+                        {
+                            int iSleepTime = iArrSleepTimes[i];
+                            if ( bDebug_rpc_e_call_rejected ) fprintf(stderr, "... orexxole.cpp %d %s: RPC_E_CALL_REJECTED, i=%d | now Sleep(%d) ...\n", __LINE__, __FUNCTION__, i, iSleepTime);
+                            Sleep(iSleepTime);      // yield, then retry
+                            hResult = pTypeLib->GetDocumentation(iTypeIndex,&bName,&bDoc,NULL,NULL);
+                        }
+                    }
+                    if ( bDebug_rpc_e_call_rejected && (hResult==RPC_E_CALL_REJECTED) )
+                    {
+                        CHAR szTmpBuf[2048];
+                        get_HRESULT_ErrorMessage(hResult, szTmpBuf);
+                        fprintf(stderr, "... orexxole.cpp %d %s: %s \n", __LINE__, __FUNCTION__, szTmpBuf );
+                    }
+
                     sprintf(pszInfoBuffer,"%S",bName);
                     sprintf(pszInfoBuffer+1024,"!LIBNAME.%d",iTypeIndex);
                     context->SetStemElement(RxStem, pszInfoBuffer+1024, context->NewStringFromAsciiz(pszInfoBuffer));
@@ -5167,11 +5605,44 @@ RexxMethod2(RexxObjectPtr,                      // Return type
                     SysFreeString(bName);
                     SysFreeString(bDoc);
 
-
                     hResult = pTypeLib->GetTypeInfo(iTypeIndex,&pTypeInfo2);   // AddRef type info pointer2
+                    if (hResult==RPC_E_CALL_REJECTED)   // in case of a "RPC_E_CALL_REJECTED" a retry usually succeeds
+                    {
+                        for (int i=0; (hResult==RPC_E_CALL_REJECTED) && (iArrSleepTimes[i]!=0); i++)
+                        {
+                            int iSleepTime = iArrSleepTimes[i];
+                            if ( bDebug_rpc_e_call_rejected ) fprintf(stderr, "... orexxole.cpp %d %s: RPC_E_CALL_REJECTED, i=%d | now Sleep(%d) ...\n", __LINE__, __FUNCTION__, i, iSleepTime);
+                            Sleep(iSleepTime);      // yield, then retry
+                            hResult = pTypeLib->GetTypeInfo(iTypeIndex,&pTypeInfo2);   // AddRef type info pointer2
+                        }
+                    }
+                    if ( bDebug_rpc_e_call_rejected && (hResult==RPC_E_CALL_REJECTED) )
+                    {
+                        CHAR szTmpBuf[2048];
+                        get_HRESULT_ErrorMessage(hResult, szTmpBuf);
+                        fprintf(stderr, "... orexxole.cpp %d %s: %s \n", __LINE__, __FUNCTION__, szTmpBuf );
+                    }
+
                     if (pTypeInfo2)
                     {
                         hResult = pTypeInfo2->GetTypeAttr(&pTypeAttr);           // AddRef type attr pointer
+                        if (hResult==RPC_E_CALL_REJECTED)   // in case of a "RPC_E_CALL_REJECTED" a retry usually succeeds
+                        {
+                            for (int i=0; (hResult==RPC_E_CALL_REJECTED) && (iArrSleepTimes[i]!=0); i++)
+                            {
+                                int iSleepTime = iArrSleepTimes[i];
+                                if ( bDebug_rpc_e_call_rejected ) fprintf(stderr, "... orexxole.cpp %d %s: RPC_E_CALL_REJECTED, i=%d | now Sleep(%d) ...\n", __LINE__, __FUNCTION__, i, iSleepTime);
+                                Sleep(iSleepTime);      // yield, then retry
+                                hResult = pTypeInfo2->GetTypeAttr(&pTypeAttr);           // AddRef type attr pointer
+                            }
+                        }
+                        if ( bDebug_rpc_e_call_rejected && (hResult==RPC_E_CALL_REJECTED) )
+                        {
+                            CHAR szTmpBuf[2048];
+                            get_HRESULT_ErrorMessage(hResult, szTmpBuf);
+                            fprintf(stderr, "... orexxole.cpp %d %s: %s \n", __LINE__, __FUNCTION__, szTmpBuf );
+                        }
+
                         if (hResult == S_OK)
                         {
                             InsertTypeInfo(context, pTypeInfo2,pTypeAttr,RxStem,&iCount);
@@ -5500,6 +5971,23 @@ bool connectEventHandler(RexxMethodContext *context, IConnectionPointContainer *
     DWORD             dwCookie = 0;
 
     hResult = pContainer->FindConnectionPoint(pEventHandler->getIntefaceID(), &pConnectionPoint);
+    if (hResult==RPC_E_CALL_REJECTED)   // in case of a "RPC_E_CALL_REJECTED" a retry usually succeeds
+    {
+        for (int i=0; (hResult==RPC_E_CALL_REJECTED) && (iArrSleepTimes[i]!=0); i++)
+        {
+            int iSleepTime = iArrSleepTimes[i];
+            if ( bDebug_rpc_e_call_rejected ) fprintf(stderr, "... orexxole.cpp %d %s: RPC_E_CALL_REJECTED, i=%d | now Sleep(%d) ...\n", __LINE__, __FUNCTION__, i, iSleepTime);
+            Sleep(iSleepTime);      // yield, then retry
+            hResult = pContainer->FindConnectionPoint(pEventHandler->getIntefaceID(), &pConnectionPoint);
+        }
+    }
+    if ( bDebug_rpc_e_call_rejected && (hResult==RPC_E_CALL_REJECTED) )
+    {
+        CHAR szTmpBuf[2048];
+        get_HRESULT_ErrorMessage(hResult, szTmpBuf);
+        fprintf(stderr, "... orexxole.cpp %d %s: %s \n", __LINE__, __FUNCTION__, szTmpBuf );
+    }
+
     if ( hResult == S_OK )
     {
         hResult = pConnectionPoint->Advise((IUnknown*) pEventHandler, &dwCookie);
@@ -5531,6 +6019,23 @@ bool getConnectionPointContainer(IDispatch *pDispatch, IConnectionPointContainer
     HRESULT hResult;
 
     hResult = pDispatch->QueryInterface(IID_IConnectionPointContainer, (LPVOID*)ppContainer);
+    if (hResult==RPC_E_CALL_REJECTED)   // in case of a "RPC_E_CALL_REJECTED" a retry usually succeeds
+    {
+        for (int i=0; (hResult==RPC_E_CALL_REJECTED) && (iArrSleepTimes[i]!=0); i++)
+        {
+            int iSleepTime = iArrSleepTimes[i];
+            if ( bDebug_rpc_e_call_rejected ) fprintf(stderr, "... orexxole.cpp %d %s: RPC_E_CALL_REJECTED, i=%d | now Sleep(%d) ...\n", __LINE__, __FUNCTION__, i, iSleepTime);
+            Sleep(iSleepTime);      // yield, then retry
+            hResult = pDispatch->QueryInterface(IID_IConnectionPointContainer, (LPVOID*)ppContainer);
+        }
+    }
+    if ( bDebug_rpc_e_call_rejected && (hResult==RPC_E_CALL_REJECTED) )
+    {
+        CHAR szTmpBuf[2048];
+        get_HRESULT_ErrorMessage(hResult, szTmpBuf);
+        fprintf(stderr, "... orexxole.cpp %d %s: %s \n", __LINE__, __FUNCTION__, szTmpBuf );
+    }
+
     if ( SUCCEEDED(hResult) )
     {
         return true;
@@ -5552,6 +6057,23 @@ bool isConnectableObject(IDispatch *pDispatch)
     IConnectionPointContainer *pContainer = NULL;
 
     hResult = pDispatch->QueryInterface(IID_IConnectionPointContainer, (LPVOID*)&pContainer);
+    if (hResult==RPC_E_CALL_REJECTED)   // in case of a "RPC_E_CALL_REJECTED" a retry usually succeeds
+    {
+        for (int i=0; (hResult==RPC_E_CALL_REJECTED) && (iArrSleepTimes[i]!=0); i++)
+        {
+            int iSleepTime = iArrSleepTimes[i];
+            if ( bDebug_rpc_e_call_rejected ) fprintf(stderr, "... orexxole.cpp %d %s: RPC_E_CALL_REJECTED, i=%d | now Sleep(%d) ...\n", __LINE__, __FUNCTION__, i, iSleepTime);
+            Sleep(iSleepTime);      // yield, then retry
+            hResult = pDispatch->QueryInterface(IID_IConnectionPointContainer, (LPVOID*)&pContainer);
+        }
+    }
+    if ( bDebug_rpc_e_call_rejected && (hResult==RPC_E_CALL_REJECTED) )
+    {
+        CHAR szTmpBuf[2048];
+        get_HRESULT_ErrorMessage(hResult, szTmpBuf);
+        fprintf(stderr, "... orexxole.cpp %d %s: %s \n", __LINE__, __FUNCTION__, szTmpBuf );
+    }
+
     if ( SUCCEEDED(hResult) && pContainer )
     {
         pContainer->Release();
@@ -5660,9 +6182,43 @@ bool getClassInfo(IDispatch *pDispatch, ITypeInfo **ppCoClassTypeInfo)
     bool                success = false;
 
     hResult = pDispatch->QueryInterface(IID_IProvideClassInfo2, (LPVOID*)&pProvideClassInfo2);
+    if (hResult==RPC_E_CALL_REJECTED)   // in case of a "RPC_E_CALL_REJECTED" a retry usually succeeds
+    {
+        for (int i=0; (hResult==RPC_E_CALL_REJECTED) && (iArrSleepTimes[i]!=0); i++)
+        {
+            int iSleepTime = iArrSleepTimes[i];
+            if ( bDebug_rpc_e_call_rejected ) fprintf(stderr, "... orexxole.cpp %d %s: RPC_E_CALL_REJECTED, i=%d | now Sleep(%d) ...\n", __LINE__, __FUNCTION__, i, iSleepTime);
+            Sleep(iSleepTime);      // yield, then retry
+            hResult = pDispatch->QueryInterface(IID_IProvideClassInfo2, (LPVOID*)&pProvideClassInfo2);
+        }
+    }
+    if ( bDebug_rpc_e_call_rejected && (hResult==RPC_E_CALL_REJECTED) )
+    {
+        CHAR szTmpBuf[2048];
+        get_HRESULT_ErrorMessage(hResult, szTmpBuf);
+        fprintf(stderr, "... orexxole.cpp %d %s: %s \n", __LINE__, __FUNCTION__, szTmpBuf );
+    }
+
     if ( SUCCEEDED(hResult) && pProvideClassInfo2 )
     {
         hResult = pProvideClassInfo2->GetClassInfo(&pTypeInfo);
+        if (hResult==RPC_E_CALL_REJECTED)   // in case of a "RPC_E_CALL_REJECTED" a retry usually succeeds
+        {
+            for (int i=0; (hResult==RPC_E_CALL_REJECTED) && (iArrSleepTimes[i]!=0); i++)
+            {
+                int iSleepTime = iArrSleepTimes[i];
+                if ( bDebug_rpc_e_call_rejected ) fprintf(stderr, "... orexxole.cpp %d %s: RPC_E_CALL_REJECTED, i=%d | now Sleep(%d) ...\n", __LINE__, __FUNCTION__, i, iSleepTime);
+                Sleep(iSleepTime);      // yield, then retry
+                hResult = pProvideClassInfo2->GetClassInfo(&pTypeInfo);
+            }
+        }
+        if ( bDebug_rpc_e_call_rejected && (hResult==RPC_E_CALL_REJECTED) )
+        {
+            CHAR szTmpBuf[2048];
+            get_HRESULT_ErrorMessage(hResult, szTmpBuf);
+            fprintf(stderr, "... orexxole.cpp %d %s: %s \n", __LINE__, __FUNCTION__, szTmpBuf );
+        }
+
         if ( SUCCEEDED(hResult) && pTypeInfo )
         {
             success = true;
@@ -5674,9 +6230,43 @@ bool getClassInfo(IDispatch *pDispatch, ITypeInfo **ppCoClassTypeInfo)
     if ( ! success )
     {
         hResult = pDispatch->QueryInterface(IID_IProvideClassInfo, (LPVOID*)&pProvideClassInfo);
+        if (hResult==RPC_E_CALL_REJECTED)   // in case of a "RPC_E_CALL_REJECTED" a retry usually succeeds
+        {
+            for (int i=0; (hResult==RPC_E_CALL_REJECTED) && (iArrSleepTimes[i]!=0); i++)
+            {
+                int iSleepTime = iArrSleepTimes[i];
+                if ( bDebug_rpc_e_call_rejected ) fprintf(stderr, "... orexxole.cpp %d %s: RPC_E_CALL_REJECTED, i=%d | now Sleep(%d) ...\n", __LINE__, __FUNCTION__, i, iSleepTime);
+                Sleep(iSleepTime);      // yield, then retry
+                hResult = pDispatch->QueryInterface(IID_IProvideClassInfo, (LPVOID*)&pProvideClassInfo);
+            }
+        }
+        if ( bDebug_rpc_e_call_rejected && (hResult==RPC_E_CALL_REJECTED) )
+        {
+            CHAR szTmpBuf[2048];
+            get_HRESULT_ErrorMessage(hResult, szTmpBuf);
+            fprintf(stderr, "... orexxole.cpp %d %s: %s \n", __LINE__, __FUNCTION__, szTmpBuf );
+        }
+
         if (hResult == S_OK && pProvideClassInfo )
         {
             hResult = pProvideClassInfo->GetClassInfo(&pTypeInfo);
+            if (hResult==RPC_E_CALL_REJECTED)   // in case of a "RPC_E_CALL_REJECTED" a retry usually succeeds
+            {
+                for (int i=0; (hResult==RPC_E_CALL_REJECTED) && (iArrSleepTimes[i]!=0); i++)
+                {
+                    int iSleepTime = iArrSleepTimes[i];
+                    if ( bDebug_rpc_e_call_rejected ) fprintf(stderr, "... orexxole.cpp %d %s: RPC_E_CALL_REJECTED, i=%d | now Sleep(%d) ...\n", __LINE__, __FUNCTION__, i, iSleepTime);
+                    Sleep(iSleepTime);      // yield, then retry
+                    hResult = pProvideClassInfo->GetClassInfo(&pTypeInfo);
+                }
+            }
+            if ( bDebug_rpc_e_call_rejected && (hResult==RPC_E_CALL_REJECTED) )
+            {
+                CHAR szTmpBuf[2048];
+                get_HRESULT_ErrorMessage(hResult, szTmpBuf);
+                fprintf(stderr, "... orexxole.cpp %d %s: %s \n", __LINE__, __FUNCTION__, szTmpBuf );
+            }
+
             if ( SUCCEEDED(hResult) && pTypeInfo )
             {
                 success = TRUE;
@@ -5722,9 +6312,43 @@ bool getClassInfoFromCLSID(ITypeInfo *pTypeInfo, CLSID *pClsID, ITypeInfo **ppCo
     HRESULT       hResult;
 
     hResult = pTypeInfo->GetContainingTypeLib(&pTypeLib, &index);
+    if (hResult==RPC_E_CALL_REJECTED)   // in case of a "RPC_E_CALL_REJECTED" a retry usually succeeds
+    {
+        for (int i=0; (hResult==RPC_E_CALL_REJECTED) && (iArrSleepTimes[i]!=0); i++)
+        {
+            int iSleepTime = iArrSleepTimes[i];
+            if ( bDebug_rpc_e_call_rejected ) fprintf(stderr, "... orexxole.cpp %d %s: RPC_E_CALL_REJECTED, i=%d | now Sleep(%d) ...\n", __LINE__, __FUNCTION__, i, iSleepTime);
+            Sleep(iSleepTime);      // yield, then retry
+            hResult = pTypeInfo->GetContainingTypeLib(&pTypeLib, &index);
+        }
+    }
+    if ( bDebug_rpc_e_call_rejected && (hResult==RPC_E_CALL_REJECTED) )
+    {
+        CHAR szTmpBuf[2048];
+        get_HRESULT_ErrorMessage(hResult, szTmpBuf);
+        fprintf(stderr, "... orexxole.cpp %d %s: %s \n", __LINE__, __FUNCTION__, szTmpBuf );
+    }
+
     if ( hResult == S_OK )
     {
         hResult = pTypeLib->GetTypeInfoOfGuid(*pClsID, &pCoClass);
+        if (hResult==RPC_E_CALL_REJECTED)   // in case of a "RPC_E_CALL_REJECTED" a retry usually succeeds
+        {
+            for (int i=0; (hResult==RPC_E_CALL_REJECTED) && (iArrSleepTimes[i]!=0); i++)
+            {
+                int iSleepTime = iArrSleepTimes[i];
+                if ( bDebug_rpc_e_call_rejected ) fprintf(stderr, "... orexxole.cpp %d %s: RPC_E_CALL_REJECTED, i=%d | now Sleep(%d) ...\n", __LINE__, __FUNCTION__, i, iSleepTime);
+                Sleep(iSleepTime);      // yield, then retry
+                hResult = pTypeLib->GetTypeInfoOfGuid(*pClsID, &pCoClass);
+            }
+        }
+        if ( bDebug_rpc_e_call_rejected && (hResult==RPC_E_CALL_REJECTED) )
+        {
+            CHAR szTmpBuf[2048];
+            get_HRESULT_ErrorMessage(hResult, szTmpBuf);
+            fprintf(stderr, "... orexxole.cpp %d %s: %s \n", __LINE__, __FUNCTION__, szTmpBuf );
+        }
+
         if ( hResult == S_OK )
         {
             found = true;
@@ -5771,12 +6395,46 @@ bool getClassInfoFromTypeInfo(ITypeInfo *pInterfaceTypeInfo, ITypeInfo **ppCoCla
     GUIDFromTypeInfo(pInterfaceTypeInfo, &guid);
 
     hResult = pInterfaceTypeInfo->GetContainingTypeLib(&pTypeLib, &count);
+    if (hResult==RPC_E_CALL_REJECTED)   // in case of a "RPC_E_CALL_REJECTED" a retry usually succeeds
+    {
+        for (int i=0; (hResult==RPC_E_CALL_REJECTED) && (iArrSleepTimes[i]!=0); i++)
+        {
+            int iSleepTime = iArrSleepTimes[i];
+            if ( bDebug_rpc_e_call_rejected ) fprintf(stderr, "... orexxole.cpp %d %s: RPC_E_CALL_REJECTED, i=%d | now Sleep(%d) ...\n", __LINE__, __FUNCTION__, i, iSleepTime);
+            Sleep(iSleepTime);      // yield, then retry
+            hResult = pInterfaceTypeInfo->GetContainingTypeLib(&pTypeLib, &count);
+        }
+    }
+    if ( bDebug_rpc_e_call_rejected && (hResult==RPC_E_CALL_REJECTED) )
+    {
+        CHAR szTmpBuf[2048];
+        get_HRESULT_ErrorMessage(hResult, szTmpBuf);
+        fprintf(stderr, "... orexxole.cpp %d %s: %s \n", __LINE__, __FUNCTION__, szTmpBuf );
+    }
+
     if ( hResult == S_OK )
     {
         count = pTypeLib->GetTypeInfoCount();
         while ( i++ < count && ! found )
         {
             hResult = pTypeLib->GetTypeInfoType(i, &kind);
+            if (hResult==RPC_E_CALL_REJECTED)   // in case of a "RPC_E_CALL_REJECTED" a retry usually succeeds
+            {
+                for (int i=0; (hResult==RPC_E_CALL_REJECTED) && (iArrSleepTimes[i]!=0); i++)
+                {
+                    int iSleepTime = iArrSleepTimes[i];
+                    if ( bDebug_rpc_e_call_rejected ) fprintf(stderr, "... orexxole.cpp %d %s: RPC_E_CALL_REJECTED, i=%d | now Sleep(%d) ...\n", __LINE__, __FUNCTION__, i, iSleepTime);
+                    Sleep(iSleepTime);      // yield, then retry
+                    hResult = pTypeLib->GetTypeInfoType(i, &kind);
+                }
+            }
+            if ( bDebug_rpc_e_call_rejected && (hResult==RPC_E_CALL_REJECTED) )
+            {
+                CHAR szTmpBuf[2048];
+                get_HRESULT_ErrorMessage(hResult, szTmpBuf);
+                fprintf(stderr, "... orexxole.cpp %d %s: %s \n", __LINE__, __FUNCTION__, szTmpBuf );
+            }
+
             if ( hResult == S_OK && kind == TKIND_COCLASS )
             {
                 /* This is a CoClass type info.  See if this class has
@@ -5784,6 +6442,23 @@ bool getClassInfoFromTypeInfo(ITypeInfo *pInterfaceTypeInfo, ITypeInfo **ppCoCla
                  * type info passed to us.
                  */
                 hResult = pTypeLib->GetTypeInfo(i, &pTypeInfo);
+                if (hResult==RPC_E_CALL_REJECTED)   // in case of a "RPC_E_CALL_REJECTED" a retry usually succeeds
+                {
+                    for (int i=0; (hResult==RPC_E_CALL_REJECTED) && (iArrSleepTimes[i]!=0); i++)
+                    {
+                        int iSleepTime = iArrSleepTimes[i];
+                        if ( bDebug_rpc_e_call_rejected ) fprintf(stderr, "... orexxole.cpp %d %s: RPC_E_CALL_REJECTED, i=%d | now Sleep(%d) ...\n", __LINE__, __FUNCTION__, i, iSleepTime);
+                        Sleep(iSleepTime);      // yield, then retry
+                        hResult = pTypeLib->GetTypeInfo(i, &pTypeInfo);
+                    }
+                }
+                if ( bDebug_rpc_e_call_rejected && (hResult==RPC_E_CALL_REJECTED) )
+                {
+                    CHAR szTmpBuf[2048];
+                    get_HRESULT_ErrorMessage(hResult, szTmpBuf);
+                    fprintf(stderr, "... orexxole.cpp %d %s: %s \n", __LINE__, __FUNCTION__, szTmpBuf );
+                }
+
                 if ( hResult == S_OK )
                 {
                     if ( isImplementedInterface(pTypeInfo, &guid) )
@@ -5828,25 +6503,96 @@ bool isImplementedInterface(ITypeInfo *pCoClass, GUID *guid)
     HRESULT hResult;
 
     hResult = pCoClass->GetTypeAttr(&pTypeAttr);
+    if (hResult==RPC_E_CALL_REJECTED)   // in case of a "RPC_E_CALL_REJECTED" a retry usually succeeds
+    {
+        for (int i=0; (hResult==RPC_E_CALL_REJECTED) && (iArrSleepTimes[i]!=0); i++)
+        {
+            int iSleepTime = iArrSleepTimes[i];
+            if ( bDebug_rpc_e_call_rejected ) fprintf(stderr, "... orexxole.cpp %d %s: RPC_E_CALL_REJECTED, i=%d | now Sleep(%d) ...\n", __LINE__, __FUNCTION__, i, iSleepTime);
+            Sleep(iSleepTime);      // yield, then retry
+            hResult = pCoClass->GetTypeAttr(&pTypeAttr);
+        }
+    }
+    if ( bDebug_rpc_e_call_rejected && (hResult==RPC_E_CALL_REJECTED) )
+    {
+        CHAR szTmpBuf[2048];
+        get_HRESULT_ErrorMessage(hResult, szTmpBuf);
+        fprintf(stderr, "... orexxole.cpp %d %s: %s \n", __LINE__, __FUNCTION__, szTmpBuf );
+    }
+
     if ( hResult == S_OK )
     {
         for ( i = 0; i < pTypeAttr->cImplTypes && (! match); i++ )
         {
-            pCoClass->GetRefTypeOfImplType(i, &hRefType);
-            hResult = pCoClass->GetRefTypeInfo(hRefType, &pTypeInfo);
+            hResult = pCoClass->GetRefTypeOfImplType(i, &hRefType);
+            if (hResult==RPC_E_CALL_REJECTED)   // in case of a "RPC_E_CALL_REJECTED" a retry usually succeeds
+            {
+                for (int i=0; (hResult==RPC_E_CALL_REJECTED) && (iArrSleepTimes[i]!=0); i++)
+                {
+                    int iSleepTime = iArrSleepTimes[i];
+                    if ( bDebug_rpc_e_call_rejected ) fprintf(stderr, "... orexxole.cpp %d %s: RPC_E_CALL_REJECTED, i=%d | now Sleep(%d) ...\n", __LINE__, __FUNCTION__, i, iSleepTime);
+                    Sleep(iSleepTime);      // yield, then retry
+                    hResult = pCoClass->GetRefTypeOfImplType(i, &hRefType);
+                }
+            }
+            if ( bDebug_rpc_e_call_rejected && (hResult==RPC_E_CALL_REJECTED) )
+            {
+                CHAR szTmpBuf[2048];
+                get_HRESULT_ErrorMessage(hResult, szTmpBuf);
+                fprintf(stderr, "... orexxole.cpp %d %s: %s \n", __LINE__, __FUNCTION__, szTmpBuf );
+            }
+
             if ( SUCCEEDED(hResult) )
             {
-                TYPEATTR *pTempTypeAttr = NULL;
-                hResult = pTypeInfo->GetTypeAttr(&pTempTypeAttr);
-                if ( hResult == S_OK )
+                hResult = pCoClass->GetRefTypeInfo(hRefType, &pTypeInfo);
+                if (hResult==RPC_E_CALL_REJECTED)   // in case of a "RPC_E_CALL_REJECTED" a retry usually succeeds
                 {
-                    if ( InlineIsEqualGUID(*guid, pTempTypeAttr->guid) )
+                    for (int i=0; (hResult==RPC_E_CALL_REJECTED) && (iArrSleepTimes[i]!=0); i++)
                     {
-                        match = true;
+                        int iSleepTime = iArrSleepTimes[i];
+                        if ( bDebug_rpc_e_call_rejected ) fprintf(stderr, "... orexxole.cpp %d %s: RPC_E_CALL_REJECTED, i=%d | now Sleep(%d) ...\n", __LINE__, __FUNCTION__, i, iSleepTime);
+                        Sleep(iSleepTime);      // yield, then retry
+                        hResult = pCoClass->GetRefTypeInfo(hRefType, &pTypeInfo);
                     }
-                    pTypeInfo->ReleaseTypeAttr(pTempTypeAttr);
                 }
-                pTypeInfo->Release();
+
+                if ( SUCCEEDED(hResult) )
+                {
+                    TYPEATTR *pTempTypeAttr = NULL;
+                    hResult = pTypeInfo->GetTypeAttr(&pTempTypeAttr);
+                    if (hResult==RPC_E_CALL_REJECTED)   // in case of a "RPC_E_CALL_REJECTED" a retry usually succeeds
+                    {
+                        for (int i=0; (hResult==RPC_E_CALL_REJECTED) && (iArrSleepTimes[i]!=0); i++)
+                        {
+                            int iSleepTime = iArrSleepTimes[i];
+                            if ( bDebug_rpc_e_call_rejected ) fprintf(stderr, "... orexxole.cpp %d %s: RPC_E_CALL_REJECTED, i=%d | now Sleep(%d) ...\n", __LINE__, __FUNCTION__, i, iSleepTime);
+                            Sleep(iSleepTime);      // yield, then retry
+                            hResult = pTypeInfo->GetTypeAttr(&pTempTypeAttr);
+                        }
+                    }
+                    if ( bDebug_rpc_e_call_rejected && (hResult==RPC_E_CALL_REJECTED) )
+                    {
+                        CHAR szTmpBuf[2048];
+                        get_HRESULT_ErrorMessage(hResult, szTmpBuf);
+                        fprintf(stderr, "... orexxole.cpp %d %s: %s \n", __LINE__, __FUNCTION__, szTmpBuf );
+                    }
+
+                    if ( hResult == S_OK )
+                    {
+                        if ( InlineIsEqualGUID(*guid, pTempTypeAttr->guid) )
+                        {
+                            match = true;
+                        }
+                        pTypeInfo->ReleaseTypeAttr(pTempTypeAttr);
+                    }
+                    pTypeInfo->Release();
+                }
+            }
+            if ( bDebug_rpc_e_call_rejected && (hResult==RPC_E_CALL_REJECTED) )
+            {
+                CHAR szTmpBuf[2048];
+                get_HRESULT_ErrorMessage(hResult, szTmpBuf);
+                fprintf(stderr, "... orexxole.cpp %d %s: %s \n", __LINE__, __FUNCTION__, szTmpBuf );
             }
         }
         pCoClass->ReleaseTypeAttr(pTypeAttr);
@@ -5875,6 +6621,22 @@ bool eventTypeInfoFromCoClass(ITypeInfo *pCoClass, ITypeInfo **ppTypeInfoEvents)
     HRESULT hResult;
 
     hResult = pCoClass->GetTypeAttr(&pTypeAttr);
+    if (hResult==RPC_E_CALL_REJECTED)   // in case of a "RPC_E_CALL_REJECTED" a retry usually succeeds
+    {
+        for (int i=0; (hResult==RPC_E_CALL_REJECTED) && (iArrSleepTimes[i]!=0); i++)
+        {
+            int iSleepTime = iArrSleepTimes[i];
+            if ( bDebug_rpc_e_call_rejected ) fprintf(stderr, "... orexxole.cpp %d %s: RPC_E_CALL_REJECTED, i=%d | now Sleep(%d) ...\n", __LINE__, __FUNCTION__, i, iSleepTime);
+            Sleep(iSleepTime);      // yield, then retry
+            hResult = pCoClass->GetTypeAttr(&pTypeAttr);
+        }
+    }
+    if ( bDebug_rpc_e_call_rejected && (hResult==RPC_E_CALL_REJECTED) )
+    {
+        CHAR szTmpBuf[2048];
+        get_HRESULT_ErrorMessage(hResult, szTmpBuf);
+        fprintf(stderr, "... orexxole.cpp %d %s: %s \n", __LINE__, __FUNCTION__, szTmpBuf );
+    }
 
     if ( hResult == S_OK )
     {
@@ -5882,6 +6644,23 @@ bool eventTypeInfoFromCoClass(ITypeInfo *pCoClass, ITypeInfo **ppTypeInfoEvents)
         for ( i = 0; i < pTypeAttr->cImplTypes; i++ )
         {
             hResult = pCoClass->GetImplTypeFlags(i, &flags);
+            if (hResult==RPC_E_CALL_REJECTED)   // in case of a "RPC_E_CALL_REJECTED" a retry usually succeeds
+            {
+                for (int i=0; (hResult==RPC_E_CALL_REJECTED) && (iArrSleepTimes[i]!=0); i++)
+                {
+                    int iSleepTime = iArrSleepTimes[i];
+                    if ( bDebug_rpc_e_call_rejected ) fprintf(stderr, "... orexxole.cpp %d %s: RPC_E_CALL_REJECTED, i=%d | now Sleep(%d) ...\n", __LINE__, __FUNCTION__, i, iSleepTime);
+                    Sleep(iSleepTime);      // yield, then retry
+                    hResult = pCoClass->GetImplTypeFlags(i, &flags);
+                }
+            }
+            if ( bDebug_rpc_e_call_rejected && (hResult==RPC_E_CALL_REJECTED) )
+            {
+                CHAR szTmpBuf[2048];
+                get_HRESULT_ErrorMessage(hResult, szTmpBuf);
+                fprintf(stderr, "... orexxole.cpp %d %s: %s \n", __LINE__, __FUNCTION__, szTmpBuf );
+            }
+
             if ( SUCCEEDED(hResult) && (flags & IMPLTYPEFLAG_FDEFAULT) && (flags & IMPLTYPEFLAG_FSOURCE) )
             {
                 HREFTYPE hRefType = NULL;
@@ -5889,14 +6668,51 @@ bool eventTypeInfoFromCoClass(ITypeInfo *pCoClass, ITypeInfo **ppTypeInfoEvents)
                 /* Found the default source (the outgoing) interface.  Get the
                  * type information.
                  */
-                pCoClass->GetRefTypeOfImplType(i, &hRefType);
-                hResult = pCoClass->GetRefTypeInfo(hRefType, &pTypeInfo);
+                hResult = pCoClass->GetRefTypeOfImplType(i, &hRefType);
+                if (hResult==RPC_E_CALL_REJECTED)   // in case of a "RPC_E_CALL_REJECTED" a retry usually succeeds
+                {
+                    for (int i=0; (hResult==RPC_E_CALL_REJECTED) && (iArrSleepTimes[i]!=0); i++)
+                    {
+                        int iSleepTime = iArrSleepTimes[i];
+                        if ( bDebug_rpc_e_call_rejected ) fprintf(stderr, "... orexxole.cpp %d %s: RPC_E_CALL_REJECTED, i=%d | now Sleep(%d) ...\n", __LINE__, __FUNCTION__, i, iSleepTime);
+                        Sleep(iSleepTime);      // yield, then retry
+                        hResult = pCoClass->GetRefTypeOfImplType(i, &hRefType);
+                    }
+                }
+                if ( bDebug_rpc_e_call_rejected && (hResult==RPC_E_CALL_REJECTED) )
+                {
+                    CHAR szTmpBuf[2048];
+                    get_HRESULT_ErrorMessage(hResult, szTmpBuf);
+                    fprintf(stderr, "... orexxole.cpp %d %s: %s \n", __LINE__, __FUNCTION__, szTmpBuf );
+                }
+
                 if ( SUCCEEDED(hResult) )
                 {
-                    found = true;
-                    *ppTypeInfoEvents = pTypeInfo;
+                    hResult = pCoClass->GetRefTypeInfo(hRefType, &pTypeInfo);
+                    if (hResult==RPC_E_CALL_REJECTED)   // in case of a "RPC_E_CALL_REJECTED" a retry usually succeeds
+                    {
+                        for (int i=0; (hResult==RPC_E_CALL_REJECTED) && (iArrSleepTimes[i]!=0); i++)
+                        {
+                            int iSleepTime = iArrSleepTimes[i];
+                            if ( bDebug_rpc_e_call_rejected ) fprintf(stderr, "... orexxole.cpp %d %s: RPC_E_CALL_REJECTED, i=%d | now Sleep(%d) ...\n", __LINE__, __FUNCTION__, i, iSleepTime);
+                            Sleep(iSleepTime);      // yield, then retry
+                            hResult = pCoClass->GetRefTypeInfo(hRefType, &pTypeInfo);
+                        }
+                    }
+
+                    if ( SUCCEEDED(hResult) )
+                    {
+                        found = true;
+                        *ppTypeInfoEvents = pTypeInfo;
+                    }
+                    break;
                 }
-                break;
+                if ( bDebug_rpc_e_call_rejected && (hResult==RPC_E_CALL_REJECTED) )
+                {
+                    CHAR szTmpBuf[2048];
+                    get_HRESULT_ErrorMessage(hResult, szTmpBuf);
+                    fprintf(stderr, "... orexxole.cpp %d %s: %s \n", __LINE__, __FUNCTION__, szTmpBuf );
+                }
             }
         }
         pCoClass->ReleaseTypeAttr(pTypeAttr);
@@ -5950,6 +6766,16 @@ void GUIDFromTypeInfo(ITypeInfo *pTypeInfo, GUID *guid)
     if ( pTypeInfo != NULL )
     {
         hResult = pTypeInfo->GetTypeAttr(&pTypeAttr);
+        if (hResult==RPC_E_CALL_REJECTED)   // in case of a "RPC_E_CALL_REJECTED" a retry usually succeeds
+        {
+            for (int i=0; (hResult==RPC_E_CALL_REJECTED) && (iArrSleepTimes[i]!=0); i++)
+            {
+                int iSleepTime = iArrSleepTimes[i];
+                if ( bDebug_rpc_e_call_rejected ) fprintf(stderr, "... orexxole.cpp %d %s: RPC_E_CALL_REJECTED, i=%d | now Sleep(%d) ...\n", __LINE__, __FUNCTION__, i, iSleepTime);
+                Sleep(iSleepTime);      // yield, then retry
+                hResult = pTypeInfo->GetTypeAttr(&pTypeAttr);
+            }
+        }
     }
 
     if ( SUCCEEDED(hResult) )
@@ -5959,6 +6785,13 @@ void GUIDFromTypeInfo(ITypeInfo *pTypeInfo, GUID *guid)
     }
     else
     {
+        if ( bDebug_rpc_e_call_rejected )
+        {
+            CHAR szTmpBuf[2048];
+            get_HRESULT_ErrorMessage(hResult, szTmpBuf);
+            fprintf(stderr, "... orexxole.cpp %d %s: %s - setting to GUID_NULL\n", __LINE__, __FUNCTION__, szTmpBuf );
+        }
+
         memcpy((void*)guid, (void*)&GUID_NULL, sizeof(GUID));
     }
 }
