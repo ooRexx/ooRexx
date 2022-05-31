@@ -216,47 +216,51 @@ end
   forward to(pipeStage) message('secondaryEof')
 
 
-::class sort public subclass pipeStage      -- sort piped data
+-- base class for pipe stages that need to accumulate data with actual processing
+-- deferred until the eof event is received. Sorting is a good example of this type of
+-- stage
+::class bufferingStage public subclass pipeStage
 ::method begin                              -- sorter initialization method
   expose items                              -- list of sorted items
   items = .array~new                        -- create a new list
   forward class(super)                      -- forward the initialization
+
+::attribute items private                   -- access to the accumulated items
 
 ::method process                            -- process sorter piped data item
   expose items                              -- access internal state data
   use strict arg value                      -- access the passed value
   items~append(value)                       -- append the value to the accumulator array
 
-::method eof                                -- process the "end-of-pipe"
-  expose items                              -- expose the list
-  items~sort                                -- sort the accumulated items
+::method eof                                -- end of processing clean up
+  expose items
+
+  items = .nil
+  forward class(super)                      -- propagate the event
+
+::method writeItems private                 -- send along the items
+  expose items
 
   do i = 1 to items~items                   -- copy all sorted items to the primary stream
      self~write(items[i])
   end
-  forward class(super)                      -- make sure we propagate the done message
 
+::class sort public subclass bufferingStage   -- sort piped data
+::method eof                                -- process the "end-of-pipe"
+  self~items~sort                           -- sort the accumulated items
+  self~writeItems                           -- now release the Kraken
+  forward class(super)                      -- make sure we propagate the done message
 
 ::class sortWith public subclass pipeStage  -- sort piped data
-::method begin                              -- sorter initialization method
-  expose items                              -- list of sorted items
-  items = .array~new                        -- create a new list
-  forward class(super)                      -- forward the initialization
-
-::method process                            -- process sorter piped data item
-  expose items                              -- access internal state data
-  use strict arg value                      -- access the passed value
-  items~append(value)                       -- append the value to the accumulator array
+::method init
+  expose comparator
+  use strict arg comparator
 
 ::method eof                                -- process the "end-of-pipe"
-  expose items comparator                   -- expose the list
-  items~sortWith(comparator)                -- sort the accumulated items
-
-  do i = 1 to items~items                   -- copy all sorted items to the primary stream
-     self~write(items[i])
-  end
+  expose comparator
+  self~items~sortWith(comparator)           -- sort the accumulated items
+  self~writeItems                           -- now release the Kraken
   forward class(super)                      -- make sure we propagate the done message
-
 
 ::class reverse public subclass pipeStage   -- a string reversal pipeStage
 ::method process                            -- pipeStage processing item
@@ -381,26 +385,16 @@ end
   end
 
 
-::class takeLast public subclass pipeStage   -- take the last n records
+::class takeLast public subclass bufferingStage   -- take the last n records
 ::method init
   expose count
   use strict arg count
   self~init:super                           -- forward the initialization
 
-::method begin
-  expose array
-
-  array = .array~new                        -- we need to accumulate these until the end
-  forward class(super)
-
-::method process
-  expose array
-  use strict arg value
-
-  array~append(value)                       -- just add to the accumulator
-
 ::method eof
-  expose count array
+  expose count
+
+  array = self~items
 
   if array~items < count then do            -- didn't even receive that many items?
       loop line over array
@@ -446,27 +440,17 @@ end
   end
 
 
-::class dropLast public subclass pipeStage     -- drop the last n records
+::class dropLast public subclass bufferingStage     -- drop the last n records
 ::method init
   expose count
   use strict arg count
 
   self~init:super                             -- forward the initialization
 
-::method begin
-  expose array
-
-  array = .array~new                        -- we need to accumulate these until the end
-  forward class(super)
-
-::method process
-  expose array
-  use strict arg value
-
-  array~append(value)                       -- just add to the accumulator
-
 ::method eof
-  expose count array
+  expose count
+
+  array = self~items                        -- get the buffered records
 
   if array~items < count then do            -- didn't even receive that many items?
       loop line over array
@@ -845,23 +829,16 @@ self~writeSecondary(value)                 -- send all mismatches down the other
   end
 
 
-::class buffer subclass pipeStage public       -- write only records before first trigger record
+::class buffer subclass bufferingStage public  -- write only records before first trigger record
 ::method init
   expose count delimiter
   use strict arg count = 1, delimiter = ("")
   self~init:super                           -- forward the initialization
 
-::method begin
-  espose buffer
-  buffer = .array~new
-
-::method process
-  expose buffer
-  use strict arg value
-  buffer~append(value)                      -- just accumulate the value
-
 ::method eof
-  expose buffer count delimiter
+  expose count delimiter
+
+  buffer = self~items                       -- get the buffered records
 
   loop i = 1 to count                       -- now write copies of the set to the stream
        if i > 1 then do
@@ -871,9 +848,6 @@ self~writeSecondary(value)                 -- send all mismatches down the other
            self~write(buffer[i])
        end
   end
-
-  buffer = .nil
-
   forward class(super)                      -- and send the done message along
 
 
