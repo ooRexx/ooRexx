@@ -2702,6 +2702,23 @@ POLEFUNCINFO2 GetEventInfo(ITypeInfo *pTypeInfo, RexxObjectPtr self, POLECLASSIN
                     strcpy(pEventList->pszFuncName, szBuffer);
 
                     hResult = pTypeInfo->GetDocumentation(pFuncDesc->memid,NULL,&bString,NULL,NULL);
+                    if (hResult==RPC_E_CALL_REJECTED)   // in case of a "RPC_E_CALL_REJECTED" a retry usually succeeds
+                    {
+                        for (int i=0; (hResult==RPC_E_CALL_REJECTED) && (iArrSleepTimes[i]!=0); i++)
+                        {
+                            int iSleepTime = iArrSleepTimes[i];
+                            if ( bDebug_rpc_e_call_rejected ) fprintf(stderr, "... orexxole.cpp %d %s: RPC_E_CALL_REJECTED, i=%d | now Sleep(%d) ...\n", __LINE__, __FUNCTION__, i, iSleepTime);
+                            Sleep(iSleepTime);      // yield, then retry
+                            hResult = pTypeInfo->GetDocumentation(pFuncDesc->memid,NULL,&bString,NULL,NULL);
+                        }
+                    }
+                    if ( bDebug_rpc_e_call_rejected && (hResult==RPC_E_CALL_REJECTED) )
+                    {
+                        CHAR szTmpBuf[2048];
+                        get_HRESULT_ErrorMessage(hResult, szTmpBuf);
+                        fprintf(stderr, "... orexxole.cpp %d %s: %s \n", __LINE__, __FUNCTION__, szTmpBuf );
+                    }
+
                     if (hResult == S_OK)
                     {
                         sprintf(szBuffer,"%S",bString);
@@ -5730,7 +5747,12 @@ RexxMethod1(RexxObjectPtr,                // Return type
                 context->SetStemElement(RxStem, pszSmall, context->NewStringFromAsciiz(pEventList->pszFuncName));
 
                 sprintf(pszSmall,"%d.!DOC",iCount);
-                context->SetStemElement(RxStem, pszSmall, context->NewStringFromAsciiz(pEventList->pszDocString));
+                   // GetEventInfo(...) can set pszDocString to NULL
+                context->SetStemElement(RxStem, pszSmall,
+                                        (pEventList->pszDocString == NULL ?
+                                         context->Nil() :
+                                         context->NewStringFromAsciiz(pEventList->pszDocString))
+                                       );
 
                 sprintf(pszSmall,"%d.!PARAMS.0",iCount);
                 context->SetStemElement(RxStem, pszSmall, context->WholeNumberToObject(pEventList->iParmCount));
