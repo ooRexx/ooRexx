@@ -745,6 +745,11 @@ self~writeSecondary(value)                 -- send all mismatches down the other
 ::method init                               -- initialize a collector
   expose stream                             -- expose target stream
   use strict arg stream                     -- get the stem variable target
+
+  if \stream~isA(.outputStream) then do     -- if not already a stream object, make it one
+     stream = .stream~new(stream)
+  end
+
   self~init:super                           -- forward the initialization
 
 ::method process                            -- process a stem pipeStage item
