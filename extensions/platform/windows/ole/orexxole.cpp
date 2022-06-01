@@ -57,7 +57,6 @@
 // global data
 //******************************************************************************
 BOOL            fInitialized = FALSE;
-CHAR            szDbg[255];
 PPOLECLASSINFO  ppClsInfo = NULL;
 PTYPELIBLIST    pTypeLibList = NULL;
 int             iClsInfoSize = 0;
@@ -99,7 +98,7 @@ BOOL fFindConstant(const char *pszConstName, POLECLASSINFO pClsInfo, PPOLECONSTI
 RexxObjectPtr Variant2Rexx(RexxThreadContext *context, VARIANT *pVariant);
 bool Rexx2Variant(RexxThreadContext *context, RexxObjectPtr RxObject, VARIANT *pVariant, VARTYPE DestVt, size_t iArgPos);
 bool createEmptySafeArray(RexxThreadContext *, VARIANT *);
-bool ArrayClass2SafeArray(RexxThreadContext *context, RexxObjectPtr RxArray, VARIANT *VarArray, size_t iArgPos);
+bool ArrayClass2SafeArray(RexxThreadContext *context, RexxObjectPtr RxArray, VARIANT *VarArray, VARTYPE ArrayVt);
 BOOL fExploreTypeAttr( ITypeInfo *pTypeInfo, TYPEATTR *pTypeAttr, POLECLASSINFO pClsInfo );
 VARTYPE getUserDefinedVT( ITypeInfo *pTypeInfo, HREFTYPE hrt );
 BOOL fExploreTypeInfo( ITypeInfo *pTypeInfo, POLECLASSINFO pClsInfo );
@@ -162,7 +161,7 @@ void dbgPrintGUID( IID *pGUID )
 }
 
 
-PSZ pszDbgInvkind(INVOKEKIND invkind)
+PSZ pszDbgInvkind(INVOKEKIND invkind, char *szDbg)
 {
     szDbg[0] = 0;
 
@@ -187,11 +186,12 @@ PSZ pszDbgInvkind(INVOKEKIND invkind)
     {
         szDbg[strlen(szDbg)-1] = 0;
     }
+
     return szDbg;
 }
 
 
-PSZ pszDbgTypekind(TYPEKIND typeKind)
+PSZ pszDbgTypekind(TYPEKIND typeKind, char *szDbg)
 {
     szDbg[0] = 0;
 
@@ -227,7 +227,7 @@ PSZ pszDbgTypekind(TYPEKIND typeKind)
 }
 
 
-PSZ pszDbgParmFlags(unsigned short pf)
+PSZ pszDbgParmFlags(unsigned short pf, char *szDbg)
 {
     szDbg[0] = 0;
 
@@ -264,11 +264,12 @@ PSZ pszDbgParmFlags(unsigned short pf)
     {
         szDbg[strlen(szDbg)-1] = 0;
     }
+
     return szDbg;
 }
 
 
-PSZ pszDbgVarType(VARTYPE vt)
+PSZ pszDbgVarType(VARTYPE vt, char *szDbg)
 {
     szDbg[0] = 0;
 
@@ -413,17 +414,18 @@ PSZ pszDbgVarType(VARTYPE vt)
         default:
             strcat(szDbg, "unknown vt");
     }
-
     return szDbg;
 }
 
 
-PSZ pszDbgVariant(VARIANT *pVar)
+PSZ pszDbgVariant(VARIANT *pVar, char *szDbg)
 {
+    szDbg[0] = 0;
+
     CHAR      szValue[2000];
     VARIANT   sStrArg;
 
-    pszDbgVarType(V_VT(pVar));
+    pszDbgVarType(V_VT(pVar), szDbg);
     strcat(szDbg, " -> ");
     szValue[0] = 0;
 
@@ -1733,7 +1735,8 @@ RexxObjectPtr Variant2Rexx(RexxThreadContext *context, VARIANT *pVariant)
                 }
                 else
                 {
-                    sprintf(szBuffer, "%s", pszDbgVarType(V_VT(pVariant)));
+                    CHAR szDbg[255];
+                    sprintf(szBuffer, "%s", pszDbgVarType(V_VT(pVariant),szDbg));
                     context->RaiseException1(Rexx_Error_Variant2Rexx, context->NewStringFromAsciiz(szBuffer));
                     return NULLOBJECT;
                 }
@@ -1852,8 +1855,11 @@ RexxObjectPtr Variant2Rexx(RexxThreadContext *context, VARIANT *pVariant)
             case VT_CARRAY:
             case VT_USERDEFINED:
             default:
-                context->RaiseException1(Rexx_Error_Variant2Rexx, context->NewStringFromAsciiz(pszDbgVarType(V_VT(pVariant))));
-                return NULLOBJECT;
+                {
+                    CHAR szDbg[255];
+                    context->RaiseException1(Rexx_Error_Variant2Rexx, context->NewStringFromAsciiz(pszDbgVarType(V_VT(pVariant), szDbg)));
+                    return NULLOBJECT;
+                }
         } /* end switch */
     }
 
@@ -2018,8 +2024,10 @@ bool Rexx2Variant(RexxThreadContext *context, RexxObjectPtr _RxObject, VARIANT *
     /* or maybe this is an array? */
     if (context->IsArray(RxObject))
     {
-        return ArrayClass2SafeArray(context, RxObject, pVariant, iArgPos); // byRefCheck!!!!
+        bool bRes=ArrayClass2SafeArray(context, RxObject, pVariant, DestVt);
+        return bRes;
     }
+
 
     /* if no target type is specified try original REXX types */
     if ((DestVt == VT_EMPTY) || (DestVt == VT_PTR) || (DestVt == VT_VARIANT))
@@ -2189,7 +2197,8 @@ bool createEmptySafeArray(RexxThreadContext *context, VARIANT *VarArray)
 }
 
 
-bool ArrayClass2SafeArray(RexxThreadContext *context, RexxObjectPtr RxArray, VARIANT *VarArray, size_t iArgPos)
+// ArrayVt: determines which type the array has to be
+bool ArrayClass2SafeArray(RexxThreadContext *context, RexxObjectPtr RxArray, VARIANT *VarArray, VARTYPE ArrayVt)
 {
     wholenumber_t   lDimensions;
     PLONG           lpIndices;              // vector of indices
@@ -2238,7 +2247,8 @@ bool ArrayClass2SafeArray(RexxThreadContext *context, RexxObjectPtr RxArray, VAR
     }
 
     /* create the SafeArray */
-    pSafeArray = SafeArrayCreate(VT_VARIANT,(UINT) lDimensions, pArrayBounds);
+    pSafeArray = SafeArrayCreate(ArrayVt,(UINT) lDimensions, pArrayBounds);
+
     if ( ! pSafeArray )
     {
         ORexxOleFree(pArrayBounds);
@@ -2246,8 +2256,7 @@ bool ArrayClass2SafeArray(RexxThreadContext *context, RexxObjectPtr RxArray, VAR
         context->RaiseException0(Rexx_Error_System_resources);
         return false;
     }
-
-    V_VT(VarArray) = VT_ARRAY | VT_VARIANT;
+    V_VT(VarArray) = VT_ARRAY | ArrayVt;    // in working changes
     V_ARRAY(VarArray) = pSafeArray;
 
     /* get each element and transform it into a VARIANT */
@@ -2271,7 +2280,7 @@ bool ArrayClass2SafeArray(RexxThreadContext *context, RexxObjectPtr RxArray, VAR
         }
         else
         {
-            if ( ! Rexx2Variant(context, RexxItem, &sVariant, VT_EMPTY, 0) )
+            if ( ! Rexx2Variant(context, RexxItem, &sVariant, ArrayVt, 0) )
             {
                 ORexxOleFree(pArrayBounds);
                 ORexxOleFree(lpIndices);
@@ -4283,7 +4292,19 @@ ThreeStateReturn checkForOverride(RexxThreadContext *context, VARIANT *pVariant,
                     break;
 
                 default :
-                    /* Let default conversion handle all other cases. */
+
+                    if (*pDestVt & VT_ARRAY)    // an array desired, process it
+                    {
+                        VARTYPE tmpVt = *pDestVt & VT_TYPEMASK;
+                        if (context->IsArray(*pRxObject))       // indeed an ooRexx array
+                        {
+                            if (ArrayClass2SafeArray(context, *pRxObject, pVariant, tmpVt) )
+                            {
+                                converted = SuccessReturn;
+                            }
+                        }
+                    }
+
                     break;
             }
         }
@@ -5009,7 +5030,10 @@ void InsertTypeInfo(RexxMethodContext *context, ITypeInfo *pTypeInfo, TYPEATTR *
 
                 // store return type
                 sprintf(szSmallBuffer,"%d.!RETTYPE",*pIndex);
-                context->SetStemElement(RxResult, szSmallBuffer, context->NewStringFromAsciiz(pszDbgVarType(pFuncDesc->elemdescFunc.tdesc.vt)));
+                {
+                   CHAR szDbg[255];
+                   context->SetStemElement(RxResult, szSmallBuffer, context->NewStringFromAsciiz(pszDbgVarType(pFuncDesc->elemdescFunc.tdesc.vt,szDbg)));
+                }
 
                 // store invoke kind
                 sprintf(szSmallBuffer,"%d.!INVKIND",*pIndex);
@@ -5062,7 +5086,10 @@ void InsertTypeInfo(RexxMethodContext *context, ITypeInfo *pTypeInfo, TYPEATTR *
 
                     // display variant type
                     sprintf(szSmallBuffer,"%d.!PARAMS.%d.!TYPE",*pIndex,i+1);
-                    context->SetStemElement(RxResult, szSmallBuffer, context->NewStringFromAsciiz(pszDbgVarType(pFuncDesc->lprgelemdescParam[i].tdesc.vt)));
+                    {
+                        CHAR szDbg[255];
+                        context->SetStemElement(RxResult, szSmallBuffer, context->NewStringFromAsciiz(pszDbgVarType(pFuncDesc->lprgelemdescParam[i].tdesc.vt,szDbg)));
+                    }
 
                     // display name
                     if (i+1 < (int) uFlags)
@@ -5763,7 +5790,10 @@ RexxMethod1(RexxObjectPtr,                // Return type
                     context->SetStemElement(RxStem, pszSmall, context->NewStringFromAsciiz(pEventList->pszName[j]));
 
                     sprintf(pszSmall,"%d.!PARAMS.%d.!TYPE",iCount,j+1);
-                    context->SetStemElement(RxStem, pszSmall, context->NewStringFromAsciiz(pszDbgVarType(pEventList->pOptVt[j])));
+                    {
+                        CHAR szDbg[255];
+                        context->SetStemElement(RxStem, pszSmall, context->NewStringFromAsciiz(pszDbgVarType(pEventList->pOptVt[j],szDbg)));
+                    }
 
                     wFlags=pEventList->pusOptFlags[j];
                     pszInfoBuffer[0] = 0x00;
