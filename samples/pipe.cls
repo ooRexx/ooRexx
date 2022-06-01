@@ -723,7 +723,7 @@ self~writeSecondary(value)                 -- send all mismatches down the other
   use strict arg value                      -- get the data item
   stem.0 = stem.0 + 1                       -- stem the item count
   stem.[stem.0] = value                     -- save the value
-  forward class(super)
+  self~write(value)                         -- there may be following stages
 
 ::class arraycollector subclass pipeStage public -- collect items in an array
 ::method init                               -- initialize a collector
@@ -739,7 +739,20 @@ self~writeSecondary(value)                 -- send all mismatches down the other
   expose array
   use strict arg value                      -- get the data item
   array~append(value)                       -- append the item
-  forward class(super)
+  self~write(value)                         -- there may be following stages
+
+::class streamCollector subclass pipeStage public -- collect items in a stream
+::method init                               -- initialize a collector
+  expose stream                             -- expose target stream
+  use strict arg stream                     -- get the stem variable target
+  self~init:super                           -- forward the initialization
+
+::method process                            -- process a stem pipeStage item
+  expose stream
+  use strict arg value                      -- get the data item
+
+  stream~lineout(value)                     -- append the item
+  self~write(value)                         -- there may be following stages
 
 ::class between subclass pipeStage public      -- write only records from first trigger record
                                             -- up to a matching record
