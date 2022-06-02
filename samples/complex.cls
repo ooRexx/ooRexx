@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/*  complex.rex         Open Object Rexx Samples                              */
+/*  complex.cls         Open Object Rexx Samples                              */
 /*                                                                            */
 /*  A complex number class.                                                   */
 /*                                                                            */
@@ -127,6 +127,38 @@
   use strict arg                              /* no arguments allowed           */
 
   return sqrt(real**2 + imaginary**2)
+
+::method sqrt                                 /* complex square root            */
+  expose real imaginary
+  use strict arg
+
+  sqrtx2y2 = sqrt(real ** 2 + imaginary ** 2)
+  sign = (imaginary < 0)~?(-1, 1)
+
+  return self~class~new( -
+    sqrt((sqrtx2y2 + real) / 2), -
+    sqrt((sqrtx2y2 - real) / 2) * sign)
+
+::method '**'                                 /* complex integer power          */
+  use strict arg exponent
+  -- complex base, but integer exponents only
+  .Validate~wholeNumber("exponent", exponent)
+
+  -- use fast exponentiation
+  power = self~class~new(1)
+  n = exponent~abs
+  p = self
+  do while n > 0
+    if n // 2 = 1 then
+      power = power * p
+    p = p * p
+    n = n % 2
+  end
+  if exponent >= 0 then
+    return power
+  else
+    return self~class~new(1) / power
+
 
 ::method string                               /* format as a string value       */
   expose real imaginary                       /* get the state info             */
