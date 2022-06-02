@@ -1,4 +1,3 @@
-#!@OOREXX_SHEBANG_PROGRAM@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
@@ -83,7 +82,7 @@
   return self                               -- we're our own return value
 
 ::method '>'                                -- synonym for '|' usually reserved for branchout connections
-use strict arg follower
+  use strict arg follower
   follower = follower~new                   -- make sure this is an instance
   self~append(follower)                     -- do the chain append logic
   return self                               -- we're our own return value
