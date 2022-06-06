@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -1292,7 +1292,6 @@ bool ArrayClass::validateSingleDimensionIndex(RexxObject **index, size_t indexCo
         // the size is still 0 and this was not set explicitly (indicated by
         // having an dimensions array resulting from calling .array~new(0)
 
-        // TODO: pretty sure there are no unit tests for this extension behaviour
         if (boundsError & ExtendUpper)
         {
             // both of these are error conditions
@@ -2305,12 +2304,12 @@ void ArrayClass::ElementCopier::copyElements(size_t newDimension)
     }
     else
     {
-        // get the relative sizes of for this dimension
+        // get the respective sizes for this dimension
         size_t newDimSize = newArray->dimensionSize(newDimension);
         size_t oldDimSize = oldArray->dimensionSize(newDimension);
         // For each subscript at this level, recurse on the copy call,
         // but only for the sections of the old array where we have elements
-        for (size_t i= 1; i <= oldDimSize; i++)
+        for (size_t i = 1; i <= oldDimSize; i++)
         {
             copyElements(newDimension + 1);
         }
@@ -2319,12 +2318,11 @@ void ArrayClass::ElementCopier::copyElements(size_t newDimension)
         // to be applied when we return back
         if (newDimSize > oldDimSize)
         {
-            for (size_t i = newArray->getDimensions(), skipAmount = 1; i > newDimension; i--)
+            size_t skipAmount = newDimSize - oldDimSize;
+            for (size_t i = newArray->getDimensions(); i > newDimension; i--)
             {
                 skipAmount *= newArray->dimensionSize(i);
             }
-            // multiply by delta add at this dimension level (could be zero here)
-            size_t skipAmount = (newDimSize - oldDimSize);
             // bump our output position past the added empty space for this dimension
             startNew += skipAmount;
         }
@@ -2351,7 +2349,7 @@ void ArrayClass::extendMulti(RexxObject **index, size_t indexCount, size_t argPo
     Protected<NumberArray> newDimArray = new (indexCount) NumberArray(indexCount);
 
     // used for optimizing the copy operations
-    size_t firstChangedDimension = getDimensions() + 1;
+    size_t firstChangedDimension = 0;
     // this is a multiplier to calculate the total required
     // array size.
     size_t totalSize = 1;
@@ -2361,7 +2359,7 @@ void ArrayClass::extendMulti(RexxObject **index, size_t indexCount, size_t argPo
     if (isSingleDimensional())
     {
         // we never call this for a single dimension array when
-        //.the size is anything other than zero, so the new
+        // the size is anything other than zero, so the new
         // dimensions are totally determined by subscripts.
 
         for (size_t i = 0; i < indexCount; i++)
@@ -2377,7 +2375,7 @@ void ArrayClass::extendMulti(RexxObject **index, size_t indexCount, size_t argPo
     else
     {
         // we need to process each index subscript and compare each
-        //.against the corresponding dimensions.  Our new size will
+        // against the corresponding dimensions.  Our new size will
         // use the larger of the two values.
 
         for (size_t i = 0; i < indexCount; i++)
@@ -2391,7 +2389,7 @@ void ArrayClass::extendMulti(RexxObject **index, size_t indexCount, size_t argPo
             // keep track of where we find the first difference
             if (newDimensionSize > oldDimensionSize)
             {
-                firstChangedDimension = std::min(firstChangedDimension, i + 1);
+                firstChangedDimension = std::max(firstChangedDimension, i + 1);
             }
 
             size_t newSize = std::max(newDimensionSize, oldDimensionSize);
@@ -2427,7 +2425,7 @@ void ArrayClass::extendMulti(RexxObject **index, size_t indexCount, size_t argPo
         // Compute lowest largest contiguous chunk that can be copied
         copier.elementsToCopy = accumSize * dimensionSize(firstChangedDimension);
         // Compute amount need to skip to complete expanded dimension
-        copier.elementsToSkip = accumSize * newArray->dimensionSize(firstChangedDimension) - dimensionSize(firstChangedDimension);
+        copier.elementsToSkip = accumSize * (newArray->dimensionSize(firstChangedDimension) - dimensionSize(firstChangedDimension));
 
         // copying starts at the beginning of both
         copier.startNew = 1;
