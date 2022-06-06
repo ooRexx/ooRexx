@@ -72,16 +72,14 @@ class ArrayClass : public RexxObject
     {
      public:
 
-       inline void copy() { copyElements(1); }
-       void copyElements(size_t newDimension);
+       void copy();
+       void copyElements(size_t newDimension, size_t oldOffset, size_t newOffset);
+       void copyBlocks(size_t dimension, size_t oldOffset, size_t newOffset);
+       void getBlockSizes(size_t dimension, size_t &oldBlock, size_t &newBlock);
 
        ArrayClass *newArray;             // the array we're copying into
        ArrayClass *oldArray;             // the array we're copying from
-       size_t highestDimension;          // the point to start copying items.
-       size_t elementsToCopy;            // the number of elements to copy at this level
-       size_t elementsToSkip;            // the size difference between dimensions at this level
-       size_t startNew;                  // the starting position for copying into the new array on a given level
-       size_t startOld;                  // starting position for copying from the old array
+       size_t totalDimensions;           // number of dimension to process
     };
 
 
