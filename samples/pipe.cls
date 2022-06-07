@@ -266,6 +266,35 @@ end
   use strict arg value                      -- get the data item
   self~write(value~reverse)                 -- send it along in reversed form
 
+::class split public subclass pipeStage     -- split the record at a give delimiter
+::method init
+  expose delimiter
+  use strict arg delimiter
+  forward class(super)                      -- make sure we propagate the done message
+
+::method process                            -- pipeStage processing item
+  expose delimiter
+
+  use strict arg value                      -- get the data item
+
+  loop line over value~makeArray(delimiter) -- split the record into smaller chunks
+     self~write(line)                       -- send each piece down the pipe
+  end
+
+::class strip public subclass pipeStage     -- strip leading or trailing blanks
+::method init
+  expose option chars
+  use strict arg option = 'B', chars = '2009'x    -- default is blanks and horizontal tabs
+  forward class(super)                      -- make sure we propagate the done message
+
+::method process
+  expose option chars
+  use strict arg value
+
+  self~write(value~strip(option, chars))    -- strip and send along
+
+
+
 ::class upper public subclass pipeStage     -- a uppercasing pipeStage
 ::method process                            -- pipeStage processing item
   use strict arg value                      -- get the data item
@@ -647,7 +676,7 @@ self~write(value~x2c)
     end
   end
 
-self~writeSecondary(value)                 -- send all mismatches down the other branch, if there
+  self~writeSecondary(value)                -- send all mismatches down the other branch, if there
 
 ::class all public subclass pipeStage       -- a string selector pipeStage
 ::method init                               -- process initial strings
