@@ -169,9 +169,6 @@ void Activity::liveGeneral(MarkReason reason)
  */
 void Activity::runThread()
 {
-    // some things only occur on subsequent requests
-    bool firstDispatch = true;
-
     int32_t base;
     // establish the stack base pointer for control stack full detection.
     stackBase = currentThread.getStackBase(&base, TOTAL_STACK_SIZE);
@@ -200,13 +197,6 @@ void Activity::runThread()
 
             // we need to have the kernel lock before we can really start working
             requestAccess();
-            // we're already marked as active when first called to keep us from
-            // getting terminated prematurely before we get a chance to run
-            if (!firstDispatch)
-            {
-                activate();                      // make sure this is marked as active
-            }
-            firstDispatch = false;               // we need to activate every time after this
             activityLevel = getActivationLevel();
 
             // if we have a dispatch message set, send it send message to kick everything off
@@ -406,6 +396,9 @@ void Activity::reset()
 {
     // most important thing to reset here is the requires table
     resetRunningRequires();
+    // we are going to redispatch a thread, so we need to mark this as
+    // active now to prevent this from getting terminated before it has a
+    // chance to run
 }
 
 

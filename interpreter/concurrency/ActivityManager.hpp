@@ -189,6 +189,9 @@ protected:
     static bool              processTerminating;      // shutdown processing started
     static size_t            interpreterInstances;    // number of times an interpreter has been created.
 
+     // IMPORTANT NOTE: To avoid deadlocks, never request the kernel lock while holding the resourceLock,
+     // otherwise deadlocks are possible. It is permissible to request the resource lock while holding the
+     // kernel lock, but this ordering must be strictly observed.
     static SysMutex          kernelSemaphore;         // global kernel semaphore lock
     static SysSemaphore      terminationSem;          // used to signal that everything has shutdown
     static volatile bool sentinel;                    // used to ensure proper ordering of updates

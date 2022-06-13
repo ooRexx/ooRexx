@@ -131,6 +131,10 @@ public:
     static RexxString* qualifyFileSystemName(RexxString *name);
 
 protected:
+
+    // IMPORTANT NOTE: To avoid deadlocks, never request the kernel lock while holding the resourceLock,
+    // otherwise deadlocks are possible. It is permissible to request the resource lock while holding the
+    // kernel lock, but this ordering must be strictly observed.
     static SysMutex  resourceLock;   // use to lock resources accessed outside of kernel global lock
     static SysMutex  dispatchLock;   // use to lock when manipulating the activity dispatch queue
     static int    initializations;   // indicates whether we're terminated or not

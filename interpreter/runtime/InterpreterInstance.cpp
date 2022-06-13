@@ -312,7 +312,7 @@ bool InterpreterInstance::detachThread()
  *
  * @return The attached activity.
  */
-Activity *InterpreterInstance::spawnActivity(Activity *parent)
+Activity* InterpreterInstance::spawnActivity(Activity *parent)
 {
     // create a new activity
     Activity *activity = ActivityManager::createNewActivity(parent);
@@ -369,7 +369,7 @@ bool InterpreterInstance::poolActivity(Activity *activity)
  * @return The associated activity, or OREF_NULL if the current thread
  *         is not attached.
  */
-Activity *InterpreterInstance::findActivity(thread_id_t threadId)
+Activity* InterpreterInstance::findActivity(thread_id_t threadId)
 {
     // this is a critical section
     ResourceSection lock;
@@ -395,7 +395,7 @@ Activity *InterpreterInstance::findActivity(thread_id_t threadId)
  *
  * @return The target activity.
  */
-Activity *InterpreterInstance::findActivity()
+Activity* InterpreterInstance::findActivity()
 {
     return findActivity(SysActivity::queryThreadID());
 }
@@ -408,7 +408,7 @@ Activity *InterpreterInstance::findActivity()
  * @return The activity object associated with this thread/instance
  *         combination.
  */
-Activity *InterpreterInstance::enterOnCurrentThread()
+Activity* InterpreterInstance::enterOnCurrentThread()
 {
     // attach this thread to the current activity
     Activity *activity = attachThread();
@@ -535,6 +535,7 @@ bool InterpreterInstance::terminate()
     localEnvironment = OREF_NULL;
     commandHandlers = OREF_NULL;
     requiresFiles = OREF_NULL;
+
 
     // tell the main interpreter controller we're gone.
     Interpreter::terminateInterpreterInstance(this);

@@ -224,23 +224,32 @@ bool Interpreter::terminateInterpreter()
             return false;
         }
 
-        {
-            try
-            {
-                // this may seem funny, but we need to create an instance
-                // to shut down so that the package manager can unload
-                // the libraries (it needs to pass a RexxThreadContext
-                // pointer out to package unloaders, if they are defined)
-                InstanceBlock instance;
-                // run whatever uninits we can before we start releasing the libraries
-                memoryObject.lastChanceUninit();
+    }
 
-                PackageManager::unload();
-            } catch (ActivityException)
-            {
-                // we're shutting down, so ignore any failures while processing this
-            }
-        }
+    // the resource lock needs to be released here because unloading packages
+    // will require the kernel lock, which can never be requested while holding
+    // the resource lock
+    try
+    {
+        // this may seem funny, but we need to create an instance
+        // to shut down so that the package manager can unload
+        // the libraries (it needs to pass a RexxThreadContext
+        // pointer out to package unloaders, if they are defined)
+        InstanceBlock instance;
+        // run whatever uninits we can before we start releasing the libraries
+        memoryObject.lastChanceUninit();
+
+        PackageManager::unload();
+    }
+    catch (ActivityException)
+    {
+        // we're shutting down, so ignore any failures while processing this
+    }
+
+
+    {
+        ResourceSection lock;   // Now that we've released the kernel lock, we need to reacquire the resource lock
+
         // perform system-specific cleanup
         SystemInterpreter::terminateInterpreter();
 
