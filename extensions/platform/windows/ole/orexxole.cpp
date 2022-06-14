@@ -3050,9 +3050,11 @@ RexxMethod4(int,                             // Return type
             {
                 pDispatch->AddRef();
                 hResult = S_OK;
+
                 // if the IPersist interface is present, we can get at its CLSID and to its ProgID if present;
                 // if !CLSID is present, then the code assumes that a structure has been built for it,
                 {
+                    HRESULT     hResult;  // local
                     IPersist *pPersist = NULL;
 
                     int hr = pDispatch->QueryInterface(IID_IPersist, (LPVOID*) &pPersist);
@@ -3109,6 +3111,7 @@ RexxMethod4(int,                             // Return type
                     }
                 }
 #endif
+
             }
             else
             {
