@@ -618,6 +618,7 @@
 #define Rexx_Error_Execution_reply                                        98935
 #define Rexx_Error_Execution_reply_return                                 98936
 #define Rexx_Error_Execution_reply_exit                                   98937
+#define Rexx_Error_Execution_super                                        98938
 #define Rexx_Error_Execution_syntax_additional                            98939
 #define Rexx_Error_Execution_error_condition                              98941
 #define Rexx_Error_Execution_mixinclass                                   98942
