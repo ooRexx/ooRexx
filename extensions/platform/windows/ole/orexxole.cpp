@@ -2024,7 +2024,10 @@ bool Rexx2Variant(RexxThreadContext *context, RexxObjectPtr _RxObject, VARIANT *
     /* or maybe this is an array? */
     if (context->IsArray(RxObject))
     {
-        bool bRes=ArrayClass2SafeArray(context, RxObject, pVariant, DestVt);
+        // if called from OLEObject_Unknown: may contain an array as argument which might
+        // be set to VT_EMPTY there which causes an error when doing a SafeArrayCreate;
+        // therefore if DestVt is set to VT_EMPTY we use VT_VARIANT instead
+        bool bRes=ArrayClass2SafeArray(context, RxObject, pVariant, (DestVt==VT_EMPTY ? VT_VARIANT : DestVt ) );
         return bRes;
     }
 
