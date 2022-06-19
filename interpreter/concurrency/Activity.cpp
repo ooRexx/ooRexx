@@ -399,6 +399,7 @@ void Activity::reset()
     // we are going to redispatch a thread, so we need to mark this as
     // active now to prevent this from getting terminated before it has a
     // chance to run
+    activate();
 }
 
 
