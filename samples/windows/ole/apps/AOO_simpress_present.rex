@@ -88,7 +88,7 @@ call addItem text, "First released in 1994 with IBM's OS/2 Warp",  1
 call addItem text, "Negotiations about open-sourcing with RexxLA", 1
 call addItem text, "Rexx Language Association (www.RexxLA.org)",   2
 call addItem text, "Source code handed over to RexxLA in 2003",    2
-call addItem text, "Open Object Rexx (ooRexx)",                    0
+call addItem text, "Open Object Rexx (ooRexx by RexxLA)",          0
 call addItem text, "First released in 2004 by RexxLA",             1, .false
 
 document~setModified(.false)                 -- inhibit save-as popup
