@@ -1,7 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2022 Rexx Language Association. All rights reserved.         */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -35,17 +34,17 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/**********************************************************************/
-/*                                                                    */
-/* MSPOWERPOINT.REX: OLE Automation with Object REXX                  */
-/*                                                                    */
-/* Open MSPowerPoint and add Title-Slide with Title and SubTitle.     */
-/* Append slides with various styles.                                 */
-/* Get slide count and amount of shapes per slide.                    */
-/* List names of shapes on each slide.                                */
-/* Save  pptx file with unique name and close PowerPoint              */
-/*                                                                    */
-/**********************************************************************/
+/*********************************************************************
+
+ MSPowerPoint.rex: using OLE (object linking and embedding) with ooRexx
+
+ Using OLE open MSPowerPoint and add a Title slide with Title and SubTitle
+ shapes (sections).
+ Append slides with various styles, get slide count and amount of shapes per
+ slide, list names of shapes on each slide.
+ Save  pptx file with a unique name and close PowerPoint.
+
+*********************************************************************/
 
 -- Start PowerPoint
 PP = .OLEObject~New("PowerPoint.Application")
@@ -77,10 +76,8 @@ say "Press any key to save and close!"
 parse pull                              -- wait for key press
 
 -- Save and Close
-parse source . . s         -- get fully qualified path of this script
--- create unique file name
-fileOut = filespec('location',s)"\PP_" || date("S") || "_" || changeStr(":",time(),"") || ".pptx"
+homeDir = VALUE('USERPROFILE',,'ENVIRONMENT')   -- get user's home directory
+fileOut = homedir"\Desktop\PP_" || date("S") || "_" || changeStr(":",time(),"") || ".pptx"
+say "File to save to:" fileOut
 ActivePresentation~SaveAs(fileOut)                                    -- save pptx file
 PP~Quit                                                               -- close PP
-
-

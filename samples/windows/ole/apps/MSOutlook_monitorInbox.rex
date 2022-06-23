@@ -36,37 +36,112 @@
 /*----------------------------------------------------------------------------*/
 /*********************************************************************
 
- MSOutlook.rex: using OLE (object linking and embedding) with ooRexx
+ MSOutlook_monitorInput.rex: using OLE (object linking and embedding) with ooRexx
+
+ -- cf. "winextensions.pdf", "Example 8.3. OLEObject - Monitor Outlook"
 
  Links:  <https://docs.microsoft.com/en-us/office/vba/api/overview/outlook>
          <https://docs.microsoft.com/en-us/office/vba/outlook/concepts/getting-started/concepts-outlook-vba-reference>
          <https://docs.microsoft.com/en-us/office/vba/api/overview/outlook/object-model>
 
- Open Microsoft Outlook and show inbox. Count mails in inbox,
- show sender of all mails currently in inbox, then wait for 10 seconds.
+ Open Microsoft Outlook, attach an ooRexx "ItemAdd" event listener
+ to monitor the inbox for adding new mails. The program takes commands
+ by watching every second whether one of the files 'pause.monitor',
+ 'restart.monitor' or 'stop.monitor' got created in the meantime by the user.
 
 *********************************************************************/
 
-  Outlook = .OLEObject~new("Outlook.Application")
-  NameSpace = Outlook~GetNamespace("MAPI")
+/* Monitor OutLook for new mail */
+ say; say; say 'ooRexx Mail Monitor version 1.0.0'
 
-  -- In Outlook folder have numbers:
-  -- DeletedItems (3), Outbox (4), SentMail (5), Inbox (6),
-  -- Calendar (9), Contacts (10), Journal (11), Notes (12),
-  -- Tasks (13)
-  Inbox = NameSpace~GetDefaultFolder("6")      -- selects Inbox
+ outLook = .oleObject~new("Outlook.Application")
 
-  -- makes Outlook visible and shows Inbox
-  Inbox~Display
+ inboxID = outLook~getConstant(olFolderInBox)
+ inboxItems = outLook~getNameSpace("MAPI")~getDefaultFolder(inboxID)~items
 
-  InboxItems = Inbox~Items
-  MailCount = InboxItems~Count                      -- count items in Inbox
-  say "You have" MailCount "Mail(s) in your Inbox:"
-  -- may require to allow access to email information
-  Do ItemNumber = 1 to MailCount                    -- go through each item
-    Item = Inbox~Items(ItemNumber)
-    Sender = Item~Sender~Name                       -- sender of item
-    say "#" ItemNumber"." Sender
+ if \ inboxItems~isConnectable then do
+    say 'Inbox items is NOT connectable, quitting'
+    return 99
+ end
+
+ inboxItems~addEventMethod("ItemAdd", .methods~printNewMail)
+ inboxItems~connectEvents
+
+ if \ inboxItems~isConnected then do
+    say 'Error connecting to inbox events, quitting'
+    return 99
+ end
+
+ monitor = .Monitor~new
+ say 'ooRexx Mail Monitor - monitoring ...'
+ do while monitor~isActive
+    j = SysSleep(1)
+    status = monitor~getStatus
+
+    select
+        when status == 'disconnect' then do
+            inboxItems~disconnectEvents
+            say 'ooRexx Mail Monitor - paused ...'
+        end
+        when status == "reconnect" then do
+            inboxItems~connectEvents
+            say 'ooRexx Mail Monitor - monitoring ...'
+        end
+        otherwise do
+            nop
+        end
+    end
+    -- End select
+    end
+    say 'ooRexx Mail Monitor version 1.0.0 ended'
+
+return 0
+
+::method printNewMail unguarded
+  use arg mailItem
+  say 'You have mail'
+  say 'Subject:' mailItem~subject
+
+::class 'Monitor'
+::method init
+  expose state active
+
+  state = 'continue'
+  active = .true
+  j = SysFileDelete('stop.monitor')
+  j = SysFileDelete('pause.monitor')
+  j = SysFileDelete('restart.monitor')
+
+::method isActive
+  expose active
+  return active
+
+::method getStatus
+  expose state active
+
+  if SysIsFile('stop.monitor') then do
+    j = SysFileDelete('stop.monitor')
+    active = .false
+    state = 'quit'
+    return state
   end
 
-Call SysSleep 10
+  if SysIsFile('pause.monitor') then do
+    j = SysFileDelete('pause.monitor')
+    if state == "paused" then return "continue"
+
+    if state \== 'quit' then do
+        state = "paused"
+        return 'disconnect'
+    end
+  end
+
+  if SysIsFile('restart.monitor') then do
+    j = SysFileDelete('restart.monitor')
+    if state == 'continue' then return state
+    if state \== 'quit' then do
+        state = 'continue'
+        return 'reconnect'
+    end
+  end
+  return 'continue'

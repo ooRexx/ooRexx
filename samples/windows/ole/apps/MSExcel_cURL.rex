@@ -1,7 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2022 Rexx Language Association. All rights reserved.         */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -35,16 +34,24 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/**********************************************************************/
-/*                                                                    */
-/* MSEXCELCURL.REX: OLE Automation with Object REXX                   */
-/*                                                                    */
-/* Get temperature from https://wttr.in using CUrl.                   */
-/* Note: CUrl is included by default since Windows 10 build 17063.    */
-/* Open new MSExcel worksheet and insert information.                 */
-/* Select cells and create a simple chart.                            */
-/*                                                                    */
-/**********************************************************************/
+
+/**********************************************************************
+ MSExcel_cURL.rex: using OLE (object linking and embedding) with ooRexx
+
+ Get temperature from <https://wttr.in> using cURL, documentation can be found
+ at <https://github.com/chubin/wttr.in#one-line-output>.
+
+ Note: cURL is included by default since Windows 10 build 17063.
+
+ Links:  <https://docs.microsoft.com/en-us/office/vba/api/overview/excel>
+         <https://docs.microsoft.com/en-us/office/vba/excel/concepts/miscellaneous/concepts-excel-vba-reference>
+         <https://docs.microsoft.com/en-us/office/vba/api/overview/excel/object-model>
+
+ Using OLE create a new Microsoft Excel worksheet, query the weather with
+ the cURL command and insert the received data. Using the worksheet temperature
+ data create a simple chart.
+
+***********************************************************************/
 
 -- Get information using curl
 cityArr = .array~of("Vienna", "Graz", "Linz", "Salzburg", "Innsbruck", "Klagenfurt", "Bregenz", "Eisenstadt", "Sankt-Poelten", "Wien")
@@ -83,5 +90,3 @@ Worksheet~Range("A1:"colTitle[2]||row)~Select
 excelApplication~Charts~Add                                 -- create new chart
 excelApplication~ActiveChart~HasTitle = .True               -- add title
 excelApplication~ActiveChart~ChartTitle~Characters~Text = "Temperature"
-
-

@@ -1,7 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2022 Rexx Language Association. All rights reserved.         */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -35,14 +34,19 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/**********************************************************************/
-/*                                                                    */
-/* MSWORDSTYLES.REX: OLE Automation with Object REXX                  */
-/*                                                                    */
-/* Open MSWord and create text with various styles.                   */
-/* Change font attributes of specific styles.                         */
-/*                                                                    */
-/**********************************************************************/
+/*********************************************************************
+
+ MSWord_useStyles.rex: using OLE (object linking and embedding) with ooRexx
+
+ Links:  <https://docs.microsoft.com/en-us/office/vba/api/overview/word>
+         <https://docs.microsoft.com/en-us/office/vba/word/concepts/miscellaneous/concepts-word-vba-reference>
+         <https://docs.microsoft.com/en-us/office/vba/api/overview/word/object-model>
+
+ Using OLE create a Microsoft Word document, add text using various
+ styles and wait for the user to press the enter (return) key before
+ changing the font attributes of the styles named "Title" and "Heading 1".
+
+*********************************************************************/
 
 -- Start Word with empty document
 Word = .OLEObject~New("Word.Application")
