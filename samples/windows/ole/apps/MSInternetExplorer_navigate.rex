@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* https://www.oorexx.org/license.html                         */
+/* https://www.oorexx.org/license.html                                        */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -37,57 +37,39 @@
 /*----------------------------------------------------------------------------*/
 /**********************************************************************/
 /*                                                                    */
-/* SAMP14.REX: OLE Automation with Object REXX - Sample 14            */
+/* MSInternetExplorer_navigate.rex: OLE Automation with ooRexx        */
 /*                                                                    */
-/* Creating a database in Microsoft Access.                           */
+/* Start Internet Explorer and show the IBM homepage. After 10 seconds*/
+/* the RexxLA events page will be displayed for 10 seconds.           */
 /*                                                                    */
 /**********************************************************************/
 
--- Initialize string to database path.
--- get TEMP directory of current user
-tempDir = value("TEMP",,"ENVIRONMENT")    -- get value of environment variable "TEMP"
-strDB = tempDir"\newDatabaseByooRexx.mdb" -- define fully qualified database name
-say "Fully qualifed database file name:" strDB
+/* create an object for IE */
+myIE = .OLEObject~New("InternetExplorer.Application")
 
--- Remove any previously created copy of this sample database
-if stream(strDB,'c','query exists') \= '' then
-    do
-        say 'Database exists (from earlier run), deleting it ...'
-        rv = SysFileDelete(strDB)
-        if rv \= 0 then
-            do
-                say 'Delete of previous database failed, exiting now'
-                exit -1    -- return code not 0 so to indicate problem
-            end
-    end
+myIE~Width  = 1000
+myIE~Height = 800
+Say "current dimensions of Internet Explorer (IE) are:" myIE~Width "by" myIE~Height
 
--- Create new instance of Microsoft Access.
-appAccess = .OLEObject~new("Access.Application")
+/* set new dimensions and browse IBM homepage */
+Say "changing IE dimensions ..."
+myIE~Width  = 1280
+myIE~Height = 1024
+Say "IE dimensions changed to:" myIE~Width "by" myIE~Height
+Say "making IE visible ..."
+myIE~Visible = .True    -- now show the window
+say "navigating to:" "https://www.ibm.com"
+myIE~Navigate("https://www.ibm.com")
 
--- Open database in Microsoft Access window.
-appAccess~NewCurrentDatabase(strDB)
+/* wait for 10 seconds */
+say "now sleeping for 10 seconds ..."
+Call SysSleep 10
 
--- Get Database object variable.
-dbs = appAccess~CurrentDb
+/* browse RexxLA event page */
+say "navigating to:" "https://www.rexxla.org/events"
+myIE~Navigate("https://www.rexxla.org/events")
 
--- Create new table.
-tdf = dbs~CreateTableDef("Contacts")
-
--- Create field in new table.
-/* Please note how to access the constant.
-   Microsoft documentation and the MS OLEViewer output
-   these constants as dbText, dbBinary, etc. - the type library
-   however prints them as DB_TEXT, DB_BINARY, etc.. Unless
-   documentation is found why the names should be translated,
-   the OLE code will *NOT* convert the names. */
-fld = tdf~CreateField("CompanyName", appAccess~getConstant("db_Text"), 40)
-
--- Append Field and TableDef objects.
-tdf~Fields~Append(fld)
-dbs~TableDefs~Append(tdf)
-
-appAccess~quit
-
--- keep window open if invoked via Explorer to allow reading the output
-say "Press enter to continue ..."
-parse pull .
+/* wait for 10 seconds */
+say "now sleeping for 10 seconds before quitting ..."
+Call SysSleep 10
+myIE~quit

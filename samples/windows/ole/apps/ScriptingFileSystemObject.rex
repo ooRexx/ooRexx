@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -37,33 +37,54 @@
 /*----------------------------------------------------------------------------*/
 /**********************************************************************/
 /*                                                                    */
-/* SAMP03.REX: OLE Automation with Object REXX - Sample 3             */
+/* ScriptingFileSystemObject.rex: OLE Automation with ooRexx          */
 /*                                                                    */
-/* Show some features of the Windows Scripting Host Network object:   */
-/*  - Query computer name, user name                                  */
-/*  - List network connections for drives and printers                */
-/*                                                                    */
-/* This sample requires the Windows Scripting Host to be installed on */
-/* the system. See http://www.microsoft.com/scripting for details.    */
+/* Use the Windows Script Host FileSystemObject to obtain information */
+/* on drives of the system.                                           */
 /*                                                                    */
 /**********************************************************************/
 
-WshNetObj = .OLEObject~New("WScript.Network")
+fsObject = .OLEObject~new("Scripting.FileSystemObject")
 
-Say "Computer Name:" WshNetObj~ComputerName
-Say "User Domain:" WshNetObj~UserDomain
-Say "User Name:" WshNetObj~UserName
+allDrives = fsObject~drives
 
-Say "The following network drives are currently mapped:"
-MappedDrives = WshNetObj~EnumNetworkDrives
-Do i=0 To MappedDrives~Count/2 - 1
-  Say "   Drive" MappedDrives[i*2] "is mapped to" MappedDrives[i*2 + 1]
-End
+if allDrives = .NIL then do
+  say "The object did not return information on your drives!"
+  exit 1
+end
 
-Say "The following network printers are currently connected:"
-Printers = WshNetObj~EnumPrinterConnections
-Do i=0 To Printers~Count/2 - 1
-  Say "   Port" Printers[i*2] "is connected to" Printers[i*2 + 1]
-End
+do i over allDrives
+  info = i~DriveLetter "-"
+
+  /* show the DriveType in human-readable form */
+  j = i~DriveType
+  select
+  when j=1 then do
+    info = info "Removable"
+  end
+  when j=2 then do
+    info = info "Fixed"
+  end
+  when j=3 then do
+    info = info "Network"
+  end
+  when j=4 then do
+    info = info "CD-ROM"
+  end
+  when j=5 then do
+    info = info "RAM Disk"
+  end
+  otherwise
+    info = info "Unknown"
+  end
+
+  /* append the ShareName for a network drive... */
+  if j=3 then info = info i~ShareName
+  /* ...and the VolumeName for the other ones */
+  else if i~IsReady then info = info i~VolumeName
+  say info
+end
+
+exit 0
 
 

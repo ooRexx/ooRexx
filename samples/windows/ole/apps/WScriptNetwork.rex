@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -37,44 +37,32 @@
 /*----------------------------------------------------------------------------*/
 /**********************************************************************/
 /*                                                                    */
-/* SAMP05.REX: OLE Automation with Object REXX - Sample 5             */
+/* WScriptNetwork.rex: OLE Automation with ooRexx                     */
 /*                                                                    */
-/* Create a new document in WordPro 97, enter some text with          */
-/* different attributes and finally save and print the document.      */
-/*                                                                    */
-/* Since no check is done do ensure the new document does not already */
-/* exist you will get a popup message from WordPro asking to          */
-/* overwrite an already existing document when this sample is run     */
-/* multiple times.                                                    */
+/* Show some features of the Windows Scripting Host Network object:   */
+/*  - Query computer name, user name                                  */
+/*  - List network connections for drives and printers                */
 /*                                                                    */
 /**********************************************************************/
 
-WordProApp = .OLEObject~New("WordPro.Application")
-WordProApp~NewDocument("AutomatedDocument.lwp","","default.mwp")
-WPDoc = WordProApp~ActiveDocument
-WPDocText = WordProApp~Text
+WshNetObj = .OLEObject~New("WScript.Network")
 
-WordProApp~Type("This is the first paragraph entered from REXX via ")
-WordProApp~Type("the OLE automation classes.[Enter]")
+Say "Computer Name:" WshNetObj~ComputerName
+Say "User Domain  :" WshNetObj~UserDomain
+Say "User Name    :" WshNetObj~UserName
+say
 
-WordProApp~Type("The second paragraph will be changed in its ")
-WordProApp~Type("appearance.")
-WordProApp~SelectParagraph
-WPDocText~Font~Name = "Arial"
-WPDocText~Font~Bold = .True
-WPDocText~Font~Italic = .True
-WPDocText~Font~Size = 15
+Say "The following network drives are currently mapped:"
+MappedDrives = WshNetObj~EnumNetworkDrives
+Do i=0 To MappedDrives~Count/2 - 1
+  Say "   Drive" MappedDrives[i*2] "is mapped to" MappedDrives[i*2 + 1]
+End
+say
 
-WordProApp~Type("[End][Enter][End]Document created at:" Time("N") "on" Date("N"))
-
-WPDoc~Save
-
-/* if you want this document printed, comment in the next line */
---WordProApp~PrintOut(1, 1, 1, .True)
-
-say "Created" WPDoc~Path"\"WPDoc~Name
-
-WPDoc~Close
-WordProApp~Quit
+Say "The following network printers are currently connected:"
+Printers = WshNetObj~EnumPrinterConnections
+Do i=0 To Printers~Count/2 - 1
+  Say "   Port" Printers[i*2] "is connected to" Printers[i*2 + 1]
+End
 
 

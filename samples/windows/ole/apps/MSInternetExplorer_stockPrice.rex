@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -37,34 +37,64 @@
 /*----------------------------------------------------------------------------*/
 /**********************************************************************/
 /*                                                                    */
-/* SAMP02.REX: OLE Automation with Object REXX - Sample 2             */
+/* MSInternetExplorer_stockPrice.rex: OLE Automation with ooRexx      */
 /*                                                                    */
-/* Show some features of the Windows Scripting Host Shell Object:     */
-/*  - Query environment string                                        */
-/*  - List special folders                                            */
-/*  - Create a shortcut on the desktop                                */
-/*                                                                    */
-/* This sample requires the Windows Scripting Host to be installed on */
-/* the system. See http://www.microsoft.com/scripting for details.    */
+/* Get stock price from IBM internet page with Microsoft Internet     */
+/* Explorer and store it in a REXX variable.                          */
 /*                                                                    */
 /**********************************************************************/
 
-WshShellObj = .OLEObject~New("WScript.Shell")
+/* Get stock price from IBM internet page with MS IE and OLE */
 
-WshEnv = WshShellObj~Environment
-Say "Operating system:" WshEnv["OS"]
-Say "You have" WshEnv["NUMBER_OF_PROCESSORS"] "processor(s) of",
-    WshEnv["PROCESSOR_ARCHITECTURE"] "architecture in your system."
+say "Getting stock price from IBM Internet page."
+say
 
-Say "The following directories represent special folders on your system:"
-Do Folder Over WshShellObj~SpecialFolders
-  Say "   " Folder
-End
+Explorer = .OLEObject~new("InternetExplorer.Application")
+Explorer~Visible = .true
+Explorer~Navigate("http://www.ibm.com/investor/")
 
-Say "Creating a shortcut for NOTEPAD.EXE on your Desktop..."
-Desktop = WshShellObj~SpecialFolders("Desktop")
-ShortCut = WshShellObj~CreateShortcut(Desktop || "\Shortcut to Notepad.lnk")
-ShortCut~TargetPath = "%WINDIR%\notepad.exe"
-ShortCut~Save
+-- Wait for browser to load the page, with a time out.  If the page is not
+-- loaded by the timout, then quit.
+count = 0
+do while Explorer~busy & count < 12
+    do while Explorer~readyState <> 4 & count < 12
+        j = SysSleep(.5)
+        count += 1
+    end
+end
 
-WshShellObj~Popup("Processing of REXX script has finished!")
+if Explorer~busy | Explorer~readyState <> 4 then do
+    say 'Timed out waiting for page: http://www.ibm.com/investor/'
+    say 'to load.  Going to quit.'
+    Explorer~quit
+    return 99
+end
+
+/* obtain text representation of the page */
+doc = Explorer~document           -- DOM document
+body = doc~body                   -- get BODY
+textrange = body~CreateTextRange  -- get TextRange
+text = textrange~Text             -- get the contents
+
+/* extract stock price information, this is dependent on page not changing */
+parse var text . "(NYSE)" '0d0a'x stockprice "0d0a"x .
+if stockprice = "" then do
+    stockprice = "<could not read stock price>"
+    gotPrice = .false
+end
+else do
+    gotPrice = .true
+end
+
+if gotPrice = .false then
+do
+   say "Press enter to continue ..."
+   parse pull
+end
+
+/* end Explorer */
+Explorer~quit
+
+say "IBM stocks are at" stockprice"."
+if \ gotPrice then say "Web page has likely changed format."
+

@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -37,54 +37,55 @@
 /*----------------------------------------------------------------------------*/
 /**********************************************************************/
 /*                                                                    */
-/* SAMP10.REX: OLE Automation with Object REXX - Sample 10            */
+/*  LotusWordPro_clickHereFields.rex: OLE Automation with ooRexx      */
 /*                                                                    */
-/* Use the Windows Script Host FileSystemObject to obtain information */
-/* on drives of the system.                                           */
+/* Create a new document in WordPro 97 with a provided Smartmaster.   */
+/* Fill in some "Click here" fields with data prompted by the program */
+/* or queried from the system. Finally the document will be saved to  */
+/* the same directory where this REXX program is located and sent to  */
+/* the printer.                                                       */
+/*                                                                    */
+/* Since no check is done do ensure the new document does not already */
+/* exist you will get a popup message from WordPro asking to          */
+/* overwrite an already existing document when this sample is run     */
+/* multiple times.                                                    */
 /*                                                                    */
 /**********************************************************************/
 
-fsObject = .OLEObject~new("Scripting.FileSystemObject")
+/* determine path of this sample program */
+Parse Source . . ProgName
+ProgPath = ProgName~Left(ProgName~LastPos("\"))
 
-allDrives = fsObject~drives
+/* determine the version of REXX currently running */
+Parse Version VersStr
 
-if allDrives = .NIL then do
-  say "The object did not return information on your drives!"
-  exit 1
-end
+/* prompt user for some information */
+Say "Please enter your name:"
+Parse Pull Name
+If Name~Length = 0 Then
+  Name = "No name entered!"
 
-do i over allDrives
-  info = i~DriveLetter "-"
+Say "Please enter your phone number:"
+Parse Pull Phone
+If Phone~Length = 0 Then
+  Phone = "No phone entered!"
 
-  /* show the DriveType in human-readable form */
-  j = i~DriveType
-  select
-  when j=1 then do
-    info = info "Removable"
-  end
-  when j=2 then do
-    info = info "Fixed"
-  end
-  when j=3 then do
-    info = info "Network"
-  end
-  when j=4 then do
-    info = info "CD-ROM"
-  end
-  when j=5 then do
-    info = info "RAM Disk"
-  end
-  otherwise
-    info = info "Unknown"
-  end
+/* create a new document */
+WordProApp = .OLEObject~New("WordPro.Application")
+docName     = "LotusWordPro_clickHereFields.lwp"
+smartMaster = "LotusWordPro_clickHereFields.mwp"
+WordProApp~NewDocument(docName, ProgPath, ProgPath || smartMaster)
 
-  /* append the ShareName for a network drive... */
-  if j=3 then info = info i~ShareName
-  /* ...and the VolumeName for the other ones */
-  else if i~IsReady then info = info i~VolumeName
-  say info
-end
+/* replace the click here blocks in the document with the new values */
+WordProApp~Foundry~ClickHeres("YourName")~InsertText(Name)
+WordProApp~Foundry~ClickHeres("YourPhone")~InsertText(Phone)
+WordProApp~Foundry~ClickHeres("ProgramName")~InsertText(ProgName)
+WordProApp~Foundry~ClickHeres("RexxVersion")~InsertText(VersStr)
 
-exit 0
+WordProApp~Save
+--WordProApp~PrintOut(1, 1, 1, .True)
+
+WordProApp~Close(.False)
+WordProApp~Quit
 
 

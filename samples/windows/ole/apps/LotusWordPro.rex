@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -37,63 +37,44 @@
 /*----------------------------------------------------------------------------*/
 /**********************************************************************/
 /*                                                                    */
-/* SAMP11.REX: OLE Automation with Object REXX - Sample 11            */
+/* LotusWordPro.rex: OLE Automation with ooRexx                       */
 /*                                                                    */
-/* Get stock price from IBM internet page with Microsoft Internet     */
-/* Explorer and store it in a REXX variable.                          */
+/* Create a new document in WordPro 97, enter some text with          */
+/* different attributes and finally save and print the document.      */
+/*                                                                    */
+/* Since no check is done do ensure the new document does not already */
+/* exist you will get a popup message from WordPro asking to          */
+/* overwrite an already existing document when this sample is run     */
+/* multiple times.                                                    */
 /*                                                                    */
 /**********************************************************************/
 
-/* Get stock price from IBM internet page with MS IE and OLE */
+WordProApp = .OLEObject~New("WordPro.Application")
+WordProApp~NewDocument("AutomatedDocument.lwp","","default.mwp")
+WPDoc = WordProApp~ActiveDocument
+WPDocText = WordProApp~Text
 
-say "Getting stock price from IBM Internet page."
-say "Using a not visible InternetExplorer."
-say
+WordProApp~Type("This is the first paragraph entered from REXX via ")
+WordProApp~Type("the OLE automation classes.[Enter]")
 
-Explorer = .OLEObject~new("InternetExplorer.Application")
-/* uncomment the next line if you want to see what is happening */
---Explorer~Visible = .true
-Explorer~Navigate("http://www.ibm.com/investor/")
+WordProApp~Type("The second paragraph will be changed in its ")
+WordProApp~Type("appearance.")
+WordProApp~SelectParagraph
+WPDocText~Font~Name = "Arial"
+WPDocText~Font~Bold = .True
+WPDocText~Font~Italic = .True
+WPDocText~Font~Size = 15
 
--- Wait for browser to load the page, with a time out.  If the page is not
--- loaded by the timout, then quit.
-count = 0
-do while Explorer~busy & count < 12
-    do while Explorer~readyState <> 4 & count < 12
-        j = SysSleep(.5)
-        count += 1
-    end
-end
+WordProApp~Type("[End][Enter][End]Document created at:" Time("N") "on" Date("N"))
 
-if Explorer~busy | Explorer~readyState <> 4 then do
-    say 'Timed out waiting for page: http://www.ibm.com/investor/'
-    say 'to load.  Going to quit.'
-    Explorer~quit
-    return 99
-end
+WPDoc~Save
 
-/* obtain text representation of the page */
-doc = Explorer~document           -- DOM document
-body = doc~body                   -- get BODY
-textrange = body~CreateTextRange  -- get TextRange
-text = textrange~Text             -- get the contents
+/* if you want this document printed, comment in the next line */
+--WordProApp~PrintOut(1, 1, 1, .True)
 
-/* extract stock price information, this is dependent on page not changing */
-parse var text . "(NYSE)" '0d0a'x stockprice "0d0a"x .
-if stockprice = "" then do
-    stockprice = "<could not read stock price>"
-    gotPrice = .false
-end
-else do
-    gotPrice = .true
-end
+say "Created" WPDoc~Path"\"WPDoc~Name
 
-/* end Explorer */
-Explorer~quit
-
-say "IBM stocks are at" stockprice"."
-if \ gotPrice then say "Web page has likely changed format."
-
-exit
+WPDoc~Close
+WordProApp~Quit
 
 

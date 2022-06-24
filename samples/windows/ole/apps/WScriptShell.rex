@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -37,55 +37,32 @@
 /*----------------------------------------------------------------------------*/
 /**********************************************************************/
 /*                                                                    */
-/* SAMP04.REX: OLE Automation with Open Object REXX - Sample 4        */
+/* WScriptShell.rex: OLE Automation with ooRexx                       */
 /*                                                                    */
-/* Create a mail message in Lotus Notes and send it to a number of    */
-/* recipients automatically.                                          */
+/* Show some features of the Windows Scripting Host Shell Object:     */
+/*  - Query environment string                                        */
+/*  - List special folders                                            */
+/*  - Create a shortcut on the desktop                                */
+/*  - Use a GUI popup                                                 */
 /*                                                                    */
 /**********************************************************************/
 
-say "Please enter your name"
-parse pull yourName
+WshShellObj = .OLEObject~New("WScript.Shell")
 
-/* create an array of the recipients */
-Recipients = .array~new
+WshEnv = WshShellObj~Environment
+Say "Operating system:" WshEnv["OS"]
+Say "You have" WshEnv["NUMBER_OF_PROCESSORS"] "processor(s) of",
+    WshEnv["PROCESSOR_ARCHITECTURE"] "architecture in your system."
 
-say "Please enter a list of recipients (email addresses). Press enter ",
-    "after each entry (end list with 'Q')."
+Say "The following directories represent special folders on your system:"
+Do Folder Over WshShellObj~SpecialFolders
+  Say "   " Folder
+End
 
-i = 0
-do until answer~translate == "Q"
-  parse pull answer
-  if answer~translate \= "Q" then do
-    i = i + 1
-    Recipients[i] = answer
-  end
-end
+Say "Creating a shortcut for NOTEPAD.EXE on your Desktop..."
+Desktop = WshShellObj~SpecialFolders("Desktop")
+ShortCut = WshShellObj~CreateShortcut(Desktop || "\Shortcut to Notepad.lnk")
+ShortCut~TargetPath = "%WINDIR%\notepad.exe"
+ShortCut~Save
 
-/* Create Notes object */
-Session = .OLEObject~New("Notes.NotesSession")
-MailServer = Session~GetEnvironmentString("MailServer", .True)
-MailFile = Session~GetEnvironmentString("MailFile", .True)
-MailDb = Session~GetDatabase(MailServer, MailFile)
-
-Say "Creating mail to be sent to" i "recipients..."
-MailDoc = MailDb~CreateDocument
-MailDoc~Form = "Memo"
-MailDoc~Logo = "StdNotesLtr9"
-MailDoc~From = yourName
-MailDoc~Subject = "Rexx OLE automation test mail"
-
-/* create a new body text with multiple lines */
-NewBody = MailDoc~CreateRichTextItem("Body")
-NewBody~AppendText("To the readers of this mail message:")
-NewBody~AddNewLine(2)
-NewBody~AppendText("This mail has been sent with Open Object Rexx for Windows.")
-NewBody~AddNewLine(1)
-NewBody~AppendText("It was created automatically at" Time("N") "on" Date("N"))
-NewBody~AppendText(" and then sent without any user interacting with the program.")
-
-MailDoc~SendTo = Recipients
-MailDoc~Save(.False, .False)
-MailDoc~Send(.False, Recipients)
-
-Say "Mail has been sent"
+WshShellObj~Popup("Processing of REXX script has finished!")

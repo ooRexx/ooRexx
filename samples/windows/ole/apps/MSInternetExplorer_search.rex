@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -37,7 +37,7 @@
 /*----------------------------------------------------------------------------*/
 /**********************************************************************/
 /*                                                                    */
-/* SAMP13.REX: OLE Automation with Object REXX - Sample 13            */
+/* MSInternetExplorer_search.rex: OLE Automation with ooRexx          */
 /*                                                                    */
 /* Using events with the Internet Explorer:                           */
 /* Search for the string "Cloud" on the IBM web page and go randomly   */

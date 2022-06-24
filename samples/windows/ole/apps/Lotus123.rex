@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -37,53 +37,96 @@
 /*----------------------------------------------------------------------------*/
 /**********************************************************************/
 /*                                                                    */
-/* SAMP06.REX: OLE Automation with Object REXX - Sample 6             */
+/* Lotus123.rex: OLE Automation with ooRexx                           */
 /*                                                                    */
-/* Create a new document in WordPro 97 with a provided Smartmaster.   */
-/* Fill in some "Click here" fields with data prompted by the program */
-/* or queried from the system. Finally the document will be saved to  */
-/* the same directory where this REXX program is located and sent to  */
-/* the printer.                                                       */
-/*                                                                    */
-/* Since no check is done do ensure the new document does not already */
-/* exist you will get a popup message from WordPro asking to          */
-/* overwrite an already existing document when this sample is run     */
-/* multiple times.                                                    */
+/* Create a new spreadsheet in 1-2-3 and fill in a table with fictive */
+/* revenue numbers. The table will also contain a calculated field    */
+/* and different styles. A second sheet is added with a 3D chart      */
+/* displaying the revenue data.                                       */
 /*                                                                    */
 /**********************************************************************/
 
-/* determine path of this sample program */
-Parse Source . . ProgName
-ProgPath = ProgName~Left(ProgName~LastPos("\"))
+/* create a new 123 Workbook */
+Workbook = .OLEObject~New("Lotus123.Workbook")
+Range = Workbook~Ranges("A1")
+Range~Contents = "Open Object Rexx OLE Sample spreadsheet"
 
-/* determine the version of REXX currently running */
-Parse Version VersStr
+/* fill the first column with month names */
+Col = "A"
+Row = 3
+Range = Workbook~Ranges(Col || Row)
+Range~Contents = "Month"
+Range~Font~FontName = "Times New Roman"
+Range~Font~Bold = "True"
 
-/* prompt user for some information */
-Say "Please enter your name:"
-Parse Pull Name
-If Name~Length = 0 Then
-  Name = "No name entered!"
+Do Month = 1 To 12
+  Row = Row + 1
+  Range = Workbook~Ranges(Col || Row)
+  Range~Contents = '"' || Right(Month, 2, "0") || "/98"
+  Range~TextHorizontalAlign = "$AlignLeft"
+End
 
-Say "Please enter your phone number:"
-Parse Pull Phone
-If Phone~Length = 0 Then
-  Phone = "No phone entered!"
+Row = Row + 1
+Range = Workbook~Ranges(Col || Row)
+Range~Contents = "All 1998"
+Range~Font~Bold = "True"
 
-/* create a new document */
-WordProApp = .OLEObject~New("WordPro.Application")
-WordProApp~NewDocument("Samp06.lwp", ProgPath, ProgPath || "Samp06.mwp")
+/* fill the second column with random revenue numbers */
+Col = "B"
+Row = 3
+Range = Workbook~Ranges(Col || Row)
+Range~Contents = "Revenue"
+Range~Font~FontName = "Times New Roman"
+Range~Font~Bold = "True"
 
-/* replace the click here blocks in the document with the new values */
-WordProApp~Foundry~ClickHeres("YourName")~InsertText(Name)
-WordProApp~Foundry~ClickHeres("YourPhone")~InsertText(Phone)
-WordProApp~Foundry~ClickHeres("ProgramName")~InsertText(ProgName)
-WordProApp~Foundry~ClickHeres("RexxVersion")~InsertText(VersStr)
+Do Month = 1 To 12
+  Row = Row + 1
+  Range = Workbook~Ranges(Col || Row)
+  Range~Contents = Random(20000, 100000)
+  Range~FormatName = "US Dollar"
+  Range~FormatDecimals = 0
+End
 
-WordProApp~Save
---WordProApp~PrintOut(1, 1, 1, .True)
+Row = Row + 1
+Range = Workbook~Ranges(Col || Row)
+Range~Contents = "@SUM(B4..B15)"
+Range~Font~Bold = "True"
+Range~FormatName = "US Dollar"
+Range~FormatDecimals = 0
 
-WordProApp~Close(.False)
-WordProApp~Quit
+/* put a grid around the table */
+Range = Workbook~Ranges("A3..B16")
+Range~GridBorder~Style = "$SolidBorder"
+
+/* use thick bottom lines for title and sum lines */
+Range = Workbook~Ranges("A3..B3")
+Range~BottomBorder~Style = "$DoubleBorder"
+Range = Workbook~Ranges("A16..B16")
+Range~TopBorder~Style = "$DoubleBorder"
+
+
+/* create a 3d chart showing revenue over month */
+Sheet = Workbook~NewSheet("$Last", 1, "False")
+Range = Workbook~Ranges("A:A4..A:B15")
+Chart = Sheet~NewChart(0, 0, 12800, 9600, Range)
+Chart~Is3D = .True
+Chart~Title~Lines(1)~Text = "Revenue development 1998"
+Chart~Legend~Visible = .False
+
+Chart~XAxis~Title~Text = "Month"
+Chart~XAxis~Title~Font~Size = "36"
+Chart~XAxis~TickLabels~Font~Size = "36"
+
+Chart~YAxis~Title~Text = "Revenue"
+Chart~YAxis~Title~Font~Size = "36"
+Chart~YAxis~TickLabels~Font~Size = "36"
+Chart~YAxis~SubTitle~Visible = .False
+
+/* save spreadsheet as file OLETest */
+Workbook~SaveAs("OLETest")
+
+say "Created" workbook~name
+
+Workbook~Close
 
 

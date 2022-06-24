@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* https://www.oorexx.org/license.html                                        */
+/* https://www.oorexx.org/license.html                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -37,39 +37,58 @@
 /*----------------------------------------------------------------------------*/
 /**********************************************************************/
 /*                                                                    */
-/* SAMP01.REX: OLE Automation with Object REXX - Sample 1             */
+/* MSInternetExplorer_events.rex: OLE Automation with ooRexx          */
 /*                                                                    */
-/* Start Internet Explorer and show the IBM homepage. After 10 seconds*/
-/* the RexxLA events page will be displayed for 10 seconds.           */
+/* Using events with the Internet Explorer:                           */
+/* Navigate to the IBM homepage and disallow changing the URL to a    */
+/* page not in that "address space".                                  */
 /*                                                                    */
 /**********************************************************************/
 
-/* create an object for IE */
-myIE = .OLEObject~New("InternetExplorer.Application")
+/* instantiate an instance of the Internet Explorer */
+myIE = .watchedIE~new("InternetExplorer.Application","WITHEVENTS")
 
-myIE~Width  = 1000
-myIE~Height = 800
-Say "current dimensions of Internet Explorer (IE) are:" myIE~Width "by" myIE~Height
+myIE~visible = .true
+myIE~navigate("http://www.ibm.com/")
 
-/* set new dimensions and browse IBM homepage */
-Say "changing IE dimensions ..."
-myIE~Width  = 1280
-myIE~Height = 1024
-Say "IE dimensions changed to:" myIE~Width "by" myIE~Height
-Say "making IE visible ..."
-myIE~Visible = .True    -- now show the window
-say "navigating to:" "https://www.ibm.com"
-myIE~Navigate("https://www.ibm.com")
+/* wait for the OnQuit event of the browser to change */
+/* the !active attribute of the REXX object to false  */
+myIE~!active = .true
+do while myIE~!active = .true
+  call syssleep 2
+end
 
-/* wait for 10 seconds */
-say "now sleeping for 10 seconds ..."
-Call SysSleep 10
+/* this class is derived from OLEObject and contains several   */
+/* methods that will be called when certain events take place. */
+::CLASS watchedIE SUBCLASS OLEObject
 
-/* browse RexxLA event page */
-say "navigating to:" "https://www.rexxla.org/events"
-myIE~Navigate("https://www.rexxla.org/events")
+/* this is an event of the Internet Explorer */
+::METHOD BeforeNavigate2
+  /* these are the arguments of this event. Cancel is an out parameter and */
+  /* will be set to the return value of the method when it was processed.  */
+  /* have a look at the documentation for a detailed description of events.*/
+  use arg pDisp, URL, Flags, TargetFrameName, PostData, Headers, Cancel
 
-/* wait for 10 seconds */
-say "now sleeping for 10 seconds before quitting ..."
-Call SysSleep 10
-myIE~quit
+  /* default: do not stop loading of this URL */
+  stopLoading = .false
+
+  /* if the target URL does not begin with "http://www.ibm.com/", don't    */
+  /* load it...  try this by typing a different URL into the address field */
+  /* when this sample is running.                                          */
+  if URL~substr(1,19) \= "http://www.ibm.com/" then do
+    stopLoading = .true
+    say "Refusing to load" URL
+  end
+
+  return stopLoading
+
+/* this is an event of the Internet Explorer */
+::METHOD TitleChange
+  use arg Text
+  say "The title has changed to:" text
+
+/* this is an event of the Internet Explorer */
+::METHOD OnQuit
+  self~!active = .false    -- terminates the waiting loop in main code
+
+::METHOD !active ATTRIBUTE -- store the active attribute

@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -37,62 +37,55 @@
 /*----------------------------------------------------------------------------*/
 /**********************************************************************/
 /*                                                                    */
-/* SAMP12.REX: OLE Automation with Object REXX - Sample 12            */
+/* LotusNotes_mail.rex: OLE Automation with ooRexx                    */
 /*                                                                    */
-/* Using events with the Internet Explorer:                           */
-/* Navigate to the IBM homepage and disallow changing the URL to a    */
-/* page not in that "address space".                                  */
+/* Create a mail message in Lotus Notes and send it to a number of    */
+/* recipients automatically.                                          */
 /*                                                                    */
 /**********************************************************************/
 
-/* instantiate an instance of the Internet Explorer */
-myIE = .watchedIE~new("InternetExplorer.Application","WITHEVENTS")
+say "Please enter your name"
+parse pull yourName
 
-myIE~visible = .true
-myIE~navigate("http://www.ibm.com/")
+/* create an array of the recipients */
+Recipients = .array~new
 
-/* wait for the OnQuit event of the browser to change */
-/* the !active attribute of the REXX object to false  */
-myIE~!active = .true
-do while myIE~!active = .true
-  call syssleep 2
+say "Please enter a list of recipients (email addresses). Press enter ",
+    "after each entry (end list with 'Q')."
+
+i = 0
+do until answer~translate == "Q"
+  parse pull answer
+  if answer~translate \= "Q" then do
+    i = i + 1
+    Recipients[i] = answer
+  end
 end
 
-exit
+/* Create Notes object */
+Session = .OLEObject~New("Notes.NotesSession")
+MailServer = Session~GetEnvironmentString("MailServer", .True)
+MailFile = Session~GetEnvironmentString("MailFile", .True)
+MailDb = Session~GetDatabase(MailServer, MailFile)
 
+Say "Creating mail to be sent to" i "recipients..."
+MailDoc = MailDb~CreateDocument
+MailDoc~Form = "Memo"
+MailDoc~Logo = "StdNotesLtr9"
+MailDoc~From = yourName
+MailDoc~Subject = "Rexx OLE automation test mail"
 
+/* create a new body text with multiple lines */
+NewBody = MailDoc~CreateRichTextItem("Body")
+NewBody~AppendText("To the readers of this mail message:")
+NewBody~AddNewLine(2)
+NewBody~AppendText("This mail has been sent with Open Object Rexx for Windows.")
+NewBody~AddNewLine(1)
+NewBody~AppendText("It was created automatically at" Time("N") "on" Date("N"))
+NewBody~AppendText(" and then sent without any user interacting with the program.")
 
-/* this class is derived from OLEObject and contains several   */
-/* methods that will be called when certain events take place. */
-::CLASS watchedIE SUBCLASS OLEObject
+MailDoc~SendTo = Recipients
+MailDoc~Save(.False, .False)
+MailDoc~Send(.False, Recipients)
 
-/* this is an event of the Internet Explorer */
-::METHOD BeforeNavigate2
-  /* these are the arguments of this event. Cancel is an out parameter and */
-  /* will be set to the return value of the method when it was processed.  */
-  /* have a look at the documentation for a detailed description of events.*/
-  use arg pDisp, URL, Flags, TargetFrameName, PostData, Headers, Cancel
-
-  /* default: do not stop loading of this URL */
-  stopLoading = .false
-
-  /* if the target URL does not begin with "http://www.ibm.com/", don't    */
-  /* load it...  try this by typing a different URL into the address field */
-  /* when this sample is running.                                          */
-  if URL~substr(1,19) \= "http://www.ibm.com/" then do
-    stopLoading = .true
-    say "Refusing to load" URL
-  end
-
-  return stopLoading
-
-/* this is an event of the Internet Explorer */
-::METHOD TitleChange
-  use arg Text
-  say "The title has changed to:" text
-
-/* this is an event of the Internet Explorer */
-::METHOD OnQuit
-  self~!active = .false    -- terminates the waiting loop in main code
-
-::METHOD !active ATTRIBUTE -- store the active attribute
+Say "Mail has been sent"
