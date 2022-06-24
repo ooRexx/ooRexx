@@ -1205,7 +1205,7 @@ RexxInstruction* LanguageParser::callNew()
         argCount = parseArgList(OREF_NULL, TERM_EOC);
         // because this uses a string name, the internal label
         // search is bypassed.
-        noInternal = false;
+        noInternal = true;
     }
     // is this call (expr) form?
     else if (token->isLeftParen())
