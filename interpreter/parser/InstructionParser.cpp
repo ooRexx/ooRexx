@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -1084,7 +1084,7 @@ RexxInstruction* LanguageParser::dynamicCallNew(RexxToken *token)
     // this is a full expression in parens
     RexxInternalObject *targetName = parenExpression(token);
     // an expression is required
-    if (name == OREF_NULL)
+    if (targetName == OREF_NULL)
     {
         syntaxError(Error_Invalid_expression_call);
     }
@@ -1152,7 +1152,7 @@ RexxInstruction* LanguageParser::callNew()
     size_t argCount = 0;
     bool noInternal = false;
 
-    // get the next token (skipping over any blank following the CALL keyword
+    // get the next token (skipping over any blank) following the CALL keyword
     RexxToken *token = nextReal();
 
     // there must be something here.
@@ -1176,10 +1176,10 @@ RexxInstruction* LanguageParser::callNew()
         previousToken();
 
 
-        // check for a matching subkeyword.  On ON or OFF are of significance
+        // check for a matching subkeyword.  ON or OFF are of significance
         // here.
         InstructionSubKeyword keyword = token->subKeyword();
-        // one of the special forms, this has it's own parsing code.
+        // one of the special forms, this has its own parsing code.
         if (keyword == SUBKEY_ON || keyword == SUBKEY_OFF)
         {
             return callOnNew(keyword);

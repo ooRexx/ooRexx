@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -61,9 +61,6 @@
  * @param name       The name of the call target.
  * @param argCount   The count of arguments.
  * @param argList    A queue of the arguments (stored in reverse evaluation order)
- * @param noInternal Indicates if the internal calls are disable for this
- *                   call.  This generally means the name was specified
- *                   as a quoted string.
  * @param builtin_index
  *                   An index for a potential builtin function call.
  */
