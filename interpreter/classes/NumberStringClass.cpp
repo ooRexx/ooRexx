@@ -2208,11 +2208,12 @@ RexxString *NumberString::formatInternal(wholenumber_t integers, wholenumber_t d
             // no leading zeros, and we have fewer real digits
             else
             {
-                decimalDigits = adjustedDecimals;
+                // this is capped at the requested number of decimals
+                decimalDigits = std::min(adjustedDecimals, decimals);
             }
             // in theory, everything has been adjusted to the point where
             // decimals is >= to the adjusted size
-            trailingDecimalZeros = decimals - adjustedDecimals;
+            trailingDecimalZeros = decimals - decimalDigits;
         }
         // we have an explicit size specified, but the number itself has no decimals.
         // these all become trailing zeros
