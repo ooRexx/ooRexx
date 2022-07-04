@@ -2208,12 +2208,20 @@ RexxString *NumberString::formatInternal(wholenumber_t integers, wholenumber_t d
             // no leading zeros, and we have fewer real digits
             else
             {
-                // this is capped at the requested number of decimals
-                decimalDigits = std::min(adjustedDecimals, decimals);
+                decimalDigits = adjustedDecimals;
+            }
+
+            // this can happen if there is a round out on the top digit when we
+            // are truncating and exponential notation is now required. In that situation
+            // we have more decimals that we are allowed to use
+            if (adjustedDecimals > decimals)
+            {
+                adjustedDecimals = decimals;
+                decimalDigits = decimals;
             }
             // in theory, everything has been adjusted to the point where
             // decimals is >= to the adjusted size
-            trailingDecimalZeros = decimals - decimalDigits;
+            trailingDecimalZeros = decimals - adjustedDecimals;
         }
         // we have an explicit size specified, but the number itself has no decimals.
         // these all become trailing zeros
