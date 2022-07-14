@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -74,6 +74,7 @@ SysFile::SysFile()
     filePointer = 0;
     ungetchar = -1;
     writeBuffered = false;     // no pending write operations
+    fileSize = -1;             // no retrieved file size yet
 }
 
 
@@ -112,6 +113,7 @@ bool SysFile::open(const char *name, int openFlags, int openMode, int shareMode)
     // save a copy of the name
     filename = strdup(name);
     ungetchar = -1;            // -1 indicates no char
+    fileSize = -1;               // make sure we don't have a file size from a previous open
 
     // is this append mode?
     if ((flags & RX_O_APPEND) != 0)
@@ -405,6 +407,10 @@ bool SysFile::read(char *buf, size_t len, size_t &bytesRead)
  */
 int SysFile::writeData(const char *data, size_t length)
 {
+    // anytime we write data to the stream, we invalidate our cached
+    // file size because it's likely no longer valid
+    fileSize = -1;
+
     // normal files seem to handle large writes ok, but for devices, we
     // need to write this in blocks
     if (!device || length < BLOCK_THRESHOLD)
@@ -992,21 +998,27 @@ bool SysFile::getSize(int64_t &size)
     {
         // we might have pending output that might change the size
         flush();
-        // have a handle, use fstat() to get the info
-        struct _stati64 fileInfo;
-        if (_fstati64(fileHandle, &fileInfo) == 0)
+        // do we have a current file size? If not currently good, we need to
+        // get it again
+        if (fileSize == -1)
         {
-            // regular file?  return the defined size
-            if (fileInfo.st_dev == 0)
+            // have a handle, use fstat() to get the info
+            struct _stati64 fileInfo;
+            if (_fstati64(fileHandle, &fileInfo) == 0)
             {
-                size = fileInfo.st_size;
+                // regular file?  return the defined size
+                if (fileInfo.st_dev == 0)
+                {
+                    fileSize = fileInfo.st_size;
+                }
+                else
+                {
+                    fileSize = 0;
+                }
             }
-            else
-            {
-                size = 0;
-            }
-            return true;
         }
+        size = fileSize;      // use our cached value
+        return true;
     }
     return false;
 }

@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -104,6 +104,7 @@ SysFile::SysFile()
     filePointer = 0;
     ungetchar = -1;
     writeBuffered = false;     // no pending write operations
+    fileSize = -1;             // no retrieved file size yet
 }
 
 /**
@@ -149,6 +150,7 @@ bool SysFile::open(const char *name, int openFlags, int openMode, int shareMode)
     // save a copy of the name
     filename = strdup(name);
     ungetchar = -1;              // 0xFF indicates no char
+    fileSize = -1;               // make sure we don't have a file size from a previous open
 
     // is this append mode?
     if ((flags & RX_O_APPEND) != 0)
@@ -321,6 +323,10 @@ bool SysFile::flush()
         // do we have data in a write buffer?
         if (writeBuffered && bufferPosition > 0)
         {
+            // anytime we write data to the stream, we invalidate our cached
+            // file size because it's likely no longer valid
+            fileSize = -1;
+
             // write this out...but if it fails, we need to bail
             int written = ::write(fileHandle, buffer, (unsigned int)bufferPosition);
             // did we have an error?
@@ -480,6 +486,11 @@ bool SysFile::write(const char *data, size_t len, size_t &bytesWritten)
     {
         return true;
     }
+
+    // anytime we write data to the stream, we invalidate our cached
+    // file size because it's likely no longer valid
+    fileSize = -1;
+
     // are we buffering?
     if (buffered)
     {
@@ -1021,21 +1032,28 @@ bool SysFile::getSize(int64_t &size)
     {
         // we might have pending output that might change the size
         flush();
-        // have a handle, use fstat() to get the info
-        struct stat64 fileInfo;
-        if (fstat64(fileHandle, &fileInfo) == 0)
+
+        // do we have a current file size? If not currently good, we need to
+        // get it again
+        if (fileSize == -1)
         {
-            // regular file?  return the defined size
-            if ((fileInfo.st_mode & S_IFREG) != 0)
+            // have a handle, use fstat() to get the info
+            struct stat64 fileInfo;
+            if (fstat64(fileHandle, &fileInfo) == 0)
             {
-                size = fileInfo.st_size;
+                // regular file?  return the defined size
+                if ((fileInfo.st_mode & S_IFREG) != 0)
+                {
+                    fileSize = fileInfo.st_size;
+                }
+                else
+                {
+                    fileSize = 0;
+                }
             }
-            else
-            {
-                size = 0;
-            }
-            return true;
         }
+        size = fileSize;      // use our cached value
+        return true;
     }
     return false;
 }

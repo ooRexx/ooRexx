@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -2354,6 +2354,13 @@ BUILTIN(LINES)
 
     RexxString *name = optional_string(LINES, name); /* get the string name               */
     RexxString *option = optional_string(LINES, option);
+
+    // the default for the BIF and the method are different, so if no
+    // option is given, we need to force it to Normal
+    if (option == OREF_NULL)
+    {
+        option = GlobalNames::NORMAL;
+    }
     RexxObject *result;
     ProtectedObject resultObj;
     int opt = 'N';

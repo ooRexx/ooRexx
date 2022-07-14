@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -146,12 +146,13 @@ protected:
     bool   isTTY;           // a keyboard based stream.
     char  *buffer;          // our read/write buffer.
     size_t bufferSize;      // the size of the buffer
-    size_t bufferPosition; // current read/write position in buffer
+    size_t bufferPosition;  // current read/write position in buffer
     size_t bufferedInput;   // amount of data in the buffer
     bool   writeBuffered;   // false == read, true == write
     bool   append;          // opened in append mode
     int64_t filePointer;    // current file pointer location
     int    ungetchar;       // a pushed back character value
+    int64_t fileSize;       // current known file size
 };
 
 #endif

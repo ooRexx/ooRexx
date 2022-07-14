@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -53,7 +53,7 @@
 
 /* error subcodes and message numbers                                         */
 /*      message identifier ----------------------------------- message number */
-
+   
 #define Rexx_Error_Program_unreadable                                     3000
 #define Rexx_Error_Program_unreadable_name                                3001
 #define Rexx_Error_Program_unreadable_user_defined                        3900
@@ -526,7 +526,6 @@
 #define Rexx_Error_Incorrect_method_symbol                                93913
 #define Rexx_Error_Incorrect_method_list                                  93914
 #define Rexx_Error_Incorrect_method_option                                93915
-#define Rexx_Error_Incorrect_method_string                                93916
 #define Rexx_Error_Incorrect_method_methodname                            93917
 #define Rexx_Error_Incorrect_method_index                                 93918
 #define Rexx_Error_Incorrect_method_array                                 93919
