@@ -414,6 +414,8 @@ if (NOT WIN32)
   check_include_file(sys/time.h HAVE_SYS_TIME_H)
   check_include_file(sys/utsname.h HAVE_SYS_UTSNAME_H)
   check_include_file(sys/wait.h HAVE_SYS_WAIT_H)
+  check_include_file(ifaddrs.h HAVE_IFADDRS_H)
+  check_symbol_exists(getifaddrs "sys/types.h;sys/socket.h;ifaddrs.h" HAVE_GETIFADDRS)
   set (CURSES_NEED_NCURSES TRUE)
   include(FindCurses) # sets CURSES_HAVE_NCURSES_H and CURSES_HAVE_NCURSES_NCURSES_H
   message(STATUS "CURSES_HAVE_NCURSES_H is ${CURSES_HAVE_NCURSES_H}")

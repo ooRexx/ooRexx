@@ -18,8 +18,14 @@
 /* Define to 1 if you have the <filehdr.h> header file. */
 #cmakedefine HAVE_FILEHDR_H
 
+/* Define to 1 if you have the 'getifaddrs' function. */
+#cmakedefine HAVE_GETIFADDRS
+
 /* Define to 1 if you have the 'getuserattr' function. */
 #cmakedefine HAVE_GETUSERATTR
+
+/* Define to 1 if you have the <ifaddrs.h> header file. */
+#cmakedefine HAVE_IFADDRS_H
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #cmakedefine HAVE_INTTYPES_H

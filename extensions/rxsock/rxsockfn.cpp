@@ -79,6 +79,9 @@
 #if defined( HAVE_SYS_FILIO_H )
 #include <sys/filio.h>
 #endif
+#if defined( HAVE_IFADDRS_H )
+#include <ifaddrs.h>
+#endif
 #endif
 
 #define psock_errno(s) fprintf(stderr, "RxSOCK Error: %s\n", s)
@@ -356,8 +359,25 @@ RexxRoutine0(RexxStringObject, SockGetHostId)
     }
     ia.s_addr = (*(uint32_t *)pHostEnt->h_addr);// in network byte order already
     return context->String(inet_ntoa(ia));
-#else
-#ifndef WIN32                                 // temporary measure to cater for all *NIXes
+#elif defined(HAVE_GETIFADDRS)
+    struct ifaddrs* tifaddrs;
+    if (getifaddrs(&tifaddrs)) {
+      setErrno(context, false);
+      return context->String("0.0.0.0");
+    }
+
+    for(struct ifaddrs* tia = tifaddrs; tia->ifa_next != NULL; tia = tia->ifa_next) {
+      if (tia->ifa_addr != NULL && tia->ifa_addr->sa_family == AF_INET) {
+        struct sockaddr_in* si = (struct sockaddr_in*)tia->ifa_addr;
+        if(memcmp("127", inet_ntoa(si->sin_addr), 3)) { /* filter out loopbacks */  
+          ia.s_addr = si->sin_addr.s_addr;
+          break;
+        }
+      }
+    }
+    freeifaddrs(tifaddrs);
+    return context->String(inet_ntoa(ia));
+#elif !defined(WIN32)                                 // temporary measure to cater for all *NIXes
 #define h_addr h_addr_list[0]                 // NOTE the #else never active -> REVISE
 
     char   pszBuff[256];                     // hostnames should be 255 chars or less
@@ -385,7 +405,6 @@ RexxRoutine0(RexxStringObject, SockGetHostId)
     // set the errno information
     setErrno(context, true);
     return context->String(inet_ntoa(ia));
-#endif
 #endif
 }
 
