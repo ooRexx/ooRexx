@@ -4918,3 +4918,25 @@ StringTable* RexxActivation::getFileNames()
     }
     return settings.fileNames;
 }
+
+
+/**
+ * Remove a filename from the short name lookup table
+ *
+ * @param fullName   The fully qualified name
+ */
+void RexxActivation::removeFileName(RexxString *fullName)
+{
+    // remove from the direct stream table
+    getStreams()->remove(fullName);
+    // if we have other lookups possible, remove all of the shortcuts
+    if (notCaseSensitive() && settings.fileNames != OREF_NULL)
+    {
+        RexxInternalObject *removed;
+        do
+        {
+            removed = settings.fileNames->removeItem(fullName);
+        }
+        while (removed != OREF_NULL);
+    }
+}

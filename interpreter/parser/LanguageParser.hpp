@@ -403,6 +403,7 @@ class LanguageParser: public RexxInternalObject
     inline void syntaxErrorAt(RexxErrorCodes errorcode, RexxToken *token) { errorPosition(errorcode, token); }
     inline void syntaxError(RexxErrorCodes errorcode, RexxObject *a1) { error(errorcode, a1); }
     inline void syntaxError(RexxErrorCodes errorcode, RexxObject *a1, RexxObject *a2) { error(errorcode, a1, a2); }
+    inline void syntaxError(RexxErrorCodes errorcode, const char *a1, RexxObject *a2) { error(errorcode, new_string(a1), a2); }
     inline void syntaxError(RexxErrorCodes errorcode, RexxObject *a1, RexxObject *a2, RexxObject *a3) { error(errorcode, a1, a2, a3); }
     inline void syntaxError(RexxErrorCodes errorcode, RexxToken *token) { errorToken(errorcode, token); }
     inline void syntaxError(RexxErrorCodes errorcode) { error(errorcode); }

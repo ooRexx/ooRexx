@@ -336,7 +336,7 @@ RexxObject *RexxString::dataType(RexxString *pType)
 
     // no type specified, this is a check for number or char.  We call the
     // same validation code, but need a different return result.
-    return (StringUtil::dataType(this, 'N') == TheTrueObject ? new_string("NUM",3) : new_string("CHAR",4));
+    return (StringUtil::dataType(this, 'N') == TheTrueObject ? GlobalNames::NUM : GlobalNames::CHAR);
 }
 
 

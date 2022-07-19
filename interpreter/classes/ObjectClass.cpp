@@ -428,7 +428,7 @@ HashCode RexxObject::hash()
         // we need to have a return value for this.
         if (result.isNull())
         {
-            reportException(Error_No_result_object_message, new_string("HASHCODE"));
+            reportException(Error_No_result_object_message, GlobalNames::HASHCODE);
         }
 
         // the default version sends us a string containing binary data.

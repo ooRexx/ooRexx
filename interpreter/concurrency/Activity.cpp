@@ -81,8 +81,6 @@
 #include <stdio.h>
 #include <time.h>
 
-// we use lots of global names here.
-using namespace GlobalNames;
 
 const size_t ACT_STACK_SIZE = 20;
 
@@ -581,23 +579,23 @@ bool Activity::raiseCondition(RexxString *condition, RexxObject *rc, RexxObject 
     RexxActivation *activation = getCurrentRexxFrame();
     if (activation != OREF_NULL)
     {
-        if (activation->isErrorSyntaxEnabled() && condition->strCompare(ERRORNAME))
+        if (activation->isErrorSyntaxEnabled() && condition->strCompare(GlobalNames::ERRORNAME))
         {
             reportException(Error_Execution_error_syntax, description, result);
         }
-        else if (activation->isFailureSyntaxEnabled() && condition->strCompare(FAILURE))
+        else if (activation->isFailureSyntaxEnabled() && condition->strCompare(GlobalNames::FAILURE))
         {
             reportException(Error_Execution_failure_syntax, description, result);
         }
-        else if (activation->isLostdigitsSyntaxEnabled() && condition->strCompare(LOSTDIGITS))
+        else if (activation->isLostdigitsSyntaxEnabled() && condition->strCompare(GlobalNames::LOSTDIGITS))
         {
             reportException(Error_Execution_lostdigits_syntax, description);
         }
-        else if (activation->isNostringSyntaxEnabled() && condition->strCompare(NOSTRING))
+        else if (activation->isNostringSyntaxEnabled() && condition->strCompare(GlobalNames::NOSTRING))
         {
             reportException(Error_Execution_nostring_syntax, description);
         }
-        else if (activation->isNotreadySyntaxEnabled() && condition->strCompare(NOTREADY))
+        else if (activation->isNotreadySyntaxEnabled() && condition->strCompare(GlobalNames::NOTREADY))
         {
             reportException(Error_Execution_notready_syntax, description);
         }
@@ -707,22 +705,22 @@ DirectoryClass* Activity::createConditionObject(RexxString *condition, RexxObjec
     DirectoryClass *conditionObj = new_directory();
     ProtectedObject p(conditionObj);
     // fill in the provided pieces
-    conditionObj->put(condition, CONDITION);
-    conditionObj->put(description == OREF_NULL ? NULLSTRING : description, DESCRIPTION);
-    conditionObj->put(TheFalseObject, PROPAGATED);
+    conditionObj->put(condition, GlobalNames::CONDITION);
+    conditionObj->put(description == OREF_NULL ? GlobalNames::NULLSTRING : description, GlobalNames::DESCRIPTION);
+    conditionObj->put(TheFalseObject, GlobalNames::PROPAGATED);
 
     // the remainders don't have defaults, so only add the items if provided.
     if (rc != OREF_NULL)
     {
-        conditionObj->put(rc, RC);
+        conditionObj->put(rc, GlobalNames::RC);
     }
     if (additional != OREF_NULL)
     {
-        conditionObj->put(additional, ADDITIONAL);
+        conditionObj->put(additional, GlobalNames::ADDITIONAL);
     }
     if (result != OREF_NULL)
     {
-        conditionObj->put(result, RESULT);
+        conditionObj->put(result, GlobalNames::RESULT);
     }
 
     // add in all location-specific information
@@ -941,7 +939,7 @@ void Activity::raiseException(RexxErrorCodes errcode, RexxString *description, A
         // top condition.  We start propagating this condition until we either
         // find a frame that traps this or we run out of frames.
         // fill in the propagation status
-        conditionobj->put(TheTrueObject, PROPAGATED);
+        conditionobj->put(TheTrueObject, GlobalNames::PROPAGATED);
         // if we have an Rexx context to work with, unwind to that point,
         if (activation != OREF_NULL)
         {
@@ -983,12 +981,12 @@ DirectoryClass* Activity::createExceptionObject(RexxErrorCodes errcode,
     // get a version of the error code formatted in "dot" format.
     sprintf(work, "%d.%1zd", errcode / 1000, errcode - primary);
     RexxString *code = new_string(work);
-    exobj->put(code, CODE);
+    exobj->put(code, GlobalNames::CODE);
 
     // now the primary code goes in as RC
     wholenumber_t newVal = primary / 1000;
     RexxInteger *rc = new_integer(newVal);
-    exobj->put(rc, RC);
+    exobj->put(rc, GlobalNames::RC);
 
     // get the text for the primary error message
     RexxString *errortext = Interpreter::getMessageText(primary);
@@ -997,7 +995,7 @@ DirectoryClass* Activity::createExceptionObject(RexxErrorCodes errcode,
     {
         reportException(Error_Execution_error_condition, code);
     }
-    exobj->put(errortext, ERRORTEXT);
+    exobj->put(errortext, GlobalNames::ERRORTEXT);
 
     // handle the message substitution values (raw form)
     // only the secondary message has substitutions, but we
@@ -1009,45 +1007,45 @@ DirectoryClass* Activity::createExceptionObject(RexxErrorCodes errcode,
     }
 
     // add this in
-    exobj->put(additional, ADDITIONAL);
+    exobj->put(additional, GlobalNames::ADDITIONAL);
 
     // do we have a secondary message?
     if (primary != errcode)
     {
         // build the message and add to the condition object
         RexxString *message = buildMessage(errcode, additional);
-        exobj->put(message, MESSAGE);
+        exobj->put(message, GlobalNames::MESSAGE);
     }
     else
     {
         // make this explicitly .nil
-        exobj->put(TheNilObject, MESSAGE);
+        exobj->put(TheNilObject, GlobalNames::MESSAGE);
     }
 
     // the description string (rare for exceptions)
     if (description == OREF_NULL)
     {
         // use an explicit null string
-        exobj->put(GlobalNames::NULLSTRING, DESCRIPTION);
+        exobj->put(GlobalNames::NULLSTRING, GlobalNames::DESCRIPTION);
     }
     else
     {
-        exobj->put(description, DESCRIPTION);
+        exobj->put(description, GlobalNames::DESCRIPTION);
     }
 
     if (result != OREF_NULL)
     {
-        exobj->put(result, RESULT);
+        exobj->put(result, GlobalNames::RESULT);
     }
 
     // add in all location-specific information
     generateProgramInformation(exobj);
 
     // the condition name is always SYNTAX
-    exobj->put(SYNTAX, CONDITION);
+    exobj->put(GlobalNames::SYNTAX, GlobalNames::CONDITION);
     // fill in the propagation status.  This is always false for the first
     // potential trap level, gets turned to true if this goes down levels.
-    exobj->put(TheFalseObject, PROPAGATED);
+    exobj->put(TheFalseObject, GlobalNames::PROPAGATED);
 
     return exobj;
 }
@@ -1062,9 +1060,9 @@ void Activity::generateProgramInformation(DirectoryClass *exobj)
 {
     // create lists for both the stack frames and the traceback lines
     ListClass *stackFrames = new_list();
-    exobj->put(stackFrames, STACKFRAMES);
+    exobj->put(stackFrames, GlobalNames::STACKFRAMES);
     ListClass *traceback = new_list();
-    exobj->put(traceback, TRACEBACK);
+    exobj->put(traceback, GlobalNames::TRACEBACK);
 
     ActivationFrame *frame = activationFrames;
 
@@ -1091,7 +1089,7 @@ void Activity::generateProgramInformation(DirectoryClass *exobj)
         if (lineNumber != TheNilObject)
         {
             // add the line number information
-            exobj->put(lineNumber, POSITION);
+            exobj->put(lineNumber, GlobalNames::POSITION);
         }
     }
 
@@ -1099,13 +1097,13 @@ void Activity::generateProgramInformation(DirectoryClass *exobj)
     // add program information
     if (package != OREF_NULL)
     {
-        exobj->put(package->getProgramName(), PROGRAM);
-        exobj->put(package, PACKAGE_REF);
+        exobj->put(package->getProgramName(), GlobalNames::PROGRAM);
+        exobj->put(package, GlobalNames::PACKAGE_REF);
     }
     else
     {
         // if not available, then this is explicitly a NULLSTRING.
-        exobj->put(GlobalNames::NULLSTRING, PROGRAM);
+        exobj->put(GlobalNames::NULLSTRING, GlobalNames::PROGRAM);
     }
 }
 
@@ -1192,7 +1190,7 @@ RexxString* Activity::messageSubstitution(RexxString *message, ArrayClass  *addi
     for (size_t i = 1; i <= substitutions; i++)
     {
         // search for the substibution value
-        size_t subposition = message->pos(AND, searchOffset);
+        size_t subposition = message->pos(GlobalNames::AND, searchOffset);
         // no more '&' markers found in the message, we're done building.
         if (subposition == 0)
         {
@@ -1273,20 +1271,20 @@ void Activity::reraiseException(DirectoryClass *exobj)
     {
         PackageClass *package = activation->getPackageObject();
         // set the position and program name
-        exobj->put(new_integer(activation->currentLine()), POSITION);
-        exobj->put(package->getProgramName(), PROGRAM);
-        exobj->put(package, PACKAGE_REF);
+        exobj->put(new_integer(activation->currentLine()), GlobalNames::POSITION);
+        exobj->put(package->getProgramName(), GlobalNames::PROGRAM);
+        exobj->put(package, GlobalNames::PACKAGE_REF);
     }
     else
     {
         // remove the old package information.
-        exobj->remove(POSITION);
-        exobj->remove(PROGRAM);
-        exobj->remove(PACKAGE_REF);
+        exobj->remove(GlobalNames::POSITION);
+        exobj->remove(GlobalNames::PROGRAM);
+        exobj->remove(GlobalNames::PACKAGE_REF);
     }
 
     // get the error code and redo the message information
-    RexxInternalObject *errorcode = exobj->get(CODE);
+    RexxInternalObject *errorcode = exobj->get(GlobalNames::CODE);
     wholenumber_t errornumber = Interpreter::messageNumber((RexxString *)errorcode);
 
     wholenumber_t primary = (errornumber / 1000) * 1000;
@@ -1297,10 +1295,10 @@ void Activity::reraiseException(DirectoryClass *exobj)
         errornumber = atol(work);
 
         RexxString *message = Interpreter::getMessageText(errornumber);
-        ArrayClass *additional = (ArrayClass *)exobj->get(ADDITIONAL);
+        ArrayClass *additional = (ArrayClass *)exobj->get(GlobalNames::ADDITIONAL);
         message = messageSubstitution(message, additional);
         // replace the original message text
-        exobj->put(message, MESSAGE);
+        exobj->put(message, GlobalNames::MESSAGE);
     }
 
     raisePropagate(exobj);
@@ -1315,7 +1313,7 @@ void Activity::reraiseException(DirectoryClass *exobj)
  */
 void Activity::raisePropagate(DirectoryClass *conditionObj)
 {
-    RexxString *condition = (RexxString *)conditionObj->get(CONDITION);
+    RexxString *condition = (RexxString *)conditionObj->get(GlobalNames::CONDITION);
     ActivationBase *activation = getTopStackFrame();
 
     // loop to the top of the stack
@@ -1327,7 +1325,7 @@ void Activity::raisePropagate(DirectoryClass *conditionObj)
         activation->trap(condition, conditionObj);
         // make sure this is marked as propagated after the first...probably
         // already done, but it doesn't hurt to ensure this.
-        conditionObj->put(TheTrueObject, PROPAGATED);
+        conditionObj->put(TheTrueObject, GlobalNames::PROPAGATED);
         // if we've unwound to the stack base and not been trapped, we need
         // to fall through to the kill processing.  The stackbase should have trapped
         // this.  We never cleanup the stackbase activation though.
@@ -1351,7 +1349,7 @@ void Activity::raisePropagate(DirectoryClass *conditionObj)
 void Activity::display(DirectoryClass *exobj)
 {
     // get the traceback info
-    ListClass *trace_backList = (ListClass *)exobj->get(TRACEBACK);
+    ListClass *trace_backList = (ListClass *)exobj->get(GlobalNames::TRACEBACK);
     if (trace_backList != OREF_NULL)
     {
         ArrayClass *trace_back = trace_backList->makeArray();
@@ -1372,12 +1370,12 @@ void Activity::display(DirectoryClass *exobj)
     }
 
     // get the error code, and format a message header
-    RexxString *rc = (RexxString *)exobj->get(RC);
+    RexxString *rc = (RexxString *)exobj->get(GlobalNames::RC);
     wholenumber_t errorCode = Interpreter::messageNumber(rc);
     Protected<RexxString> text = Interpreter::getMessageText(Message_Translations_error);
 
     // get the program name
-    RexxString *programname = (RexxString *)exobj->get(PROGRAM);
+    RexxString *programname = (RexxString *)exobj->get(GlobalNames::PROGRAM);
     // add on the error number
     text = text->concatWith(rc->requestString(), ' ');
 
@@ -1388,7 +1386,7 @@ void Activity::display(DirectoryClass *exobj)
         text = text->concatWith(programname, ' ');
 
         // if we have a line position, add that on also
-        RexxInternalObject *position = exobj->get(POSITION);
+        RexxInternalObject *position = exobj->get(GlobalNames::POSITION);
         if (position != OREF_NULL)
         {
             text = text->concatWith(Interpreter::getMessageText(Message_Translations_line), ' ');
@@ -1398,14 +1396,14 @@ void Activity::display(DirectoryClass *exobj)
     text = text->concatWithCstring(":  ");
 
     // and finally the primary error message
-    text = text->concat((RexxString *)exobj->get(ERRORTEXT));
+    text = text->concat((RexxString *)exobj->get(GlobalNames::ERRORTEXT));
     traceOutput(currentRexxFrame, text);
 
     // now add the secondary message if we have one.
-    RexxString *secondary = (RexxString *)exobj->get(MESSAGE);
+    RexxString *secondary = (RexxString *)exobj->get(GlobalNames::MESSAGE);
     if (secondary != OREF_NULL && secondary != (RexxString *)TheNilObject)
     {
-        rc = (RexxString *)exobj->get(CODE);
+        rc = (RexxString *)exobj->get(GlobalNames::CODE);
         errorCode = Interpreter::messageNumber(rc);
         text = Interpreter::getMessageText(Message_Translations_error);
 
@@ -1431,18 +1429,18 @@ void Activity::displayDebug(DirectoryClass *exobj)
     // get the leading part to indicate this is a debug error, then compose the full
     // message
     RexxString *text = Interpreter::getMessageText(Message_Translations_debug_error);
-    text = text->concatWith((exobj->get(RC))->requestString(), ' ');
+    text = text->concatWith((exobj->get(GlobalNames::RC))->requestString(), ' ');
     text = text->concatWithCstring(":  ");
-    text = text->concatWith((RexxString *)exobj->get(ERRORTEXT), ' ');
+    text = text->concatWith((RexxString *)exobj->get(GlobalNames::ERRORTEXT), ' ');
     traceOutput(currentRexxFrame, text);
 
 
     // now any secondary message
-    RexxString *secondary = (RexxString *)exobj->get(MESSAGE);
+    RexxString *secondary = (RexxString *)exobj->get(GlobalNames::MESSAGE);
     if (secondary != OREF_NULL && secondary != (RexxString *)TheNilObject)
     {
         text = Interpreter::getMessageText(Message_Translations_debug_error);
-        text = text->concatWith((RexxString *)exobj->get(CODE), ' ');
+        text = text->concatWith((RexxString *)exobj->get(GlobalNames::CODE), ' ');
         text = text->concatWithCstring(":  ");
         text = text->concat(secondary);
         traceOutput(getCurrentRexxFrame(), text);
@@ -2720,13 +2718,13 @@ bool Activity::callCommandExit(RexxActivation *activation, RexxString *address, 
         if (exit_parm.rxcmd_flags.rxfcfail)
         {
             // raise the condition when things are done
-            condition = createConditionObject(FAILURE, (RexxObject *)result, command, OREF_NULL, OREF_NULL);
+            condition = createConditionObject(GlobalNames::FAILURE, (RexxObject *)result, command, OREF_NULL, OREF_NULL);
         }
 
         else if (exit_parm.rxcmd_flags.rxfcerr)
         {
             // raise the condition when things are done
-            condition = createConditionObject(ERRORNAME, (RexxObject *)result, command, OREF_NULL, OREF_NULL);
+            condition = createConditionObject(GlobalNames::ERRORNAME, (RexxObject *)result, command, OREF_NULL, OREF_NULL);
         }
 
         // get the return code string
@@ -3076,12 +3074,12 @@ void  Activity::traceOutput(RexxActivation *activation, RexxString *line)
     // if the exit passes on the call, we write this to the .traceouput
     if (callTraceExit(activation, line))
     {
-        RexxObject *stream = getLocalEnvironment(TRACEOUTPUT);
+        RexxObject *stream = getLocalEnvironment(GlobalNames::TRACEOUTPUT);
 
         if (stream != OREF_NULL && stream != TheNilObject)
         {
             ProtectedObject result;
-            stream->sendMessage(LINEOUT, line, result);
+            stream->sendMessage(GlobalNames::LINEOUT, line, result);
         }
         // could not find the target, but don't lose the data!
         else
@@ -3102,11 +3100,11 @@ void Activity::sayOutput(RexxActivation *activation, RexxString *line)
     if (callSayExit(activation, line))
     {
         // say output goes to .output
-        RexxObject *stream = getLocalEnvironment(OUTPUT);
+        RexxObject *stream = getLocalEnvironment(GlobalNames::OUTPUT);
         if (stream != OREF_NULL && stream != TheNilObject)
         {
             ProtectedObject result;
-            stream->sendMessage(SAY, line, result);
+            stream->sendMessage(GlobalNames::SAY, line, result);
         }
         else
         {
@@ -3130,11 +3128,11 @@ RexxString *Activity::traceInput(RexxActivation *activation)
     if (callDebugInputExit(activation, value))
     {
         // .debuginput is used for the debug read
-        RexxObject *stream = getLocalEnvironment(DEBUGINPUT);
+        RexxObject *stream = getLocalEnvironment(GlobalNames::DEBUGINPUT);
         if (stream != OREF_NULL)
         {
             ProtectedObject result;
-            value = (RexxString *)stream->sendMessage(LINEIN, result);
+            value = (RexxString *)stream->sendMessage(GlobalNames::LINEIN, result);
             // use a null string of we get .nil back.
             if (value == (RexxString *)TheNilObject)
             {
@@ -3165,12 +3163,12 @@ RexxString *Activity::pullInput(RexxActivation *activation)
     if (callPullExit(activation, value))
     {
         // we handle both the queue and I/O parts here
-        RexxObject *stream = getLocalEnvironment(STDQUE);
+        RexxObject *stream = getLocalEnvironment(GlobalNames::STDQUE);
         // read from the rexx queue first
         if (stream != OREF_NULL)
         {
             ProtectedObject result;
-            value = (RexxString *)stream->sendMessage(PULL, result);
+            value = (RexxString *)stream->sendMessage(GlobalNames::PULL, result);
             // if we don't get anything from the queue, try again from linein
             if (value == (RexxString *)TheNilObject)
             {
@@ -3217,7 +3215,7 @@ RexxString *Activity::lineIn(RexxActivation *activation)
         {
             ProtectedObject result;
             // read using the LINEIN method
-            value = (RexxString *)stream->sendMessage(LINEIN, result);
+            value = (RexxString *)stream->sendMessage(GlobalNames::LINEIN, result);
             if (value == (RexxString *)TheNilObject)
             {
                 value = GlobalNames::NULLSTRING;
@@ -3244,17 +3242,17 @@ void Activity::queue(RexxActivation *activation, RexxString *line, QueueOrder or
     if (callPushExit(activation, line, order))
     {
         // we use the current queue object as the target
-        RexxObject *targetQueue = getLocalEnvironment(STDQUE);
+        RexxObject *targetQueue = getLocalEnvironment(GlobalNames::STDQUE);
         if (targetQueue != OREF_NULL)
         {
             ProtectedObject result;
             if (order == QUEUE_LIFO)
             {
-                targetQueue->sendMessage(PUSH, line, result);
+                targetQueue->sendMessage(GlobalNames::PUSH, line, result);
             }
             else
             {
-                targetQueue->sendMessage(QUEUE, line, result);
+                targetQueue->sendMessage(GlobalNames::QUEUE, line, result);
             }
         }
     }

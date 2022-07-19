@@ -1914,7 +1914,7 @@ void LanguageParser::annotateDirective()
             // this must be a literal string
             if (!token->isSymbolOrLiteral())
             {
-                syntaxError(Error_Symbol_or_string_directive_option, new_string("::ANNOTATE"), new_string("CLASS"));
+                syntaxError(Error_Symbol_or_string_directive_option, GlobalNames::ANNOTATE_DIRECTIVE, GlobalNames::CLASS);
             }
 
             // get the target class name
@@ -1925,7 +1925,7 @@ void LanguageParser::annotateDirective()
             // raise the error now.
             if (directive == OREF_NULL)
             {
-                syntaxError(Error_Translation_missing_annotation_target, new_string("class"), name);
+                syntaxError(Error_Translation_missing_annotation_target, "class", name);
             }
 
             // get this directly from the directive.  Note, annotations are accumulative.
@@ -1941,7 +1941,7 @@ void LanguageParser::annotateDirective()
             // this must be a literal string
             if (!token->isSymbolOrLiteral())
             {
-                syntaxError(Error_Symbol_or_string_directive_option, new_string("::ANNOTATE"), new_string("ROUTINE"));
+                syntaxError(Error_Symbol_or_string_directive_option, GlobalNames::ANNOTATE_DIRECTIVE, GlobalNames::ROUTINE);
             }
 
             // get the target name
@@ -1952,7 +1952,7 @@ void LanguageParser::annotateDirective()
             // raise the error now.
             if (routine == OREF_NULL)
             {
-                syntaxError(Error_Translation_missing_annotation_target, new_string("routine"), name);
+                syntaxError(Error_Translation_missing_annotation_target, "routine", name);
             }
 
             // get this directly from the directive.  Note, annotations are accumulative.
@@ -1968,7 +1968,7 @@ void LanguageParser::annotateDirective()
             // this must be a literal string
             if (!token->isSymbolOrLiteral())
             {
-                syntaxError(Error_Symbol_or_string_directive_option, new_string("::ANNOTATE"), new_string("METHOD"));
+                syntaxError(Error_Symbol_or_string_directive_option, GlobalNames::ANNOTATE_DIRECTIVE, GlobalNames::METHOD);
             }
 
             // get the target method
@@ -1979,7 +1979,7 @@ void LanguageParser::annotateDirective()
             // raise the error now.
             if (method == OREF_NULL)
             {
-                syntaxError(Error_Translation_missing_annotation_target, new_string("method"), name);
+                syntaxError(Error_Translation_missing_annotation_target, "method", name);
             }
 
             // get this directly from the directive.  Note, annotations are accumulative.
@@ -1995,7 +1995,7 @@ void LanguageParser::annotateDirective()
             // this must be a literal string
             if (!token->isSymbolOrLiteral())
             {
-                syntaxError(Error_Symbol_or_string_directive_option, new_string("::ANNOTATE"), new_string("ATTRIBUTE"));
+                syntaxError(Error_Symbol_or_string_directive_option, GlobalNames::ANNOTATE_DIRECTIVE, GlobalNames::ATTRIBUTE);
             }
 
             // get the target attribute name
@@ -2015,7 +2015,7 @@ void LanguageParser::annotateDirective()
             // this must be a literal string
             if (!token->isSymbolOrLiteral())
             {
-                syntaxError(Error_Symbol_or_string_directive_option, new_string("::ANNOTATE"), new_string("CONSTANT"));
+                syntaxError(Error_Symbol_or_string_directive_option, GlobalNames::ANNOTATE_DIRECTIVE, GlobalNames::CONSTANT);
             }
 
             // get the target class name
@@ -2032,7 +2032,7 @@ void LanguageParser::annotateDirective()
             // raise the error now.
             if (method == OREF_NULL)
             {
-                syntaxError(Error_Translation_missing_annotation_target, new_string("constant"), name);
+                syntaxError(Error_Translation_missing_annotation_target, "constant", name);
             }
 
             // get this directly from the directive.  Note, annotations are accumulative.
@@ -2114,7 +2114,7 @@ void LanguageParser::processAttributeAnnotations(RexxString *getterName)
     // annotations to process.
     if (getterMethod == OREF_NULL && setterMethod == OREF_NULL)
     {
-        syntaxError(Error_Translation_missing_annotation_target, new_string("attribute"), getterName);
+        syntaxError(Error_Translation_missing_annotation_target, "attribute", getterName);
     }
 
     // parse this one, then merge into each of the methods
@@ -2554,7 +2554,7 @@ void LanguageParser::routineDirective()
                 // this is a compound string descriptor, so it must be a literal
                 if (!token->isLiteral())
                 {
-                    syntaxError(Error_Symbol_or_string_directive_option, new_string("::ROUTINE"), new_string("EXTERNAL"));
+                    syntaxError(Error_Symbol_or_string_directive_option, GlobalNames::ROUTINE_DIRECTIVE, GlobalNames::EXTERNAL);
                 }
 
                 externalname = token->value();

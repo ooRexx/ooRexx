@@ -4075,15 +4075,15 @@ NumberString *NumberString::newInstanceFromDouble(double number, wholenumber_t p
     // special strings for those.
     if (std::isnan(number))
     {
-        return (NumberString *)new_string("nan");
+        return (NumberString *)GlobalNames::NAN_VAL;
     }
     else if (number == +HUGE_VAL)
     {
-        return (NumberString *)new_string("+infinity");
+        return (NumberString *)GlobalNames::INFINITY_PLUS;
     }
     else if (number == -HUGE_VAL)
     {
-        return (NumberString *)new_string("-infinity");
+        return (NumberString *)GlobalNames::INFINITY_MINUS;
     }
 
     // with precision restricted to a maximum of 16, the length of a %.*g
