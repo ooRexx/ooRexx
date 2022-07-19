@@ -140,7 +140,7 @@ int WINAPI WinMain(
             sprintf(arg_buffer, "Error %zd.%1zd running program %s line %zd\n\n  %s\n  %s", conditionInfo.rc, minorCode,
                 pgmThrdInst->StringData(conditionInfo.program), conditionInfo.position,
                 pgmThrdInst->StringData(conditionInfo.errortext), pgmThrdInst->StringData(conditionInfo.message));
-            MessageBox(NULL, arg_buffer, "Object Object Rexx Execution Error", MB_OK | MB_ICONHAND);
+            MessageBox(NULL, arg_buffer, "Open Object Rexx Execution Error", MB_OK | MB_ICONHAND);
 
             pgmInst->Terminate();
             return -rc;   // well, the negation of the error number is the return code

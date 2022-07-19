@@ -448,7 +448,8 @@ RexxCode *LanguageParser::translateInterpret(RexxString *interpretString, Packag
     // create the appropriate array source, then the parser, then generate the
     // code.
     ProgramSource *programSource = new ArrayProgramSource(new_array(interpretString), lineNumber);
-    Protected<LanguageParser> parser = new LanguageParser(GlobalNames::NULLSTRING, programSource);
+    // the package for the interpret will inherit the program name from the parent context.
+    Protected<LanguageParser> parser = new LanguageParser(sourceContext->getProgramName(), programSource);
     return parser->translateInterpret(sourceContext, labels);
 }
 
