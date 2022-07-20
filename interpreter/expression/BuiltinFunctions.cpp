@@ -1772,7 +1772,7 @@ BUILTIN(SYMBOL)
         }
         else
         {
-            return GlobalNames::LIT;
+            return GlobalNames::VAR;
         }
     }
 }
