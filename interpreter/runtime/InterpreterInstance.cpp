@@ -468,14 +468,10 @@ void InterpreterInstance::removeInactiveActivities()
  */
 bool InterpreterInstance::terminate()
 {
-    // belt and braces in case an instance gets terminated twice
-    if (rootActivity == OREF_NULL)
-    {
-        return false;
-    }
-
+    // if our current activity is not the root one, we can't do that
+    Activity *current = findActivity();
     // we also can't be doing active work on the root thread
-    if (rootActivity->isActive())
+    if (current != rootActivity || rootActivity->isActive())
     {
         return false;
     }
@@ -489,13 +485,13 @@ bool InterpreterInstance::terminate()
         ResourceSection lock;
         // remove the current activity from the list so we don't clean everything
         // up.  We need to
-        allActivities->removeItem(rootActivity);
+        allActivities->removeItem(current);
         // go remove all of the activities that are not doing work for this instance
         removeInactiveActivities();
         // no activities left?  We can leave now
         terminated = allActivities->isEmpty();
         // we need to restore the rootActivity to the list for potentially running uninits
-        allActivities->append(rootActivity);
+        allActivities->append(current);
     }
 
     // if there are active threads still running, we need to wait until
@@ -512,7 +508,7 @@ bool InterpreterInstance::terminate()
 
     // this might be holding some local references. Make sure we clear these
     // before running the garbage collector
-    rootActivity->clearLocalReferences();
+    current->clearLocalReferences();
 
     // before we update of the data structures, make sure we process any
     // pending uninit activity.
@@ -527,7 +523,7 @@ bool InterpreterInstance::terminate()
     terminationSem.close();
 
     // make sure the root activity is removed by the ActivityManager;
-    ActivityManager::returnRootActivity(rootActivity);
+    ActivityManager::returnRootActivity(current);
 
     // just in case there's still a reference held to this, clear out all object reference fields
     rootActivity = OREF_NULL;
