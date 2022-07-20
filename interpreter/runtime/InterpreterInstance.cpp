@@ -447,7 +447,8 @@ void InterpreterInstance::removeInactiveActivities()
     for (size_t i = 0; i < count; i++)
     {
         Activity *activity = (Activity *)allActivities->pull();
-        if (activity->isActive())
+        // we never terminate the root activity or any activity current in use
+        if (activity == rootActivity || activity->isActive())
         {
             allActivities->append(activity);
         }
@@ -468,10 +469,8 @@ void InterpreterInstance::removeInactiveActivities()
  */
 bool InterpreterInstance::terminate()
 {
-    // if our current activity is not the root one, we can't do that
-    Activity *current = findActivity();
-    // we also can't be doing active work on the root thread
-    if (current != rootActivity || rootActivity->isActive())
+    // we can't be doing active work on the root thread
+    if (rootActivity->isActive())
     {
         return false;
     }
@@ -483,15 +482,10 @@ bool InterpreterInstance::terminate()
     {
 
         ResourceSection lock;
-        // remove the current activity from the list so we don't clean everything
-        // up.  We need to
-        allActivities->removeItem(current);
         // go remove all of the activities that are not doing work for this instance
         removeInactiveActivities();
-        // no activities left?  We can leave now
-        terminated = allActivities->isEmpty();
-        // we need to restore the rootActivity to the list for potentially running uninits
-        allActivities->append(current);
+        // if we just have the single root activity left, then we can shutdown
+        terminated = allActivities->items() == 1;
     }
 
     // if there are active threads still running, we need to wait until
@@ -503,12 +497,13 @@ bool InterpreterInstance::terminate()
 
     // if everything has terminated, then make sure we run the uninits before shutting down.
     // This activity is currently the current activity.  We're going to run the
-    // uninits on this one, so reactivate it until we're done running
+    // uninits on this one, so reactivate it until we're done running. If we were not actually
+    // called on an attached thread, an attach will be performed.
     enterOnCurrentThread();
 
     // this might be holding some local references. Make sure we clear these
     // before running the garbage collector
-    current->clearLocalReferences();
+    rootActivity->clearLocalReferences();
 
     // before we update of the data structures, make sure we process any
     // pending uninit activity.
@@ -523,7 +518,7 @@ bool InterpreterInstance::terminate()
     terminationSem.close();
 
     // make sure the root activity is removed by the ActivityManager;
-    ActivityManager::returnRootActivity(current);
+    ActivityManager::returnRootActivity(rootActivity);
 
     // just in case there's still a reference held to this, clear out all object reference fields
     rootActivity = OREF_NULL;
