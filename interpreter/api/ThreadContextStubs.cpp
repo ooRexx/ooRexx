@@ -1992,7 +1992,7 @@ void RexxEntry ClearCondition(RexxThreadContext *c)
 
 POINTER RexxEntry MutableBufferData(RexxThreadContext *c, RexxMutableBufferObject b)
 {
-    ApiContext context(c, false);     // no lock required
+    ApiContext context(c);   // still needs to be blocking because the backing databuffer can be updated.
     try
     {
         return (POINTER)((MutableBuffer *)b)->getData();
