@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -238,7 +238,7 @@ RexxObjectPtr RexxEntry SendMessage2(RexxThreadContext * c, RexxObjectPtr o, CST
 
 RexxDirectoryObject RexxEntry GetLocalEnvironment(RexxThreadContext *c)
 {
-    ApiContext context(c);
+    ApiContext context(c, false);      // this is a non-blocking call
     try
     {
         return (RexxDirectoryObject)context.activity->getLocal();
@@ -251,7 +251,7 @@ RexxDirectoryObject RexxEntry GetLocalEnvironment(RexxThreadContext *c)
 
 RexxDirectoryObject RexxEntry GetGlobalEnvironment(RexxThreadContext *c)
 {
-    ApiContext context(c);
+    ApiContext context(c, false);      // this is a non-blocking call
     try
     {
         return (RexxDirectoryObject)TheEnvironment;
@@ -265,7 +265,7 @@ RexxDirectoryObject RexxEntry GetGlobalEnvironment(RexxThreadContext *c)
 
 logical_t RexxEntry IsInstanceOf(RexxThreadContext *c, RexxObjectPtr o, RexxClassObject cl)
 {
-    ApiContext context(c);
+    ApiContext context(c, false);      // this can safely be a non-blocking call.
     try
     {
         return ((RexxObject *)o)->isInstanceOf((RexxClass *)cl);
@@ -273,7 +273,7 @@ logical_t RexxEntry IsInstanceOf(RexxThreadContext *c, RexxObjectPtr o, RexxClas
     catch (NativeActivation *)
     {
     }
-    return 0;
+    return false;
 }
 
 logical_t RexxEntry IsOfType(RexxThreadContext *c, RexxObjectPtr o, CSTRING cn)
@@ -557,9 +557,9 @@ RexxRoutineObject RexxEntry NewRoutine(RexxThreadContext *c, CSTRING n, CSTRING 
 }
 
 
-logical_t RexxEntry IsRoutine(RexxThreadContext *c, RexxObjectPtr o)
+logical_t RexxEntry IsRoutine(RexxThreadContext * c, RexxObjectPtr o)
 {
-    ApiContext context(c);
+    ApiContext context(c, false);       // this can be safely executed without blocking
     try
     {
         // convert the name to a string instance, and check the environments.
@@ -572,9 +572,9 @@ logical_t RexxEntry IsRoutine(RexxThreadContext *c, RexxObjectPtr o)
 }
 
 
-logical_t RexxEntry IsMethod(RexxThreadContext *c, RexxObjectPtr o)
+logical_t RexxEntry IsMethod(RexxThreadContext * c, RexxObjectPtr o)
 {
-    ApiContext context(c);
+    ApiContext context(c, false);       // this can be safely executed without blocking
     try
     {
         // convert the name to a string instance, and check the environments.
@@ -963,7 +963,7 @@ logical_t RexxEntry ObjectToLogical(RexxThreadContext * c, RexxObjectPtr o, logi
 
 RexxObjectPtr RexxEntry LogicalToObject(RexxThreadContext *c, logical_t n)
 {
-    ApiContext context(c);
+    ApiContext context(c, false);      // does not require a lock
     try
     {
         return (RexxObjectPtr)booleanObject(n != 0);
@@ -1041,9 +1041,9 @@ CSTRING RexxEntry ObjectToStringValue(RexxThreadContext *c, RexxObjectPtr o)
     return NULL;
 }
 
-size_t RexxEntry StringGet(RexxThreadContext *c, RexxStringObject s, size_t o, POINTER r, size_t l)
+size_t RexxEntry StringGet(RexxThreadContext * c, RexxStringObject s, size_t o, POINTER r, size_t l)
 {
-    ApiContext context(c);
+    ApiContext context(c, false);      // this does not require a lock
     try
     {
         RexxString *temp = (RexxString *)s;
@@ -1055,9 +1055,9 @@ size_t RexxEntry StringGet(RexxThreadContext *c, RexxStringObject s, size_t o, P
     return 0;
 }
 
-size_t RexxEntry StringLength(RexxThreadContext *c, RexxStringObject s)
+size_t RexxEntry StringLength(RexxThreadContext * c, RexxStringObject s)
 {
-    ApiContext context(c);
+    ApiContext context(c, false);      // this does not require a lock
     try
     {
         RexxString *temp = (RexxString *)s;
@@ -1069,9 +1069,9 @@ size_t RexxEntry StringLength(RexxThreadContext *c, RexxStringObject s)
     return 0;
 }
 
-CSTRING RexxEntry StringData(RexxThreadContext *c, RexxStringObject s)
+CSTRING RexxEntry StringData(RexxThreadContext * c, RexxStringObject s)
 {
-    ApiContext context(c);
+    ApiContext context(c, false);      // this does not require a lock
     try
     {
         RexxString *temp = (RexxString *)s;
@@ -1139,7 +1139,7 @@ RexxStringObject RexxEntry StringLower(RexxThreadContext *c, RexxStringObject s)
 
 logical_t RexxEntry IsString(RexxThreadContext *c, RexxObjectPtr o)
 {
-    ApiContext context(c);
+    ApiContext context(c, false);    // this does not require a lock
     try
     {
         return isString((RexxObject *)o);
@@ -1165,7 +1165,7 @@ RexxBufferStringObject RexxEntry NewBufferString(RexxThreadContext * c, size_t l
 
 size_t  RexxEntry BufferStringLength(RexxThreadContext *c, RexxBufferStringObject s)
 {
-    ApiContext context(c);
+    ApiContext context(c, false);       // no lock required
     try
     {
         RexxString *temp = (RexxString *)s;
@@ -1179,7 +1179,7 @@ size_t  RexxEntry BufferStringLength(RexxThreadContext *c, RexxBufferStringObjec
 
 POINTER RexxEntry BufferStringData(RexxThreadContext *c, RexxBufferStringObject s)
 {
-    ApiContext context(c);
+    ApiContext context(c, false);       // no lock required
     try
     {
         RexxString *temp = (RexxString *)s;
@@ -1262,7 +1262,7 @@ RexxDirectoryObject RexxEntry NewDirectory(RexxThreadContext *c)
 
 logical_t RexxEntry IsDirectory(RexxThreadContext *c, RexxObjectPtr o)
 {
-    ApiContext context(c);
+    ApiContext context(c, false);     // no lock required
     try
     {
         return isOfClass(Directory, (RexxObject *)o);
@@ -1329,7 +1329,7 @@ RexxStringTableObject RexxEntry NewStringTable(RexxThreadContext *c)
 
 logical_t RexxEntry IsStringTable(RexxThreadContext *c, RexxObjectPtr o)
 {
-    ApiContext context(c);
+    ApiContext context(c, false);   // no lock required
     try
     {
         return isOfClass(StringTable, (RexxObject *)o);
@@ -1512,7 +1512,7 @@ RexxArrayObject RexxEntry ArrayOfFour(RexxThreadContext *c, RexxObjectPtr o1, Re
 
 logical_t RexxEntry IsArray(RexxThreadContext *c, RexxObjectPtr o)
 {
-    ApiContext context(c);
+    ApiContext context(c, false);      // no lock required
     try
     {
         return isArray((RexxObject *)o);
@@ -1525,7 +1525,7 @@ logical_t RexxEntry IsArray(RexxThreadContext *c, RexxObjectPtr o)
 
 POINTER RexxEntry BufferData(RexxThreadContext *c, RexxBufferObject b)
 {
-    ApiContext context(c);
+    ApiContext context(c, false);       // no lock required
     try
     {
         return (POINTER)((BufferClass *)b)->getData();
@@ -1538,7 +1538,7 @@ POINTER RexxEntry BufferData(RexxThreadContext *c, RexxBufferObject b)
 
 size_t RexxEntry BufferLength(RexxThreadContext *c, RexxBufferObject b)
 {
-    ApiContext context(c);
+    ApiContext context(c, false);   // no lock required
     try
     {
         return ((BufferClass *)b)->getDataLength();
@@ -1564,7 +1564,7 @@ RexxBufferObject RexxEntry NewBuffer(RexxThreadContext *c, size_t l)
 
 logical_t RexxEntry IsBuffer(RexxThreadContext *c, RexxObjectPtr o)
 {
-    ApiContext context(c);
+    ApiContext context(c, false);    // no lock required
     try
     {
         return isOfClass(Buffer, (RexxObject *)o);
@@ -1577,7 +1577,7 @@ logical_t RexxEntry IsBuffer(RexxThreadContext *c, RexxObjectPtr o)
 
 POINTER RexxEntry PointerValue(RexxThreadContext *c, RexxPointerObject o)
 {
-    ApiContext context(c);
+    ApiContext context(c, false);     // no lock required
     try
     {
         return (POINTER)((PointerClass *)o)->pointer();
@@ -1603,7 +1603,7 @@ RexxPointerObject RexxEntry NewPointer(RexxThreadContext *c, POINTER p)
 
 logical_t RexxEntry IsPointer(RexxThreadContext *c, RexxObjectPtr o)
 {
-    ApiContext context(c);
+    ApiContext context(c, false);     // no lock required
     try
     {
         return isOfClass(Pointer, (RexxObject *)o);
@@ -1616,7 +1616,7 @@ logical_t RexxEntry IsPointer(RexxThreadContext *c, RexxObjectPtr o)
 
 logical_t RexxEntry IsVariableReference(RexxThreadContext *c, RexxObjectPtr o)
 {
-    ApiContext context(c);
+    ApiContext context(c, false);    // no lock required
     try
     {
         return isOfClass(VariableReference, (RexxObject *)o);
@@ -1629,7 +1629,7 @@ logical_t RexxEntry IsVariableReference(RexxThreadContext *c, RexxObjectPtr o)
 
 RexxStringObject RexxEntry VariableReferenceName(RexxThreadContext *c, RexxVariableReferenceObject o)
 {
-    ApiContext context(c);
+    ApiContext context(c, false);     // no lock required
     try
     {
         return (RexxStringObject)context.ret(((VariableReference *)o)->getName());
@@ -1642,7 +1642,7 @@ RexxStringObject RexxEntry VariableReferenceName(RexxThreadContext *c, RexxVaria
 
 RexxObjectPtr RexxEntry VariableReferenceValue(RexxThreadContext *c, RexxVariableReferenceObject o)
 {
-    ApiContext context(c);
+    ApiContext context(c);    // this has to be a blocking context, since the value can get changed.
     try
     {
         return context.ret(((VariableReference *)o)->getValue());
@@ -1853,7 +1853,7 @@ RexxObjectPtr RexxEntry GetStemValue(RexxThreadContext *c, RexxStemObject s)
 
 logical_t RexxEntry IsStem(RexxThreadContext *c, RexxObjectPtr o)
 {
-    ApiContext context(c);
+    ApiContext context(c, false);     // no block required
     try
     {
         return isStem((RexxObject *)o);
@@ -1928,7 +1928,7 @@ void RexxEntry RaiseCondition(RexxThreadContext *c, CSTRING n, RexxStringObject 
 
 logical_t RexxEntry CheckCondition(RexxThreadContext *c)
 {
-    ApiContext context(c);
+    ApiContext context(c, false);     // no lock required
     try
     {
         return context.context->getConditionInfo() != OREF_NULL;
@@ -1992,7 +1992,7 @@ void RexxEntry ClearCondition(RexxThreadContext *c)
 
 POINTER RexxEntry MutableBufferData(RexxThreadContext *c, RexxMutableBufferObject b)
 {
-    ApiContext context(c);
+    ApiContext context(c, false);     // no lock required
     try
     {
         return (POINTER)((MutableBuffer *)b)->getData();
@@ -2005,7 +2005,7 @@ POINTER RexxEntry MutableBufferData(RexxThreadContext *c, RexxMutableBufferObjec
 
 size_t RexxEntry MutableBufferLength(RexxThreadContext *c, RexxMutableBufferObject b)
 {
-    ApiContext context(c);
+    ApiContext context(c);   // this needs to be blocking because the length can be updated
     try
     {
         return ((MutableBuffer *)b)->getLength();
@@ -2070,7 +2070,7 @@ RexxMutableBufferObject RexxEntry NewMutableBuffer(RexxThreadContext *c, size_t 
 
 logical_t RexxEntry IsMutableBuffer(RexxThreadContext *c, RexxObjectPtr o)
 {
-    ApiContext context(c);
+    ApiContext context(c, false);      // no lock required
     try
     {
         return isOfClass(MutableBuffer, (RexxObject *)o);

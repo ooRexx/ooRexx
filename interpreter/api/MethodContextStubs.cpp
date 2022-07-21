@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -52,7 +52,7 @@ BEGIN_EXTERN_C()
 
 RexxArrayObject RexxEntry GetMethodArguments(RexxMethodContext *c)
 {
-    ApiContext context(c);
+    ApiContext context(c, false);    // no lock required
     try
     {
         return (RexxArrayObject)context.context->getArguments();
@@ -65,9 +65,11 @@ RexxArrayObject RexxEntry GetMethodArguments(RexxMethodContext *c)
 
 RexxObjectPtr RexxEntry GetMethodArgument(RexxMethodContext *c, stringsize_t i)
 {
-    ApiContext context(c);
+    ApiContext context(c, false);    // no lock required
     try
     {
+        // because the argument is encapusulated in the method context, it's safe
+        // to retrieve an argument without a lock
         return (RexxObjectPtr)context.context->getArgument(i);
     }
     catch (NativeActivation *)
@@ -78,7 +80,7 @@ RexxObjectPtr RexxEntry GetMethodArgument(RexxMethodContext *c, stringsize_t i)
 
 RexxMethodObject RexxEntry GetCurrentMethod(RexxMethodContext *c)
 {
-    ApiContext context(c);
+    ApiContext context(c, false);     // no lock required
     try
     {
         return (RexxMethodObject)context.context->getExecutable();
@@ -91,7 +93,7 @@ RexxMethodObject RexxEntry GetCurrentMethod(RexxMethodContext *c)
 
 CSTRING RexxEntry GetMessageName(RexxMethodContext *c)
 {
-    ApiContext context(c);
+    ApiContext context(c, false);      // no lock required
     try
     {
         return (CSTRING)context.context->getMessageName()->getStringData();
@@ -104,7 +106,7 @@ CSTRING RexxEntry GetMessageName(RexxMethodContext *c)
 
 RexxObjectPtr RexxEntry GetSelf(RexxMethodContext *c)
 {
-    ApiContext context(c);
+    ApiContext context(c, false);      // no lock required
     try
     {
         return (RexxObjectPtr)context.context->getSelf();
@@ -120,6 +122,7 @@ POINTER RexxEntry GetCSelf(RexxMethodContext *c)
     ApiContext context(c);
     try
     {
+        // this property can a bit mutable, so we need the lock
         return context.context->cself();
     }
     catch (NativeActivation *)
@@ -130,7 +133,7 @@ POINTER RexxEntry GetCSelf(RexxMethodContext *c)
 
 RexxClassObject RexxEntry GetSuper(RexxMethodContext *c)
 {
-    ApiContext context(c);
+    ApiContext context(c, false);     // no lock required
     try
     {
         return (RexxClassObject)context.context->getSuper();
@@ -143,7 +146,7 @@ RexxClassObject RexxEntry GetSuper(RexxMethodContext *c)
 
 RexxObjectPtr RexxEntry GetScope(RexxMethodContext *c)
 {
-    ApiContext context(c);
+    ApiContext context(c, false);    // no lock required
     try
     {
         return (RexxObjectPtr)context.context->getScope();

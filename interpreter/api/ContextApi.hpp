@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -55,127 +55,181 @@
  */
 class ApiContext
 {
-public:
-    /**
-     * Initialize an API context from a thread context.
-     *
-     * @param c      The source context.
-     */
-    inline ApiContext(RexxThreadContext *c)
-    {
-        // we need to cleanup on exit
-        releaseLock = true;
-        clearConditions = false;
-        activity = contextToActivity(c);
-        context = activity->getApiContext();
-        context->enableConditionTraps();
-        // go acquire the kernel lock and take care of nesting
-        activity->enterCurrentThread();
-        // we need to validate the thread call context to ensure this
-        // is the correct thread
-        activity->validateThread();
-    }
+ public:
+     /**
+      * Initialize an API context from a thread context.
+      *
+      * @param c      The source context.
+      */
+     inline ApiContext(RexxThreadContext *c)
+     {
+         // we need to cleanup on exit
+         releaseLock = true;
+         clearConditions = false;
+         activity = contextToActivity(c);
+         context = activity->getApiContext();
+         context->enableConditionTraps();
+         // go acquire the kernel lock and take care of nesting
+         activity->enterCurrentThread();
+         // we need to validate the thread call context to ensure this
+         // is the correct thread
+         activity->validateThread();
+     }
 
 
-    /**
-     * Initialize an API context from a thread context.
-     * this is a nonblocking context.  The extra argument allows
-     * the overloads to work
-     *
-     * @param c      The source context.
-     */
-    inline ApiContext(RexxThreadContext *c, bool blocking)
-    {
+     /**
+      * Initialize an API context from a thread context.
+      * this is a nonblocking context.  The extra argument allows
+      * the overloads to work. Note: a non-blocking context can
+      * can only be used to retrieve information from a an inmutable
+      * object. For example, getting the size of a string object is
+      * ok, but not getting the size of an array object, since the
+      * current holder of the lock could be simultaneously updating
+      * the array.
+      *
+      * @param c      The source context.
+      */
+     inline ApiContext(RexxThreadContext *c, bool blocking)
+     {
 
-        // we need to cleanup on exit
-        releaseLock = blocking;
-        clearConditions = false;
-        activity = contextToActivity(c);
-        context = activity->getApiContext();
-        context->enableConditionTraps();
-    }
+         // we need to cleanup on exit
+         releaseLock = blocking;
+         clearConditions = false;
+         activity = contextToActivity(c);
+         context = activity->getApiContext();
+         context->enableConditionTraps();
+     }
 
-    /**
+     /**
+      * Initialize an API context from a call context.
+      *
+      * @param c      The source context.
+      */
+     inline ApiContext(RexxCallContext *c)
+     {
+         // we need to cleanup on exit
+         releaseLock = true;
+         clearConditions = false;
+         activity = contextToActivity(c);
+         context = contextToActivation(c);
+         context->enableConditionTraps();
+         // go acquire the kernel lock and take care of nesting
+         activity->enterCurrentThread();
+         // we need to validate the thread call context to ensure this
+         // is the correct thread
+         activity->validateThread();
+     }
+
+     /*
      * Initialize an API context from a call context.
+     * this is a nonblocking context.The extra argument allows
+     * the overloads to work.Note: a non-blocking context can
+     * can only be used to retrieve information from a an inmutable
+     * object.For example, getting the size of a string object is
+     * ok, but not getting the size of an array object, since the
+     * current holder of the lock could be simultaneously updating
+     * the array.
      *
      * @param c      The source context.
      */
-    inline ApiContext(RexxCallContext *c)
-    {
-        // we need to cleanup on exit
-        releaseLock = true;
-        clearConditions = false;
-        activity = contextToActivity(c);
-        context = contextToActivation(c);
-        context->enableConditionTraps();
-        // go acquire the kernel lock and take care of nesting
-        activity->enterCurrentThread();
-        // we need to validate the thread call context to ensure this
-        // is the correct thread
-        activity->validateThread();
-    }
+     inline ApiContext(RexxCallContext *c, bool blocking)
+     {
+
+         // we need to cleanup on exit
+         releaseLock = blocking;
+         clearConditions = false;
+         activity = contextToActivity(c);
+         context = activity->getApiContext();
+         context->enableConditionTraps();
+     }
 
 
-    /**
-     * Initialize an API context from an exit context.
-     *
-     * @param c      The source context.
-     */
-    inline ApiContext(RexxExitContext *c)
-    {
-        // we need to cleanup on exit
-        releaseLock = true;
-        clearConditions = false;
-        activity = contextToActivity(c);
-        context = contextToActivation(c);
-        context->enableConditionTraps();
-        // go acquire the kernel lock and take care of nesting
-        activity->enterCurrentThread();
-        // we need to validate the thread call context to ensure this
-        // is the correct thread
-        activity->validateThread();
-    }
+
+     /**
+      * Initialize an API context from an exit context.
+      *
+      * @param c      The source context.
+      */
+     inline ApiContext(RexxExitContext *c)
+     {
+         // we need to cleanup on exit
+         releaseLock = true;
+         clearConditions = false;
+         activity = contextToActivity(c);
+         context = contextToActivation(c);
+         context->enableConditionTraps();
+         // go acquire the kernel lock and take care of nesting
+         activity->enterCurrentThread();
+         // we need to validate the thread call context to ensure this
+         // is the correct thread
+         activity->validateThread();
+     }
 
 
-    /**
-     * Initialize an API context from an exit context.
-     *
-     * @param c      The source context.
-     */
-    inline ApiContext(RexxIORedirectorContext *c)
-    {
-        // we need to cleanup on exit
-        releaseLock = true;
-        activity = contextToActivity(c);
-        context = contextToActivation(c);
-        context->enableConditionTraps();
-        clearConditions = true;
-        activity->enterCurrentThread();
-        // we need to validate the thread call context to ensure this
-        // is the correct thread
-        activity->validateThread();
-    }
+     /**
+      * Initialize an API context from an exit context.
+      *
+      * @param c      The source context.
+      */
+     inline ApiContext(RexxIORedirectorContext *c)
+     {
+         // we need to cleanup on exit
+         releaseLock = true;
+         activity = contextToActivity(c);
+         context = contextToActivation(c);
+         context->enableConditionTraps();
+         clearConditions = true;
+         activity->enterCurrentThread();
+         // we need to validate the thread call context to ensure this
+         // is the correct thread
+         activity->validateThread();
+     }
 
 
-    /**
-     * Initialize an API context from a method context.
-     *
-     * @param c      The source context.
-     */
-    inline ApiContext(RexxMethodContext *c)
-    {
-        // we need to cleanup on exit
-        releaseLock = true;
-        clearConditions = false;
-        activity = contextToActivity(c);
-        context = contextToActivation(c);
-        context->enableConditionTraps();
-        // go acquire the kernel lock and take care of nesting
-        activity->enterCurrentThread();
-        // we need to validate the thread call context to ensure this
-        // is the correct thread
-        activity->validateThread();
-    }
+     /**
+      * Initialize an API context from a method context.
+      *
+      * @param c      The source context.
+      */
+     inline ApiContext(RexxMethodContext *c)
+     {
+         // we need to cleanup on exit
+         releaseLock = true;
+         clearConditions = false;
+         activity = contextToActivity(c);
+         context = contextToActivation(c);
+         context->enableConditionTraps();
+         // go acquire the kernel lock and take care of nesting
+         activity->enterCurrentThread();
+         // we need to validate the thread call context to ensure this
+         // is the correct thread
+         activity->validateThread();
+     }
+
+
+     /**
+      * Initialize an API context from a method context.
+      * this is a nonblocking context.  The extra argument allows
+      * the overloads to work. Note: a non-blocking context can
+      * can only be used to retrieve information from a an inmutable
+      * object. For example, getting the size of a string object is
+      * ok, but not getting the size of an array object, since the
+      * current holder of the lock could be simultaneously updating
+      * the array.
+      *
+      * @param c      The source context.
+      */
+     inline ApiContext(RexxMethodContext *c, bool blocking)
+     {
+
+         // we need to cleanup on exit
+         releaseLock = blocking;
+         clearConditions = false;
+         activity = contextToActivity(c);
+         context = activity->getApiContext();
+         context->enableConditionTraps();
+     }
+
 
     /**
      * Destructor for an API context.  Releases the interpreter

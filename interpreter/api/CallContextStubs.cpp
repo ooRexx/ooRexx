@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -57,7 +57,7 @@ BEGIN_EXTERN_C()
 
 RexxArrayObject RexxEntry GetCallArguments(RexxCallContext *c)
 {
-    ApiContext context(c);
+    ApiContext context(c, false);     // no lock required
     try
     {
         return (RexxArrayObject)context.context->getArguments();
@@ -70,9 +70,11 @@ RexxArrayObject RexxEntry GetCallArguments(RexxCallContext *c)
 
 RexxObjectPtr RexxEntry GetCallArgument(RexxCallContext *c, stringsize_t i)
 {
-    ApiContext context(c);
+    ApiContext context(c, false);    // no lock required
     try
     {
+        // this array is safely encapsulated so that it won't get update, this makes
+        // the get call possible without a lock
         return (RexxObjectPtr)context.context->getArgument(i);
     }
     catch (NativeActivation *)
@@ -83,7 +85,7 @@ RexxObjectPtr RexxEntry GetCallArgument(RexxCallContext *c, stringsize_t i)
 
 CSTRING RexxEntry GetRoutineName(RexxCallContext *c)
 {
-    ApiContext context(c);
+    ApiContext context(c, false);     // no lock required
     try
     {
         return (CSTRING)context.context->getMessageName()->getStringData();
@@ -96,7 +98,7 @@ CSTRING RexxEntry GetRoutineName(RexxCallContext *c)
 
 RexxRoutineObject RexxEntry GetCurrentRoutine(RexxCallContext *c)
 {
-    ApiContext context(c);
+    ApiContext context(c, false);     // no lock required
     try
     {
         return (RexxRoutineObject)context.context->getExecutable();
@@ -354,7 +356,7 @@ void RexxEntry ExitThrowCondition(RexxExitContext *c, CSTRING n, RexxStringObjec
 
 stringsize_t RexxEntry GetContextDigits(RexxCallContext *c)
 {
-    ApiContext context(c);
+    ApiContext context(c, false);   // no lock required
     try
     {
         return context.context->digits();
@@ -367,7 +369,7 @@ stringsize_t RexxEntry GetContextDigits(RexxCallContext *c)
 
 stringsize_t RexxEntry GetContextFuzz(RexxCallContext *c)
 {
-    ApiContext context(c);
+    ApiContext context(c, false);    // no lock required
     try
     {
         return context.context->fuzz();
@@ -381,7 +383,7 @@ stringsize_t RexxEntry GetContextFuzz(RexxCallContext *c)
 
 logical_t RexxEntry GetContextForm(RexxCallContext *c)
 {
-    ApiContext context(c);
+    ApiContext context(c, false);    // no lock required
     try
     {
         return context.context->form() ? true : false;
@@ -397,6 +399,7 @@ RexxObjectPtr RexxEntry GetCallerContext(RexxCallContext *c)
     ApiContext context(c);
     try
     {
+        // this can create the context object on demand, so it needs the lock
         return (RexxObjectPtr)context.ret(context.context->getRexxContextObject());
     }
     catch (NativeActivation *)
