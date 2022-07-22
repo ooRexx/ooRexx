@@ -423,19 +423,6 @@ Activity* InterpreterInstance::enterOnCurrentThread()
 }
 
 
-/**
- * We're leaving the current thread.  So we need to deactivate
- * this.
- */
-void InterpreterInstance::exitCurrentThread()
-{
-    // find the current activity and deactivate it, and
-    // release the kernel lock.
-    Activity *activity = findActivity();
-    activity->exitCurrentThread();
-}
-
-
 void InterpreterInstance::removeInactiveActivities()
 {
     size_t count = allActivities->items();
@@ -496,13 +483,15 @@ bool InterpreterInstance::terminate()
         terminationSem.wait();
     }
 
+    Activity *current;
+
     try
     {
         // if everything has terminated, then make sure we run the uninits before shutting down.
         // This activity is currently the current activity.  We're going to run the
         // uninits on this one, so reactivate it until we're done running. If we were not actually
         // called on an attached thread, an attach will be performed.
-        enterOnCurrentThread();
+        current = enterOnCurrentThread();
 
         // this might be holding some local references. Make sure we clear these
         // before running the garbage collector
@@ -517,16 +506,17 @@ bool InterpreterInstance::terminate()
 
         // ok, deactivate this again...this will return the activity because the terminating
         // flag is on.
-        exitCurrentThread();
+        current->exitCurrentThread();
     }
     // do the release in a catch block to ensure we really release this
     catch (NativeActivation *)
     {
         // ok, deactivate this again...this will return the activity because the terminating
         // flag is on.
-        exitCurrentThread();
+        current->exitCurrentThread();
 
     }
+
     terminationSem.close();
 
     // make sure the root activity is removed by the ActivityManager;
