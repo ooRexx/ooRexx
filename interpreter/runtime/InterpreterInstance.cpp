@@ -457,19 +457,35 @@ void InterpreterInstance::removeInactiveActivities()
  */
 bool InterpreterInstance::terminate()
 {
+    // check this is in fact a valid instance
+    if (!Interpreter::isInstanceActive(this))
+    {
+        return false;
+    }
+
+
     // we can't be doing active work on the root thread
     if (rootActivity->isActive())
     {
         return false;
     }
 
-    terminated = false;
-    // turn on the global termination in process flag
-    terminating = true;
-
     {
 
         ResourceSection lock;
+
+        // it's possible to get a call on a second thread or even recursively, let's make sure
+        // we're not already in the process of shutting down
+
+        if (terminating)
+        {
+            return false;
+        }
+
+        terminated = false;
+        // turn on the global termination in process flag
+        terminating = true;
+
         // go remove all of the activities that are not doing work for this instance
         removeInactiveActivities();
         // if we just have the single root activity left, then we can shutdown

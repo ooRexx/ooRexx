@@ -375,6 +375,21 @@ bool Interpreter::terminateInterpreterInstance(InterpreterInstance *instance)
 
 
 /**
+ * Verify that an instance pointer is if fact a valid, active instance.
+ *
+ * @param instance The instance to check
+ *
+ * @return true if this is in our list, false otherwise.
+ */
+bool Interpreter::isInstanceActive(InterpreterInstance *instance)
+{
+    ResourceSection lock;
+
+    return interpreterInstances->hasItem(instance);
+}
+
+
+/**
  * Tell the interpreter to have all of the instances halt its activities.
  */
 bool Interpreter::haltAllActivities(RexxString *name)

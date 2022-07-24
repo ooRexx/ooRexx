@@ -98,6 +98,7 @@ public:
     static InterpreterInstance *createInterpreterInstance(RexxOption *options);
     static inline InterpreterInstance *createInterpreterInstance() { return createInterpreterInstance(NULL); }
     static bool terminateInterpreterInstance(InterpreterInstance *instance);
+    static bool isInstanceActive(InterpreterInstance *instance);
     static RexxString *getVersionString();
     static void initLocal();
     static size_t getInterpreterVersion();
