@@ -48,6 +48,7 @@
 #include <string.h>                         /* needed for strlen()        */
 #include <stdio.h>
 #include <io.h>
+#include <time.h>                           // time(), localtime(), strftime()
 
 #include "ArgumentParser.h"  /* defines getArguments and freeArguments */
 
@@ -62,7 +63,7 @@ int WINAPI WinMain(
 {
     int32_t rc;                          /* actually running program RC       */
     const char *program_name;            /* name to run                       */
-    CHAR  arg_buffer[1024];              /* starting argument buffer         */
+    CHAR  arg_buffer[8192];              /* starting argument buffer         */
     CONSTRXSTRING arguments;             /* rexxstart argument                */
     size_t argcount;
 
@@ -137,10 +138,16 @@ int WINAPI WinMain(
             pgmThrdInst->DecodeConditionInfo(condition, &conditionInfo);
             wholenumber_t minorCode = conditionInfo.code - (conditionInfo.rc * 1000);
 
-            sprintf(arg_buffer, "Error %zd.%1zd running program %s line %zd\n\n  %s\n  %s", conditionInfo.rc, minorCode,
+            sprintf(arg_buffer, "Error %zd.%1zd running %s line %zd\n\n%s\n%s", conditionInfo.rc, minorCode,
                 pgmThrdInst->StringData(conditionInfo.program), conditionInfo.position,
                 pgmThrdInst->StringData(conditionInfo.errortext), pgmThrdInst->StringData(conditionInfo.message));
-            MessageBox(NULL, arg_buffer, "Open Object Rexx Execution Error", MB_OK | MB_ICONHAND);
+
+            char title[64];
+            time_t now = time(NULL);
+            struct tm *local = localtime(&now);
+            strftime(title, sizeof(title) - 1, "%F %T  Open Object Rexx Execution Error", local);
+
+            MessageBox(NULL, arg_buffer, title, MB_OK | MB_ICONHAND);
 
             pgmInst->Terminate();
             return -rc;   // well, the negation of the error number is the return code
