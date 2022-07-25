@@ -467,7 +467,6 @@ wholenumber_t Activity::error()
         // pop and terminate te frame
         popStackFrame(topStackFrame);
     }
-
     // go display
     return displayCondition(conditionobj);
 }
@@ -498,8 +497,16 @@ wholenumber_t Activity::error(ActivationBase *activation, DirectoryClass *errorI
         popStackFrame(topStackFrame);
     }
 
-    // go display
-    return displayCondition(errorInfo);
+    // need in case there's an error trying to display this information
+    try
+    {
+        // go display
+        return displayCondition(errorInfo);
+    }
+    catch (NativeActivation *)
+    {
+        return Error_Interpretation / 1000;   // this is a default one if something goes wrong
+    }
 }
 
 

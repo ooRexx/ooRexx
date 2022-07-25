@@ -193,6 +193,8 @@ void RexxStartDispatcher::handleError(wholenumber_t r, DirectoryClass *c)
     // use the base error handling and set our return code to the negated error code.
     ActivityDispatcher::handleError(-r, c);
     retcode = (short)rc;
+    // in case there are errors trying to display
+    activation->enableConditionTraps();
     // process the error to display the error message.
     activity->error(activation, conditionData);
 }
@@ -206,6 +208,8 @@ void CallRoutineDispatcher::run()
 {
     if (arguments != OREF_NULL)
     {
+        // in case there are errors trying to display
+        activation->enableConditionTraps();
         // we use a null string for the name when things are called directly
         routine->call(activity, GlobalNames::NULLSTRING, arguments->messageArgs(), arguments->messageArgCount(), result);
     }
