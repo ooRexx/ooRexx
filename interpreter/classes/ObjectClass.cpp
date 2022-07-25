@@ -424,7 +424,6 @@ HashCode RexxObject::hash()
         // by sending the HASHCODE() message.
         sendMessage(GlobalNames::HASHCODE, result);
 
-        // TODO:  Add a test for this condition
         // we need to have a return value for this.
         if (result.isNull())
         {
