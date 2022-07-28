@@ -2800,12 +2800,16 @@ RexxInstruction *LanguageParser::labelNew(RexxToken *nameToken, RexxToken *colon
     /* add to the label list             */
     addLabel(newObject, name);
 
+    // complete construction of this.
+    ::new((void *)newObject)RexxInstructionLabel();
+
+    // NOTE: do this after calling the constructor. With some compilers, the base constructor
+    // get's called, which resets the location information.
+
     // use the name object for tracking the location.
     SourceLocation location = colonToken->getLocation();
     // the clause ends with the colon.
     newObject->setEnd(location.getEndLine(), location.getEndOffset());
-    // complete construction of this.
-    ::new ((void *)newObject) RexxInstructionLabel();
     return newObject;
 }
 
