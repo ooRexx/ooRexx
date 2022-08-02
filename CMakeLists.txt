@@ -2097,11 +2097,11 @@ if (DOC_SOURCE_DIR)
 	   install(FILES ${DOC_SOURCE_DIR}/readme.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
 	   install(FILES ${DOC_SOURCE_DIR}/ootest.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
 	   install(FILES ${DOC_SOURCE_DIR}/orxncurses.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
-	
+
 	   install(FILES ${DOC_SOURCE_DIR}/rexxapi.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
 	   install(FILES ${DOC_SOURCE_DIR}/rexxextensions.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
 	   install(FILES ${DOC_SOURCE_DIR}/rexxgtk.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
-	
+
 	   install(FILES ${DOC_SOURCE_DIR}/rexxpg.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
 	   install(FILES ${DOC_SOURCE_DIR}/rexxref.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
 	   install(FILES ${DOC_SOURCE_DIR}/rxmath.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
@@ -2110,7 +2110,7 @@ if (DOC_SOURCE_DIR)
 
 	   install(FILES ${DOC_SOURCE_DIR}/unixextensions.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
 
-   endif()	
+   endif()
 endif ()
 
 
@@ -2289,6 +2289,66 @@ if (BUILD_DMG)
    configure_file( ${CMAKE_SOURCE_DIR}/platform/unix/macos/install/build_macOS_dmg.sh.in ${CMAKE_BINARY_DIR}/build_macOS_dmg.sh IMMEDIATE @ONLY )
 
 endif ()
+
+
+######################  portable Rexx Home ENVironment archive  ##########################
+# rgf, 2021-11-25 - 2021-12-04
+
+set (zip_dir_name           _portable_)
+set (run_rexx_exe           ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rexx)
+set (run_rexx_create_script ${CMAKE_CURRENT_SOURCE_DIR}/support/portable/createPortable.rex)
+
+if (WIN32)
+   set (rexx_exe_cpu ${NSIS_CPU})
+   set (rexx_exe_opsys win)
+   set (rexx_exe_shell_ft cmd)
+else  () # Unix
+   exec_program("uname" ARGS "-s" OUTPUT_VARIABLE rexx_exe_opsys) # execute_process() did not work out
+   set (rexx_exe_shell_ft sh)
+
+   if( APPLE AND BUILD_OSX_UNIVERSAL_BINARIES )
+      set(rexx_exe_cpu "universal")
+   else ()
+      set(rexx_exe_cpu ${CMAKE_SYSTEM_PROCESSOR})
+   endif ()
+endif ()
+string(TOLOWER ${rexx_exe_opsys} rexx_exe_opsys) # make sure operating system is lowercase
+string(TOLOWER ${CMAKE_BUILD_TYPE} rexx_exe_build_type)
+set (zip_name "${CPACK_PACKAGE_NAME}-${ORX_VERSION}-${rexx_exe_opsys}${ORX_ARCHITECTURE}-r${ORX_BLD_LVL}-${rexx_exe_cpu}-portable-${rexx_exe_build_type}")
+
+add_custom_target(portable
+  COMMAND ${CMAKE_COMMAND} -E remove_directory "${zip_dir_name}"  # make sure directory gets removed
+  # Rexx program that does a DESTDIR local install and creates the zip directory structure
+  COMMAND ${run_rexx_exe}  ${run_rexx_create_script} -portable_dirname ${zip_dir_name} -zip_name ${zip_name}
+
+  # change into temporary directory and create runtime archive
+  COMMAND ${CMAKE_COMMAND} -E chdir "${zip_dir_name}"
+          ${CMAKE_COMMAND} -E tar "cfv" "${zip_name}-runtime.zip" --format=zip
+                                 "${zip_name}/bin"
+                                 "${zip_name}/lib"
+                                 "${zip_name}/include"
+                                 "${zip_name}/setupoorexx.${rexx_exe_shell_ft}"
+                                 "${zip_name}/setupoorexx.rex"
+                                 "${zip_name}/testoorexx.rex"
+                                 "${zip_name}/readme.txt"
+
+  # change into temporary directory and create full archive
+  COMMAND ${CMAKE_COMMAND} -E chdir "${zip_dir_name}"
+          ${CMAKE_COMMAND} -E tar "cfv" "${zip_name}.zip" --format=zip
+                                 "${zip_name}"
+
+  # copy archives
+  COMMAND ${CMAKE_COMMAND} -E copy "${zip_dir_name}/${zip_name}-runtime.zip" "${CMAKE_CURRENT_BINARY_DIR}"
+  COMMAND ${CMAKE_COMMAND} -E copy "${zip_dir_name}/${zip_name}.zip" "${CMAKE_CURRENT_BINARY_DIR}"
+
+  # delete archives
+  COMMAND ${CMAKE_COMMAND} -E remove "${zip_dir_name}/${zip_name}-runtime.zip"
+  				     "${zip_dir_name}/${zip_name}.zip"
+
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+  COMMENT "Creating portable Rexx Home ENVironment zip archives ...")
+# <-- portable Rexx Home ENVironment archive <--
+
 
 # Do not move the following statement!! It must be the last statement in this file.
 include(CPack)
