@@ -207,6 +207,9 @@ RexxString *CommandIOContext::readInput(NativeActivation *context)
  */
 void CommandIOContext::readInputBuffered(NativeActivation *context, const char *&data, size_t &length)
 {
+    // set the length to zero in case input is not redirected.
+    length = 0;
+
     // first make sure we have a source object
     if (input != OREF_NULL)
     {

@@ -323,7 +323,7 @@ RexxPackageObject RexxEntry LoadPackage(RexxThreadContext *c, CSTRING n)
     try
     {
         Protected<RexxString> name = new_string(n);
-        RexxString *resolvedName = context.activity->resolveProgramName(name, OREF_NULL, OREF_NULL, RESOLVE_DEFAULT);
+        Protected<RexxString> resolvedName = context.activity->resolveProgramName(name, OREF_NULL, OREF_NULL, RESOLVE_DEFAULT);
 
         // convert the name to a string instance, and check the environments.
         return (RexxPackageObject)context.ret(context.activity->getInstance()->loadRequires(context.activity, name, resolvedName));
@@ -411,10 +411,6 @@ RexxClassObject RexxEntry FindClassFromPackage(RexxThreadContext *c, RexxPackage
         Protected<RexxString> name = new_upper_string(n);
 
         return (RexxClassObject)context.ret(((PackageClass *)m)->findClass(name));
-
-        RexxObject *t = OREF_NULL;   // required for the findClass call
-        return (RexxClassObject)context.ret(((PackageClass *)m)->findClass(name, t));
-
     }
     catch (NativeActivation *)
     {

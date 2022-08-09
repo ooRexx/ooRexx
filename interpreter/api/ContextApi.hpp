@@ -187,6 +187,22 @@ class ApiContext
 
 
      /**
+      * Initialize an API context from an exit context.
+      *
+      * @param c      The source context.
+      */
+     inline ApiContext(RexxIORedirectorContext *c, bool blocking)
+     {
+         // we need to cleanup on exit
+         releaseLock = blocking;
+         activity = contextToActivity(c);
+         context = contextToActivation(c);
+         context->enableConditionTraps();
+     }
+
+
+
+     /**
       * Initialize an API context from a method context.
       *
       * @param c      The source context.

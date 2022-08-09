@@ -574,9 +574,9 @@ void RexxEntry WriteErrorBuffer(RexxIORedirectorContext *c, const char *data, si
 }
 
 
-logical_t RexxEntry IsInputRedirected(RexxIORedirectorContext *c)
+logical_t RexxEntry IsInputRedirected(RexxIORedirectorContext * c)
 {
-    ApiContext context(c);
+    ApiContext context(c, false);     // this can be handled without locking
     try
     {
         CommandIOContext *ioContext = ((RedirectorContext *)c)->ioContext;
@@ -596,9 +596,9 @@ logical_t RexxEntry IsInputRedirected(RexxIORedirectorContext *c)
 }
 
 
-logical_t RexxEntry IsOutputRedirected(RexxIORedirectorContext *c)
+logical_t RexxEntry IsOutputRedirected(RexxIORedirectorContext * c)
 {
-    ApiContext context(c);
+    ApiContext context(c, false);     // this can be handled without locking
     try
     {
         CommandIOContext *ioContext = ((RedirectorContext *)c)->ioContext;
@@ -618,9 +618,9 @@ logical_t RexxEntry IsOutputRedirected(RexxIORedirectorContext *c)
 }
 
 
-logical_t RexxEntry IsErrorRedirected(RexxIORedirectorContext *c)
+logical_t RexxEntry IsErrorRedirected(RexxIORedirectorContext * c)
 {
-    ApiContext context(c);
+    ApiContext context(c, false);     // this can be handled without locking
     try
     {
         CommandIOContext *ioContext = ((RedirectorContext *)c)->ioContext;
@@ -640,9 +640,9 @@ logical_t RexxEntry IsErrorRedirected(RexxIORedirectorContext *c)
 }
 
 
-logical_t RexxEntry AreOutputAndErrorSameTarget(RexxIORedirectorContext *c)
+logical_t RexxEntry AreOutputAndErrorSameTarget(RexxIORedirectorContext * c)
 {
-    ApiContext context(c);
+    ApiContext context(c, false);     // this can be handled without locking
     try
     {
         CommandIOContext *ioContext = ((RedirectorContext *)c)->ioContext;
