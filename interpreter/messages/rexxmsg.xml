@@ -5486,6 +5486,15 @@ special character (such as a parenthesis).
       </SubMessage>
       <SubMessage>
         <Code>98</Code>
+        <Subcode>952</Subcode>
+        <MessageNumber>838</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Execution_circular_requires</SymbolicName>
+        <Text>Circular ::REQUIRES references detected with <Sub position="1" name="name"/>.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>98</Code>
         <Subcode>970</Subcode>
         <MessageNumber>495</MessageNumber>
         <Component>Rexx</Component>

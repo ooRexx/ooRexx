@@ -69,6 +69,32 @@
 // singleton class instance
 RexxClass *PackageClass::classInstance = OREF_NULL;
 
+/**
+ * A class to track installation of packages to allow us to catch circular references.
+ */
+class InstallingPackage
+{
+ public:
+     InstallingPackage(RexxActivation *activation, RexxString *packageName)
+     {
+         activity = activation->getActivity();
+         package = packageName;
+
+         // mark us as being in the activity chain
+         activity->addRunningRequires(packageName);
+     }
+
+     ~InstallingPackage()
+     {
+         // we're done processing our requires, remove us from the list
+         activity->removeRunningRequires(package);
+     }
+
+ protected:
+     Activity *activity;       // the activity we're running on
+     RexxString *package;      // the package currently installing
+};
+
 
 /**
  * Create initial class object at bootstrap time.
@@ -1213,6 +1239,9 @@ void PackageClass::processInstall(RexxActivation *activation)
     // do we have requires to process?
     if (requires != OREF_NULL)
     {
+        // record that we're in an installation chain
+        InstallingPackage installing(activation, programName);
+
         // now loop through the requires items
         size_t count = requires->items();
         for (size_t i = 1; i <= count; i++)
@@ -2092,13 +2121,9 @@ void PackageClass::runProlog(Activity *activity)
     {
         ProtectedObject dummy;
 
-        // make sure we add a reference to the circular reference stack
-        activity->addRunningRequires(getProgramName());
         // if we have initcode, then by definition, the leading section has been created as
         // a routine.
         ((RoutineClass *)mainExecutable)->call(activity, getProgramName(), NULL, 0, GlobalNames::REQUIRES, OREF_NULL, EXTERNALCALL, dummy);
-        // No longer installing routine.
-        activity->removeRunningRequires(getProgramName());
     }
     // no prolog, but we still need to perform the installation process.
     else

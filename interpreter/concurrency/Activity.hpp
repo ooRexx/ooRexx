@@ -284,11 +284,9 @@ class Activity : public RexxInternalObject
     inline ActivationBase *getTopStackFrame() { return topStackFrame; }
     inline size_t getActivationDepth() { return stackFrameDepth; }
     inline const NumericSettings *getNumericSettings () {return numericSettings;}
-    inline RexxInternalObject *runningRequires(RexxString *program) {return requiresTable->get(program);}
     inline void        addRunningRequires(RexxString *program) { requiresTable->put(program, program);}
     inline void        removeRunningRequires(RexxInternalObject *program) { requiresTable->remove(program);}
-    inline void        resetRunningRequires() { requiresTable->empty();}
-    inline bool        checkRequires(RexxString *n) { return runningRequires(n) != OREF_NULL; }
+           void        checkRequires(RexxString *n);
     inline void        clearRunWait()  { runSem.reset(); dispatchPosted = false; }
     inline void        clearGuardWait()  { guardSem.reset(); }
            uint64_t    getRandomSeed();

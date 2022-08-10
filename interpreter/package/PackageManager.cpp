@@ -797,8 +797,6 @@ PackageClass *PackageManager::loadRequires(Activity *activity, RexxString *short
  */
 PackageClass *PackageManager::getMacroSpaceRequires(Activity *activity, RexxString *name, Protected<PackageClass> &package, RexxObject *securityManager)
 {
-    // make sure we're not stuck in a circular reference
-    activity->checkRequires(name);
     // unflatten the method and protect it
     RoutineClass *code = RexxActivation::getMacroCode(name);
     package = code->getPackage();
@@ -825,8 +823,6 @@ PackageClass *PackageManager::getMacroSpaceRequires(Activity *activity, RexxStri
  */
 PackageClass *PackageManager::getRequiresFile(Activity *activity, RexxString *name, RexxObject *securityManager, Protected<PackageClass> &package)
 {
-    // make sure we're not stuck in a circular reference
-    activity->checkRequires(name);
     // try to load this from a previously compiled source file or
     // translate it a new if not.
     package = LanguageParser::createPackage(name);

@@ -628,6 +628,7 @@
 #define Rexx_Error_Execution_forward                                      98947
 #define Rexx_Error_Execution_authorization                                98948
 #define Rexx_Error_Execution_no_concurrency                               98951
+#define Rexx_Error_Execution_circular_requires                            98952
 #define Rexx_Error_Execution_error_syntax                                 98970
 #define Rexx_Error_Execution_failure_syntax                               98971
 #define Rexx_Error_Execution_lostdigits_syntax                            98972

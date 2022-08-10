@@ -632,6 +632,7 @@ ERROR_MESSAGE Message_table[] = {      /* table of major and minor errors   */
     MESSAGE(Error_Execution_forward, "FORWARD can only be issued in an object method invocation.")
     MESSAGE(Error_Execution_authorization, "Authorization failure:  &1.")
     MESSAGE(Error_Execution_no_concurrency, "Concurrency not supported.")
+    MESSAGE(Error_Execution_circular_requires, "Circular ::REQUIRES references detected with &1.")
     MESSAGE(Error_Execution_error_syntax, "External command \"&1\" ended with return code &2.")
     MESSAGE(Error_Execution_failure_syntax, "External command \"&1\" failed with return code &2.")
     MESSAGE(Error_Execution_lostdigits_syntax, "Number &1 has more digits than the current precision.")

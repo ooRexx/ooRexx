@@ -392,8 +392,6 @@ Activity::Activity(GlobalProtectedObject &p, bool createThread)
  */
 void Activity::reset()
 {
-    // most important thing to reset here is the requires table
-    resetRunningRequires();
     // we are going to redispatch a thread, so we need to mark this as
     // active now to prevent this from getting terminated before it has a
     // chance to run
@@ -3585,3 +3583,16 @@ void Activity::cleanupMutexes()
     }
 }
 
+/**
+ * Check for a circular requires reference and raise an error if it occurs.
+ *
+ * @param name   The name of the requires files
+ */
+void Activity::checkRequires(RexxString *name)
+{
+    // if this is in the list of currently loading requires files, reject the second load
+    if (requiresTable->hasIndex(name))
+    {
+        reportException(Error_Execution_circular_requires, name);
+    }
+}

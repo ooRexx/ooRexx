@@ -631,6 +631,7 @@ ERROR_MAP Message_map_table[] = {     /* table of major and minor errors   */
       MINOR(Error_Execution_forward)
       MINOR(Error_Execution_authorization)
       MINOR(Error_Execution_no_concurrency)
+      MINOR(Error_Execution_circular_requires)
       MINOR(Error_Execution_error_syntax)
       MINOR(Error_Execution_failure_syntax)
       MINOR(Error_Execution_lostdigits_syntax)

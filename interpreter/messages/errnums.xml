@@ -3864,6 +3864,12 @@ special character (such as a parenthesis).
 </listitem>
 </varlistentry>
 <varlistentry>
+<term>952</term>
+<listitem>
+<para>Circular ::REQUIRES references detected with <emphasis role="italic">name</emphasis>.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
 <term>970</term>
 <listitem>
 <para>External command "<emphasis role="italic">command</emphasis>" ended with return code <emphasis role="italic">rc</emphasis>.</para>

@@ -927,6 +927,8 @@ PackageClass *InterpreterInstance::loadRequires(Activity *activity, RexxString *
     Protected<PackageClass> package = getRequiresFile(activity, shortName);
     if (!package.isNull())
     {
+        // check for recursion here. We only need to do this if it's already in the cache
+        activity->checkRequires(package->getProgramName());
         return package;
     }
 
@@ -937,6 +939,8 @@ PackageClass *InterpreterInstance::loadRequires(Activity *activity, RexxString *
         package = getRequiresFile(activity, fullName);
         if (!package.isNull())
         {
+            // check for recursion here. We only need to do this if it's already in the cache
+            activity->checkRequires(package->getProgramName());
             // add this to the cache using the short name, since they resolve to the same
             addRequiresFile(shortName, OREF_NULL, package);
             return package;
