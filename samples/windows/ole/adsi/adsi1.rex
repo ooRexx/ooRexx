@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -47,14 +47,12 @@ ComputerName = value("COMPUTERNAME",,"ENVIRONMENT")
 myComputer = .OLEObject~GetObject("WinNT://"||ComputerName||",computer")
 
 say "Standard properties of this computer:"
-say left("Name:",10," ") myComputer~name
-
-say left("Class:",10," ") myComputer~class
-
-say left("GUID:",10," ") myComputer~guid
-say left("ADsPath:",10," ") myComputer~adspath
-say left("Parent:",10," ") myComputer~parent
-say left("Schema:",10," ") myComputer~schema
+say left("Name:",   10) myComputer~name
+say left("Class:",  10) myComputer~class
+say left("GUID:",   10) myComputer~guid
+say left("ADsPath:",10) myComputer~adspath
+say left("Parent:", 10) myComputer~parent
+say left("Schema:", 10) myComputer~schema
 
 return 0
 
