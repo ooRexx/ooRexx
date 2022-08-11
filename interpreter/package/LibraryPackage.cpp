@@ -409,6 +409,13 @@ NativeMethod *LibraryPackage::resolveMethod(RexxString *name)
  */
 RoutineClass *LibraryPackage::resolveRoutine(RexxString *name)
 {
+    // the package might not define any routines, in which case routines is NULL. We
+    // need to protect againtst that.
+    if (routines == OREF_NULL)
+    {
+        return OREF_NULL;
+    }
+
     // we resolve all of these at load time, so this is either in the table, or it's not.
     RoutineClass *code = (RoutineClass *)routines->get(name);
     if (code == OREF_NULL)
