@@ -665,6 +665,7 @@ typedef struct
      RexxStringTableObject(RexxEntry *NewStringTable)(RexxThreadContext *);
      logical_t(RexxEntry *IsStringTable)(RexxThreadContext *, RexxObjectPtr);
      RexxObjectPtr(RexxEntry *SendMessageScoped)(RexxThreadContext *, RexxObjectPtr, CSTRING, RexxClassObject, RexxArrayObject);
+     RexxInstance *(RexxEntry *GetInterpreterInstance)(RexxThreadContext *);
 
 } RexxThreadInterface;
 
@@ -1633,6 +1634,12 @@ struct RexxThreadContext_
          functions->ClearCondition(this);
      }
 
+     RexxInstance* GetInterpreterInstance()
+     {
+         return functions->GetInterpreterInstance(this);
+     }
+
+
      RexxObjectPtr Nil()
      {
          return functions->RexxNil;
@@ -2372,6 +2379,10 @@ struct RexxMethodContext_
      void ClearCondition()
      {
          threadContext->ClearCondition();
+     }
+     RexxInstance* GetInterpreterIntsance()
+     {
+         return threadContext->GetInterpreterInstance();
      }
      void ThrowException0(size_t n)
      {
@@ -3219,6 +3230,10 @@ struct RexxCallContext_
      {
          threadContext->ClearCondition();
      }
+     RexxInstance* GetInterpreterInstance()
+     {
+         return threadContext->GetInterpreterInstance();
+     }
      void ThrowException0(size_t n)
      {
          functions->ThrowException0(this, n);
@@ -4044,6 +4059,10 @@ struct RexxExitContext_
      void ClearCondition()
      {
          threadContext->ClearCondition();
+     }
+     RexxInstance* GetInterpreterIntsance()
+     {
+         return threadContext->GetInterpreterInstance();
      }
      void ThrowException0(size_t n)
      {

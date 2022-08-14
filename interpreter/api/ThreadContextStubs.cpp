@@ -2077,6 +2077,22 @@ logical_t RexxEntry IsMutableBuffer(RexxThreadContext *c, RexxObjectPtr o)
     return false;
 }
 
+
+RexxInstance* RexxEntry GetInterpreterInstance(RexxThreadContext *c)
+{
+    ApiContext context(c);
+    try
+    {
+        return context.context->getActivity()->getInstance()->getInstanceContext();
+    }
+    catch (NativeActivation *)
+    {
+    }
+
+    return (RexxInstance *)NULL;
+}
+
+
 END_EXTERN_C()
 
 RexxThreadInterface Activity::threadContextFunctions =
@@ -2245,4 +2261,5 @@ RexxThreadInterface Activity::threadContextFunctions =
     NewStringTable,
     IsStringTable,
     SendMessageScoped,
+    GetInterpreterInstance,
 };
