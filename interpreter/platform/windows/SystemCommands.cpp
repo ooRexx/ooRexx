@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -461,7 +461,7 @@ bool sysCommandNT(RexxExitContext *context,
         if (redirErr)
         {
             if (combo)
-            {                // send output and error to the same stream
+            {   // send output and error to the same stream
                 siStartInfo.hStdError = siStartInfo.hStdOutput;
                 redirErr = false;
             }
@@ -508,7 +508,6 @@ bool sysCommandNT(RexxExitContext *context,
         }
 
 
-        // if Output is redirected, write the data from the output pipe
         if (redirOut)
         {
             // we start a separate thread to read OUTPUT data from the stdout pipe
@@ -555,7 +554,7 @@ bool sysCommandNT(RexxExitContext *context,
                 // the OUTPUT thread may have encountered an error .. raise it now
                 if (outputThread.error != 0)
                 {
-                    ErrorRedirection(context, errorThread.error);
+                    ErrorRedirection(context, outputThread.error);
                     return false;
                 }
             }
