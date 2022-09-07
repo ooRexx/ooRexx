@@ -2608,7 +2608,7 @@ BUILTIN(CONDITION)
         // null string is not a valid option
         if (option->getLength() == 0)
         {
-            reportException(Error_Incorrect_call_list, "CONDITION", IntegerOne, "ACDIORS", option);
+            reportException(Error_Incorrect_call_list, "CONDITION", IntegerOne, "ACDEIORS", option);
         }
 
         style = Utilities::toUpper(option->getChar(0));
@@ -2640,7 +2640,7 @@ BUILTIN(CONDITION)
             }
             break;
 
-        // condition('I'struction).  Returns either SYNTAX or CALL, or a null string if no condition
+        // condition('I'nstruction).  Returns either SIGNAL or CALL, or a null string if no condition
         case 'I':
             if (conditionobj != OREF_NULL)
             {
@@ -2696,9 +2696,28 @@ BUILTIN(CONDITION)
             return GlobalNames::NULLSTRING;
             break;
 
+        // condition('E'xtra).  The error subcode after the dot in an error number.
+        case 'E':
+            if (conditionobj != OREF_NULL)
+            {
+                // extract the subcode from the condition object CODE item
+                RexxObject *code = (RexxObject *)conditionobj->get(GlobalNames::CODE);
+                if (code != OREF_NULL && isString(code))
+                {
+                    const char *codeData = ((RexxString *)code)->getStringData();
+                    size_t codeLength = ((RexxString *)code)->getLength();
+                    size_t dotPosition = StringUtil::memPos(codeData, codeLength, '.');
+                    if (dotPosition != SIZE_MAX)
+                    {
+                        return new_string(codeData + dotPosition + 1, codeLength - dotPosition - 1);
+                    }
+                }
+            }
+            break;
+
         // an unknown option
         default:
-            reportException(Error_Incorrect_call_list, "CONDITION", IntegerOne, "ACDIORS", option);
+            reportException(Error_Incorrect_call_list, "CONDITION", IntegerOne, "ACDEIORS", option);
             break;
     }
 
