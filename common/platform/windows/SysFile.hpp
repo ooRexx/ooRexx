@@ -129,7 +129,7 @@ public:
 
 protected:
     void   getStreamTypeInfo();
-    int    writeData(const char *data, size_t length);
+    int64_t writeData(const char *data, size_t length);
 
     int    fileHandle;      // separate file handle
     int    errInfo;         // last error info
@@ -156,5 +156,3 @@ protected:
 };
 
 #endif
-
-
