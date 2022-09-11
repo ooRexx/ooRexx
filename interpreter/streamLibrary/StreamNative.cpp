@@ -53,6 +53,7 @@
 #include <new>
 #include <stdio.h>
 #include "FileNameBuffer.hpp"
+#include <algorithm> // std::min
 
 /********************************************************************************/
 /*                                                                              */
@@ -259,9 +260,9 @@ char *StreamInfo::getDefaultBuffer(size_t &length)
  */
 char *StreamInfo::extendBuffer(size_t &length)
 {
-    // We need more room for reading...extend this by another allocation unit,
-    // keeping the data in the new buffer.
-    allocateBuffer(bufferLength + DefaultBufferSize);
+    // We need more room for reading.  Double the buffer size, but cap the
+    // extension at < 2 GB (0x7ffff000) due to a possible read() restriction
+    allocateBuffer(bufferLength + std::min(bufferLength, (size_t)0x7ffff000));
     length = bufferLength;
     return bufferAddress;
 }
@@ -1354,7 +1355,12 @@ RexxStringObject StreamInfo::readVariableLine()
         }
 
         // extend the buffer and try reading again
-        buffer = extendBuffer(bufferSize);
+        // only extend our buffer if it isn't full yet (we may have read
+        // the last line of a file with no trailing crlf)
+        if (currentLength + 1 >= bufferSize)
+        {
+            buffer = extendBuffer(bufferSize);
+        }
     }
 }
 
