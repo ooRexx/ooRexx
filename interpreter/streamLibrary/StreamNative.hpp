@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -61,7 +61,8 @@ class StreamInfo
 public:
     enum
     {
-        DefaultBufferSize = 512        // default read buffer size
+        DefaultBufferSize = 512,       // default read buffer size
+        LocalBufferSize = 10000,       // local buffer vs BufferString threshold
     };
 
     typedef enum

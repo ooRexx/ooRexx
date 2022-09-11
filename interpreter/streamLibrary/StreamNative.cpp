@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -1487,34 +1487,45 @@ RexxStringObject StreamInfo::charin(bool _setPosition, int64_t position, size_t 
         return context->NullString();
     }
 
-    // a buffer string allows us to read the data into an actual string object
-    // without having to first read it into a separate buffer.  Since charin()
-    // is frequently used to read in entire files at one shot, this can be a
-    // fairly significant savings.
-    RexxBufferStringObject result = context->NewBufferString(read_length);
-    // make sure we can allocate this, otherwise we'll crash
-    if (context->CheckCondition())
-    {
-        return NULL;
-    }
-    char *buffer = (char *)context->BufferStringData(result);
-
-    // do the actual read
+    RexxStringObject string;
     size_t bytesRead;
-    readBuffer(buffer, read_length, bytesRead);
+    // If we only have a small number of characters to read, we first read
+    // into a buffer and then create a string from it.  With fewer API calls
+    // this should be fastest.
+    if (read_length <= LocalBufferSize)
+    {
+        char buffer[LocalBufferSize];
+        readBuffer(buffer, read_length, bytesRead);
+        string = context->NewString(buffer, bytesRead);
+    }
+    else
+    {
+        // A buffer string allows us to read the data into an actual string object
+        // without having to first read it into a separate buffer.  Since charin()
+        // is frequently used to read in entire files at one shot, this can be a
+        // fairly significant saving.
+        RexxBufferStringObject bufferString = context->NewBufferString(read_length);
+        // make sure we can allocate this, otherwise we'll crash
+        if (bufferString == NULLOBJECT)
+        {
+            return NULLOBJECT;
+        }
+        char *buffer = (char *)context->BufferStringData(bufferString);
+        readBuffer(buffer, read_length, bytesRead);
+        // now convert our buffered string into a real string object
+        string = context->FinishBufferString(bufferString, bytesRead);
+    }
 
     // invalidate all of the line positioning info
     resetLinePositions();
 
-    // now convert our buffered string into a real string object and return it.
-    RexxStringObject res = context->FinishBufferString(result, bytesRead);
     // if we didn't get the requested amount, return what we got but raise a
     // notready condition
     if (bytesRead < read_length)
     {
-        eof(res);
+        eof(string);
     }
-    return res;
+    return string;
 }
 
 /********************************************************************************************/
@@ -1665,19 +1676,41 @@ RexxStringObject StreamInfo::linein(bool _setPosition, int64_t position, size_t 
         // we need to adjust for any charin operations that might have
         // occurred within this record
         size_t read_length = binaryRecordLength - (charReadPosition - 1) % binaryRecordLength;
-        // a buffer string allows us to read the data into an actual string object
-        // without having to first read it into a separate buffer.  Since charin()
-        // is frequently used to read in entire files at one shot, this can be a
-        // fairly significant savings.
-        RexxBufferStringObject temp = context->NewBufferString(read_length);
-        char *buffer = (char *)context->BufferStringData(temp);
 
-        // do the actual read
+        RexxStringObject string;
         size_t bytesRead;
-        readBuffer(buffer, read_length, bytesRead);
-
-        // now convert our buffered string into a real string object and return it.
-        return context->FinishBufferString(temp, bytesRead);
+        // If we only have a small number of characters to read, we first read
+        // into a buffer and then create a string from it.  With fewer API calls
+        // this should be fastest.
+        if (read_length <= LocalBufferSize)
+        {
+            char buffer[LocalBufferSize];
+            readBuffer(buffer, read_length, bytesRead);
+            string = context->NewString(buffer, bytesRead);
+        }
+        else
+        {
+            // A buffer string allows us to read the data into an actual string object
+            // without having to first read it into a separate buffer.  For binary
+            // reads with large record lengths this can be a fairly significant saving.
+            RexxBufferStringObject bufferString = context->NewBufferString(read_length + 5);
+            // make sure we can allocate this, otherwise we'll crash
+            if (bufferString == NULLOBJECT)
+            {
+                return NULLOBJECT;
+            }
+            char *buffer = (char *)context->BufferStringData(bufferString);
+            readBuffer(buffer, read_length, bytesRead);
+            // now convert our buffered string into a real string object
+            string = context->FinishBufferString(bufferString, bytesRead);
+        }
+        // if we didn't get the requested amount, return what we got but raise a
+        // notready condition
+        if (bytesRead < read_length)
+        {
+            eof(string);
+        }
+        return string;
     }
     else
     {
@@ -1720,32 +1753,26 @@ RexxMethod3(RexxStringObject, stream_linein, CSELF, streamPtr, OPTIONAL_int64_t,
  *
  * @return A string object containing the read characters.
  */
-int StreamInfo::arrayin(RexxArrayObject result)
+int StreamInfo::arrayin(RexxArrayObject array)
 {
     // do read setup
     readSetup();
     // reading fixed length records?
     if (record_based)
     {
+        // allocate a buffer large enough for our record length
+        char *buffer = allocateBuffer(binaryRecordLength);
+
+        // for our first record we need to adjust for any charin operations
+        // that might have occurred within this record
+        size_t read_length = binaryRecordLength - (charReadPosition - 1) % binaryRecordLength;
+
         while (true)
         {
-            // we need to adjust for any charin operations that might have
-            // occurred within this record
-            size_t read_length = binaryRecordLength - (charReadPosition - 1) % binaryRecordLength;
-            // a buffer string allows us to read the data into an actual string object
-            // without having to first read it into a separate buffer.  Since charin()
-            // is frequently used to read in entire files at one shot, this can be a
-            // fairly significant savings.
-            RexxBufferStringObject temp = context->NewBufferString(read_length);
-            char *buffer = (char *)context->BufferStringData(temp);
-
-            // do the actual read
             size_t bytesRead;
             readBuffer(buffer, read_length, bytesRead);
-
-            // now convert our buffered string into a real string object and return it.
-            context->FinishBufferString(temp, bytesRead);
-            context->ArrayAppend(result, temp);
+            context->ArrayAppendString(array, buffer, bytesRead);
+            read_length = binaryRecordLength; // from now on we expect full-length records
         }
     }
     else
@@ -1753,7 +1780,7 @@ int StreamInfo::arrayin(RexxArrayObject result)
         while (true)
         {
             // we need to read a variable length line
-            appendVariableLine(result);
+            appendVariableLine(array);
         }
     }
     return 0;
@@ -1881,11 +1908,11 @@ RexxMethod2(int64_t, stream_lines, CSELF, streamPtr, OPTIONAL_CSTRING, option)
     bool quick = false;
     if (option != NULL)
     {
-        if (toupper(*option) == 'N')
+        if (Utilities::toUpper(*option) == 'N')
         {
             quick = true;
         }
-        else if (toupper(*option) != 'C')
+        else if (Utilities::toUpper(*option) != 'C')
         {
             context->RaiseException0(Rexx_Error_Incorrect_method);
             return 0;
