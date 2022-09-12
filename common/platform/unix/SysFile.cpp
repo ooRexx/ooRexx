@@ -328,7 +328,7 @@ bool SysFile::flush()
             fileSize = -1;
 
             // write this out...but if it fails, we need to bail
-            int written = ::write(fileHandle, buffer, (unsigned int)bufferPosition);
+            size_t written = writeData(buffer, (unsigned int)bufferPosition);
             // did we have an error?
             if (written <= 0)
             {
@@ -466,6 +466,45 @@ bool SysFile::read(char *buf, size_t len, size_t &bytesRead)
     return true;
 }
 
+/**
+ * Wrapper around ::write() to handle writes larger than
+ * approx. 2 GB.
+ *
+ * @param data   The data to write.
+ * @param length The data length.
+ *
+ * @return The number of bytes written
+ */
+size_t SysFile::writeData(const char *data, size_t length)
+{
+    // anytime we write data to the stream, we invalidate our cached
+    // file size because it's likely no longer valid
+    fileSize = -1;
+
+    // ::write() on Linux can handle chunks of 0x7ffff000 bytes at most,
+    // for both 32-/64-bit systems.  This doesn't apply to e. g. Solaris,
+    // but we always write this in 0x7ffff000-byte blocks or less.
+    size_t blocksize = (size_t)0x7ffff000;
+
+    // for various reasons ::write() can successfully return with less
+    // bytes written than requested, so we always loop until all data
+    // has been written or ::write() fails.
+    size_t bytesWritten = 0;
+    while (length > 0)
+    {
+        size_t segmentSize = length > blocksize ? blocksize : length;
+        ssize_t justWritten = ::write(fileHandle, data, segmentSize);
+        // write error?  Return whatever we've written
+        if (justWritten <= 0)
+        {
+            return bytesWritten;
+        }
+        length -= justWritten;
+        bytesWritten += justWritten;
+        data += justWritten;
+    }
+    return bytesWritten;
+}
 
 
 
@@ -514,7 +553,7 @@ bool SysFile::write(const char *data, size_t len, size_t &bytesWritten)
             // flush an existing data from the buffer
             flush();
             // write this out directly
-            int written = ::write(fileHandle, data, (unsigned int)len);
+            size_t written = writeData(data, (unsigned int)len);
             // oh, oh...got a problem
             if (written <= 0)
             {
@@ -566,7 +605,7 @@ bool SysFile::write(const char *data, size_t len, size_t &bytesWritten)
                 }
             }
             // write the data
-            int written = ::write(fileHandle, data, (unsigned int)len);
+            size_t written = writeData(data, (unsigned int)len);
             if (written <= 0)
             {
                 // return error status if there was a problem
@@ -579,7 +618,7 @@ bool SysFile::write(const char *data, size_t len, size_t &bytesWritten)
         else
         {
             // write the data
-            int written = ::write(fileHandle, data, (unsigned int)len);
+            size_t written = writeData(data, (unsigned int)len);
             if (written <= 0)
             {
                 // return error status if there was a problem

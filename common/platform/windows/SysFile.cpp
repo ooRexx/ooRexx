@@ -260,7 +260,7 @@ bool SysFile::flush()
         if (writeBuffered && bufferPosition > 0)
         {
             // write this out...but if it fails, we need to bail
-            int64_t written = writeData(buffer, (size_t)bufferPosition);
+            size_t written = writeData(buffer, (size_t)bufferPosition);
             // did we have an error?
             if (written <= 0)
             {
@@ -405,7 +405,7 @@ bool SysFile::read(char *buf, size_t len, size_t &bytesRead)
  *
  * @return The number of bytes written
  */
-int64_t SysFile::writeData(const char *data, size_t length)
+size_t SysFile::writeData(const char *data, size_t length)
 {
     // anytime we write data to the stream, we invalidate our cached
     // file size because it's likely no longer valid
@@ -482,7 +482,7 @@ bool SysFile::write(const char *data, size_t len, size_t &bytesWritten)
             // flush an existing data from the buffer
             flush();
             // write this out directly
-            int64_t written = writeData(data, len);
+            size_t written = writeData(data, len);
             // oh, oh...got a problem
             if (written <= 0)
             {
@@ -534,7 +534,7 @@ bool SysFile::write(const char *data, size_t len, size_t &bytesWritten)
                 }
             }
             // write the data
-            int64_t written = writeData(data, len);
+            size_t written = writeData(data, len);
             if (written <= 0)
             {
                 // return error status if there was a problem
@@ -547,7 +547,7 @@ bool SysFile::write(const char *data, size_t len, size_t &bytesWritten)
         else
         {
             // write the data
-            int64_t written = writeData(data, len);
+            size_t written = writeData(data, len);
             if (written <= 0)
             {
                 // return error status if there was a problem

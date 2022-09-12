@@ -130,6 +130,7 @@ class SysFile
 
  protected:
      void   getStreamTypeInfo();
+     size_t writeData(const char *data, size_t length);
 
      int    fileHandle;      // separate file handle
      int    errInfo;         // last error info
