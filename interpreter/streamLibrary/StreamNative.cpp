@@ -108,8 +108,9 @@ StreamInfo *checkStreamInfo(RexxMethodContext *context, void *streamPtr, RexxObj
 {
     if (streamPtr == NULL)
     {
-        context->RaiseException0(Rexx_Error_System_service);
-        throw Rexx_Error_System_service;
+        context->RaiseException1(Rexx_Error_System_service_service,
+            context->String("Stream not initialized"));
+        throw Rexx_Error_System_service_service;
     }
 
     StreamInfo *stream_info = (StreamInfo *)streamPtr;
@@ -226,7 +227,8 @@ char *StreamInfo::allocateBuffer(size_t length)
     bufferLength = length;
     if (bufferAddress == NULL)
     {
-        raiseException(Rexx_Error_System_service);
+        raiseException(Rexx_Error_System_service_service,
+            context->String("Stream buffer allocation failure"));
     }
     // and return the new buffer address
     return bufferAddress;
@@ -1920,7 +1922,8 @@ RexxMethod2(int64_t, stream_lines, CSELF, streamPtr, OPTIONAL_CSTRING, option)
         }
         else if (Utilities::toUpper(*option) != 'C')
         {
-            context->RaiseException0(Rexx_Error_Incorrect_method);
+            context->RaiseException2(Rexx_Error_Incorrect_method_option,
+                context->String("CN"), context->String(option));
             return 0;
         }
     }

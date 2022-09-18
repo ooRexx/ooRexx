@@ -181,6 +181,20 @@ static void waitTimerOrEvent(HANDLE hev)
 
 
 /**
+ * Raise Error_System_service_service.
+ *
+ * @param context  The current method context.
+ * @param detail   Message detail insert.
+ */
+void raiseErrorSystem(RexxMethodContext *c, char *detail)
+{
+    char message[100];
+    sprintf(message, "%s failure code %d", detail, GetLastError());
+    c->RaiseException1(Rexx_Error_System_service_service, c->String(message));
+}
+
+
+/**
  * starts a timer and waits for it to expire.
  * An event semaphore is created that can be
  * used to cancel the timer.
@@ -201,7 +215,7 @@ RexxMethod2(int, alarm_startTimer, wholenumber_t, numdays, wholenumber_t, alarmt
     SemHandle = CreateEvent(NULL, TRUE, fState, NULL);
     if ( !SemHandle )
     {
-        context->RaiseException0(Rexx_Error_System_service);
+        raiseErrorSystem(context, "Alarm Start CreateEvent");
         return 0;
     }
 
@@ -218,8 +232,8 @@ RexxMethod2(int, alarm_startTimer, wholenumber_t, numdays, wholenumber_t, alarmt
         if ( TimerHandle == 0 )
         {
             /* Couldn't create a timer, raise an exception. */
+            raiseErrorSystem(context, "Alarm Start SetTimer");
             CloseHandle(SemHandle);
-            context->RaiseException0(Rexx_Error_System_service);
             return 0;
         }
 
@@ -251,8 +265,8 @@ RexxMethod2(int, alarm_startTimer, wholenumber_t, numdays, wholenumber_t, alarmt
         if ( !TimerHandle )
         {
             /* Couldn't create a timer, raise an exception. */
+            raiseErrorSystem(context, "Alarm Start SetTimer");
             CloseHandle(SemHandle);
-            context->RaiseException0(Rexx_Error_System_service);
             return 0;
         }
 
@@ -282,7 +296,7 @@ RexxMethod1(int, alarm_stopTimer, POINTER, eventSemHandle)
     if ( ! SetEvent((HANDLE)eventSemHandle) )
     {
         /* Raise an error if the semaphore could not be posted. */
-        context->RaiseException0(Rexx_Error_System_service);
+        raiseErrorSystem(context, "Alarm Stop SetEvent");
     }
     return 0;
 }
@@ -313,8 +327,8 @@ RexxMethod3(int, ticker_waitTimer, POINTER, eventSemHandle, wholenumber_t, numda
         if ( TimerHandle == 0 )
         {
             /* Couldn't create a timer, raise an exception. */
+            raiseErrorSystem(context, "Ticker Wait SetTimer");
             CloseHandle(SemHandle);
-            context->RaiseException0(Rexx_Error_System_service);
             return 0;
         }
 
@@ -346,8 +360,8 @@ RexxMethod3(int, ticker_waitTimer, POINTER, eventSemHandle, wholenumber_t, numda
         if ( !TimerHandle )
         {
             /* Couldn't create a timer, raise an exception. */
+            raiseErrorSystem(context, "Ticker Wait SetTimer");
             CloseHandle(SemHandle);
-            context->RaiseException0(Rexx_Error_System_service);
             return 0;
         }
 
@@ -376,7 +390,7 @@ RexxMethod0(int, ticker_createTimer)
     HANDLE SemHandle = CreateEvent(NULL, TRUE, false, NULL);
     if ( !SemHandle )
     {
-        context->RaiseException0(Rexx_Error_System_service);
+        raiseErrorSystem(context, "Ticker Create CreateEvent");
         return 0;
     }
 
@@ -400,8 +414,7 @@ RexxMethod1(int, ticker_stopTimer, POINTER, eventSemHandle)
     if ( ! SetEvent((HANDLE)eventSemHandle) )
     {
         /* Raise an error if the semaphore could not be posted. */
-        context->RaiseException0(Rexx_Error_System_service);
+        raiseErrorSystem(context, "Ticker Stop SetEvent");
     }
     return 0;
 }
-
