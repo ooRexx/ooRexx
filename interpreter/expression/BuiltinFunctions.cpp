@@ -2338,7 +2338,7 @@ BUILTIN(LINES)
 
     fix_args(LINES);
 
-    RexxString *name = optional_string(LINES, name); /* get the string name               */
+    RexxString *name = optional_string(LINES, name); // get the string name
     RexxString *option = optional_string(LINES, option);
 
     // the default for the BIF and the method are different, so if no
@@ -2357,7 +2357,7 @@ BUILTIN(LINES)
         opt = Utilities::toUpper(option->getChar(0));
         if (opt != 'C' && opt != 'N')
         {
-            reportException(Error_Incorrect_call_list, "ARG", IntegerTwo, "NC", option);
+            reportException(Error_Incorrect_call_list, "LINES", IntegerTwo, "CN", option);
         }
     }
 
