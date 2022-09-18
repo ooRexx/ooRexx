@@ -114,6 +114,7 @@ public:
     bool countLines(int64_t start, int64_t end, int64_t &lastLine, int64_t &count);
     bool nextLine(size_t &bytesRead);
     bool seekForwardLines(int64_t startPosition, int64_t &lineCount, int64_t &endPosition);
+
     inline bool isTransient() { return transient; }
     inline bool isDevice() { return device; }
     inline bool isReadable() { return readable; }
@@ -129,7 +130,7 @@ public:
 
 protected:
     void   getStreamTypeInfo();
-    size_t writeData(const char *data, size_t length);
+    ssize_t writeData(const char *data, size_t length);
 
     int    fileHandle;      // separate file handle
     int    errInfo;         // last error info

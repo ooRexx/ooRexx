@@ -77,7 +77,6 @@ SysFile::SysFile()
     fileSize = -1;             // no retrieved file size yet
 }
 
-
 /**
  * Opens a file.  This opens the file for both lowlevel I/O
  * and also for higher level I/O.
@@ -86,8 +85,6 @@ SysFile::SysFile()
  * @param openFlags  The open flags.  This are the same flags used on the _sopen()
  *                   function.
  * @param openMode   Open mode.  Same flag values as _sopen().
- * @param fdopenMode fdopenMode character string.  Same as values use for the
- *                   fdopen() function.
  * @param shareMode  The sharing mode.  Same as used by the _sopen() library
  *                   function.
  *
@@ -134,7 +131,6 @@ bool SysFile::open(const char *name, int openFlags, int openMode, int shareMode)
  * Open a stream using a provided handle value.
  *
  * @param handle     The source stream handle.
- * @param fdopenMode The fdopen() mode flags for the stream.
  *
  * @return true if the file opened ok, false otherwise.
  */
@@ -145,6 +141,7 @@ bool SysFile::open(int handle)
     fileHandle = handle;
     ungetchar = -1;            // -1 indicates no char
     getStreamTypeInfo();
+
     // set the default buffer size (and allocate the buffer)
     setBuffering(true, 0);
     return true;
@@ -213,6 +210,7 @@ bool SysFile::close()
     {
         return true;
     }
+
     // if we're buffering, make sure the buffers are flushed
     if (buffered)
     {
@@ -241,6 +239,7 @@ bool SysFile::close()
             return false;
         }
     }
+
     // always clear this on a close
     fileHandle = -1;
 
@@ -260,7 +259,7 @@ bool SysFile::flush()
         if (writeBuffered && bufferPosition > 0)
         {
             // write this out...but if it fails, we need to bail
-            size_t written = writeData(buffer, (size_t)bufferPosition);
+            ssize_t written = writeData(buffer, bufferPosition);
             // did we have an error?
             if (written <= 0)
             {
@@ -395,7 +394,6 @@ bool SysFile::read(char *buf, size_t len, size_t &bytesRead)
     return true;
 }
 
-
 /**
  * Wrapper around _write to handle block size issues with
  * device streams and _write itself.
@@ -403,9 +401,9 @@ bool SysFile::read(char *buf, size_t len, size_t &bytesRead)
  * @param data   The data to write.
  * @param length The data length.
  *
- * @return The number of bytes written
+ * @return The number of bytes written, or -1 on error
  */
-size_t SysFile::writeData(const char *data, size_t length)
+ssize_t SysFile::writeData(const char *data, size_t length)
 {
     // anytime we write data to the stream, we invalidate our cached
     // file size because it's likely no longer valid
@@ -416,29 +414,24 @@ size_t SysFile::writeData(const char *data, size_t length)
     // for devices, we write this in blocks of BLOCK_THRESHOLD size
     size_t blocksize = device ? BLOCK_THRESHOLD : INT_MAX;
 
-    if (length < blocksize)
+    // Windows _write isn't expected to successfully return with less
+    // bytes written than requested, but we always loop until all data
+    // has been written or _write fails.
+    size_t bytesWritten = 0;
+    while (length > 0)
     {
-        return _write(fileHandle, data, (unsigned int)length);
-    }
-    else
-    {
-        // need to write this out in segments
-        size_t bytesWritten = 0;
-        while (length > 0)
+        size_t segmentSize = length > blocksize ? blocksize : length;
+        int justWritten = _write(fileHandle, data, (unsigned int)segmentSize);
+        // write error?  bail out
+        if (justWritten <= 0)
         {
-            size_t segmentSize = length > blocksize ? blocksize : length;
-            int justWritten = _write(fileHandle, data, (unsigned int)segmentSize);
-            // write error?  Return whatever we've written
-            if (justWritten <= 0)
-            {
-                return bytesWritten;
-            }
-            length -= justWritten;
-            bytesWritten += justWritten;
-            data += justWritten;
+            return -1;
         }
-        return bytesWritten;
+        length -= justWritten;
+        bytesWritten += justWritten;
+        data += justWritten;
     }
+    return bytesWritten;
 }
 
 
@@ -459,6 +452,11 @@ bool SysFile::write(const char *data, size_t len, size_t &bytesWritten)
     {
         return true;
     }
+
+    // anytime we write data to the stream, we invalidate our cached
+    // file size because it's likely no longer valid
+    fileSize = -1;
+
     // are we buffering?
     if (buffered)
     {
@@ -482,7 +480,7 @@ bool SysFile::write(const char *data, size_t len, size_t &bytesWritten)
             // flush an existing data from the buffer
             flush();
             // write this out directly
-            size_t written = writeData(data, len);
+            ssize_t written = writeData(data, len);
             // oh, oh...got a problem
             if (written <= 0)
             {
@@ -534,7 +532,7 @@ bool SysFile::write(const char *data, size_t len, size_t &bytesWritten)
                 }
             }
             // write the data
-            size_t written = writeData(data, len);
+            ssize_t written = writeData(data, len);
             if (written <= 0)
             {
                 // return error status if there was a problem
@@ -547,7 +545,7 @@ bool SysFile::write(const char *data, size_t len, size_t &bytesWritten)
         else
         {
             // write the data
-            size_t written = writeData(data, len);
+            ssize_t written = writeData(data, len);
             if (written <= 0)
             {
                 // return error status if there was a problem
@@ -1001,6 +999,7 @@ bool SysFile::getSize(int64_t &size)
     {
         // we might have pending output that might change the size
         flush();
+
         // do we have a current file size? If not currently good, we need to
         // get it again
         if (fileSize == -1)
@@ -1028,7 +1027,7 @@ bool SysFile::getSize(int64_t &size)
 
 /**
  * Retrieve the size of a file from the file name.  If the
- * name is a device, it zero is returned.
+ * name is not a regular file, zero is returned.
  *
  * @param size   The returned size value.
  *
