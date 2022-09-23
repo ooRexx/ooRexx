@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -495,16 +495,8 @@ wholenumber_t Activity::error(ActivationBase *activation, DirectoryClass *errorI
         popStackFrame(topStackFrame);
     }
 
-    // need in case there's an error trying to display this information
-    try
-    {
-        // go display
-        return displayCondition(errorInfo);
-    }
-    catch (NativeActivation *)
-    {
-        return Error_Interpretation / 1000;   // this is a default one if something goes wrong
-    }
+    // go display
+    return displayCondition(errorInfo);
 }
 
 
@@ -3083,8 +3075,17 @@ void  Activity::traceOutput(RexxActivation *activation, RexxString *line)
 
         if (stream != OREF_NULL && stream != TheNilObject)
         {
-            ProtectedObject result;
-            stream->sendMessage(GlobalNames::LINEOUT, line, result);
+            // need this in case the .traceoutput or the .error monitor
+            // gives us an invalid object with no LINEOUT
+            try
+            {
+                ProtectedObject result;
+                stream->sendMessage(GlobalNames::LINEOUT, line, result);
+            }
+            catch (NativeActivation *)
+            {
+                lineOut(line); // don't lose the data!
+            }
         }
         // could not find the target, but don't lose the data!
         else
@@ -3196,7 +3197,7 @@ RexxObject *Activity::lineOut(RexxString *line)
 {
     size_t length = line->getLength();
     const char *data = line->getStringData();
-    printf("%.*s\n",(int)length, data);
+    printf("%.*s" line_end,(int)length, data);
     return IntegerZero;
 }
 
