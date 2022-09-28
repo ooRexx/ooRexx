@@ -1064,8 +1064,8 @@ BUILTIN(DATE)
     // validate the output separator is only used with supported styles
     if (osep != OREF_NULL)
     {
-        // only certain styles support this option
-        if (strchr("BDMWL", style) != NULL)
+        // A separator is only valid for formats E, I, N, O, S, and U
+        if (strchr("EINOSU", style) = NULL)
         {
             reportException(Error_Incorrect_call_format_incomp_sep, "DATE", IntegerOne, new_string((char)style), IntegerFour);
         }
@@ -1090,7 +1090,7 @@ BUILTIN(DATE)
         if (isep != OREF_NULL)
         {
             // only valid with certain styles
-            if (strchr("BDMWL", style2) != NULL)
+            if (strchr("BDFLMTW", style2) != NULL)
             {
                 reportException(Error_Incorrect_call_format_incomp_sep, "DATE", IntegerThree, new_string((char *)&style2, 1), IntegerFive);
             }

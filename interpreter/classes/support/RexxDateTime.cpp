@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -766,19 +766,19 @@ bool RexxDateTime::adjustTimeZone(int64_t o)
  *
  *  Format specifiers are:
  *
- *            '/'   A sepaarator is expected (passed in)
+ *            '/'   A separator is expected (passed in)
  *            'm'   Start of a month specification
- *            'd'   Start of a day specification
+ *            'd'   Start of a 2-digit day specification
+ *            'D'   Start of a 1- or 2-digit day specification
  *            'y'   Start of a 2-digit year spec
  *            'Y'   Start of a 4-digit year spec
  *            'M'   Start of a "named" 3 character month
- *            'h'   Start of a 12-hour hour field
  *            'H'   Start of a 24-hour hour field
  *            'i'   Start of a mInutes field
  *            's'   Start of a seconds field
  *            'u'   Start of a microseconds field
  *            'C'   Start of a Civil time meridian designation
- *            'c'   Start of a Civil time hour (no leading blanks)
+ *            'c'   Start of a 1- or 2-digit Civil time hour
  *            ':'   ':' expected at this position
  *            '.'   '.' expected at this position
  *
@@ -801,7 +801,10 @@ bool  RexxDateTime::parseDateTimeFormat(const char *date, const char *format, co
     const char *inputscan = date;        // and get some scanning pointers
     const char *formatscan = format;
 
-    if (strlen(date) > strlen(format))   // a mismatch on the lengths?  this can't be correct
+    size_t datelength = strlen(date);
+    // because of possible 1- or 2-digits fields like DD or cc our format may be
+    // of the same length or longer than the date, but never the other way round
+    if (strlen(format) < datelength)
     {
         return false;
     }
@@ -825,7 +828,8 @@ bool  RexxDateTime::parseDateTimeFormat(const char *date, const char *format, co
                 inputscan += MONTH_SIZE;
                 formatscan += MONTH_SIZE;
                 break;
-            // day specifier, which also requires a fixed size
+
+            // day specifier, requires two digits
             case 'd':
                 // parse out the number version
                 if (!getNumber(inputscan, DAY_SIZE, &day))
@@ -858,17 +862,6 @@ bool  RexxDateTime::parseDateTimeFormat(const char *date, const char *format, co
                     break;
                 }
 
-            // 12 hour field format
-            case 'h':
-                // parse out the number version
-                if (!getNumber(inputscan, HOURS_SIZE, &hours, MAXCIVILHOURS))
-                {
-                    return false;
-                }
-                inputscan += HOURS_SIZE;
-                formatscan += HOURS_SIZE;
-                break;
-
             // 24 hours format field
             case 'H':
                 // parse out the number version
@@ -879,6 +872,7 @@ bool  RexxDateTime::parseDateTimeFormat(const char *date, const char *format, co
                 inputscan += HOURS_SIZE;     /* step both pointers                */
                 formatscan += HOURS_SIZE;
                 break;
+
             // minutes field
             case 'i':
                 // parse out the number version
@@ -903,14 +897,24 @@ bool  RexxDateTime::parseDateTimeFormat(const char *date, const char *format, co
 
             // microseconds in a long time
             case 'u':
+                // don't require all six digits of microseconds, but at least one
+                int microlength;
+                microlength = std::max(1, (int)(date + datelength - inputscan));
+                microlength = std::min(MICRO_SIZE, microlength);
                 // parse out the number version
-                if (!getNumber(inputscan, MICRO_SIZE, &microseconds))
+                if (!getNumber(inputscan, microlength, &microseconds))
                 {
                     return false;
                 }
-                inputscan += MICRO_SIZE;     /* step both pointers                */
+                // we may have parsed less than 6 digits .. adjust microseconds
+                for (; microlength < MICRO_SIZE; microlength++)
+                {
+                    microseconds *= 10;
+                }
+                inputscan += microlength;     // step both pointers
                 formatscan += MICRO_SIZE;
                 break;
+
             // two digit year value
             case 'y':
                 // parse out the number version
@@ -956,7 +960,7 @@ bool  RexxDateTime::parseDateTimeFormat(const char *date, const char *format, co
             case 'M':
             {
                 month = 0;
-                // can months table for a descriptive match
+                // scan months table for a descriptive match
                 for (int i = 0; i < MONTHS; i++)
                 {
                     /* have a match?                     */
@@ -1006,7 +1010,7 @@ bool  RexxDateTime::parseDateTimeFormat(const char *date, const char *format, co
                 formatscan += strlen(ANTEMERIDIAN);
                 break;
 
-            // civil time hours spec, which does not have leading zeros
+            // civil time hours spec, either one or two digits
             case 'c':                      /* civil time hours spec             */
                 {
                     // We accept 1 or 2 digits here, so check the second to see if
@@ -1026,7 +1030,8 @@ bool  RexxDateTime::parseDateTimeFormat(const char *date, const char *format, co
                     formatscan += HOURS_SIZE;    /* just step the format pointer      */
                     break;
                 }
-            // a separater
+
+            // a separator
             case '/':
                 if (*sep == '\0')
                 {
@@ -1055,11 +1060,18 @@ bool  RexxDateTime::parseDateTimeFormat(const char *date, const char *format, co
                 formatscan++;
                 inputscan++;
                 break;
+
                 // bad format?
             default:
                 return false;
         }
     }
+    // there must be no residual data left in our date
+    if (inputscan < date + datelength)
+    {
+        return false;
+    }
+
 
     // now we need to validity check the date fields.  Zero's not valid for any of them
     if (day == 0 || month == 0 || year == 0)
