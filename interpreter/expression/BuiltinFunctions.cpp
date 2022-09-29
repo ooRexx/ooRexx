@@ -1065,7 +1065,7 @@ BUILTIN(DATE)
     if (osep != OREF_NULL)
     {
         // A separator is only valid for formats E, I, N, O, S, and U
-        if (strchr("EINOSU", style) = NULL)
+        if (strchr("EINOSU", style) == NULL)
         {
             reportException(Error_Incorrect_call_format_incomp_sep, "DATE", IntegerOne, new_string((char)style), IntegerFour);
         }
