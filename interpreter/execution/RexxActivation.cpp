@@ -1750,17 +1750,16 @@ void RexxActivation::raise(RexxString *condition, RexxObject *rc, RexxString *de
             // we'll use a generic message that doesn't require substitutions.
             else if (condition->strCompare(GlobalNames::NOMETHOD))
             {
-                // this is sort of tricky...the standard no method error requires a message name
-                // and a receiver object. If we don't have two objects in the ADDITIONAL, then we
-                // need to issue a generic message.
-                if (additional != OREF_NULL && isOfClass(Array, additional))
+                // this might be a propagate, in which case additional and description might not be
+                // set. Pull the current from the condition object.
+                additional = (RexxObject *)conditionobj->get(GlobalNames::ADDITIONAL);
+                description = (RexxString *)conditionobj->get(GlobalNames::DESCRIPTION);
+
+                // this is a CONDITION, not a syntax error at this point. The ADDITIONAL information
+                // is the receiver object, the message name is the description
+                if (additional != OREF_NULL && description != OREF_NULL)
                 {
-                    RexxObject *receiver = (RexxObject *)((ArrayClass *)additional)->get(1);
-                    RexxObject *messageName = (RexxObject *)((ArrayClass *)additional)->get(2);
-                    if (receiver != OREF_NULL && messageName != OREF_NULL)
-                    {
-                        reportException(Error_No_method_name, receiver, messageName);
-                    }
+                    reportException(Error_No_method_name, additional, description);
                 }
 
                 // if the error was not issued above, we fall through to here
