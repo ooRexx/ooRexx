@@ -81,14 +81,14 @@ void RexxInstructionNumeric::execute(RexxActivation *context, ExpressionStack *s
         // no expression?  Just set digits back to default
         if (expression == OREF_NULL)
         {
-            wholenumber_t default = context->getPackage()->getDigits();
+            wholenumber_t defaultDigits = context->getPackage()->getDigits();
             // digits cannot be less than or equal to fuzz
-            if (default <= context->fuzz())
+            if (defaultDigits <= context->fuzz())
             {
-                reportException(Error_Expression_result_digits, default, context->fuzz());
+                reportException(Error_Expression_result_digits, defaultDigits, context->fuzz());
             }
             // set the value
-            context->setDigits(default);
+            context->setDigits(defaultDigits);
         }
         // expression version
         else
@@ -119,14 +119,14 @@ void RexxInstructionNumeric::execute(RexxActivation *context, ExpressionStack *s
         // no expression resets to default
         if (expression == OREF_NULL)
         {
-            wholenumber_t default = context->getPackage()->getFuzz();
+            wholenumber_t defaultFuzz = context->getPackage()->getFuzz();
             // cannot be greater than or equal to digits
-            if (default >= context->digits())
+            if (defaultFuzz >= context->digits())
             {
-                reportException(Error_Expression_result_digits, context->digits(), default);
+                reportException(Error_Expression_result_digits, context->digits(), defaultFuzz);
             }
             // set the value
-            context->setFuzz(default);
+            context->setFuzz(defaultFuzz);
         }
         else
         {
