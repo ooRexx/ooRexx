@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -688,6 +688,7 @@ RexxObject *RexxInteger::multiply(RexxInteger *other)
                         // for a multiplier of -2, result will be negative
                         return new_integer(multiplier == -2 ? -result : result);
                     }
+                    break;
             }
 
             // the product should be a valid integer under the current numeric
@@ -748,6 +749,7 @@ RexxObject *RexxInteger::divide(RexxInteger *other)
                     {
                         return new_integer(value / divisor);
                     }
+                    break;
                 case -4:
                 case 4:
                     // if multiple of four, dividing is easy
@@ -755,17 +757,19 @@ RexxObject *RexxInteger::divide(RexxInteger *other)
                     {
                         return new_integer(value / divisor);
                     }
+                    break;
                 default:
                     // generally, if there's no remainder, we can divide here
                     if (value % divisor == 0)
                     {
                         return new_integer(value / divisor);
                     }
+                    break;
             }
         }
     }
 
-    // else we will have forward to NumberString::divide
+    // else we will have to forward to NumberString::divide
     return integer_forward(divide, other);
 }
 
@@ -796,7 +800,7 @@ RexxObject *RexxInteger::integerDivide(RexxInteger *other)
         }
     }
 
-    // else we will have forward to NumberString:integerDivide
+    // else we will have to forward to NumberString:integerDivide
     return integer_forward(integerDivide, other);
 }
 
@@ -837,7 +841,7 @@ RexxObject *RexxInteger::remainder(RexxInteger *other)
         }
     }
 
-    // else we will have forward to NumberString::remainder
+    // else we will have to forward to NumberString::remainder
     return integer_forward(remainder, other);
 }
 
@@ -1187,10 +1191,11 @@ wholenumber_t RexxInteger::comp(RexxObject *other)
     requiredArgument(other, ARG_ONE);
 
     // if we want to do a binary compare, both operands must be valid
-    // under the current numeric digits
+    // under the current numeric digits, and FUZZ must be zero
     if (Numerics::isValid(value, number_digits()) &&
         isInteger(other) &&
-        Numerics::isValid(((RexxInteger *)other)->value, number_digits()))
+        Numerics::isValid(((RexxInteger *)other)->value, number_digits()) &&
+        number_fuzz() == 0)
     {
         // the difference of two RexxIntegers may overflow a RexxInteger, but no
         // wholenumber_t overflow will occur - see dicussion at RexxInteger::minus
