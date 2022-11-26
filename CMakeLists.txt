@@ -2313,7 +2313,8 @@ else  () # Unix
    endif ()
 endif ()
 string(TOLOWER ${rexx_exe_opsys} rexx_exe_opsys) # make sure operating system is lowercase
-set (zip_name "${CPACK_PACKAGE_NAME}-${ORX_VERSION}-${rexx_exe_opsys}${ORX_ARCHITECTURE}-r${ORX_BLD_LVL}-${rexx_exe_cpu}-portable-${CMAKE_BUILD_TYPE}")
+string(TOLOWER ${CMAKE_BUILD_TYPE} rexx_build_type) 
+set (zip_name "${CPACK_PACKAGE_NAME}-${ORX_VERSION}-${rexx_exe_opsys}${ORX_ARCHITECTURE}-r${ORX_BLD_LVL}-${rexx_exe_cpu}-portable-${rexx_build_type}")
 
 add_custom_target(portable
   COMMAND ${CMAKE_COMMAND} -E remove_directory "${zip_dir_name}"  # make sure directory gets removed
