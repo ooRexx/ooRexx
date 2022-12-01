@@ -2292,8 +2292,6 @@ endif ()
 
 
 ######################  portable Rexx Home ENVironment archive  ##########################
-# rgf, 2021-11-25 - 2021-12-04
-
 set (zip_dir_name           _portable_)
 set (run_rexx_exe           ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rexx)
 set (run_rexx_create_script ${CMAKE_CURRENT_SOURCE_DIR}/support/portable/createPortable.rex)
@@ -2313,7 +2311,7 @@ else  () # Unix
    endif ()
 endif ()
 string(TOLOWER ${rexx_exe_opsys} rexx_exe_opsys) # make sure operating system is lowercase
-string(TOLOWER ${CMAKE_BUILD_TYPE} rexx_build_type) 
+string(TOLOWER "${CMAKE_BUILD_TYPE}" rexx_build_type)
 set (zip_name "${CPACK_PACKAGE_NAME}-${ORX_VERSION}-${rexx_exe_opsys}${ORX_ARCHITECTURE}-r${ORX_BLD_LVL}-${rexx_exe_cpu}-portable-${rexx_build_type}")
 
 add_custom_target(portable
@@ -2343,7 +2341,7 @@ add_custom_target(portable
 
   # delete archives
   COMMAND ${CMAKE_COMMAND} -E remove "${zip_dir_name}/${zip_name}-runtime.zip"
-  				     "${zip_dir_name}/${zip_name}.zip"
+                                     "${zip_dir_name}/${zip_name}.zip"
 
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
   COMMENT "Creating portable Rexx Home ENVironment zip archives ...")
