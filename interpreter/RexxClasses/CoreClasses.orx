@@ -3920,7 +3920,7 @@ nomethod:
 -- validate that an argument is a valid Rexx number
 ::METHOD number class
   use strict arg name, number
-  if \number~dataType("Number") then do
+  if \datatype(number, "Number") then do
       -- The NAME argument must be a number; found "NUMBER"
       raise syntax 88.902 array(name, number)
   end
@@ -3930,7 +3930,7 @@ nomethod:
   use strict arg name, number, min, max, digits=(digits())
   numeric digits digits
   -- must be numeric and within the given range
-  if number~dataType("Number"), number >= min, number <= max then do
+  if datatype(number, "Number"), number >= min, number <= max then do
       return
   end
   -- The NAME argument must be in the range MIN to MAX; found "NUMBER"
@@ -3941,7 +3941,7 @@ nomethod:
   use strict arg name, number, digits=(digits())
   numeric digits digits
   -- must be numeric and zero or positive
-  if number~dataType("Number"), number >= 0 then do
+  if datatype(number, "Number"), number >= 0 then do
       return
   end
   -- The NAME argument must be zero or a positive number; found "NUMBER"
@@ -3952,7 +3952,7 @@ nomethod:
   use strict arg name, number, digits=(digits())
   numeric digits digits
   -- must be numeric and positive
-  if number~dataType("Number"), number > 0 then do
+  if datatype(number, "Number"), number > 0 then do
       return
   end
   -- The NAME argument must be a positive number; found "NUMBER"
@@ -3962,7 +3962,7 @@ nomethod:
 ::METHOD wholeNumber class
   use strict arg name, number, digits=(digits())
   numeric digits digits
-  if \number~dataType("Whole") then do
+  if \datatype(number, "Whole") then do
       -- The NAME argument must be a whole number; found "NUMBER"
       raise syntax 88.903 array(name, number)
   end
@@ -3973,7 +3973,7 @@ nomethod:
   use strict arg name, number, min, max, digits=(digits())
   numeric digits digits
   -- must be whole and within the given range
-  if number~dataType("Whole"), number >= min, number <= max then do
+  if datatype(number, "Whole"), number >= min, number <= max then do
       return
   end
   -- The NAME argument must be in the range MIN to MAX; found "NUMBER"
@@ -3984,7 +3984,7 @@ nomethod:
   use strict arg name, number, digits=(digits())
   numeric digits digits
   -- must be whole and zero or positive
-  if number~dataType("Whole"), number >= 0 then do
+  if datatype(number, "Whole"), number >= 0 then do
       return
   end
   -- The NAME argument must be zero or a positive whole number; found "NUMBER"
@@ -3995,7 +3995,7 @@ nomethod:
   use strict arg name, number, digits=(digits())
   numeric digits digits
   -- must be whole and positive
-  if number~dataType("Whole"), number > 0 then do
+  if datatype(number, "Whole"), number > 0 then do
       return
   end
   -- The NAME argument must be a positive whole number; found "NUMBER"
@@ -4009,7 +4009,7 @@ nomethod:
   use strict arg name, number, digits=(.RexxInfo~internalDigits)
   numeric digits digits
   -- must be whole and zero or positive
-  if number~dataType("Whole"), number >= 0 then do
+  if datatype(number, "Whole"), number >= 0 then do
       return
   end
   -- Argument NAME is an invalid length value; found "NUMBER"
@@ -4022,7 +4022,7 @@ nomethod:
   use strict arg name, number, digits=(.RexxInfo~internalDigits)
   numeric digits digits
   -- must be whole and positive
-  if number~dataType("Whole"), number > 0 then do
+  if datatype(number, "Whole"), number > 0 then do
       return
   end
   -- Argument NAME is an invalid position value; found "NUMBER"
