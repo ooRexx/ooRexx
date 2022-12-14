@@ -81,7 +81,7 @@ set (CMAKE_SAMPLES_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/samples)
 set (ORX_API_LEVEL 4)
 set (ORX_MAJOR 5)
 set (ORX_MINOR 0)
-set (ORX_MOD_LVL 0)
+set (ORX_MOD_LVL 1)
 set (ORX_BLD_LVL 0)
 set (ORX_VERSION ${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL})
 set (ORX_NODOT_VERSION ${ORX_MAJOR}${ORX_MINOR}${ORX_MOD_LVL})
@@ -154,7 +154,7 @@ set (ORX_CURRENT ${ORX_MAJOR})
 # Each public release of ooRexx should increment this number by one except
 # when the ORX_MINOR goes back to zero. If that is the case then this entry
 # should also be set to zero.
-set (ORX_REVISION 0)
+set (ORX_REVISION 1)
 # For ooRexx, this number should ALWAYS be zero. This will force the linker to
 # utilize all previous releases for linking.
 set (ORX_AGE 0)
@@ -960,9 +960,10 @@ target_include_directories(rexx_exe PUBLIC
             ${build_messages_dir})
 # Extra link library definitions
 target_link_libraries(rexx_exe rexx rexxapi ${platform_rexx_exe_libs} ${CMAKE_REQUIRED_LIBRARIES})
-# Merge in extra manifest information on Windows
+# Merge in extra manifestinformation on Windows
 if (WIN32)
 add_custom_command(TARGET rexx_exe POST_BUILD
+   DEPENDS ${EXE_MANIFEST_FILE}
    COMMAND "mt.exe" -nologo -manifest \"${EXE_MANIFEST_FILE}\" "-inputresource:bin\\rexx.exe;#1" "-outputresource:bin\\rexx.exe;#1"
    COMMENT "Adding custom manifest to rexx.exe...")
 endif ()
@@ -1524,6 +1525,7 @@ if (WIN32)
                 ${build_extensions_oodialog_dir})
    target_link_libraries(oodialog_exe rexx rexxapi shlwapi)
    add_custom_command(TARGET oodialog_exe POST_BUILD
+      DEPENDS ${EXE_MANIFEST_FILE}
       COMMAND "mt.exe" -nologo -manifest \"${EXE_MANIFEST_FILE}\" "-inputresource:bin\\ooDialog.exe;#1" "-outputresource:bin\\ooDialog.exe;#1"
       COMMENT "Adding custom manifest to ooDialog.exe...")
    install(TARGETS oodialog_exe RUNTIME COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
@@ -1561,6 +1563,7 @@ if (WIN32)
                 ${build_extensions_oodialog_dir})
    target_link_libraries(oodialog_com rexx rexxapi shell32 Advapi32)
    add_custom_command(TARGET oodialog_com POST_BUILD
+      DEPENDS ${EXE_MANIFEST_FILE}
       COMMAND "mt.exe" -nologo -manifest \"${EXE_MANIFEST_FILE}\" "-inputresource:bin\\ooDialog.com;#1" "-outputresource:bin\\ooDialog.com;#1"
       COMMENT "Adding custom manifest to ooDialog.com...")
    install(TARGETS oodialog_com RUNTIME COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
@@ -1619,6 +1622,7 @@ if (WIN32)
                ${build_messages_dir})
    target_link_libraries(rexxhide rexx rexxapi)
    add_custom_command(TARGET rexxhide POST_BUILD
+      DEPENDS ${EXE_MANIFEST_FILE}
       COMMAND "mt.exe" -nologo -manifest \"${EXE_MANIFEST_FILE}\" "-inputresource:bin\\rexxhide.exe;#1" "-outputresource:bin\\rexxhide.exe;#1"
       COMMENT "Adding custom manifest to rexxhide.exe...")
    install(TARGETS rexxhide RUNTIME COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
@@ -1638,6 +1642,7 @@ if (WIN32)
                ${build_messages_dir})
    target_link_libraries(rexxpaws rexx rexxapi)
    add_custom_command(TARGET rexxpaws POST_BUILD
+      DEPENDS ${EXE_MANIFEST_FILE}
       COMMAND "mt.exe" -nologo -manifest \"${EXE_MANIFEST_FILE}\" "-inputresource:bin\\rexxpaws.exe;#1" "-outputresource:bin\\rexxpaws.exe;#1"
       COMMENT "Adding custom manifest to rexxpaws.exe...")
    install(TARGETS rexxpaws RUNTIME COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
@@ -2052,7 +2057,7 @@ if (DOC_SOURCE_DIR)
          ${NSIS_INSTALLER_DIR}/orange-uninstall.bmp)
 
       # Target for building an NSIS installation.  This will copy all of the install
-      # files into a directory structure that mimics how.  We do this in 4 stages to install each of
+      # files into a directory structure that mimics how.  We do this in 4 stagesto install each of
       # the components into a different directory, since them might install files into common directories
       # at install time.
       add_custom_target(nsis_install_dirs
