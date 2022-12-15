@@ -7,17 +7,22 @@
         svn copy --username=userId svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/main/trunk svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/main/branches/5.0.0  -m "Creating code branch 5.0.0 to prepare release."
         svn copy --username=userId svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/docs/trunk svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/docs/branches/5.0.0 -m "Creating docs branch 5.0.0 to prepare release."
 
+?? should we branch the tests too? I suspect we should because if there is a bug fix release, the build
+   should not be running tests added for new features in trunk.
+
 - update the ooRexx version related information in trunk to "5.1.0"
 
   cf. <http://sourceforge.net/p/oorexx/code-0/12539> changes to:
 
-        main/trunk/CMakeLists.txt
+        main/trunk/CMakeLists.txt   -- update the release version information to the next release.
+           See https://sourceforge.net/p/oorexx/code-0/12539/#diff-1 for the types of changes required.
         main/trunk/platform/windows/rexx32.exe.manifest
         main/trunk/platform/windows/rexx64.exe.manifest
 
   and cf. <http://sourceforge.net/p/oorexx/code-0/12540>
 
-        main/trunk/api/oorexxapi.h
+        main/trunk/api/oorexxapi.h  -- Add a new version identifier define for the new release.
+           See https://sourceforge.net/p/oorexx/code-0/12540/ for an example
 
 - Suggestion for a time table:
 
@@ -47,8 +52,11 @@
                 - Documentation
                 - Patches
 
-??      1) all items with the status "accepted" need to be checked to see whether they
-           have been worked on such that they can be changed to "pending"
+        1) all items with the status "accepted" need to be checked to see whether they
+           have been worked on such that they can be changed to "pending". Accepted generally
+           means code changes have been made, so these should be included in the changes.
+           A decision needs to be made on whether the incomplete portions of the item (generally
+           doc or test work) need to be completed prior to the release.
 
         2) all items with the status "pending" get included in CHANGES (the text file
            located in trunk)
@@ -67,7 +75,10 @@
                   offered when new bugs get created
 
 ??                ... this option page would allow to delete Milestones; which ones
-                      should we delete
+                      should we delete. RKM I would be in favor of deleting all of the 3.x.x labels,
+                      the list is getting a bit long. Also a few junk ones like vX.X.X.
+
+?? should there be a Milestone 5.0.1 milestone for potential bug fix releases?
 
 - release
 
@@ -80,7 +91,7 @@
             they participate (like the various IBM e-mail lists, other related
             open-source e-mail lists and projects)
 
-??      - use "svn move" to move main/branches/5.0.0 to main/releases/5.0.0, do the same
+        - use "svn move" to move main/branches/5.0.0 to main/releases/5.0.0, do the same
           for the documentation (docs/branches/5.0.0 to docs/releases/5.0.0)
 
 
