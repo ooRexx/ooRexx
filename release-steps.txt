@@ -1,0 +1,101 @@
+2022-12-15, Release Steps for ooRexx 5.0.0 as a role model
+
+- create a branch for 5.0.0 using current trunk (if no show stopper errors occur
+  running the ooRexx testsuite); here the svn command for code and documentation
+  (replace "userId" with yours)
+
+        svn copy --username=userId svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/main/trunk svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/main/branches/5.0.0  -m "Creating code branch 5.0.0 to prepare release."
+        svn copy --username=userId svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/docs/trunk svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/docs/branches/5.0.0 -m "Creating docs branch 5.0.0 to prepare release."
+
+- update the ooRexx version related information in trunk to "5.1.0"
+
+  cf. <http://sourceforge.net/p/oorexx/code-0/12539> changes to:
+
+        main/trunk/CMakeLists.txt
+        main/trunk/platform/windows/rexx32.exe.manifest
+        main/trunk/platform/windows/rexx64.exe.manifest
+
+  and cf. <http://sourceforge.net/p/oorexx/code-0/12540>
+
+        main/trunk/api/oorexxapi.h
+
+- Suggestion for a time table:
+
+    t0: if the tests on Jenkins show no show-stopper errors from the latest trunk, then create the branch: ASAP
+    t1: apply the necessary changes in the branch (version information update, release information update):  < =(t0+7 days)
+    t2: create the installation packages from the branch and upload them to a staged directory "5.0.0": after a week (t1+1)
+    t3: communicate the availability: t2+1
+
+- create on Sourceforge:
+
+        oorexx/files/5.1.0beta        ... to receive the new builds from trunk
+        oorexx/oorexx-docs/5.1.0beta  ... to receive the new documentation from trunk
+
+        oorexx/files/5.0.0_Release_Candidate        ... to receive the tested builds from branches/5.0.0
+        oorexx/oorexx-docs/5.0.0_Release_Candidate  ... to receive the new documentation from trunk
+
+- adjust the build scripts on Jenkins and feed the 5.0.0_Release_Candidate and the 5.1.0beta folders
+  for code and documentation
+
+- release information:
+
+        update branches/5.0.0./CHANGES (a text file) to document all changes from the last release
+        for
+
+                - Bugs
+                - Feature-requests
+                - Documentation
+                - Patches
+
+??      1) all items with the status "accepted" need to be checked to see whether they
+           have been worked on such that they can be changed to "pending"
+
+        2) all items with the status "pending" get included in CHANGES (the text file
+           located in trunk)
+
+??      3) all items with the status "pending" get changed to "closed"
+
+        4) a "Milestone 5.1" needs to be created, just did it, here the steps needed
+           for "Bugs":
+
+                - pick "Administration"
+                - click on the lock icon in the upper hand corner
+                - click on the "Tickets" menu and then on the changed config "icon"
+                  left of the text "Bugs"
+                - choose "Options"
+                - add "5.1.0" to "Milestones" which represents ooRexx version numbers
+                  offered when new bugs get created
+
+??                ... this option page would allow to delete Milestones; which ones
+                      should we delete
+
+- release
+
+        - rename the folders from "5.0.0_Release_Candidate" to "5.0.0"
+
+        - announce the new release on the ooRexx related e-mail lists,
+          RexxLA e-mail list, BSF4ooRexx related e-mail lists
+
+          - ask the reader to forward the announcement to related e-mail lists
+            they participate (like the various IBM e-mail lists, other related
+            open-source e-mail lists and projects)
+
+
+- overall timetable estimate:
+
+        - t0: if the tests on Jenkins show no show-stopper errors from the latest
+              trunk, then create the branch
+
+        - t1: create the installation packages from the branch and upload them to a
+              staged directory "5.0.0"
+
+        - t2: apply the necessary changes in the branch (version information update,
+              release information update): within (t0+7) days the longest
+
+        - t3: communicate the availability: t2+1
+
+
+
+
+
+
