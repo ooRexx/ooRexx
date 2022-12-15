@@ -45,6 +45,8 @@
 
 - release information:
 
+        update branches/5.0.0/NOTICES to reflect the current copyright year
+
         update branches/5.0.0./CHANGES (a text file) to document all changes from the last release
         for
 
