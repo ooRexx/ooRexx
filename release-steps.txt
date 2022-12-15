@@ -80,6 +80,9 @@
             they participate (like the various IBM e-mail lists, other related
             open-source e-mail lists and projects)
 
+??      - use "svn move" to move main/branches/5.0.0 to main/releases/5.0.0, do the same
+          for the documentation (docs/branches/5.0.0 to docs/releases/5.0.0)
+
 
 - overall timetable estimate:
 
