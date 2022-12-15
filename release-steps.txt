@@ -1,11 +1,12 @@
 2022-12-15, Release Steps for ooRexx 5.0.0 as a role model
 
 - create a branch for 5.0.0 using current trunk (if no show stopper errors occur
-  running the ooRexx testsuite); here the svn command for code and documentation
-  (replace "userId" with yours)
+  running the ooRexx testsuite); here the svn command for code, documentation
+  and test (replace "userId" with yours)
 
         svn copy --username=userId svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/main/trunk svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/main/branches/5.0.0  -m "Creating code branch 5.0.0 to prepare release."
         svn copy --username=userId svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/docs/trunk svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/docs/branches/5.0.0 -m "Creating docs branch 5.0.0 to prepare release."
+        svn copy --username=userId svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/test/trunk svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/test/branches/5.0.0 -m "Creating test branch 5.0.0 to prepare release."
 
 ?? should we branch the tests too? I suspect we should because if there is a bug fix release, the build
    should not be running tests added for new features in trunk.
@@ -63,22 +64,20 @@
 
 ??      3) all items with the status "pending" get changed to "closed"
 
-        4) a "Milestone 5.1" needs to be created, just did it, here the steps needed
-           for "Bugs":
+        4) a "Milestone 5.1.0" and "5.0.1" (for potential buf fix releases) needs to be
+           created, just did it, here the steps needed for "Bugs":
 
                 - pick "Administration"
                 - click on the lock icon in the upper hand corner
                 - click on the "Tickets" menu and then on the changed config "icon"
                   left of the text "Bugs"
-                - choose "Options"
+                - choose "Field Management"
                 - add "5.1.0" to "Milestones" which represents ooRexx version numbers
                   offered when new bugs get created
 
 ??                ... this option page would allow to delete Milestones; which ones
                       should we delete. RKM I would be in favor of deleting all of the 3.x.x labels,
                       the list is getting a bit long. Also a few junk ones like vX.X.X.
-
-?? should there be a Milestone 5.0.1 milestone for potential bug fix releases?
 
 - release
 
@@ -107,9 +106,6 @@
               release information update): within (t0+7) days the longest
 
         - t3: communicate the availability: t2+1
-
-
-
 
 
 
