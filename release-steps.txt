@@ -109,5 +109,143 @@
 
         - t3: communicate the availability: t2+1
 
+------------
+
+Changes to be made to Jenkins
+
+For all Build jobs (31 2022-12-16)
+
+Change Build Repository URL from trunk
+
+https://svn.code.sf.net/p/oorexx/code-0/main/trunk
+
+to Release Candidate
+
+https://svn.code.sf.net/p/oorexx/code-0/main/branches/5.0.0
+
+ ooRexx-CentOS9-build
+ ooRexx-Controller-Ubuntu20-build
+ ooRexx-Debian11-build
+ ooRexx-Fedora35-build
+ ooRexx-FreeBSD13-build
+ ooRexx-linux-aarch64-build
+ ooRexx-LinuxMint20-build
+ ooRexx-macOS10-build
+ ooRexx-macOS11-build
+ ooRexx-macOS12-build
+ ooRexx-macOS12-M1-build
+ ooRexx-NetBSD9-build
+ ooRexx-OpenBSD7_1-build
+ ooRexx-OpenIndiana-build
+ ooRexx-OpenSuse15-build
+ ooRexx-RaspberryPiOS32-build
+ ooRexx-RaspberryPiOS64-build
+ oorexx-ubuntu16-build
+ oorexx-ubuntu16debug-build
+ ooRexx-Ubuntu22-build
+ ooRexx-windows10_32-build
+ ooRexx-windows10_64-build
+ ooRexx-windows11_32-build
+ ooRexx-windows11_64-build
+ ooRexx-windows32-build 19
+ ooRexx-windows64-build 20
+ ooRexx-windows7_32-build
+ ooRexx-windows7_64-build
+ ooRexx-windows8_32-build
+ ooRexx-windows8_64-build
+ ooRexx-Z-build
+
+For all Test jobs (29 2022-12-16)
+
+Change Test Repository URL from trunk
+
+https://svn.code.sf.net/p/oorexx/code-0/test/trunk
+
+to Release Candidate
+
+https://svn.code.sf.net/p/oorexx/code-0/test/branches/5.0.0
+
+ ooRexx-CentOS9-test
+ ooRexx-Controller-Ubuntu20-test
+ ooRexx-Debian11-test
+ ooRexx-Fedora35-test
+ ooRexx-FreeBSD13-test
+ ooRexx-LinuxMint20-test
+ ooRexx-macOS10-test
+ ooRexx-macOS11-test
+ ooRexx-macOS12-M1-test
+ ooRexx-macOS12-test
+ ooRexx-NetBSD9-test
+ ooRexx-OpenBSD7_1-test
+ ooRexx-OpenIndiana-test
+ ooRexx-OpenSuse15-test
+ ooRexx-RaspberryPiOS32-test
+ ooRexx-RaspberryPiOS64-test
+ oorexx-ubuntu16-test
+ ooRexx-Ubuntu22-test
+ ooRexx-windows10_32-test
+ ooRexx-windows10_64-test
+ ooRexx-windows11_32-test
+ ooRexx-windows11_64-test
+ ooRexx-windows32-test
+ ooRexx-windows64-test
+ ooRexx-windows7_32-test
+ ooRexx-windows7_64-test
+ ooRexx-windows8_32-test
+ ooRexx-windows8_64-test
+ ooRexx-Z-test
 
 
+in ooRexx-docs-build
+
+change the Documentation Repository URL from trunk
+
+https://svn.code.sf.net/p/oorexx/code-0/docs/trunk
+
+to the release candidate
+
+https://svn.code.sf.net/p/oorexx/code-0/docs/branches/5.0.0
+
+Currently the upload of docs go to (two folders, PDF and html)
+
+/oorexx-docs/5.0.0beta'
+/oorexx-docs/5.0.0html'
+
+Changed to  (PDF currently
+
+ oorexx-docs/5.0.0_Release_Candidate (staged)
+
+ooRexx-{sourceforge-upload}
+
+Currently the upload of  artifacts go to
+
+sourceforgeFiles = "/home/frs/project/oorexx/oorexx/5.0.0beta"
+
+CHANGED TO oorexx/5.0.0_Release_Candidate (staged) in the upload script but this is not sufficient -> WORK TO DO 
+
+in jenkinsArtifactUpload.rex in /var/lib/jenkins/workspace/ooRexx-{sourceforge-upload}
+
+The following artifacts are selected for upload (we might remove some of these):
+ooRexx-CentOS9-build
+ooRexx-Debian11-build
+ooRexx-Fedora35-build
+ooRexx-FreeBSD13-build
+ooRexx-linux-aarch64-build
+ooRexx-LinuxMint20-build
+ooRexx-macOS11-build
+ooRexx-macOS12-build
+ooRexx-NetBSD9-build
+ooRexx-OpenBSD7_1-build
+ooRexx-OpenIndiana-build
+ooRexx-OpenSuse15-build
+ooRexx-RaspberryPiOS32-build
+ooRexx-RaspberryPiOS64-build
+oorexx-ubuntu16-build
+oorexx-ubuntu16debug-build
+ooRexx-Controller-Ubuntu20-build
+ooRexx-Ubuntu22-build
+ooRexx-windows32-build
+ooRexx-windows64-build
+ooRexx-Z-build
+
+------------
