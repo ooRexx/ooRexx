@@ -109,6 +109,9 @@
 
         - t3: communicate the availability: t2+1
 
+        - t4: once the release has been finalized, create a x.x.(n+1) branch from the release branche
+              to be used for potential bug fix releases.
+
 ------------
 
 Changes to be made to Jenkins
@@ -221,7 +224,7 @@ Currently the upload of  artifacts go to
 
 sourceforgeFiles = "/home/frs/project/oorexx/oorexx/5.0.0beta"
 
-CHANGED TO oorexx/5.0.0_Release_Candidate (staged) in the upload script but this is not sufficient -> WORK TO DO 
+CHANGED TO oorexx/5.0.0_Release_Candidate (staged) in the upload script but this is not sufficient -> WORK TO DO
 
 in jenkinsArtifactUpload.rex in /var/lib/jenkins/workspace/ooRexx-{sourceforge-upload}
 
