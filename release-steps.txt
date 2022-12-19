@@ -25,6 +25,24 @@
         main/trunk/api/oorexxapi.h  -- Add a new version identifier define for the new release.
            See https://sourceforge.net/p/oorexx/code-0/12540/ for an example
 
+- update the ooRexx documentation in trunk to not show *CHG* and *NEW*
+
+??   this may be as easy as changing the entity definitions
+??
+??       <!ENTITY added50 "*NEW* ">
+??       <!ENTITY changed50 "*CHG* ">
+??   to
+??       <!ENTITY added50 "">
+??       <!ENTITY changed50 "">
+??
+??   and to add for new additions and changes in the documentation
+??
+??       <!ENTITY added51 "*NEW* ">
+??       <!ENTITY changed51 "*CHG* ">
+??
+??   in the files: rexxapi/en-US/rexxapi.ent, rexxpg/en-US/rexxpg.ent, rexxref/en-US/rexxref.ent,
+??   winextensions/en-US/winextensions.ent
+
 - Suggestion for a time table:
 
     t0: if the tests on Jenkins show no show-stopper errors from the latest trunk, then create the branch: ASAP
