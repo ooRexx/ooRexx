@@ -1,15 +1,13 @@
 2022-12-15, Release Steps for ooRexx 5.0.0 as a role model
 
 - create a branch for 5.0.0 using current trunk (if no show stopper errors occur
-  running the ooRexx testsuite); here the svn command for code, documentation
-  and test (replace "userId" with yours)
+  running the ooRexx testsuite) for "main/trunk" to "main/branches", "docs/trunk" to
+  "docs/branches", "test/trunk" to "test/branches";
+  here the svn command for code, documentation and test (replace "userId" with yours)
 
         svn copy --username=userId svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/main/trunk svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/main/branches/5.0.0  -m "Creating code branch 5.0.0 to prepare release."
         svn copy --username=userId svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/docs/trunk svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/docs/branches/5.0.0 -m "Creating docs branch 5.0.0 to prepare release."
         svn copy --username=userId svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/test/trunk svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/test/branches/5.0.0 -m "Creating test branch 5.0.0 to prepare release."
-
-?? should we branch the tests too? I suspect we should because if there is a bug fix release, the build
-   should not be running tests added for new features in trunk.
 
 - update the ooRexx version related information in trunk to "5.1.0"
 
@@ -129,6 +127,7 @@
 
         - t4: once the release has been finalized, create a x.x.(n+1) branch from the release branche
               to be used for potential bug fix releases.
+??            move the "main|docs|test"/branches/5.0.0 to "main|docs|test"/releases/5.0.0
 
 ------------
 
