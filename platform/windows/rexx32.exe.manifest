@@ -2,7 +2,7 @@
 <assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
 
   <assemblyIdentity
-    version="5.0.1.0"
+    version="5.1.0.0"
     processorArchitecture="x86"
     name="RexxLA.rexx.ooRexx"
     type="win32"
