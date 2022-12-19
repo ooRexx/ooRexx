@@ -126,7 +126,8 @@
         - t3: communicate the availability: t2+1
 
         - t4: once the release has been finalized, create a x.x.(n+1) branch from the release branche
-              to be used for potential bug fix releases.
+              to be used for potential bug fix releases. This includes updating the release number information
+              in the build.
 ??            move the "main|docs|test"/branches/5.0.0 to "main|docs|test"/releases/5.0.0
 
 ------------
