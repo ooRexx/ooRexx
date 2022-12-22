@@ -1,12 +1,14 @@
 2022-12-15, Release Steps for ooRexx 5.0.0 as a role model
 
 - create a branch for 5.0.0 using current trunk (if no show stopper errors occur
-  running the ooRexx testsuite) for "main/trunk" to "main/branches", "docs/trunk" to
-  "docs/branches", "test/trunk" to "test/branches";
-  here the svn command for code, documentation and test (replace "userId" with yours)
+  running the ooRexx testsuite) for
+      "main/trunk" to "main/branches" and
+      "test/trunk" to "test/branches",
+      not yet for the docs (see below)
+
+  here the svn command for code and test (replace "userId" with yours)
 
         svn copy --username=userId svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/main/trunk svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/main/branches/5.0.0  -m "Creating code branch 5.0.0 to prepare release."
-        svn copy --username=userId svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/docs/trunk svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/docs/branches/5.0.0 -m "Creating docs branch 5.0.0 to prepare release."
         svn copy --username=userId svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/test/trunk svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/test/branches/5.0.0 -m "Creating test branch 5.0.0 to prepare release."
 
 - update the ooRexx version related information in trunk to "5.1.0"
@@ -23,7 +25,19 @@
         main/trunk/api/oorexxapi.h  -- Add a new version identifier define for the new release.
            See https://sourceforge.net/p/oorexx/code-0/12540/ for an example
 
-- update the ooRexx documentation in trunk to not show *CHG* and *NEW*
+- *before* creating the docs branches/5.0.0
+
+        - make sure all authors who have committed in the meantime are listed in their appropriate
+          ${book}/en-US/Author_Group.xml; to detect one can use tools/listAuthorsAsOfLate.rex
+?? (to be added)
+
+- create the docs branch for 5.0.0 using current "docs/trunk" to "docs/branches/5.0.0"
+
+  here the svn command for code, documentation and test (replace "userId" with yours)
+
+        svn copy --username=userId svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/docs/trunk svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/docs/branches/5.0.0 -m "Creating docs branch 5.0.0 to prepare release."
+
+- update the ooRexx documentation in trunk to not show *CHG* and *NEW* for 50 anymore
 
 ??   this may be as easy as changing the entity definitions
 ??
