@@ -25,11 +25,17 @@
         main/trunk/api/oorexxapi.h  -- Add a new version identifier define for the new release.
            See https://sourceforge.net/p/oorexx/code-0/12540/ for an example
 
-- *before* creating the docs branches/5.0.0
+- *before* creating the docs branches/5.0.0, the necessary steps:
 
         - make sure all authors who have committed in the meantime are listed in their appropriate
           ${book}/en-US/Author_Group.xml; to detect one can use tools/listAuthorsAsOfLate.rex
-?? (to be added)
+
+        - make sure that ${book}/revision_info.txt has the latest revision information
+          of real updates to ${book}/en-US/*.xml files; one approach to update that file
+          is to first delete it, then run "updateEntityValues.rex -y 2022 -e "2022.12.25" -r 99999 .."
+          which will recreate ${book}/revision_info.txt
+
+        - make sure that all copyright texts are updated (you can use tools/updateCopyright.rex)
 
 - create the docs branch for 5.0.0 using current "docs/trunk" to "docs/branches/5.0.0"
 
