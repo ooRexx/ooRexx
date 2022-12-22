@@ -262,7 +262,7 @@ Currently the upload of  artifacts go to
 
 sourceforgeFiles = "/home/frs/project/oorexx/oorexx/5.0.0beta"
 
-CHANGED TO oorexx/5.0.0_Release_Candidate (staged) in the upload script but this is not sufficient -> WORK TO DO
+CHANGED TO oorexx/5.0.0_Release_Candidate (staged) in the upload script but this is not sufficient -> There was a delay problem, is working as intended after some time
 
 in jenkinsArtifactUpload.rex in /var/lib/jenkins/workspace/ooRexx-{sourceforge-upload}
 
@@ -290,3 +290,7 @@ ooRexx-windows64-build
 ooRexx-Z-build
 
 ------------
+
+Before any new release go through the tools used for documentation build to make sure they are still up to date; make any changes BEFORE a specific version is frozen to avoid double copying to release and trunk
+
+Same for all platforms that we are currently building, work through all build and test "Projects" on Jenkins and note any build that fail (and the reason therefor) and any tests that are excluded (with a hint to a bug report if available)
