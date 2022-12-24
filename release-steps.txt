@@ -121,8 +121,10 @@
 
         - rename the folders from "5.0.0_Release_Candidate" to "5.0.0"
 
+        - Update the Sourceforge default download links to point to the new releases
+
         - announce the new release on the ooRexx related e-mail lists,
-          RexxLA e-mail list, BSF4ooRexx related e-mail lists
+          RexxLA e-mail list, BSF4ooRexx related e-mail lists, Open Object Rexx Facebook page
 
           - ask the reader to forward the announcement to related e-mail lists
             they participate (like the various IBM e-mail lists, other related
