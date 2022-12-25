@@ -297,3 +297,86 @@ ooRexx-Z-build
 Before any new release go through the tools used for documentation build to make sure they are still up to date; make any changes BEFORE a specific version is frozen to avoid double copying to release and trunk
 
 Same for all platforms that we are currently building, work through all build and test "Projects" on Jenkins and note any build that fail (and the reason therefor) and any tests that are excluded (with a hint to a bug report if available)
+
+------------
+
+In order to get the correct documentation added to Windows and macOS installers it is imperative to build the documentation BEFORE the final build of code is triggered. The documentation need around one hour to complete when all documents are built so withing that time no build of code should be triggered.
+
+A better way to do the release would possibly be to NOT change anything on Jenkins but leave the builds from trunk and then when it is agreed to release a specific revision to manually copy that revision on sourceforge using sftp. The burst of activity AFTER the agreement to go GA caused a lof of additional work, all that should be done in trunk
+
+------------
+
+TODO List for ooRexx 5 after a release is done
+
+After release Jenkins shold go back to trunk
+
+For Build Projects change
+
+https://svn.code.sf.net/p/oorexx/code-0/main/branches/5.0.0
+TO
+https://svn.code.sf.net/p/oorexx/code-0/main/trunk
+
+For Test Projects change
+
+https://svn.code.sf.net/p/oorexx/code-0/test/branches/5.0.0
+
+to
+
+https://svn.code.sf.net/p/oorexx/code-0/test/trunk
+
+Change Jenkins upload go to oorexx/5.1.0beta/ -> in Uploading script
+
+Change Jenkins doc upload go to oorexx-docs/5.1.0beta/ -> in Docbuild Project
+
+Set Windows  & MacOS to build only AFTER documentation has been built
+
+Try to make sure everything is driven from CMake
+
+Problem 1:
+For Windows build currently the url for downloading the documentation is hardcoded in downloaddocs.bat (C:/downloaddocs/downloaddocs.bat)
+
+Proposed solution: Make url an input to the script -> %1 (there are other input)
+Preferably the url should come out of CMakeLists.txt
+
+Problem 2:
+For MacOS build there is a script created at build time that is used post-build to create the installer. Also in this script the downloadpath for documentation is hardcoded
+
+Proposed solution: Define a variable defining the downloadpath for documentation in CMakelists.txt that can be used in the script
+
+Problem 3:
+oorexx-docs-bildutils folder on sourceforge is not automatically updated.
+
+Temporary solution: use SFTP to upload the latest tools
+Long term solution: check if this can be made a "Project" in Jenkins
+
+Problem 4:
+oorexx-buildutils is also not automatically updated. Further only Windows tools are present.
+
+Temporary solution: use SFTP to upload the latest tools
+Long term solution: a "Project" in Jenkins + Further tools for macOS and Linux/Unix
+
+Problem 5:
+In oorexx-docs/5.0.0 folder on SF the Readme.txt is from 2016
+
+Solution: Revise and updated Readme.txt and try to set date to release date 2022-12-23
+
+Problem 6:
+In oorexx-docs/5.0.0 folder on SF the Readme.txt is not displayed ( a link to another document is not shown)
+
+Solution fix the link
+
+Problem 7:
+oorexx-docs/5.0.0beta documentation is still present
+
+Solution: Remove folder after having backed it up
+
+Problem 8:
+oorexx/5.0.0_Release_Candidate is still present
+
+Solution: Remove folder after having backed it up
+
+Problem 9:
+oorexx/5.0.0beta is still present
+
+Solution: Remove folder after having backed it up
+
