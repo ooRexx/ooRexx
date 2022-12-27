@@ -337,11 +337,13 @@ For Windows build currently the url for downloading the documentation is hardcod
 
 Proposed solution: Make url an input to the script -> %1 (there are other input)
 Preferably the url should come out of CMakeLists.txt
+Temporary solution: still hardcoded but reading from oorexx-docs/5.0.0 (later 5.1.0beta)
 
 Problem 2:
 For MacOS build there is a script created at build time that is used post-build to create the installer. Also in this script the downloadpath for documentation is hardcoded
 
 Proposed solution: Define a variable defining the downloadpath for documentation in CMakelists.txt that can be used in the script
+Temporary solution: still hardcoded but reading from oorexx-docs/5.0.0 (later 5.1.0beta)
 
 Problem 3:
 oorexx-docs-bildutils folder on sourceforge is not automatically updated.
@@ -356,9 +358,9 @@ Temporary solution: use SFTP to upload the latest tools
 Long term solution: a "Project" in Jenkins + Further tools for macOS and Linux/Unix
 
 Problem 5:
-In oorexx-docs/5.0.0 folder on SF the Readme.txt is from 2016
+In oorexx-docs/5.0.0 folder on SF the Readme.txt is missing
 
-Solution: Revise and updated Readme.txt and try to set date to release date 2022-12-23
+Solution: create a Readme.txt and try to set date to release date 2022-12-23
 
 Problem 6:
 In oorexx-docs/5.0.0 folder on SF the Readme.txt is not displayed ( a link to another document is not shown)
@@ -367,16 +369,13 @@ Solution fix the link
 
 Problem 7:
 oorexx-docs/5.0.0beta documentation is still present
-
-Solution: Remove folder after having backed it up
+Solved: Remove folder after having backed it up
+(but 4.1 and earlier documentation is still missing)
 
 Problem 8:
 oorexx/5.0.0_Release_Candidate is still present
-
-Solution: Remove folder after having backed it up
+Solved: folder removed after having backed it up
 
 Problem 9:
 oorexx/5.0.0beta is still present
-
-Solution: Remove folder after having backed it up
-
+Solved: folder removed after having backed it up
