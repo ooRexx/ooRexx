@@ -379,3 +379,41 @@ Solved: folder removed after having backed it up
 Problem 9:
 oorexx/5.0.0beta is still present
 Solved: folder removed after having backed it up
+
+Further problems found 2022-12-28
+
+On several *nix platforms the installer build is tested after build
+
+sudo rpm --upgrade ooRexx-5.0.0-*.rpm || true
+rpm --query --info "ooRexx-5.0.0-*"
+sudo rpm --erase "ooRexx-5.0.0-*"
+sudo rpm --install ooRexx-5.0.0-*.rpm
+
+Problem 1: all these settings must be manually edited.
+Problem 2: testing the upgrade option is a good thing but at a change from 5.0.0 to 5.1.0 this will not succeed, the error will look like this
+
+CPack: Create package
+CPackRPM: Will use GENERATED spec file: /home/osboxes/workspace/ooRexx-CentOS9-build/oorexxBuild/_CPack_Packages/Linux/RPM/SPECS/ooRexx.spec
+CPack: - package: /home/osboxes/workspace/ooRexx-CentOS9-build/oorexxBuild/ooRexx-5.1.0-12588.centos9.x86_64.rpm generated.
++ pkill rxapi
++ sudo rpm --upgrade ooRexx-5.1.0-12588.centos9.x86_64.rpm
+	package ooRexx-5.0.1-12588.x86_64 is already installed
++ true
++ rpm --query --info 'ooRexx-5.1.0-*'
+package ooRexx-5.1.0-* is not installed
+Build step 'Execute shell' marked build as failure
+Archiving artifacts
+Finished: FAILURE
+
+Hence the old 5.0.0 (5.0.1?) must be deleted manually.
+
+Problem 3: in the uploading script there is a ::constant ooRexxID defined as '5.0.0-'
+This must also be manually changed at a change from 5.0.0 -> 5.1.0
+
+Short term solution to 1: Manually editing every script and changing 5.0.0 -> 5.1.0 (DONE)
+Long term solution: make the naming of the installer from a variable read, preferably from CMakeLists.txt
+
+Solution to 2: Manually visiting all *nix platforms and uninstalling earlier versions of oorexx; avoid using the "update" option in testing the installer; In the build process install artifact once query info and uninstall it before leaving (the test job is done from the built ooRexx, not the installed ooRexx)
+
+Short term solution to 3: manually editing uploading script
+Long term solution: read a variable  during upload rather than using a constant
