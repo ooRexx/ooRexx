@@ -255,7 +255,7 @@ Currently the upload of docs go to (two folders, PDF and html)
 /oorexx-docs/5.0.0beta'
 /oorexx-docs/5.0.0html'
 
-Changed to  (PDF currently
+Changed to  (PDF currently)
 
  oorexx-docs/5.0.0_Release_Candidate (staged)
 
@@ -417,3 +417,13 @@ Solution to 2: Manually visiting all *nix platforms and uninstalling earlier ver
 
 Short term solution to 3: manually editing uploading script
 Long term solution: read a variable  during upload rather than using a constant
+
+----
+
+Consider one additional zipped documentation item with the complete documentation available for download
+
+The release version should not display the revision number. -> find out how to achieve this.
+
+Revision numbers are part of the installer filenames (controlled by CMake) -> find out how to achieve this
+
+----
