@@ -43,24 +43,6 @@
 
         svn copy --username=userId svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/docs/trunk svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/docs/branches/5.0.0 -m "Creating docs branch 5.0.0 to prepare release."
 
-- update the ooRexx documentation in trunk to not show *CHG* and *NEW* for 50 anymore
-
-??   this may be as easy as changing the entity definitions
-??
-??       <!ENTITY added50 "*NEW* ">
-??       <!ENTITY changed50 "*CHG* ">
-??   to
-??       <!ENTITY added50 "">
-??       <!ENTITY changed50 "">
-??
-??   and to add for new additions and changes in the documentation
-??
-??       <!ENTITY added51 "*NEW* ">
-??       <!ENTITY changed51 "*CHG* ">
-??
-??   in the files: rexxapi/en-US/rexxapi.ent, rexxpg/en-US/rexxpg.ent, rexxref/en-US/rexxref.ent,
-??   winextensions/en-US/winextensions.ent
-
 - Suggestion for a time table:
 
     t0: if the tests on Jenkins show no show-stopper errors from the latest trunk, then create the branch: ASAP
@@ -131,6 +113,9 @@
             they participate (like the various IBM e-mail lists, other related
             open-source e-mail lists and projects)
 
+        - add a release entry in the Sourceforge project's "News" section using
+          the link: <https://sourceforge.net/p/oorexx/news/>
+
         - use "svn move" to move main/branches/5.0.0 to main/releases/5.0.0, do the same
           for the documentation (docs/branches/5.0.0 to docs/releases/5.0.0) and tests
 
@@ -141,6 +126,26 @@
         - change into docs/trunk/tools and run
 
              updateEntityValues.rex -y 2023 -v "5.0.0 -> 5.1.0" -e "2023.01.01" -r 99999 ..
+
+        - update the ooRexx documentation in trunk to not show *CHG* and *NEW* for 50 anymore
+
+          this may be as easy as changing the entity definitions
+
+              <!ENTITY added50 "*NEW* ">
+              <!ENTITY changed50 "*CHG* ">
+          to
+              <!ENTITY added50 "">
+              <!ENTITY changed50 "">
+
+          and to add for new additions and changes in the documentation
+
+              <!ENTITY added51 " *NEW* ">
+              <!ENTITY changed51 " *CHG* ">
+
+          in the files: rexxapi/en-US/rexxapi.ent, rexxpg/en-US/rexxpg.ent, rexxref/en-US/rexxref.ent,
+          winextensions/en-US/winextensions.ent
+
+        ?? applied, but not tested yet
 
 
 - overall timetable estimate:
