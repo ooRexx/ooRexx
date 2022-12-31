@@ -37,6 +37,8 @@
 
         - make sure that all copyright texts are updated (you can use tools/updateCopyright.rex)
 
+        -> NOTE: "main/branches/5.0.0/ReleaseNotes" needs to be adjusted as well!
+
 - create the docs branch for 5.0.0 using current "docs/trunk" to "docs/branches/5.0.0"
 
   here the svn command for code, documentation and test (replace "userId" with yours)
