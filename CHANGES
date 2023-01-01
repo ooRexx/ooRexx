@@ -1,7 +1,7 @@
-            Fixes in Open Object Rexx 5.0.0
+            Fixes and Changes in Open Object Rexx 5.1.0
 
 The following is a list of fixes, enhancements, and other relevant changes
-to ooRexx since the 4.2.0 release.  The numbers for each item can be used to
+to ooRexx since the 5.0.0 release.  The numbers for each item can be used to
 look up the item in the appropriate tracker in the ooRexx project on
 SourceForge, i.e. the Bugs tracker, the Feature Requests tracker, etc.
 
@@ -10,453 +10,51 @@ SourceForge, i.e. the Bugs tracker, the Feature Requests tracker, etc.
   ------------------------
 
   Keyword instructions
-     new DO WITH INDEX .. ITEM .. OVER ..          [feature-requests:#158]
-     new FOR iterator for DO WITH and DO OVER      [feature-requests:#605]
-     new SELECT CASE                               [feature-requests:#600]
-     new USE LOCAL ..                              [feature-requests:#654]
-     added call type REQUIRES to PARSE SOURCE      [feature-requests:#622]
+        none
 
   Built-in functions
-     added CONDITION("RESET")                      [feature-requests:#682]
-     added DATATYPE("Internal") format             [feature-requests:#711]
-     added DATE("ISO") format                      [feature-requests:#407]
-     added XRANGE() named character sequences      [feature-requests:#639]
+        none
 
   Added notation
-     new [namespace]:[class|routine] notation      [feature-requests:#464]
-     new (item1, item2, ..) Array notation         [feature-requests:#613]
-     new "REXX" package                            [feature-requests:#602]
+        none
 
   Directives
-     new ::ANNOTATE ATTRIBUTE/CLASS/CONSTANT/METHOD/PACKAGE/ROUTINE [feature-requests:#620]
-     added ABSTRACT subkeyword to ::CLASS          [feature-requests:#631]
-     added DELEGATE subkeyword to ::ATTRIBUTE and ::METHOD [feature-requests:#649]
-     value on ::CONSTANT now optional              [feature-requests:#389]
-     new ::OPTIONS NOVALUE CONDITION/ERROR         [feature-requests:#568]
-                                                   [feature-requests:#394]
-     new ::OPTIONS PROLOG/NOPROLOG                 [feature-requests:#621]
-     new ::RESOURCE                                [feature-requests:#545]
-                                                   [feature-requests:#61]
-     added NAMESPACE option to ::REQUIRES          [feature-requests:#464]
+        none
 
   Changes to classes and methods
-     new class AlarmNotification                   [feature-requests:#644]
-     new class json                                [feature-requests:#625]
-     new class MessageNotification                 [feature-requests:#640]
-     new class RexxInfo                            [feature-requests:#618]
-     new class StringTable                         [feature-requests:#615]
-     new class Ticker                              [feature-requests:#653]
-     new class Validate                            [feature-requests:#707]
-
-     new methods added to Alarm class
-       canceled/cancelled                          [feature-requests:#652]
-       scheduledTime                               [feature-requests:#646]
-       attachment                                  [feature-requests:#645]
-
-     new methods added to Class class
-       annotation, annotations                     [feature-requests:#620]
-       defineMethods                               [feature-requests:#647]
-       isMetaclass                                 [feature-requests:#629]
-       package                                     [feature-requests:#596]
-
-     new method added to Collection classes
-       of                                          [feature-requests:#616]
-     changed existing method of Collection classes
-       size argument added to method new           [feature-requests:#604]
-       appendAll, putAll, fill, empty              [feature-requests:#670]
-
-     new method added to Directory class
-       removeEntry                                 [feature-requests:#607]
-
-     new methods added to Message class
-       halt                                        [feature-requests:#642]
-       hasResult                                   [feature-requests:#606]
-       sendWith, startWith (send/start changed)    [feature-requests:#643]
-       wait                                        [feature-requests:#641]
-     changes
-       allow messages triggered more than once     [feature-requests:#245]
-
-     new methods added to Method class
-       annotation, annotations                     [feature-requests:#620]
-       isAbstract, isConstant, and isAttribute     [feature-requests:#632]
-       scope                                       [feature-requests:#636]
-
-     changed existing methods of Method class
-       optional "context" argument added to newFile [feature-requests:#686]
-
-     new methods added to MutableBuffer class
-       [], []=                                     [feature-requests:#614]
-       (caseless)Contains, (caseless)ContainsWord  [feature-requests:#451]
-       (caseless)startsWith, (caseless)endsWith    [feature-requests:#651]
-       setText                                     [feature-requests:#599]
-     changed existing methods of MutableBuffer class
-       append allows multiple strings              [feature-requests:#619]
-       match/matchChar position restriction removed [feature-requests:#650]
-
-     new method added to Object class
-       isNil                                       [feature-requests:#696]
-
-     new methods added to Package class
-       annotation, annotations                     [feature-requests:#620]
-       findNamespace, namespaces                   [feature-requests:#464]
-       findProgram                                 [feature-requests:#648]
-       findPublicClass, findPublicRoutine          [feature-requests:#630]
-       local                                       [feature-requests:#708]
-       prolog                                      [feature-requests:#638]
-       resource, resources                         [feature-requests:#545]
-                                                   [feature-requests:#61]
-     changed existing methods of Package class
-       optional "context" argument added to new    [feature-requests:#633]
-       optional "namespace" argument added to addPackage [feature-requests:#464]
-
-     changed methods of Properties class
-        load (class and instance methods) and save allow .File instance [feature-requests:#598]
-
-     new methods added to Routine class
-       []                                          [feature-requests:#611]
-       annotation, annotations                     [feature-requests:#620]
-     changed existing methods of Routine class
-       optional "context" argument added to newFile [feature-requests:#686]
-
-     new methods added to String class
-       12 named character sequence class methods   [feature-requests:#639]
-       [], []=                                     [feature-requests:#614]
-       ?                                           [feature-requests:#627]
-       append                                      [feature-requests:#623]
-       (caseless)contains, (caseless)containsWord  [feature-requests:#451]
-       (caseless)startsWith, (caseless)endsWith    [feature-requests:#651]
-       modulo                                      [feature-requests:#683]
-     changed existing methods of String class
-       match/matchChar position restriction removed [feature-requests:#650]
-       dataType("Internal")                        [feature-requests:#711]
-
-     added method FtpAnnotateLog to class RxFtp    [feature-requests:#659]
-
-  Rexxutil library
-     added SysGet(Long/Short)PathName              [feature-requests:#678]
-     changed SysTextScreenSize to accept get/set   [feature-requests:#702]
+        none
 
   Environment variables
-     new .RESOURCES StringTable                    [feature-requests:#545]
-                                                   [feature-requests:#61]
-     new .RexxInfo instance                        [feature-requests:#618]
-                                                   [feature-requests:#677]
-
+        none
 
 
   Bugs
   ----
   https://sourceforge.net/p/oorexx/bugs/nnnn
 
-  #1529 syswinver on Win10 gives 6.02 
-  #1528 TimeSpan from..() class methods fail 
-  #1527 .File~isCaseSensitive gives wrong answer on MacOS 
-  #1521 ooRexxTry.rex sample broken 
-  #1520 lines() and chars() return incorrect result after partial read to stdin. 
-  #1517 Debug error in 64-bit rxwinsys.DLL "stack around the variable 'timeOut' corrupted" 
-  #1513 Literal binary string doesn't enforce correct whitespace placement 
-  #1512 incorrect message (should say 'binary string') 
-  #1511 Crash in RexxClass::subclass 
-  #1509 hashCode() should not accept any argument 
-  #1508 Security Manager: STREAM message bugs 
-  #1504 Crash 
-  #1503 Hang upon returning from a nested external call on the GUI thread 
-  #1500 OOREXXUNIT.CLS, missing assertion counter increases 
-  #1498 OOREXXUNIT.CLS needs to reset: .traceoutput~current(.error) 
-  #1497 Little bug in ooTest.frm 
-  #1492 SysCrypt() gives error "undefined symbol" 
-  #1489 USE (STRICT) ARG issues 
-  #1488 Bug in NativeActivation::setDigits and NativeActivation::setForm 
-  #1486 Security Manager issues 
-  #1483 SysSleep() fails for certain time intervals 
-  #1480 EVENTS.CPP contains #include that is unneeded 
-  #1479 SysDumpVariables crash on WIN7 
-  #1478 Querying file time stamp, then deleting file, will prevent file from being written to 
-  #1474 format bif crashes 
-  #1473 MutableBuffer changeStr() fails under specific circumstances 
-  #1472 linein reading 510 byte records reports 511 byte length 
-  #1471 RXQUEUE loses lineends every 4096 chars 
-  #1469 Code/documentation mismatch in Interpreter_instance.cpp 
-  #1467 lineIn() / append() performance issue 
-  #1466 sortWith() crashes interpreter 
-  #1464 Further crashes with a slightly changed abc.cls 
-  #1463 Using multiple Rexx interpreter instances causing crashes 
-  #1462 Memory leak when creating many Rexx interpreter instances 
-  #1461 Crash in "MemoryObject::markObjectsMain" et.al. 
-  #1459 Test case causing crashes, giving different stack traces 
-  #1458 ~listFiles gives current folder files for root folder 
-  #1457 int64_t in RexxRoutine argument will cause an error 88.907 if supplying lowest 64-bit int value "-9223372036854775808" 
-  #1454 Jenkins home directory incorrectly installed on Ubuntu target 
-  #1453 CreateRexxInterpreter returns "1002" instead of "1" on success 
-  #1450 Performance drops suddenly (once even a crash) 
-  #1449 Crash while executing createStackFrame() 
-  #1445 AttachThread()/DetachThread() memory leak 
-  #1443 USE LOCAL: wrong error message 
-  #1442 Dynamically created routine no longer inherits parent context 
-  #1440 address 'ksh' will execute any following code twice 
-  #1437 oorexx at Revision 11226 does not build on Apple Sierra 
-  #1434 ::routine external specification doesn't ignore case 
-  #1433 Array~append Performance 
-  #1431 CALL ON ANY triggers for NOVALUE condition 
-  #1430 CALL ON ANY issues 
-  #1428 CONDITION('A') returns copy of offending object instead of object itself 
-  #1426 Sending say/lineout without argument to .stdout or .stderr does not yield a new line 
-  #1424 X2D() returns incorrect result 
-  #1418 AlarmNotification's triggered() method gives surprising error message 
-  #1417 Linux system commands export/unset should be accepted in lowercase only 
-  #1416 Incorrect error messages 
-  #1415 Incorrect FORMAT() BIF/method output 
-  #1411 ncurses.cls should be removed from Windows 5.0 installer 
-  #1410 ::requires fails to resolve uppercase .REX extension 
-  #1408 QUALIFY() issues 
-  #1402 ooREXX stops after error. 
-  #1401 rxregexp.cls issues 
-  #1399 Correct errror messages for SELECT LABEL/CASE and USE ARG/LOCAL 
-  #1398 Segmentation Fault - SysDumpVariables 
-  #1395 hostemu subcommand "EXECIO" bugs 
-  #1393 Windows command "1:" will crash Rexx 
-  #1392 Incorrect response to request(string) from array instances 
-  #1391 SysGetErrortext returns trailing '0d 0a'x chars on Windows 
-  #1389 PARSE SOURCE returns operating system name in mixed case 
-  #1387 Regression tests fail due to different SysMkDir() implementations 
-  #1386 SysGetservbyname(...) gives wrong service PORT on SuSe x86_64 
-  #1384 .Ticker triggers too often on Linux 
-  #1383 32-bit tests: datatype() returns NUM for exponents > 10 digits 
-  #1382 32-bit tests: BIF's and methods see 1.000000009 as a whole number 
-  #1380 4.2.0 build failure on Fedora 24 / GCC 6.1.1 
-  #1378 SysGetservbyname(...) gives Segmentation fault 
-  #1377 Class uninit() method doesn't run in 5.0 
-  #1376 TIME(, "Civil") doesn't check for valid hours 
-  #1375 Fixes for compiling 4.2.0. with clang 
-  #1374 Array delete() method with out-of-bounds index gives exception 
-  #1372 Creating a Package with an inherited method as parent scope makes interpreter fail 
-  #1371 File timestamps return inconsistent results 
-  #1369 API RexxRoutine uint64_t issue 
-  #1367 ooRexx on MacOSX 10.11 not operable anymore 
-  #1365 Method compareTo not called for '=' operator 
-  #1364 Invalid Drive Letter for DIRECTORY() BIF gives Exception (Windows only) 
-  #1362 CALL ON ANY raises HALT too late and gives exception 
-  #1361 SIGNAL ON ANY doesn't trigger on NOVALUE 
-  #1358 Strict comparison gives unexpected result 
-  #1355 MutableBuffer setText() crashes 
-  #1354 Queue lists excess instance methods 
-  #1353 Supplier only lists five instance mesthods, three more are missing 
-  #1352 Array hasIndex() raises error for index > 99,999,999 
-  #1351 Problem with RxFtp ftpTraceLog method 
-  #1349 Crashes when running multiple interpreter instances 
-  #1348 typo error (NATIVE_INTYPES) in REXXAPITYPES.H 
-  #1344 USE ARG and ARG()-BIF sometimes not working correctly if multi Rexx intepreter instances run in the same thread 
-  #1341 Some classes have a lot more instance methods than expected 
-  #1340 .Package "new" method third parameter "scope" not wokring correctly 
-  #1339 Multiplication gives wrong result 
-  #1337 Check number of method parameters 
-  #1336 Segmentation fault with invalid method parameters 
-  #1335 Cannot create "Ticker" instance 
-  #1334 Wrong "datatype" error message 93.915 insert 
-  #1333 unix/SystemCommands.cpp:198: possible bad array index ? 
-  #1330 call rxqueue "d" crashes interpreter 
-  #1329 rexxmsg.xml still mentions requirement to use genmsgs.bat 
-  #1328 CTRL+C suppressed when CMD.EXE started via an ooREXX program 
-  #1323 rxsock always setting h_errno to 1541 
-  #1322 Sysgetfiledatetime() argument 2 no longer optional 
-  #1313 Time('offset') on ooRexx 4.1.3 Linux Not Handing Daylight Savings 
-  #1312 .file~new('','/') fails 
-  #1311 Method and BIF charin() with large length parameter meke ooRexx crash 
-  #1308 segfault on makeString with no result object 
-  #1306 UNINIT not getting called for copied objects. 
-  #1300 Object RUN, SETMETHOD, and UNSETMETHOD no longer real private. 
-  #1296 5.0.0 windows 32 installer from build machine includes bits of svn 
-  #1288 parsing select with do end 
-  #1287 Oodialog and oorexx 5.0 
-  #1286 Class copy() methods can cause bad class state. 
-  #1283 List object will reassign indexes as the list grows. 
-  #1280 sysdumpvariables does not show the value of a stem (g.) 
-  #1279 Creating/Sorting Array Loop Crashes ooRexx Interpreter 
-  #1277 File-Read Loop Breaks Interpreter 
-  #1276 arrayIn causes memory leak 
-  #1271 SYSSTEMCOPY incorrect result on v4.2.0 (was OK on v4.1.2) 
-  #1266 qualify() BIF Crashes Interpreter 
-  #1265 round() Method Returns Incorrect Result 
-  #1261 Array LAST() returns wrong info after DELETE() 
-  #1259 Set/Bag hasIndex/hasItem at/index removeItem/remove allItems/allIndexes Performance 
-  #1257 lastItem Method Fails for Array 
-  #1256 rxCalcTan(90) raises Syntax 
-  #1252 oorexxtry.rex may crash on MACOSX 
-  #1250 Compiling 4.2.0 on MacOSX 
-  #1179 MAX() with 256 * k Arguments Gives Error; MAX() with >=257 Arguments Gives Wrong Result 
-  #1156 Problem tracing delimited strings 
-  #1080 RXAPI memory not released at end 
-  #1045 bug in rxregexp when using alternatives 
-   #957 format(1.2345678E-12,,2) = 0.00000000000123 
-   #907 Compiled code tracebacks need to give method name indication 
-   #834 OS X value() fails to delete variable from ENVIRONMENT 
-   #800 SysStemSort very,very slow .... 
-   #582 query('timestamp') is 1 hr off on a day boundary 
-   #210 orxscrpt.dll loses state between ParseScriptText calls 
-   #189 Destructor in MSIE running at the wrong time 
-   #179 No GUID put into Windows registry for WSH 
-    #73 ooRexx 3.0.1 .wsc Samples Don't Work 
-
-
 
   Requests For Enhancement
   ------------------------
   https://sourceforge.net/p/oorexx/feature-requests/nnn
-
-  #712 Add additional information to the RexxHide popup
-  #711 add a DATATYPE for internal whole number
-  #708 Allow object instances to be attached to package instances
-  #707 Document the ArgUtil class
-  #705 SysFileTree() on Unix derrivates to short path length
-  #703 Default Unix ADDRESS() environment should be 'sh'
-  #702 Extend the functionality of SysTextScreenSize function
-  #697 Remove .nil/.true/.false dependency on .environment
-  #696 isNil() method
-  #688 Calling native library code is slow
-  #686 .Method/.Routine class method "newFile" do not allow to supply a context object
-  #684 RexxInteger methods don't adhere to NUMERIC DIGITS setting
-  #683 modulo operator
-  #682 Provide a mechanism for resetting the current condition
-  #678 Stream Class add ~qualifylong method which will return the GetLongPathName
-  #677 Add maximum/minimum implementation values to .RexxInfo
-  #674 (caseless)changeStr should allow 0 as 'count' argument
-  #673 suggest to remove undocumented math functions from Windows rexxutil
-  #670 appendAll(), putAll(), fill(), empty() to return target collection as result
-  #669 Add fractional seconds support for Alarm and Ticker
-  #659 RxFtp allow write to log
-  #654 Add an instruction that is the inverse of EXPOSE
-  #652 Alarm Object - has it been successfully cancelled?
-  #651 Add startsWith and endsWith methods to String class
-  #650 Remove position restriction on match() and matchChar()
-  #649 Add "delegator" methods
-  #648 Add a "findPackage" method to the package class
-  #647 Add a defineMethods method to the Class class
-  #646 Add a method to the alarm object to query the set alarm time
-  #645 Allow an object to be attached to an alarm event
-  #644 Allow direct triggering of alarm events
-  #643 Allow arguments to be specified on a start/send operation
-  #642 Allow a message object to raise a HALT condition in a running message
-  #641 Add a wait() method to the Message class
-  #640 Improve .Message notification mechanism
-  #639 xrange() to support more than one range
-  #638 Allow access to the "main" part of a package object
-  #636 Add a scope method to the Method class
-  #633 Allow a parent context on a Package new method
-  #632 Add isAbstract, isConstant, and isAttribute to the method class
-  #631 Allow real abstract classes
-  #630 Package should have findPublicClass and findPublicRoutine
-  #629 Add isMetaclass method to .Class
-  #627 iif()-type method for .string
-  #625 Add json class to ooRexx Distribution
-  #623 Add "append" method to .string
-  #622 Add a new parse source call type for a ::requires load process
-  #621 Add option to not run package prolog when loaded
-  #620 Have a package information directive
-  #619 Allow multiple strings on MutableBuffer append()
-  #618 Add a class that contains methods for retrieving interpreter information
-  #616 Add an OF method to Map collections
-  #615 Add a lighter weight version of Directory
-  #614 add a [] method to String and MutableBuffer classes
-  #613 Syntactic sugar for array creation
-  #611 Add [] method to the Routine class
-  #607 Directory class should also have a removeEntry method
-  #606 Message class: please supply a method that indicates whether a result was returned
-  #605 Allow a FOR modifier on DO OVER loops
-  #604 Allow collections other than array to accept an initial size argument on new
-  #602 Add a "REXX" package that all loaded packages have as a dependent package
-  #600 Add the NetRexx SELECT CASE instruction to ooRexx
-  #599 MutableBuffer could use a setText method
-  #598 Allow Properties files to be loaded using a .File object
-  #596 Add a package method to the Class class
-  #595 Update samples for some of the newer features
-  #568 Add a package option to have errors raised for NOVALUE situations
-  #545 Asset Directive
-  #476 Add positive whole number type to APIs
-  #464 Add a package name directive
-  #451 add "contains" method to String Class
-  #407 Could "I" be added to Date() formats?
-  #394 Add a NOVALUE switch to ::OPTIONS
-  #389 Make expression value on ::CONSTANT optional
-  #245 Allow message objects to be triggered more than once
-  #158 Add iteration over a supplier to DO/LOOP
-   #61 Allow data directive statements in Rexx files
-
 
 
   Documentation Bugs
   ------------------
   https://sourceforge.net/p/oorexx/documentation/nnn
 
-  #257 Wrong code example for "5.1.4.21. sendWith" 
-  #256 RAISE USER userconditoin 
-  #255 CSVStream (rexxExtensions) 1.6.2 CSVlinein 
-  #254 Security Manager documentation to be clarified 
-  #253 Confusing Documentation on .LOCAL vs .ENVIRONMENT 
-  #252 No four trailing zeros in time("elapsed") and time("reset") output 
-  #251 Little issues in "13.1 Calls to Security Manager" 
-  #250 .File renameTo has Windows/Unix commands reversed 
-  #249 ::Routine example 3.16 missing external keyword 
-  #248 incorrect command in diagram (rexxref 5.3.6.38. toString) 
-  #247 typo in rexxref (18.4. The RXQUEUE Filter) 
-  #246 Ad native API DecodeConditionInfo 
-  #245 (doc) rexxpg.pdf, section 8.5 
-  #244 incorrect error message 34.1 
-  #242 Typographical error in INSTALL file 
-  #241 Array~makestring 
-  #239 Array Classs multiple delete 
-  #236 SysGetSID required argument 
-  #234 comp.lang.rexx: Lost ability to trace ::Routine dynamically 
-  #233 IF/WHEN expression list 
-  #232 1.13.5. Compound Symbols misuse of plural 
-  #231 RxCalcCos(x,20) should raise syntax 
-  #229 rexxref 7.4.49. RANDOM 
-  #228 identitytable 
-  #227 Object instancemethods doc is wrong. 
-  #226 mutable buffer pos method - add length parameter 
-  #225 Obsolete information in VALUE() BIF documentaiton. 
-  #224 value bif does not raise the Novalue condition 
-  #223 Syntax diagram for Object setMethod is wrong. 
-  #222 ooRexx Reference Typos Corrected 
-  #221 Wrong SVN Diagrams for "translate" 
-  #220 Description of translate is incomplete 
-  #218 Stream documentation does not mention that a .File object can be used to create a stream. 
-  #216 Documentation for execio/hi/ts/te needs improvement 
-  #214 SysTextScreenSize() 
-  #172 Operator precedence section needs clarification 
-  #169 [ oorexx-Patches-2954418 ] Add gethostname to rxsock 
-  #167 UNIX-compatibility comment 
-   #63 5.4.14. The RegularExpression Class 
-
-
 
   Patches
   -------
   https://sourceforge.net/p/oorexx/patches/nnn
 
-  #204 Performance enhancement for ::routine calls 
-  #203 Four patches needed OpenIndiana/SunOS/Solaris 
-  #201 PfnDliHook patch 
-  #199 json documentation 
-  #198 json.cls ooTest 
-
-
 
 Windows
 =======
-
-  Miscellaneous
-  -------------
-
-  - The version of ooDialog distributed with ooRexx is updated to ooDialog
-    version 4.2.3.
-
-  - ooDialog has a separate release notes file that shows changes in
-    ooDialog.  The file: ooDialog_ReleaseNotes.txt is located with the other
-    ooRexx documentation in the distribution. The ooDialog.pdf manual also
-    lists all changes for the current version.
+  none
 
 
 Unix/Linux
 ==========
 
   none
+

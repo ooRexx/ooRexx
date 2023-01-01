@@ -37,7 +37,7 @@
 
         - make sure that all copyright texts are updated (you can use tools/updateCopyright.rex)
 
-        -> NOTE: "main/branches/5.0.0/ReleaseNotes" needs to be adjusted as well!
+        -> NOTE: copyright of "main/branches/5.0.0/ReleaseNotes" needs to be adjusted as well!
 
 - create the docs branch for 5.0.0 using current "docs/trunk" to "docs/branches/5.0.0"
 
@@ -52,7 +52,7 @@
     t2: create the installation packages from the branch and upload them to a staged directory "5.0.0": after a week (t1+1)
     t3: communicate the availability: t2+1
 
-- create on Sourceforge:
+- create in files area on Sourceforge:
 
         oorexx/files/5.1.0beta        ... to receive the new builds from trunk
         oorexx/oorexx-docs/5.1.0beta  ... to receive the new documentation from trunk
@@ -75,31 +75,63 @@
                 - Documentation
                 - Patches
 
-        1) all items with the status "accepted" need to be checked to see whether they
-           have been worked on such that they can be changed to "pending". Accepted generally
-           means code changes have been made, so these should be included in the changes.
-           A decision needs to be made on whether the incomplete portions of the item (generally
-           doc or test work) need to be completed prior to the release.
+          1) all items with the status "accepted" need to be checked to see whether they
+             have been worked on such that they can be changed to "pending".
+             "accepted" generally means code changes have been made, so these should be
+             included in the changes.
+             A decision needs to be made on whether the incomplete portions of the item
+             (generally doc or test work) need to be completed prior to the release.
 
-        2) all items with the status "pending" get included in CHANGES (the text file
-           located in trunk)
+          2) all items with the status "pending" and "accepted" get included in CHANGES
+             (the text file located in trunk), the script
 
-??      3) all items with the status "pending" get changed to "closed"
+                  main/trunk/support/sourceForge/processedTickets.rex
 
-        4) a "Milestone 5.1.0" and "5.0.1" (for potential buf fix releases) needs to be
-           created, just did it, here the steps needed for "Bugs":
+             queries the four categories on Sourceforge and creates the text for the entries
+             to be added to CHANGES
 
-                - pick "Administration"
-                - click on the lock icon in the upper hand corner
-                - click on the "Tickets" menu and then on the changed config "icon"
-                  left of the text "Bugs"
-                - choose "Field Management"
-                - add "5.1.0" to "Milestones" which represents ooRexx version numbers
-                  offered when new bugs get created
+          3) change all tickets with the status "pending" and "accepted" with no pending work items
+             to "closed" using "bulk-edit":
 
-??                ... this option page would allow to delete Milestones; which ones
-                      should we delete. RKM I would be in favor of deleting all of the 3.x.x labels,
-                      the list is getting a bit long. Also a few junk ones like vX.X.X.
+                  - for each ticket category choose "Searches" in the left column towards the
+                    bottom
+
+                    - search/query for "pending" tickets, enter the following value in the search field:
+
+                        category: Bugs, Feature-requests
+
+                            status:pending or (status:accepted AND _pending_work_items:none)
+
+                        category: Documentation, Patches
+
+                            status:pending or status:accepted
+
+                    - if there are more than 25 hits, choose the maximum of 250
+
+                    - in the upper right hand corner choose "bulk-edit"
+
+                      - change status to "closed"
+
+                      - click the check box in the title underneath to select all tickets
+
+                      - click "Save"
+
+                  - repeat, if more than 250 hits
+
+          4) a "Milestone 5.1.0" and "5.0.1" (for potential buf fix releases) needs to be
+             created, here the steps needed for "Bugs":
+
+                  - pick "Administration"
+                  - click on the lock icon in the upper hand corner
+                  - click on the "Tickets" menu and then on the changed config "icon"
+                    left of the text "Bugs"
+                  - choose "Field Management"
+                  - add "5.1.0" to "Milestones" which represents ooRexx version numbers
+                    offered when new bugs get created
+
+  ??                ... this option page would allow to delete Milestones; which ones
+                        should we delete. RKM I would be in favor of deleting all of the 3.x.x labels,
+                        the list is getting a bit long. Also a few junk ones like vX.X.X.
 
 - release
 
@@ -149,6 +181,12 @@
 
         ?? applied, but not tested yet
 
+        - change into main/trunk, edit CHANGES to remove all changes documented for
+          5.0.0, keep the headings
+
+        - change into main/trunk, edit ReleaseNotes to remove all changes documented for
+          5.0.0, adjust copyright year and version (change from 5.0.0 to 5.1.0 and
+          4.2.0 to 5.0.0)
 
 - overall timetable estimate:
 
@@ -166,7 +204,21 @@
         - t4: once the release has been finalized, create a x.x.(n+1) branch from the release branche
               to be used for potential bug fix releases. This includes updating the release number information
               in the build.
-??            move the "main|docs|test"/branches/5.0.0 to "main|docs|test"/releases/5.0.0
+              move the "main|docs|test"/branches/5.0.0 to "main|docs|test"/releases/5.0.0
+
+
+----
+Helpful Sourceforge resources:
+
+Documentation root:   <https://sourceforge.net/p/forge/documentation/Docs%20Home/>
+Release API:          <https://sourceforge.net/p/forge/documentation/Using%20the%20Release%20API/>
+Bulk-edit of tickets: <https://sourceforge.net/p/forge/documentation/Tickets/#bulk-edit>
+Markdown syntax:      <https://sourceforge.net/nf/markdown_syntax>
+
+Very nice and helpful introduction to Sourceforge setup, including "howto" backing up:
+    <https://www.software.ac.uk/resources/guides/how-create-and-manage-sourceforge-projects>
+
+
 
 ------------
 
@@ -442,3 +494,4 @@ The release version should not display the revision number. -> find out how to a
 Revision numbers are part of the installer filenames (controlled by CMake) -> find out how to achieve this
 
 ----
+
