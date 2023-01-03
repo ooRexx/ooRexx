@@ -1,213 +1,218 @@
 2022-12-15, Release Steps for ooRexx 5.0.0 as a role model
+===
 
-- create a branch for 5.0.0 using current trunk (if no show stopper errors occur
+- create a branch for `5.0.0` using current trunk (if no show stopper errors occur
   running the ooRexx testsuite) for
-      "main/trunk" to "main/branches" and
-      "test/trunk" to "test/branches",
+      `main/trunk` to `main/branches` and
+      `test/trunk` to `test/branches`,
       not yet for the docs (see below)
 
   here the svn command for code and test (replace "userId" with yours)
 
-        svn copy --username=userId svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/main/trunk svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/main/branches/5.0.0  -m "Creating code branch 5.0.0 to prepare release."
-        svn copy --username=userId svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/test/trunk svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/test/branches/5.0.0 -m "Creating test branch 5.0.0 to prepare release."
+      svn copy --username=userId svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/main/trunk svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/main/branches/5.0.0  -m "Creating code branch 5.0.0 to prepare release."
+      svn copy --username=userId svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/test/trunk svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/test/branches/5.0.0 -m "Creating test branch 5.0.0 to prepare release."
 
-- update the ooRexx version related information in trunk to "5.1.0"
+- update the ooRexx version related information in trunk to `5.1.0`
 
-  cf. <http://sourceforge.net/p/oorexx/code-0/12539> changes to:
+  cf. <https://sourceforge.net/p/oorexx/code-0/12539/#diff-1> changes to:
 
-        main/trunk/CMakeLists.txt   -- update the release version information to the next release.
-           See https://sourceforge.net/p/oorexx/code-0/12539/#diff-1 for the types of changes required.
-        main/trunk/platform/windows/rexx32.exe.manifest
-        main/trunk/platform/windows/rexx64.exe.manifest
+      main/trunk/CMakeLists.txt   -- update the release version information to the next release.
+      main/trunk/platform/windows/rexx32.exe.manifest
+      main/trunk/platform/windows/rexx64.exe.manifest
 
   and cf. <http://sourceforge.net/p/oorexx/code-0/12540>
 
-        main/trunk/api/oorexxapi.h  -- Add a new version identifier define for the new release.
-           See https://sourceforge.net/p/oorexx/code-0/12540/ for an example
+      main/trunk/api/oorexxapi.h  -- Add a new version identifier define for the new release.
 
-- *before* creating the docs branches/5.0.0, the necessary steps:
+- *before* creating the docs `branches/5.0.0`, the necessary steps:
 
-        - make sure all authors who have committed in the meantime are listed in their appropriate
-          ${book}/en-US/Author_Group.xml; to detect one can use tools/listAuthorsAsOfLate.rex
+  - make sure all authors who have committed in the meantime are listed in their appropriate
+    `${book}/en-US/Author_Group.xml`; to detect one can use `tools/listAuthorsAsOfLate.rex`
 
-        - make sure that ${book}/revision_info.txt has the latest revision information
-          of real updates to ${book}/en-US/*.xml files; one approach to update that file
-          is to first delete it, then run "updateEntityValues.rex -y 2022 -e "2022.12.25" -r 99999 .."
-          which will recreate ${book}/revision_info.txt
+  - make sure that `${book}/revision_info.txt` has the latest revision information
+    of real updates to `${book}/en-US/*.xml` files; one approach to update that file
+    is to first delete it, then run `updateEntityValues.rex -y 2022 -e "2022.12.25" -r 99999 ..`
+    which will recreate `${book}/revision_info.txt`
 
-        - make sure that all copyright texts are updated (you can use tools/updateCopyright.rex)
+  - make sure that all copyright texts are updated (you can use `tools/updateCopyright.rex`)
 
-        -> NOTE: copyright of "main/branches/5.0.0/ReleaseNotes" needs to be adjusted as well!
+  - *NOTE:* copyright of `main/branches/5.0.0/ReleaseNotes` needs to be adjusted as well!
 
-- create the docs branch for 5.0.0 using current "docs/trunk" to "docs/branches/5.0.0"
+- create the docs branch for `5.0.0` using current `docs/trunk` to `docs/branches/5.0.0`
 
   here the svn command for code, documentation and test (replace "userId" with yours)
 
-        svn copy --username=userId svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/docs/trunk svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/docs/branches/5.0.0 -m "Creating docs branch 5.0.0 to prepare release."
+      svn copy --username=userId svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/docs/trunk svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/docs/branches/5.0.0 -m "Creating docs branch 5.0.0 to prepare release."
 
 - Suggestion for a time table:
 
-    t0: if the tests on Jenkins show no show-stopper errors from the latest trunk, then create the branch: ASAP
-    t1: apply the necessary changes in the branch (version information update, release information update):  < =(t0+7 days)
-    t2: create the installation packages from the branch and upload them to a staged directory "5.0.0": after a week (t1+1)
-    t3: communicate the availability: t2+1
+    - t0: if the tests on Jenkins show no show-stopper errors from the latest trunk, then create the branch: ASAP
 
-- create in files area on Sourceforge:
+    - t1: apply the necessary changes in the branch (version information update, release information update):  < =(t0+7 days)
 
-        oorexx/files/5.1.0beta        ... to receive the new builds from trunk
-        oorexx/oorexx-docs/5.1.0beta  ... to receive the new documentation from trunk
+    - t2: create the installation packages from the branch and upload them to a staged directory `5.0.0`: after a week (t1+1)
 
-        oorexx/files/5.0.0_Release_Candidate        ... to receive the tested builds from branches/5.0.0
-        oorexx/oorexx-docs/5.0.0_Release_Candidate  ... to receive the new documentation from trunk
+    - t3: communicate the availability: t2+1
 
-- adjust the build scripts on Jenkins and feed the 5.0.0_Release_Candidate and the 5.1.0beta folders
+- create the following directories in files area on Sourceforge:
+
+      oorexx/files/5.1.0beta        ... to receive the new builds from trunk
+      oorexx/oorexx-docs/5.1.0beta  ... to receive the new documentation from trunk
+
+      oorexx/files/5.0.0_Release_Candidate        ... to receive the tested builds from branches/5.0.0
+      oorexx/oorexx-docs/5.0.0_Release_Candidate  ... to receive the new documentation from trunk
+
+- adjust the build scripts on Jenkins and feed the `5.0.0_Release_Candidate` and the `5.1.0beta` folders
   for code and documentation
 
 - release information:
 
-        update branches/5.0.0/NOTICES to reflect the current copyright year
+  - update `branches/5.0.0/NOTICES` (a text file) to reflect the current copyright year
 
-        update branches/5.0.0./CHANGES (a text file) to document all changes from the last release
-        for
+  - update `branches/5.0.0./CHANGES` (a text file) to document all changes from the last release for
 
-                - Bugs
-                - Feature-requests
-                - Documentation
-                - Patches
+       - Bugs
+       - Feature-requests
+       - Documentation
+       - Patches
 
-          1) all items with the status "accepted" need to be checked to see whether they
-             have been worked on such that they can be changed to "pending".
-             "accepted" generally means code changes have been made, so these should be
-             included in the changes.
-             A decision needs to be made on whether the incomplete portions of the item
-             (generally doc or test work) need to be completed prior to the release.
+    1) all items with the status `accepted` need to be checked to see whether they
+       have been worked on such that they can be changed to `pending`.
+       `accepted` generally means code changes have been made, so these should be
+       included in the changes.
 
-          2) all items with the status "pending" and "accepted" get included in CHANGES
-             (the text file located in trunk), the script
+       A decision needs to be made on whether the incomplete portions of the item
+       (generally doc or test work) need to be completed prior to the release.
 
-                  main/trunk/support/sourceForge/processedTickets.rex
+    2) all items with the status `pending` and `accepted` get included in `CHANGES`
+       (the text file located in trunk), the script
 
-             queries the four categories on Sourceforge and creates the text for the entries
-             to be added to CHANGES
+       `main/trunk/support/sourceForge/processedTickets.rex`
 
-          3) change all tickets with the status "pending" and "accepted" with no pending work items
-             to "closed" using "bulk-edit":
+       queries the four categories on SourceForge and creates the text for the entries
+       to be added to `CHANGES`
 
-                  - for each ticket category choose "Searches" in the left column towards the
-                    bottom
+    3) change all tickets with the status `pending` and `accepted` with no pending work items
+       to `closed` using `bulk-edit`:
 
-                    - search/query for "pending" tickets, enter the following value in the search field:
+       - for each ticket category choose `Searches` in the left column towards the bottom
 
-                        category: Bugs, Feature-requests
+       - search/query for `pending` tickets, enter the following value in the search field:
 
-                            status:pending or (status:accepted AND _pending_work_items:none)
+         * category: Bugs, Feature-requests
 
-                        category: Documentation, Patches
+               status:pending or (status:accepted AND _pending_work_items:none)
 
-                            status:pending or status:accepted
+         * category: Documentation, Patches
 
-                    - if there are more than 25 hits, choose the maximum of 250
+               status:pending or status:accepted
 
-                    - in the upper right hand corner choose "bulk-edit"
+       - if there are more than 25 hits, choose the maximum of 250
 
-                      - change status to "closed"
+       - in the upper right hand corner choose `bulk-edit`
 
-                      - click the check box in the title underneath to select all tickets
+         - change status to `closed`
 
-                      - click "Save"
+         - click the check box in the title underneath to select all tickets
 
-                  - repeat, if more than 250 hits
+         - click `Save`
 
-          4) a "Milestone 5.1.0" and "5.0.1" (for potential buf fix releases) needs to be
-             created, here the steps needed for "Bugs":
+     - repeat, if more than 250 hits
 
-                  - pick "Administration"
-                  - click on the lock icon in the upper hand corner
-                  - click on the "Tickets" menu and then on the changed config "icon"
-                    left of the text "Bugs"
-                  - choose "Field Management"
-                  - add "5.1.0" and "5.0.1" to "Milestones" which represents ooRexx
-                    version numbers offered when new bugs get created; to take effect
-                    one needs to press the "Save" button underneath the visual frame
+    4) a `Milestone` `5.1.0` and `5.0.1` (for potential buf fix releases) needs to be
+       created, here the steps needed for `Bugs`:
 
-                    ... this option page would allow to delete Milestones (e.g. if no
-                        no tickets registered) and to declare Milestones to be "completed"
-                        by checking the respective box; deleted and completed Milestones
-                        will cause them to not be shown in the "Groups" frame on the left
-                        hand side.
+       - pick `Administration`
+
+       - click on the lock icon in the upper hand corner
+
+       - click on the `Tickets` menu and then on the changed config "icon"
+         left of the text `Bugs`
+
+       - choose `Field Management`
+
+       - add `5.1.0` and `5.0.1` to `Milestones` which represents ooRexx
+         version numbers offered when new bugs get created; to take effect
+         one needs to press the `Save` button underneath the visual frame
+
+         *Note:* this option page would allow to delete Milestones (e.g. if no
+             no tickets registered) and to declare Milestones to be "completed"
+             by checking the respective box; deleted and completed Milestones
+             will cause them to not be shown in the "Groups" frame on the left
+             hand side.
 
 - release
 
-        - rename the folders from "5.0.0_Release_Candidate" to "5.0.0"
+  - rename the folders from `5.0.0_Release_Candidate` to `5.0.0`
 
-        - Update the Sourceforge default download links to point to the new releases
+  - Update the SourceForge default download links to point to the new releases
 
-        - announce the new release on the ooRexx related e-mail lists,
-          RexxLA e-mail list, BSF4ooRexx related e-mail lists, Open Object Rexx Facebook page,
-          comp.lang.rexx
+  - announce the new release on the ooRexx related e-mail lists,
+    RexxLA e-mail list, BSF4ooRexx related e-mail lists, Open Object Rexx Facebook page,
+    comp.lang.rexx
 
-          - ask the reader to forward the announcement to related e-mail lists
-            they participate (like the various IBM e-mail lists, other related
-            open-source e-mail lists and projects)
+    - ask the reader to forward the announcement to related e-mail lists
+      they participate (like the various IBM e-mail lists, other related
+      open-source e-mail lists and projects)
 
-        - add a release entry in the Sourceforge project's "News" section using
-          the link: <https://sourceforge.net/p/oorexx/news/>
+  - add a release entry in the SourceForge project's "News" section using
+    the link: <https://sourceforge.net/p/oorexx/news/>
 
-        - use "svn move" to move main/branches/5.0.0 to main/releases/5.0.0, do the same
-          for the documentation (docs/branches/5.0.0 to docs/releases/5.0.0) and tests
+  - use "svn move" to move `main/branches/5.0.0` to `main/releases/5.0.0`, do the same
+    for the documentation (`docs/branches/5.0.0` to `docs/releases/5.0.0`) and tests
 
-            svn move --username=userId svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/main/branches/5.0.0 svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/main/releases/5.0.0 -m "Creating main/releases/5.0.0 to conclude release process."
-            svn move --username=userId svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/docs/branches/5.0.0 svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/docs/releases/5.0.0 -m "Creating docs/releases/5.0.0 to conclude release process."
-            svn move --username=userId svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/test/branches/5.0.0 svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/test/releases/5.0.0 -m "Creating test/releases/5.0.0 to conclude release process."
+        svn move --username=userId svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/main/branches/5.0.0 svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/main/releases/5.0.0 -m "Creating main/releases/5.0.0 to conclude release process."
+        svn move --username=userId svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/docs/branches/5.0.0 svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/docs/releases/5.0.0 -m "Creating docs/releases/5.0.0 to conclude release process."
+        svn move --username=userId svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/test/branches/5.0.0 svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/test/releases/5.0.0 -m "Creating test/releases/5.0.0 to conclude release process."
 
-        - change into docs/trunk/tools and run
+  - change into docs/trunk/tools and run
 
-             updateEntityValues.rex -y 2023 -v "5.0.0 -> 5.1.0" -e "2023.01.01" -r 99999 ..
+        updateEntityValues.rex -y 2023 -v "5.0.0 -> 5.1.0" -e "2023.01.01" -r 99999 ..
 
-        - update the ooRexx documentation in trunk to not show *CHG* and *NEW* for 50 anymore
+  - update the ooRexx documentation in trunk to not show *CHG* and *NEW* for 50 anymore by
+    setting the replacement text to the empty string `""`, from
 
-          this may be as easy as changing the entity definitions
+        <!ENTITY added50 "*NEW* ">
+        <!ENTITY changed50 "*CHG* ">
+    to
+        <!ENTITY added50 "">
+        <!ENTITY changed50 "">
 
-              <!ENTITY added50 "*NEW* ">
-              <!ENTITY changed50 "*CHG* ">
-          to
-              <!ENTITY added50 "">
-              <!ENTITY changed50 "">
+    and to add for new additions and changes in the documentation
 
-          and to add for new additions and changes in the documentation
+        <!ENTITY added51 " *NEW* ">
+        <!ENTITY changed51 " *CHG* ">
 
-              <!ENTITY added51 " *NEW* ">
-              <!ENTITY changed51 " *CHG* ">
+    in the files: `rexxapi/en-US/rexxapi.ent`, `rexxpg/en-US/rexxpg.ent`, `rexxref/en-US/rexxref.ent`,
+    `winextensions/en-US/winextensions.ent`
 
-          in the files: rexxapi/en-US/rexxapi.ent, rexxpg/en-US/rexxpg.ent, rexxref/en-US/rexxref.ent,
-          winextensions/en-US/winextensions.ent
+  - change into main/trunk, edit CHANGES to remove all changes documented for
+    5.0.0, keep the headings
 
-        - change into main/trunk, edit CHANGES to remove all changes documented for
-          5.0.0, keep the headings
-
-        - change into main/trunk, edit ReleaseNotes to remove all changes documented for
-          5.0.0, adjust copyright year and version (change from 5.0.0 to 5.1.0 and
-          4.2.0 to 5.0.0)
+  - change into `main/trunk`, edit `ReleaseNotes` to remove all changes documented for
+    5.0.0, adjust copyright year and version (change from `5.0.0` to `5.1.0` and
+    `4.2.0` to `5.0.0`)
 
 - overall timetable estimate:
 
-        - t0: if the tests on Jenkins show no show-stopper errors from the latest
-              trunk, then create the branch
+  - t0: if the tests on Jenkins show no show-stopper errors from the latest
+        trunk, then create the branch
 
-        - t1: create the installation packages from the branch and upload them to a
-              staged directory "5.0.0"
+  - t1: create the installation packages from the branch and upload them to a
+        staged directory `5.0.0`
 
-        - t2: apply the necessary changes in the branch (version information update,
-              release information update): within (t0+7) days the longest
+  - t2: apply the necessary changes in the branch (version information update,
+        release information update): within (t0+7) days the longest
 
-        - t3: communicate the availability: t2+1
+  - t3: communicate the availability: t2+1
 
-        - t4: once the release has been finalized, create a x.x.(n+1) branch from the release branche
-              to be used for potential bug fix releases. This includes updating the release number information
-              in the build.
-              move the "main|docs|test"/branches/5.0.0 to "main|docs|test"/releases/5.0.0
+  - t4: once the release has been finalized, create a x.x.(n+1) branch from the release branche
+        to be used for potential bug fix releases. This includes updating the release number information
+        in the build.
+        move the `main|docs|test"/branches/5.0.0` to `main|docs|test"/releases/5.0.0`
 
-- creating branches/5.0.1 for main, docs, test
+- in the case that updates are needed to the release version one needs to create
+  appropriate the branches: `branches/5.0.1` for `main`, `docs`, `test` to work in
 
         svn copy --username=userId svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/main/releases/5.0.0 svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/main/branches/5.0.1 -m "Creating code branch 5.0.1."
         svn copy --username=userId svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/docs/releases/5.0.0 svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/docs/branches/5.0.1 -m "Creating docs branch 5.0.1."
@@ -215,15 +220,18 @@
 
 
 ----
-Helpful Sourceforge resources:
+Helpful SourceForge resources:
 
-Documentation root:   <https://sourceforge.net/p/forge/documentation/Docs%20Home/>
-Release API:          <https://sourceforge.net/p/forge/documentation/Using%20the%20Release%20API/>
-Bulk-edit of tickets: <https://sourceforge.net/p/forge/documentation/Tickets/#bulk-edit>
-Markdown syntax:      <https://sourceforge.net/nf/markdown_syntax>
+- SourceForge Documentation Home:   <https://sourceforge.net/p/forge/documentation/Docs%20Home/>
 
-Very nice and helpful introduction to Sourceforge setup, including "howto" backing up:
-    <https://www.software.ac.uk/resources/guides/how-create-and-manage-sourceforge-projects>
+- Release API:          <https://sourceforge.net/p/forge/documentation/Using%20the%20Release%20API/>
+
+- Bulk-edit of Tickets: <https://sourceforge.net/p/forge/documentation/Tickets/#bulk-edit>
+
+- Markdown Syntax:      <https://sourceforge.net/nf/markdown_syntax>
+
+- Very nice and helpful introduction to SourceForge setup, including "howto" backing up:
+  <https://www.software.ac.uk/resources/guides/how-create-and-manage-sourceforge-projects>
 
 
 
