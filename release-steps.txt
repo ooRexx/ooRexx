@@ -126,12 +126,15 @@
                   - click on the "Tickets" menu and then on the changed config "icon"
                     left of the text "Bugs"
                   - choose "Field Management"
-                  - add "5.1.0" to "Milestones" which represents ooRexx version numbers
-                    offered when new bugs get created
+                  - add "5.1.0" and "5.0.1" to "Milestones" which represents ooRexx
+                    version numbers offered when new bugs get created; to take effect
+                    one needs to press the "Save" button underneath the visual frame
 
-  ??                ... this option page would allow to delete Milestones; which ones
-                        should we delete. RKM I would be in favor of deleting all of the 3.x.x labels,
-                        the list is getting a bit long. Also a few junk ones like vX.X.X.
+                    ... this option page would allow to delete Milestones (e.g. if no
+                        no tickets registered) and to declare Milestones to be "completed"
+                        by checking the respective box; deleted and completed Milestones
+                        will cause them to not be shown in the "Groups" frame on the left
+                        hand side.
 
 - release
 
@@ -179,8 +182,6 @@
           in the files: rexxapi/en-US/rexxapi.ent, rexxpg/en-US/rexxpg.ent, rexxref/en-US/rexxref.ent,
           winextensions/en-US/winextensions.ent
 
-        ?? applied, but not tested yet
-
         - change into main/trunk, edit CHANGES to remove all changes documented for
           5.0.0, keep the headings
 
@@ -205,6 +206,12 @@
               to be used for potential bug fix releases. This includes updating the release number information
               in the build.
               move the "main|docs|test"/branches/5.0.0 to "main|docs|test"/releases/5.0.0
+
+- creating branches/5.0.1 for main, docs, test
+
+        svn copy --username=userId svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/main/releases/5.0.0 svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/main/branches/5.0.1 -m "Creating code branch 5.0.1."
+        svn copy --username=userId svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/docs/releases/5.0.0 svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/docs/branches/5.0.1 -m "Creating docs branch 5.0.1."
+        svn copy --username=userId svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/test/releases/5.0.0 svn+ssh://orexx@svn.code.sf.net/p/oorexx/code-0/test/branches/5.0.1 -m "Creating test branch 5.0.1."
 
 
 ----
