@@ -2102,7 +2102,6 @@ if (DOC_SOURCE_DIR)
 	   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/ReleaseNotes COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR} RENAME ReleaseNotes.txt)
 
 	   install(FILES ${DOC_SOURCE_DIR}/readme.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
-	   install(FILES ${DOC_SOURCE_DIR}/ootest.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
 	   install(FILES ${DOC_SOURCE_DIR}/orxncurses.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
 
 	   install(FILES ${DOC_SOURCE_DIR}/rexxapi.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
@@ -2318,7 +2317,15 @@ else  () # Unix
 endif ()
 string(TOLOWER ${rexx_exe_opsys} rexx_exe_opsys) # make sure operating system is lowercase
 string(TOLOWER "${CMAKE_BUILD_TYPE}" rexx_build_type)
-set (zip_name "${CPACK_PACKAGE_NAME}-${ORX_VERSION}-${rexx_exe_opsys}${ORX_ARCHITECTURE}-r${ORX_BLD_LVL}-${rexx_exe_cpu}-portable-${rexx_build_type}")
+
+if (DEFINED CPACK_PACKAGE_FILE_NAME)
+   # 2023-01-05: use the installation package name, if defined
+   set (zip_name "${CPACK_PACKAGE_FILE_NAME}-portable-${rexx_build_type}")
+else ()
+   # 2023-01-05: field sequence should follow as close as possible the installation package name
+   # set (zip_name "${CPACK_PACKAGE_NAME}-${ORX_VER_STR}-${ORX_BLD_LVL}.${rexx_exe_opsys}.${ORX_ARCHITECTURE}-${rexx_exe_cpu}-portable-${rexx_build_type}")
+   set (zip_name "${CPACK_PACKAGE_NAME}-${ORX_VER_STR}-${ORX_BLD_LVL}.${OS_DIST}.${rexx_exe_cpu}-portable-${rexx_build_type}")
+endif ()
 
 add_custom_target(portable
   COMMAND ${CMAKE_COMMAND} -E remove_directory "${zip_dir_name}"  # make sure directory gets removed
