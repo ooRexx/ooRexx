@@ -58,7 +58,7 @@ if  [ "${FILEICON}".  != "". ] ; then
   ${FILEICON} set $cmake_binary_dir/temp_dmg_dir/$cpack_package_name$orx_major $cmake_source_dir/platform/unix/macos/install/oorexx.png
 fi
 
-# The documentation is taken care of from make install
+# Documentation is taken care of by CMake
 
 # Create the dmg locally, will look something like ooRexx-5.0.0-12160.macOS.x86_64.dmg
 rm -f $cmake_binary_dir/$cpack_package_name$orx_major.dmg
