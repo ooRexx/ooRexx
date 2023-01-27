@@ -137,7 +137,7 @@ find_package(Subversion)
 if(SUBVERSION_FOUND)
   set(ORX_WC_REVISION 0)
   Subversion_WC_INFO(${PROJECT_SOURCE_DIR} ORX IGNORE_SVN_FAILURE)
-  set(ORX_BLD_LVL ${ORX_WC_REVISION})
+  set(ORX_BLD_LVL ${ORX_WC_LAST_CHANGED_REV})
 endif()
 message(STATUS "SVN Revision Number is ${ORX_BLD_LVL}")
 
