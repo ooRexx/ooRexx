@@ -48,6 +48,7 @@
 ::Attribute values                        -- table for headered i/o
 ::Attribute rawText                       -- copy of last line read
 ::Attribute skipHeaders                   -- switch can be set before open
+::Attribute skipBOM?                      -- switch can be set before open
 ::Attribute lineEnd                       -- string used for line terminations
 ::Attribute Delimiter                     -- separates CSV fields
 ::Attribute Qualifier                     -- Surrounds literals
@@ -63,7 +64,8 @@
 /* ------------------------------------------------------------------------- */
 ::method Init
 /* ------------------------------------------------------------------------- */
-use arg parms, headersExist
+expose skipBOM?
+use arg parms, headersExist, skipBOM? = .false
                                                         /* initialise values */
 self~fileHasHeaders     =   (headersExist = .true                  ),
                           | 'HEADERS'~abbrev(headersexist~translate)
@@ -88,6 +90,7 @@ self~lineEnd            = .endOfLine          /* line terminator for this os */
 /* ------------------------------------------------------------------------- */
 ::method Open
 /* ------------------------------------------------------------------------- */
+expose SkipBOM?
 use arg args
 
 self~openArgs = args~translate             /* Close needs to know open basis */
@@ -104,6 +107,11 @@ then do
    then do
       if self~chars > 0
       then do
+         if skipBOM? = .true
+         then do
+            prolog = self~charin(,3)
+            if prolog \= 'EFBBBF'x then self~seek('=1')
+         end /* DO */
          self~fileHasHeaders     = .false
          headersArray            = self~CsvLineIn      /* get header array   */
          self~fileHasHeaders     = .true
