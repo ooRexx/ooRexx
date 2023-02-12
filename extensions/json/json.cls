@@ -85,7 +85,7 @@
     -- chars that end a value
     ctrl = .Set~of(' ', '}', ']', ',', '09'x, '0a'x, '0d'x)
 
-    crlf = "0d0a"x
+    crlf = .rexxInfo~endOfLine   -- get the platform's endOfLine character(s)
 
 
 /** Utility class method to ease reading JSON files into an ooRexx object.
