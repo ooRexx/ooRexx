@@ -93,7 +93,8 @@ if .bDebug=.true then say .leadin "RC"~left(.lw,".")":" pp(rc) "(by" cmd")" "gen
 if op_sys='W' then
    eCopy="copy"
 else
-   eCopy="cp -afv"
+-- v option not available on all platforms, removed 2023-02-15 POJ
+   eCopy="cp -af"
 
 targetRootDir=zipDir || .rexxinfo~directorySeparator || zipName  -- the archive's exploded root directory
 if .bDebug=.true then say .leadin "targetRootDir"~left(.lw,".")":" pp(targetRootDir) "zipDir:" pp(zipDir) "zipName:" pp(zipName)
@@ -208,7 +209,8 @@ end
           ~~close
    address system "chmod" dirMask scriptFullPath
 
-   eCopy = "cp -afv"    -- should work on both, Linux and Darwin, preserving symbolic links
+-- v option not available on all platforms, removed 2023-02-15 POJ
+   eCopy = "cp -af"    -- should work on both, Linux and Darwin, preserving symbolic links
 
       -- create and copy to the "bin" directory, locating the installed directory with SysFileTree()
    call sysFileTree zipDir"/rexx", "files.", "FOS"
