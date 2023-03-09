@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2023 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -56,6 +56,7 @@ void SysThread::attachThread()
 {
     // initialize the thread basics
     _threadID = pthread_self();
+    valid = true;         // we have a valid _threadID
     attached = true;      // we didn't create this one
 }
 
@@ -66,10 +67,10 @@ void SysThread::dispatch()
 
 void SysThread::terminate()
 {
-    if (!attached && _threadID != 0)
+    if (!attached && valid)
     {
         pthread_detach(_threadID);
-        _threadID = 0;
+        valid = false; // our _threadID isn't valid any more
     }
 }
 
@@ -115,10 +116,9 @@ void SysThread::createThread()
     attached = false;
 
     // create the thread now
-    int rc = createThread(_threadID, THREAD_STACK_SIZE, call_thread_function, (void *)this);
+    int rc = createThread(_threadID, valid, THREAD_STACK_SIZE, call_thread_function, (void *)this);
     if (rc != 0)
     {
-        _threadID = 0;
         fprintf(stderr," *** ERROR: At SysThread(), createThread - RC = %d !\n", rc);
     }
     return;
@@ -138,7 +138,7 @@ void SysThread::createThread()
  *
  * @return The success/failure return code.
  */
-int SysThread::createThread(pthread_t &threadNumber, size_t stackSize, void *(*startRoutine)(void *), void *startArgument)
+int SysThread::createThread(pthread_t &id, bool &idValid, size_t stackSize, void *(*startRoutine)(void *), void *startArgument)
 {
     pthread_attr_t  newThreadAttr;
 
@@ -149,20 +149,21 @@ int SysThread::createThread(pthread_t &threadNumber, size_t stackSize, void *(*s
     pthread_attr_setstacksize(&newThreadAttr, stackSize);
 
     // Now create the thread
-    int rc = pthread_create(&threadNumber, &newThreadAttr, startRoutine, (void *)startArgument);
+    int rc = pthread_create(&id, &newThreadAttr, startRoutine, (void *)startArgument);
+    idValid = rc == 0; // only on success we have a valid id
     pthread_attr_destroy(&newThreadAttr);
     return rc;
 }
 
 
-// wait for the thread to terminatre
+// wait for the thread to terminate
 void SysThread::waitForTermination()
 {
-    if (!attached && _threadID != 0)
+    if (!attached && valid)
     {
         void *res;
         pthread_join(_threadID, &res);
-        _threadID = 0;
+        valid = false; // our _threadID isn't valid any more
     }
 }
 

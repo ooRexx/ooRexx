@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2009-2021 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2009-2023 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -389,7 +389,18 @@ RexxRoutine0(RexxObjectPtr,
              SysGettid)
 {
     pthread_t tid = pthread_self();
-    return context->UnsignedInt64ToObject((uint64_t)tid);
+    // pthread_t is opaque, so it shouldn't be converted to anything
+    // but it's documented to return "the current numerical thread id"
+    // we cannot directly cast it to int as it may be e.g. a struct
+    if (sizeof(tid) >= 8)
+    {
+        return context->UnsignedInt64ToObject(*(uint64_t *)&tid);
+    }
+    if (sizeof(tid) >= 4)
+    {
+        return context->UnsignedInt32ToObject(*(uint32_t *)&tid);
+    }
+    return context->NullString();
 }
 
 

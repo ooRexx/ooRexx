@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2023 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -67,13 +67,8 @@ public:
         THREAD_STACK_SIZE = 1024*512
     };
 
-    SysThread() : attached(false), _threadID(0) { ; }
+    SysThread() : attached(false), valid(false) { ; }
     virtual ~SysThread() { ; }
-
-    SysThread(pthread_t tID)
-    {
-        _threadID = (pthread_t)tID;
-    }
 
     virtual void attachThread();
     virtual void dispatch();
@@ -81,12 +76,7 @@ public:
     void startup();
     void shutdown();
     void yield();
-    inline uintptr_t threadID()
-    {
-         return (uintptr_t)_threadID;
-    }
     bool equals(SysThread &other);
-    inline size_t hash() { return (((size_t)_threadID) >> 8) * 37; }
     void waitForTermination();
 
     static void sleep(int msecs);
@@ -97,14 +87,15 @@ public:
         gettimeofday(&now, NULL);
         return (uint64_t)now.tv_sec * 1000 + now.tv_usec / 1000;
     }
-    static int createThread(pthread_t &threadNumber, size_t stackSize, void *(*startRoutine)(void *), void *startArgument);
+    static int createThread(pthread_t &id, bool &idValid, size_t stackSize, void *(*startRoutine)(void *), void *startArgument);
 
 
 protected:
     void createThread();
 
-    bool           attached;        // indicates whether this was a created thread or attached
-    pthread_t     _threadID;        // thread identifier
+    bool           valid;      // indicates whether opaque _threadID is valid
+    bool           attached;   // indicates whether this was a created thread or attached
+    pthread_t     _threadID;   // thread identifier
 };
 
 #endif

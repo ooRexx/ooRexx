@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2023 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -73,8 +73,8 @@ class Activity;
 class SysActivity
 {
 public:
-    inline SysActivity() : threadId(0) { }
-    inline bool equals(thread_id_t t) { return threadId == t; }
+    inline SysActivity() : valid(false) { }
+    inline bool equals(thread_id_t t) { return pthread_equal(threadId, t); }
     void create(Activity *activity, size_t stackSize);
     void close();
     void useCurrentThread();
@@ -86,7 +86,8 @@ public:
     static thread_id_t queryThreadID();
 
 protected:
-    pthread_t     threadId;         // the thread identifier
+    bool          valid;      // indicates whether opaque threadId is valid
+    pthread_t     threadId;   // the thread identifier
 };
 
 #endif

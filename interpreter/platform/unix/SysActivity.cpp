@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2023 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -79,7 +79,7 @@ void SysActivity::close()
 void SysActivity::create(Activity *activity, size_t stackSize)
 {
     // try to create the thread and raise an exception for any failure
-    int rc = SysThread::createThread(threadId, stackSize, threadFnc, (void *)activity);
+    int rc = SysThread::createThread(threadId, valid, stackSize, threadFnc, (void *)activity);
     if (rc != 0)
     {
         reportException(Error_System_service_service, "ERROR CREATING THREAD");
