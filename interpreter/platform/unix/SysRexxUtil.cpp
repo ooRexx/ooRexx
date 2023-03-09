@@ -1087,16 +1087,16 @@ RexxRoutine1(int, SysCloseMutexSem, uintptr_t, vhandle)
 /*************************************************************************
 * Function:  SysSetPriority                                              *
 *                                                                        *
-* Syntax:    result = SysSetPriority([class], prio)                      *
+* Syntax:    result = SysSetPriority([cls], prio)                        *
 *                                                                        *
-* Params:    class  - ignored                                            *
+* Params:    cls    - ignored                                            *
 *            prio   - scheduling priority -19 to 20 (negative "nice")    *
 *                     (lower to higher priority)                         *
 * Return:    0    success                                                *
 *            >0   errno from setpriority() failure                       *
 *                                                                        *
 *************************************************************************/
-RexxRoutine2(int, SysSetPriority, OPTIONAL_int32_t, class, int32_t, prio)
+RexxRoutine2(int, SysSetPriority, OPTIONAL_int32_t, cls, int32_t, prio)
 {
     // priority is the negated prio argument
     return setpriority(PRIO_PROCESS, 0, -prio) == 0 ? 0 : errno;
