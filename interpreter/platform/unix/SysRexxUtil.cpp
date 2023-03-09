@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2023 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -1087,47 +1087,19 @@ RexxRoutine1(int, SysCloseMutexSem, uintptr_t, vhandle)
 /*************************************************************************
 * Function:  SysSetPriority                                              *
 *                                                                        *
-* Syntax:    result = SysSetPriority(Class, Level)                       *
+* Syntax:    result = SysSetPriority([class], prio)                      *
 *                                                                        *
-* Params:    Class  - The priority class (0-4)                           *
-*            Level  - Amount to change (-31 to +31)                      *
+* Params:    class  - ignored                                            *
+*            prio   - scheduling priority -19 to 20 (negative "nice")    *
 *                     (lower to higher priority)                         *
-* Return:    0    for correct execution                                  *
-*            304  for ERROR_INVALID_PDELTA                               *
-*            307  for ERROR_INVALID_PCLASS                               *
-*            derived from:                                               *
-*            result - return code from DosSetPriority                    *
+* Return:    0    success                                                *
+*            >0   errno from setpriority() failure                       *
 *                                                                        *
 *************************************************************************/
-RexxRoutine2(int, SysSetPriority, int32_t, pclass, int32_t, level)
+RexxRoutine2(int, SysSetPriority, OPTIONAL_int32_t, class, int32_t, prio)
 {
-    RexxReturnCode    rc;                        /* creation return code                */
-
-    if (pclass == 0)                        /* class 0 -> no change               */
-    {
-        rc = 0;                             /* no error                           */
-    }
-    /* change the priority                */
-    /* change according to delta          */
-    else if (pclass > 0 && pclass <= 4)
-    {
-        int pid = getpid();                     /* current PID                        */
-
-        /* current priority                   */
-        int priority = getpriority(PRIO_PROCESS, getpid());
-
-        /* Set new priority                   */
-        setpriority(PRIO_PROCESS, getpid(), -level);
-        rc = 0;
-    }
-
-    else
-    {
-        context->InvalidRoutine();
-        return 0;
-    }
-
-    return rc;
+    // priority is the negated prio argument
+    return setpriority(PRIO_PROCESS, 0, -prio) == 0 ? 0 : errno;
 }
 
 /**

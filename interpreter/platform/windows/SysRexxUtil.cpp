@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2023 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -2098,6 +2098,7 @@ RexxRoutine2(int, SysSetPriority, RexxObjectPtr, classArg, RexxObjectPtr, levelA
                 break;
             case 3:
                 iclass = REALTIME_PRIORITY_CLASS;
+                break;
             default:
                 context->InvalidRoutine();
                 return 0;
@@ -2115,7 +2116,7 @@ RexxRoutine2(int, SysSetPriority, RexxObjectPtr, classArg, RexxObjectPtr, levelA
         {
             iclass = HIGH_PRIORITY_CLASS;
         }
-        else if (!stricmp(classStr, "NORMAL") == 0)
+        else if (stricmp(classStr, "NORMAL") == 0)
         {
             iclass = NORMAL_PRIORITY_CLASS;
         }
