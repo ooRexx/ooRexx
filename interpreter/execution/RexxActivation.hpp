@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2023 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -255,7 +255,7 @@ class RexxActivation : public ActivationBase
    RexxObject      * rexxVariable(RexxString *);
    void              pushEnvironment(RexxObject *);
    RexxObject      * popEnvironment();
-   void              processTraps();
+   bool              processTraps();
    void              mergeTraps(QueueClass *);
    uint64_t          getRandomSeed(RexxInteger *);
    VariableDictionary *getObjectVariables();

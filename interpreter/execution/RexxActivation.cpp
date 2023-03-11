@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2023 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -746,10 +746,16 @@ RexxObject* RexxActivation::run(RexxObject *_receiver, RexxString *name, RexxObj
                 // if we have pending traps, process them now
                 if (!conditionQueue->isEmpty())
                 {
-                    processTraps();
+                    bool caught = processTraps();
+                    // a condition might have raised an error because of a missing label
+                    // go process it now
+                    if (caught && !conditionQueue->isEmpty())
+                    {
+                        processTraps();
+                    }
                     // processing the traps might have deferred handling until clause
-                    // termination (CALL ON conditions)...turn on the clause_boundary
-                    // flag to check for them after instruction completiong.
+                    // termination (CALL ON conditions)...turn on the clauseBoundary
+                    // flag to check for them after instruction completion.
                     if (!conditionQueue->isEmpty())
                     {
                         clauseBoundary = true;
@@ -764,9 +770,12 @@ RexxObject* RexxActivation::run(RexxObject *_receiver, RexxString *name, RexxObj
 /**
  * process pending condition traps before going on to execute a
  * clause
+ *
+ * @return true if a trap handler may have raised another condition.
  */
-void RexxActivation::processTraps()
+bool RexxActivation::processTraps()
 {
+    bool caught = false;
     size_t i = conditionQueue->items();
 
     // process each item currently in the queue
@@ -800,6 +809,7 @@ void RexxActivation::processTraps()
             }
             catch (RexxActivation *t)
             {
+                caught = true;
                 // if we're not the target of this throw, we've already been unwound
                 // keep throwing this until it reaches the target activation.
                 if (t != this)
@@ -816,6 +826,7 @@ void RexxActivation::processTraps()
             }
         }
     }
+    return caught;
 }
 
 
@@ -1363,7 +1374,7 @@ void RexxActivation::implicitExit()
  */
 void RexxActivation::termination()
 {
-    // remove any guard locks for this activaty.
+    // remove any guard locks for this activity.
     guardOff();
     // have any setlocals we need to undo?
     if (environmentList != OREF_NULL && !environmentList->isEmpty())
@@ -1637,7 +1648,7 @@ void RexxActivation::raiseExit(RexxString *condition, RexxObject *rc, RexxString
             activity->callTerminationExit(this);
         }
         ProtectedObject p(this);
-        // terminate the activaiton and remove from the stack
+        // terminate the activation and remove from the stack
         termination();
         activity->popStackFrame(false);
         // propagate to the parent
@@ -1948,7 +1959,7 @@ StringTable* RexxActivation::getStreams()
             else
             {
 
-                // alway's use caller's for internal call, external call or interpret
+                // always use caller's for internal call, external call or interpret
                 settings.streams = ((RexxActivation *)callerFrame)->getStreams();
             }
         }
@@ -2414,7 +2425,7 @@ bool RexxActivation::trap(RexxString *condition, DirectoryClass *exceptionObject
                 throw this;
             }
             // if we're interpreted, this needs to be handled in the parent
-            // activaiton.
+            // activation.
             else
             {
                 parent->mergeTraps(conditionQueue);
@@ -2584,7 +2595,7 @@ void RexxActivation::mergeTraps(QueueClass *sourceConditionQueue)
  * or PROPAGATE condition trap.  This ensures that the SIGNAL
  * or PROPAGATE returns to the correct condition level
  *
- * @param child  The child activaty.
+ * @param child  The child activity.
  */
 void RexxActivation::unwindTrap(RexxActivation *child)
 {
@@ -2695,7 +2706,7 @@ void RexxActivation::debugInterpret(RexxString *codestring)
 
 
 /**
- * Return a Rexx-defined "dot" variable na.e
+ * Return a Rexx-defined "dot" variable name
  *
  * @param name   The target variable name.
  *
@@ -2766,7 +2777,7 @@ RexxObject * RexxActivation::rexxVariable(RexxString * name )
 RexxObject *RexxActivation::getContextObject()
 {
     // the context object is created on demand...much of the time, this
-    // is not needed for an actvation
+    // is not needed for an activation
     if (contextObject == OREF_NULL)
     {
         contextObject = new RexxContext(this);
@@ -3759,9 +3770,6 @@ void RexxActivation::traceCompoundValue(TracePrefix prefix, RexxString *stemName
     CompoundVariableTail tail(tails, tailCount, false);
 
     outLength += tail.getLength();
-
-    // add in the number of added dots
-    outLength += tailCount - 1;
 
     // these are fixed overheads
     outLength += TRACE_OVERHEAD + strlen(marker);
