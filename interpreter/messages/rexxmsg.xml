@@ -1558,7 +1558,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Invalid_trace_trace</SymbolicName>
-        <Text>TRACE request letter must be one of <q>ACEFILNOR</q>; found  <q><Sub position="1" name="value"/></q>.</Text>
+        <Text>TRACE request letter must be one of <q>ACEFILNOR</q>; found <q><Sub position="1" name="value"/></q>.</Text>
       </SubMessage>
       <SubMessage>
         <Code>24</Code>
@@ -1939,7 +1939,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Invalid_subkeyword_address_with_io_option</SymbolicName>
-        <Text>Acceptable ADDRESS WITH I/O types are STEM, STREAM, and USING; found <q><Sub position="1" name="word"/></q>.</Text>
+        <Text>Acceptable ADDRESS WITH I/O types are NORMAL, STEM, STREAM, and USING; found <q><Sub position="1" name="word"/></q>.</Text>
       </SubMessage>
       <SubMessage>
         <Code>25</Code>
@@ -4145,7 +4145,7 @@ special character (such as a parenthesis).
           <Component>Rexx</Component>
           <Severity>Warning</Severity>
           <SymbolicName>Error_Invalid_argument_variable_reference_simple</SymbolicName>
-          <Text>The <Sub position="1" name="argument"/> argument must be a VariableReference for a Simple variable; found <q><Sub position="2" name="value"/></q>.</Text>
+          <Text>The <Sub position="1" name="argument"/> argument must be a VariableReference for a simple variable; found <q><Sub position="2" name="value"/></q>.</Text>
         </SubMessage>
         <SubMessage>
           <Code>88</Code>

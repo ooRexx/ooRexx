@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2023 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -129,6 +129,10 @@ ArrayClass *RexxVariableReference::list(RexxActivation *context)
     RexxObject *value = variableObject->getValue(context);
     // force to string form
     Protected<RexxString> nameString = value->requestString();
+
+    // and trace it
+    context->traceResultValue(nameString);
+
     // get this as a list of words
     Protected<ArrayClass> list = ((RexxString *)nameString)->subWords(OREF_NULL, OREF_NULL);
 

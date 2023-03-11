@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2023 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -181,7 +181,7 @@ void RexxInstructionForward::execute(RexxActivation *context, ExpressionStack *s
     {
         // we need to evaluate this argument, then get as an array
         RexxObject *temp = arguments->evaluate(context, stack);
-        context->traceKeywordResult(GlobalNames::ARRAY, temp);
+        context->traceKeywordResult(GlobalNames::ARGUMENTS, temp);
         ArrayClass *argArray = temp->requestArray();
         // protect this on the stack too
         stack->push(argArray);
@@ -234,6 +234,7 @@ void RexxInstructionForward::execute(RexxActivation *context, ExpressionStack *s
                 context->traceArgument(GlobalNames::NULLSTRING);
             }
         }
+        context->traceKeywordResult(GlobalNames::ARRAY, array);
         // note that we evaluated this one last, so that other
         // values pushed on the stack will not interfere with the arguments.
         _arguments = stack->arguments(count);

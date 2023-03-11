@@ -1088,7 +1088,7 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>001</term>
 <listitem>
-<para>TRACE request letter must be one of "ACEFILNOR"; found  "<emphasis role="italic">value</emphasis>".</para>
+<para>TRACE request letter must be one of "ACEFILNOR"; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
@@ -1345,7 +1345,7 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>933</term>
 <listitem>
-<para>Acceptable ADDRESS WITH I/O types are STEM, STREAM, and USING; found "<emphasis role="italic">word</emphasis>".</para>
+<para>Acceptable ADDRESS WITH I/O types are NORMAL, STEM, STREAM, and USING; found "<emphasis role="italic">word</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
@@ -2952,7 +2952,7 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>930</term>
 <listitem>
-<para>The <emphasis role="italic">argument</emphasis> argument must be a VariableReference for a Simple variable; found "<emphasis role="italic">value</emphasis>".</para>
+<para>The <emphasis role="italic">argument</emphasis> argument must be a VariableReference for a simple variable; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
