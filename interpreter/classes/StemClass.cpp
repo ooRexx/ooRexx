@@ -499,6 +499,17 @@ RexxObject *StemClass::bracketEqual(RexxObject **tailElements, size_t argCount)
 
 
 /**
+ * Handle a primitive-level MAKESTRING request by forwarding it to the default value.
+ *
+ * @return
+ */
+RexxString *StemClass::makeString()
+{
+    return value->makeString();
+}
+
+
+/**
  * Extract an array of tail items.
  *
  * @return An array of all tails in the stem.

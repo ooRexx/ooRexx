@@ -87,6 +87,7 @@ class StemClass : public RexxObject
     NumberString *numberString() override;
     RexxInteger *integerValue(wholenumber_t) override;
     RexxString  *stringValue() override;
+    RexxString* makeString()override;
     ArrayClass  *makeArray() override;
     ArrayClass   *allItems();
     ArrayClass   *allIndexes();
