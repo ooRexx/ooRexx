@@ -130,8 +130,9 @@ ArrayClass *RexxVariableReference::list(RexxActivation *context)
     // force to string form
     Protected<RexxString> nameString = value->requestString();
 
-    // and trace it
-    context->traceResultValue(nameString);
+    // we'd like to traceVariable() but our variable name is not available
+    // so just trace result
+    context->traceResult(nameString);
 
     // get this as a list of words
     Protected<ArrayClass> list = ((RexxString *)nameString)->subWords(OREF_NULL, OREF_NULL);

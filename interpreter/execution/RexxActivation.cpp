@@ -203,8 +203,11 @@ RexxActivation::RexxActivation(Activity *_activity, RexxActivation *_parent, Rex
 
     // inherit parents settings
     _parent->putSettings(settings);
-    // step the trace indentation level for this internal nesting
-    settings.traceIndent++;
+    // except for INTERPRET, step the trace indentation level for this internal nesting
+    if (!isInterpret())
+    {
+        settings.traceIndent++;
+    }
 
     // if we are doing an internal call, we've inherited our
     // caller's trap state, but if we change anything, then we need
@@ -331,7 +334,7 @@ void RexxActivation::live(size_t liveMark)
     memory_mark(conditionQueue);
     memory_mark(contextObject);
 
-    // We're hold a pointer back to our arguments directly where they
+    // We're holding a pointer back to our arguments directly where they
     // are created.  Since in some places, this argument list comes
     // from the C stack, we need to handle the marking ourselves.
     memory_mark_array(argCount, argList);
@@ -366,7 +369,7 @@ void RexxActivation::liveGeneral(MarkReason reason)
     memory_mark_general(conditionQueue);
     memory_mark_general(contextObject);
 
-    // We're hold a pointer back to our arguments directly where they
+    // We're holding a pointer back to our arguments directly where they
     // are created.  Since in some places, this argument list comes
     // from the C stack, we need to handle the marking ourselves.
     memory_mark_general_array(argCount, argList);
@@ -418,7 +421,7 @@ void RexxActivation::inheritPackageSettings()
 RexxObject * RexxActivation::dispatch()
 {
     ProtectedObject r;
-    // we just resume running at the old location, reusing the intial values.
+    // we just resume running at the old location, reusing the initial values.
     return run(receiver, settings.messageName, argList, argCount, OREF_NULL, r);
 }
 
@@ -471,7 +474,7 @@ RexxObject* RexxActivation::run(RexxObject *_receiver, RexxString *name, RexxObj
             // save entry argument list forvariable pool fetch private access
             settings.parentArgList = argList;
             settings.parentArgCount = argCount;
-            // make sure the code has resolved any class definitions, requireds, or libraries
+            // make sure the code has resolved any class definitions, requires, or libraries
             code->install(this);
             // set our starting code position (and the instruction used for error reporting)
             next = code->getFirstInstruction();
@@ -521,7 +524,7 @@ RexxObject* RexxActivation::run(RexxObject *_receiver, RexxString *name, RexxObj
     else
     {
         // if we could not keep the guard lock when we were spun off, then
-        // we need to reaquire (and potentially wait) for the lock now.
+        // we need to reacquire (and potentially wait) for the lock now.
         if (settings.hasTransferFailed())
         {
             settings.objectVariables->reserve(activity);
@@ -595,13 +598,13 @@ RexxObject* RexxActivation::run(RexxObject *_receiver, RexxString *name, RexxObj
                 // the time stamp is no longer current
                 settings.timeStamp.valid = false;
 
-                // do we need to check clause_boundary stuff?  Go do those
+                // do we need to check clauseBoundary stuff?  Go do those
                 // checks.
                 if (clauseBoundary)
                 {
                     processClauseBoundary();
                 }
-                // get our next instrucion and loop around
+                // get our next instruction and loop around
                 nextInst = next;
             }
 
@@ -898,39 +901,42 @@ void RexxActivation::setTrace(const TraceSetting &source)
     settings.setTraceSuppressed(false);
     settings.traceSkip = 0;
 
+    bool debug = settings.packageSettings.traceSettings.isDebug();
+
+    // if this is a nop request like "trace ??" our settings remain unchanged.
+    if (source.isNoSetting())
+    {
+        ; // no change
+    }
+    // if this is a trace off request we unconditionally set trace off
+    // no debug is allowed for trace off
+    else if (source.isTraceOff())
+    {
+        settings.packageSettings.traceSettings.setTraceOff();
+    }
     // this might just be a debug toggle request.  All other trace
     // settings remain the same, but we flip the debug state to the
     // other mode.
-    if (source.isDebugToggle())
+    else if (source.isDebugToggle())
     {
-        // just flip the debug state
-        settings.packageSettings.traceSettings.toggleDebug();
-        // if no longer in debug mode, we need to reset the prompt issued flag
-        if (!settings.packageSettings.traceSettings.isDebug())
+        // except for trace off, we flip the debug state
+        // no debug is allowed for trace off
+        if (!settings.packageSettings.traceSettings.isTraceOff())
         {
-            // flipping out of debug mode.  Reissue the debug prompt when
-            // turned back on again
-            settings.setDebugPromptIssued(false);
-        }
-    }
-    // are we in debug mode already?  A trace setting with no "?" maintains the
-    // debug setting, unless it is Trace Off
-    else if (settings.packageSettings.traceSettings.isDebug())
-    {
-        // merge the flag settings
-        settings.packageSettings.traceSettings.merge(source);
-        // flipped out of debug mode.  Reissue the debug prompt when
-        // turned back on again
-        if (!settings.packageSettings.traceSettings.isDebug())
-        {
-            settings.setDebugPromptIssued(false);
+            settings.packageSettings.traceSettings.toggleDebug();
         }
     }
     else
     {
         // set the new flags
         settings.packageSettings.traceSettings.set(source);
+    }
 
+    if (debug && !settings.packageSettings.traceSettings.isDebug())
+    {
+        // flipping out of debug mode.  Reissue the debug prompt when
+        // turned back on again
+        settings.setDebugPromptIssued(false);
     }
 
     // if tracing intermediates, turn on the special fast check flag
@@ -977,7 +983,7 @@ void RexxActivation::returnFrom(RexxObject *resultObj)
     {
         reportException(Error_Execution_reply_return);
     }
-    // cause this level to terminate terminate the execution loop and shut down
+    // cause this level to terminate the execution loop and shut down
     stopExecution(RETURNED);
     // if this is an interpret, we really need to terminate the parent activation
     if (isInterpret())
@@ -1232,8 +1238,8 @@ void RexxActivation::autoExpose(RexxVariableBase **variables, size_t count)
 RexxObject* RexxActivation::forward(RexxObject  *target, RexxString  *message,
                                     RexxClass *superClass, RexxObject **arguments, size_t argcount, bool continuing)
 {
-    // all pieces that are a note specified on the FORWARD will use the
-    // contgext values.
+    // all pieces that are not specified on the FORWARD will use the
+    // context values.
     if (target == OREF_NULL)
     {
         target = receiver;
@@ -1676,7 +1682,7 @@ void RexxActivation::raise(RexxString *condition, RexxObject *rc, RexxString *de
 
     Protected<DirectoryClass> p = conditionobj;
 
-    // are we propagating an an existing condition?
+    // are we propagating an existing condition?
     if (condition->strCompare(GlobalNames::PROPAGATE))
     {
         // get the original condition name
@@ -2660,6 +2666,7 @@ void RexxActivation::interpret(RexxString *codestring)
     ProtectedObject r;
     // run this compiled code on the new activation
     newActivation->run(OREF_NULL, OREF_NULL, argList, argCount, OREF_NULL, r);
+
 }
 
 
@@ -3221,7 +3228,7 @@ RexxObject * RexxActivation::internalCallTrap(RexxString *name, RexxInstruction 
 void RexxActivation::guardWait()
 {
     // we need to wait without locking the variables.  If we
-    // held the lock before the wait, we reaquire it after we wake up.
+    // held the lock before the wait, we reacquire it after we wake up.
     GuardStatus initial_state = objectScope;
 
     if (objectScope == SCOPE_RESERVED)
@@ -3266,7 +3273,7 @@ RexxDateTime RexxActivation::getTime()
         // IMPORTANT:  If a time call resets the elapsed time clock, we don't
         // clear the value out.  The time needs to stay valid until the clause is
         // complete.  The time stamp value that needs to be used for the next
-        // elapsed time call is the timstamp that was valid at the point of the
+        // elapsed time call is the timestamp that was valid at the point of the
         // last call, which is our current old invalid one.  So, we need to grab
         // that value and set the elapsed time start point, then clear the flag
         // so that it will remain current.
@@ -3378,7 +3385,7 @@ RexxInteger * RexxActivation::random(RexxInteger *randmin, RexxInteger *randmax,
     if (randmin != OREF_NULL)
     {
         // no maximum value specified and no seed specified,
-        // then the minimum is actually the max value value
+        // then the minimum is actually the max value
         if ((randmax == OREF_NULL) && (randseed == OREF_NULL))
         {
             maximum = randmin->getValue();

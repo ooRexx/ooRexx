@@ -206,7 +206,7 @@ void RexxInstructionRaise::execute(RexxActivation *context, ExpressionStack *sta
     if (description != OREF_NULL)
     {
         _description = (RexxString *)description->evaluate(context, stack);
-        context->traceKeywordResult(GlobalNames::DESCRIPTION, rc);
+        context->traceKeywordResult(GlobalNames::DESCRIPTION, _description);
     }
 
     // is this the ARRAY form of passing information?

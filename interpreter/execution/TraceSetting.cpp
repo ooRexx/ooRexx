@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2023 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -136,10 +136,10 @@ bool TraceSetting::parseTraceSetting(RexxString *value, char &badOption)
 
     size_t length = value->getLength();
 
-    // null string?  This just turns tracing off.
+    // null string?  This just sets tracing to default.
     if (length == 0)
     {
-        setTraceOff();
+        setTraceNormal();
         return true;
     }
 
@@ -208,18 +208,18 @@ bool TraceSetting::parseTraceSetting(RexxString *value, char &badOption)
 
             // unknown trace setting
             default:
-                // each context handles it's own error reporting, so give back the
+                // each context handles its own error reporting, so give back the
                 // information needed for the message.
                 badOption = value->getChar(pos);
                 return false;
                 break;
         }
         // we break out of the loop if we get here.  Situations that
-        // need additional parsing do a continute.
+        // need additional parsing do a continue.
         break;
     }
 
-    // we need to somehow set the debug setting.  If there is not other
+    // we need to somehow set the debug setting.  If there is no other
     // trace setting, this is a debug toggle.  Otherwise, turn on the debug flag in
     // the setting.
     if (turnDebugOn)
