@@ -227,7 +227,7 @@ ERROR_MESSAGE Message_table[] = {      /* table of major and minor errors   */
     MESSAGE(Error_Invalid_subkeyword_method, "Unknown keyword on ::METHOD directive; found \"&1\".")
     MESSAGE(Error_Invalid_subkeyword_routine, "Unknown keyword on ::ROUTINE directive; found \"&1\".")
     MESSAGE(Error_Invalid_subkeyword_requires, "Unknown keyword on ::REQUIRES directive; found \"&1\".")
-    MESSAGE(Error_Invalid_subkeyword_use, "USE must be followed by the keyword ARG or LOCAL; found \"&1\".")
+    MESSAGE(Error_Invalid_subkeyword_use, "USE must be followed by the keyword ARG, LOCAL or STRICT; found \"&1\".")
     MESSAGE(Error_Invalid_subkeyword_raise, "RAISE must be followed by one of the keywords ERROR, FAILURE, HALT, LOSTDIGITS, NOMETHOD, NOSTRING, NOTREADY, NOVALUE, PROPAGATE, SYNTAX, or USER; found \"&1\".")
     MESSAGE(Error_Invalid_subkeyword_raiseoption, "Unknown keyword on RAISE instruction; found \"&1\".")
     MESSAGE(Error_Invalid_subkeyword_description, "Duplicate DESCRIPTION keyword found.")

@@ -1189,7 +1189,7 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>905</term>
 <listitem>
-<para>USE must be followed by the keyword ARG or LOCAL; found "<emphasis role="italic">word</emphasis>".</para>
+<para>USE must be followed by the keyword ARG, LOCAL or STRICT; found "<emphasis role="italic">word</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
