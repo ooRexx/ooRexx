@@ -205,7 +205,8 @@ void RexxInstructionMessage::execute(RexxActivation *context, ExpressionStack *s
     // if we have a result, trace it and assign it to the variable result.
     if (!result.isNull())
     {
-        context->traceResult(result);
+        // trace the message name and result
+        context->traceMessage(name, result);
         context->setLocalVariable(GlobalNames::RESULT, VARIABLE_RESULT, result);
     }
     // for no result, we drop the RESULT variable
