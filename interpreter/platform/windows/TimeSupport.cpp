@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2023 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -396,7 +396,6 @@ RexxMethod0(int, ticker_createTimer)
 
     // store this in state variables
     context->SetObjectVariable("EVENTSEMHANDLE", context->NewPointer(SemHandle));
-    context->SetObjectVariable("TIMERSTARTED", context->True());
 
     return 0;
 }

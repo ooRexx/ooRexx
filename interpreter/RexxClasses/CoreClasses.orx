@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2023 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -1618,29 +1618,24 @@ return left~caselessCompareTo(right, start, length)
 /* ******************************** */
 /*    T I C K E R      C L A S S    */
 /* ******************************** */
- /**************************************************************************/
- /* The Ticker class provides timer that will trigger an event over an     */
- /* interval.                                                              */
- /**************************************************************************/
 
-::CLASS 'Ticker' SUBCLASS object Public
+-- Ticker sends notification messages to a notification target each time
+-- the trigger interval expires and when the trigger is cancelled.
+::class Ticker public
 
 -- initialize a ticker object
 ::METHOD init
- expose timer canceled target attachment timerStarted eventSemHandle interval
- timer = 0
+ expose canceled target attachment eventSemHandle interval
  eventSemHandle = 0
- timerStarted = 0
  canceled = .false
  use strict arg interval, target, attachment = .nil
 
- -- this must be an object that implements the alarm notification interface
- if \target~isA(.AlarmNotification) then
-   raise syntax 88.914 array ("target", .AlarmNotification~id)
+ -- the notification target must implement the AlarmNotification interface
+ .Validate~classType("target", target, .AlarmNotification)
 
  numeric digits 18                     -- we'll be doing math with large numbers potentially
  if interval~isA(.TimeSpan) then nop   -- already in timespan form?  everything is set up
- -- just a seconds specification convert to a timespace
+ -- just a seconds specification?  convert to a Timespan
  else if datatype(interval, 'N') then do
    interval = .timespan~fromSeconds(interval)
  end
@@ -1656,9 +1651,9 @@ return left~caselessCompareTo(right, start, length)
  alarmtime = interval~totalMicroseconds - .TimeSpan~fromDays(numdays)~totalMicroseconds
 
  -- the remainder needs to be in milliseconds
- alarmtime %= 1000
+ alarmtime = (alarmtime + 500) % 1000
 
- self~!createTimer
+ self~!createTimer -- sets timerStarted to .true and the eventSemHandle pointer
 
  -- release the guard lock and go concurrent
  guard off
@@ -1677,8 +1672,6 @@ return left~caselessCompareTo(right, start, length)
     end
     guard off -- allow cancel() to eventually run
  end
- -- indicate this is cleared
- eventSemHandle = 0;
  exit
 
 -- read-only access to the attachment object.
@@ -1688,6 +1681,7 @@ return left~caselessCompareTo(right, start, length)
 ::attribute canceled GET UNGUARDED
 ::method cancelled UNGUARDED
   expose canceled
+  use strict arg
   return canceled
 
 ::METHOD !createTimer PRIVATE unguarded EXTERNAL 'LIBRARY REXX ticker_createTimer'
@@ -1696,243 +1690,21 @@ return left~caselessCompareTo(right, start, length)
 
 -- cancel a ticker
 ::METHOD cancel unguarded
- expose canceled eventSemHandle timerStarted target
+ expose canceled eventSemHandle target
  use strict arg
 
- -- wait until the timer is actually set
- guard off when timerStarted
+ if eventSemHandle == 0 then
+   return
 
  -- indicate we're canceled and stop the timer
  canceled = .true
  self~!stopTimer(eventSemHandle)
- -- notify the alarm target
+ -- indicate this is cleared
+ eventSemHandle = 0
+ -- notify the Ticker target
  target~cancel(self)
 
 
-
-
-/*
-   name:    CircularQueue.rex
-   purpose: allow to use a circular queue (buffer) of predefined size; if queue is full
-            new entries overwrite existing ones in a circular fashion; also allows for
-            resizing the circular queue at runtime
-
-   documentation:
-
-   The CircularQueue class
-   =======================
-
-      This is a collection class which allows for storing objects in a circular queue
-      of a predefined size. Once the end of the queue has been reached, new item
-      objects are inserted from the beginning, replacing earlier entries.
-
-      The collected objects can be processed in FIFO (first in, first out) or in a
-      stack-like LIFO (last in, first out) order.
-
-
-
-   OF (Class Method)
-   =================
-
-          +-,----+
-          v      |
-   >>-OF(---item-+-)--------------------------<<
-
-   Returns a newly created CircularQueue object containing the specified item
-   objects in the order specified. The number of listed items determines the
-   size of the circular queue.
-
-
-   INIT
-   ====
-
-   >>-INIT(size)----------------------------------<<
-
-   Constructor method invoked by the NEW method, which determines the size of
-   the circular queue.
-
-
-   MAKEARRAY
-   =========
-                 +-Fifo-----+
-   >>-MAKEARRAY(-+----------+-)----------------------<<
-                 +-,-order--+
-
-   Returns a single-index array containing the items of the circular queue in the
-   specified order.
-
-   The following orders can be used. (Only the capitalized letter is needed; all
-   characters following it are ignored.)
-
-   Fifo
-      "first-in, first-out", default
-
-   Lifo
-      stacklike, "last-in, first-out"
-
-
-   PUSH
-   ====
-
-   >>-PUSH(item)----------------------------------<<
-
-   Makes the object item a member item of the circular queue, inserting the item
-   object in front of the first item in the queue. The pushed item object will be
-   the new first item in the circular queue.
-
-   If the circular queue is full, than the last item stored in the circular queue
-   will be deleted, before the insertion takes place. In this case the deleted item
-   will be returned, otherwise .nil.
-
-
-
-   QUEUE
-   =====
-
-   >>-QUEUE(item)---------------------------------<<
-
-   Makes the object item a member item of the circular queue, inserting the item
-   at the end of the circular queue.
-
-   If the circular queue is full, than the first item will be deleted, before the
-   insertion takes place. In this case the deleted item will be returned, otherwise .nil.
-
-
-
-   RESIZE
-   ======
-
-                      +-Fifo-----+
-   >>-RESIZE(-newSize-+----------+-)----------------------<<
-                      +-,-order--+
-
-   Resizes the circular queue object to be able to contain "newSize" items.
-   If the previous size was larger than "newSize", than the now superfluous
-   items are removed in the specified order.
-
-   The following orders can be used. (Only the capitalized letter is needed; all
-   characters following it are ignored.)
-
-   Fifo
-      "first-in, first-out", default: keeps the newest entries
-
-   Lifo
-      stacklike, "last-in, first-out": keeps the oldest entries
-
-   Note: resizing with a value of "0" effectively removes all items from the
-   circular queue.
-
-
-   SIZE
-   =====
-
-   >>-SIZE----------------------------------------<<
-
-   Returns the maximum number of objects that can be stored in the circular queue.
-
-
-
-   SUPPLIER
-   =========
-                +-Fifo-----+
-   >>-SUPPLIER(-+----------+-)----------------------<<
-                +-,-order--+
-
-   Returns a supplier object for the collection. After you have obtained a supplier,
-   you can send it messages (see The Supplier Class) to enumerate all the items
-   that were in the circular queue at the time of the supplier's creation.
-
-   The supplier will enumerate the items in the specified order. (Only the capitalized
-   letter is needed; all characters following it are ignored.)
-
-   Fifo
-      "first-in, first-out", default
-
-   Lifo
-      stacklike, "last-in, first-out"
-
-
-   STRING
-   ======
-              +-----","---+  +-Fifo----+
-   >>-STRING(-+-----------+--+---------+-)---------<<
-              +-delimiter-+  +-,-order-+
-
-   Returns a string object that concatenates the string values of the collected
-   item objects, using the delimiter string to delimit them, in the specified order.
-
-   If the delimiter string argument is omitted the comma character is used as the
-   default delimiter string.
-
-   The following orders can be used. (Only the capitalized letter is needed;
-   all characters following it are ignored.)
-
-   Fifo
-      "first-in, first-out", default
-
-   Lifo
-      stacklike, "last-in, first-out"
-
-   --------------- CircularQueue example --------------
-
-      -- create a circular buffer with five items
-   u=.circularQueue~of("a", "b", "c", "d", "e")
-   say "content: ["u"]," "content (LIFO): ["u~string("->","L")"]"
-   say
-
-   u~resize(4, "FIFO")     -- resize fifo-style (keep newest)
-   say "after resizing to 4 items in FIFO style (keeping the newest):"
-   say "content: ["u"]," "content (LIFO): ["u~string("->","L")"]"
-   say
-
-   u~resize(2, "LILO")     -- resize lifo-style (keep oldest)
-   say "after resizing to 2 items in LIFO style (keeping the oldest):"
-   say "content: ["u"]," "content (LIFO): ["u~string("->","L")"]"
-   say
-
-   u~resize(0)             -- resize lifo-style (keep oldest)
-   say "after resizing to 0 items, thereby deleting all items:"
-   say "content: ["u"]," "content (LIFO): ["u~string("->","L")"]"
-   say
-
-   u~resize(2)             -- resize lifo-style (keep oldest)
-   say "after resizing to 2, size="u~size "and items="u~items
-   u~~queue('x')~~queue('y')~~queue('z')
-   say "after queuing the three items 'x', 'y', 'z':"
-   say "content: ["u"]," "content (LIFO): ["u~string("->","L")"]"
-   say
-
-   u~~push('1')~~push('2')~~push('3')
-   say "after pushing the three items '1', '2', '3':"
-   say "content: ["u"]," "content (LIFO): ["u~string("->","L")"]"
-   say
-
-
-/*
-Output:
-
-   content: [a,b,c,d,e], content (LIFO): [e->d->c->b->a]
-
-   after resizing to 4 items in FIFO style (keeping the newest):
-   content: [b,c,d,e], content (LIFO): [e->d->c->b]
-
-   after resizing to 2 items in LIFO style (keeping the oldest):
-   content: [b,c], content (LIFO): [c->b]
-
-   after resizing to 0 items, thereby deleting all items:
-   content: [], content (LIFO): []
-
-   after resizing to 2, size=2 and items=0
-   after queuing the three items 'x', 'y', 'z':
-   content: [y,z], content (LIFO): [z->y]
-
-   after pushing the three items '1', '2', '3':
-   content: [3,2], content (LIFO): [2->3]
-
-*/
-
-
-*/
 
    -- circular buffer (round-robin queue) of a defined size
 ::CLASS 'CircularQueue' subclass queue public
