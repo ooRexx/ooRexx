@@ -2363,6 +2363,9 @@ add_custom_target(portable
   COMMENT "Creating portable Rexx Home ENVironment zip archives ...")
 # <-- portable Rexx Home ENVironment archive <--
 
+# Create a source package
+set(CPACK_SOURCE_GENERATOR "TGZ")
+set(CPACK_SOURCE_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL}-${CPACK_PACKAGE_RELEASE}")
 
 # Do not move the following statement!! It must be the last statement in this file.
 include(CPack)
