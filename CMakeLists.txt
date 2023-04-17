@@ -2003,11 +2003,11 @@ if (DOC_SOURCE_DIR)
 
       # Name of the installer file we're going to create
       if (DEFINED OS_DIST)
-         set(INSTALLER_FILE "ooRexx-${ORX_VERSION_NSIS}.${OS_DIST}.${NSIS_CPU}.exe")
-         set(INSTALLER_SCRIPT "ooRexx-${ORX_VERSION_NSIS}.${OS_DIST}.${NSIS_CPU}.nsi")
+         set(INSTALLER_FILE "${CPACK_PACKAGE_NAME}-${ORX_VERSION_NSIS}.${OS_DIST}.${NSIS_CPU}.exe")
+         set(INSTALLER_SCRIPT "${CPACK_PACKAGE_NAME}-${ORX_VERSION_NSIS}.${OS_DIST}.${NSIS_CPU}.nsi")
       else ()
-         set(INSTALLER_FILE "ooRexx-${ORX_VERSION_NSIS}.windows.${NSIS_CPU}.exe")
-         set(INSTALLER_SCRIPT "ooRexx-${ORX_VERSION_NSIS}.windows.${NSIS_CPU}.nsi")
+         set(INSTALLER_FILE "${CPACK_PACKAGE_NAME}-${ORX_VERSION_NSIS}.windows.${NSIS_CPU}.exe")
+         set(INSTALLER_SCRIPT "${CPACK_PACKAGE_NAME}-${ORX_VERSION_NSIS}.windows.${NSIS_CPU}.nsi")
       endif ()
 
       # create an installer file from the template
