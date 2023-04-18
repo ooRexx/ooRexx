@@ -2213,7 +2213,7 @@ if (BUILD_DEB)
      ")
    set(CPACK_GENERATOR DEB)
    # The package name MUST be in lower case.
-   set(CPACK_DEBIAN_PACKAGE_NAME oorexx)
+   set(CPACK_DEBIAN_PACKAGE_NAME ${CPACK_PACKAGE_NAME})
    if (DEFINED PROD)
       set(CPACK_PACKAGE_RELEASE 1)
    else ()
@@ -2236,7 +2236,7 @@ endif ()
 # Build for FREEBSD
 if (BUILD_FREEBSD)
    set(CPACK_GENERATOR FREEBSD)
-   set(CPACK_FREEBSD_PACKAGE_NAME ooRexx)
+   set(CPACK_FREEBSD_PACKAGE_NAME ${CPACK_PACKAGE_NAME})
    if (DEFINED PROD)
       set(CPACK_PACKAGE_RELEASE 1)
    else ()
@@ -2270,8 +2270,8 @@ if (BUILD_DMG)
 # initialised from platform/unix/macos/install/build_macOS_dmg.sh.in
 # using settings from here
 
-# Always 64 bit for macOS
-   set(OS_DIST "macOS")
+# Always 64 bit for macOS; as of rev 12671 it should be all lowercase
+# This should be set in cmake commandline instead set(OS_DIST "macos")
 
 # This is copied from DEB & RPM Installers
    if (DEFINED PROD)
@@ -2286,7 +2286,6 @@ if (BUILD_DMG)
    else ()
       set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL}-${CPACK_PACKAGE_RELEASE}.${CMAKE_SYSTEM_PROCESSOR}")
    endif ()
-
 
    message(STATUS "ORX_BLD_LVL ${ORX_BLD_LVL}")
    message(STATUS "CPACK_PACKAGE_RELEASE ${CPACK_PACKAGE_RELEASE}")
