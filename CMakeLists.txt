@@ -2264,14 +2264,17 @@ For more information on ooRexx, visit https://www.oorexx.org/
 For more information on Rexx, visit https://www.rexxla.org/")
 endif ()
 
-# Build for Apple macOS
+# Build for Apple macOS, fallback when OS not defined
+if (NOT DEFINED OS_DIST AND APPLE)
+   set(OS_DIST "macos")
+endif ()
+
 if (BUILD_DMG)
 # The installer is built in a post-process script build_macOS_dmg.sh.in
 # initialised from platform/unix/macos/install/build_macOS_dmg.sh.in
 # using settings from here
 
 # Always 64 bit for macOS; as of rev 12671 it should be all lowercase
-# This should be set in cmake commandline instead set(OS_DIST "macos")
 
 # This is copied from DEB & RPM Installers
    if (DEFINED PROD)
@@ -2284,7 +2287,7 @@ if (BUILD_DMG)
    if( APPLE AND BUILD_OSX_UNIVERSAL_BINARIES )
       set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL}-${CPACK_PACKAGE_RELEASE}.${OS_DIST}.arm64.x86_64")
    else ()
-      set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL}-${CPACK_PACKAGE_RELEASE}.${CMAKE_SYSTEM_PROCESSOR}")
+      set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL}-${CPACK_PACKAGE_RELEASE}.${OS_DIST}.${CMAKE_SYSTEM_PROCESSOR}")
    endif ()
 
    message(STATUS "ORX_BLD_LVL ${ORX_BLD_LVL}")
