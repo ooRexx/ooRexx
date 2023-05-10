@@ -1976,7 +1976,8 @@ if (DOC_SOURCE_DIR)
    install_doc_shortcut("ooRexx APIs (Application Programming Interfaces)" "rexxapi.pdf")
    install_doc_shortcut("ooRexx Programming Guide" "rexxpg.pdf")
    install_doc_shortcut("ooRexx Mathematical Functions Reference" "rxmath.pdf")
-   install_doc_shortcut("ooRexx rxFTP Class Reference" "rxftp.pdf")
+   install_doc_shortcut("ooRexx TCP/IP Socket Functions Reference" "rxsock.pdf")
+   install_doc_shortcut("ooRexx RxFtp Class Library Reference" "rxftp.pdf")
    install_doc_shortcut("ooDialog Reference" "oodialog.pdf")
    install_doc_shortcut("ooDialog Release Notes" "ooDialog_ReleaseNotes.txt")
    install_doc_shortcut("ooDialog User Guide" "oodguide.pdf")
@@ -2059,7 +2060,7 @@ if (DOC_SOURCE_DIR)
          ${NSIS_INSTALLER_DIR}/orange-uninstall.bmp)
 
       # Target for building an NSIS installation.  This will copy all of the install
-      # files into a directory structure that mimics how.  We do this in 4 stagesto install each of
+      # files into a directory structure that mimics how.  We do this in 4 stages to install each of
       # the components into a different directory, since them might install files into common directories
       # at install time.
       add_custom_target(nsis_install_dirs
