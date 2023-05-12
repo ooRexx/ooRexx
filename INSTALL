@@ -30,6 +30,9 @@ installation is likely to produce unpredictable results.
 Windows
 -------
 
+ooRexx has been tested and is supported on Windows 7, 8, 8.1, 10 and 11.
+Windows Vista and any version prior to that might work, but is not supported. 
+
 The Windows installer is a .exe file, a NSIS (Nullsoft Scriptable Install
 System) installer.  NSIS has a similar look and feel to the Windows .msi
 installer.
@@ -49,15 +52,16 @@ Using a generically named release as an example, to install without
 prompting into the "D:\Local Interpreters" directory, the following command
 line could be used:
 
-E:\downloads\ooRexx-5.0.0-12188.windows.x86_64.exe /S /D=D:\Local Interpreters\ooRexx
+E:\downloads\ooRexx-5.0.0-12583.windows.x86_64.exe /S /D=D:\Local Interpreters\ooRexx
 
 An existing version of ooRexx must be uninstalled before installation.
 Starting the installer when a previous version of ooRexx is installed will
 automatically run the uninstaller first.  This is true even when the
 installer is started from a command prompt using the /S option.
 
-Notes for Windows Versions After XP
------------------------------------
+Notes for Windows Versions prior to Windows 7
+---------------------------------------------
+
 Windows Vista and later versions have a feature known as User Account
 Control (UAC.)  ooRexx is fully supported on these versions of Windows,
 however UAC places some restrictions on the ooRexx installer.  The same
@@ -101,69 +105,87 @@ Rexx programs or to the "Users" group.  This setting can be accessed through
 Administrative Tools -> Local Security Policy -> User Rights Assignment->
 Create global objects
 
+
 Linux
 -----
 
 Both .rpm (Redhat Package Manager) and .deb (Debian) install packages are
 available.  Both Redhat and SuSE Linux generally use .rpm files, as do many
-other Linux distributions.  Debian based systems (Debian, Ubuntu, Kubuntu,
-etc.,) use .deb files.
+other Linux distributions. .rpm installers for CentOS, Fedora and
+OpenSuse are provided. Debian based systems (Debian, Ubuntu, Kubuntu,
+etc.,) use .deb files. .deb installers for Debian, Ubuntu and Linux
+Mint are provided.
 
-As for all versions of ooRexx, any previous installations must be completely
-uninstalled first.  The commands to do a basic install are as follows:
-
-Debian:
-
-dpkg -P ooRexx
-dpkg -i <packageFile>
-
-RPM:
-
-rpm -e ooRexx
-rpm -iv <packageFile>
-
-System using the systemd daemon:
+For systems using the systemd daemon the following may be needed at the end:
 
 sudo systemctl --system daemon-reload
 
-Using a generically named packages as an example. They must be executed as
-root or using sudo.  If there is no previous installation of ooRexx, skip
-the first command, (dpkg -P or rpm -e) they are the commands to uninstall a
-previous version.
+As for all versions of ooRexx, any previous installations should be completely
+uninstalled first. In the following examples elevated privileges are implied,
+i.e. you may need to use sudo. The commands to do a basic install are as follows:
 
-tom@Loon:~/downloads$ dpkg -P ooRexx
-tom@Loon:~/downloads$ dpkg -i ooRexx-5.0.0-12189.ubuntu1604.x86_64.deb
-# if systemd is installed:
-tom@Loon:~/downloads$ sudo systemctl --system daemon-reload
+Debian / Ubuntu / Linux Mint:
 
-Raven:/home/tom # rpm -e ooRexx
-Raven:/home/tom # rpm -iv oorexx/5.0.0beta/ooRexx-5.0.0-12189.centos7.x86_64.rpm
-# if systemd is installed:
-Raven:/home/tom # sudo systemctl --system daemon-reload
+dpkg --purge oorexx
+dpkg --install <packageFile>
+dpkg --status oorexx
+
+alternatively
+
+apt purge oorexx
+apt install ./<packageFile>
+apt show oorexx
+
+(./ indicates that the package file resides in the current directory)
+
+CentOS / Fedora / OpenSuse
+
+rpm --erase --verbose oorexx
+rpm --install --verbose <packageFile>
+rpm --query --info oorexx
+
+alternatively CentOS / Fedora
+
+dnf --verbose remove oorexx
+dnf --verbose install <packageFile>
+dnf info oorexx
+
+alternatively OpenSuse
+
+zypper --verbose remove oorexx
+zypper --verbose install <packageFile>
+zypper info oorexx
+
+
+BSD
+---
+ooRexx 5.0.0 has been built and tested on FreeBSD, OpenBSD and NetBSD.
+There is one installer available for FreeBSD; for OpenBSD and NetBSD
+look at the portable installer below: 
+
+pkg remove oorexx
+pkg install <packageFile>
+pkg info oorexx
 
 Solaris
-------
+-------
 
-There are .pkg install packages for several versions of Solaris on both
-Intel and Sparc architectures. The commands to install a .pkg file are as
-follows:
-
-%
+Currently there is no .pkg install package for Solaris, please use the
+portable installer (see below)
 
 Mac OSX
 -------
 
-There is a .dmg install package for Intel based macOS systems.
+There is a .dmg installation package for Intel and arm based (M1/M2 etc)
+macOS systems. The commands to install a .dmg file are as follows:
 
-The commands to install a .dmg file are as follows:
-
-1. Copy the ooRexx5 image (.dmg file) to the desktop or to a folder. Image name
-   will show version and revision such as ooRexx-5.0.0-12149.macOS.x86_64
+1. Copy the ooRexx5 image (.dmg file) to the desktop or to a folder.
+   Image name will show version and revision
 2. Mount the image by double clicking on it
 3. Drag ooRexx5 to the Applications icon
 For Mojave and before:
 4a. Add "export PATH=/Applications/ooRexx5/bin:$PATH" to .bash_profile
-For Catalina:
+For Catalina and later:
 4b. Add "export PATH=/Applications/ooRexx5/bin:$PATH" to .zshrc
 
 Confirm that the installation works by entering one of:
@@ -182,7 +204,7 @@ home folder, to see it press shift command . (dot or period character),
 all 3 at the same time.
 
 If you do not have .bash_profile enter touch .bash_profile in a terminal
-window to create it. Same for .zshrc if you are using Catalina.
+window to create it. Same for .zshrc if you are using Catalina or higher.
 
 PLEASE ALSO NOTE:
 ooRexx 5 can be installed anywhere, without any elevated rights, i.e. it is
@@ -194,32 +216,42 @@ or .zshrc should be amended correspondingly.
 AIX
 ---
 
-There is a LPP install package for AIX.
+There is currently no support for AIX.
 
-This LPP will add an SRC subsystem named rxapi. The subsystem is started
-automatically after the installation and via an entry in the /etc/inittab
-during boot.
 
-Copy the ooRexx 32 bit _or_ 64 bit installation package to an empty
-directory and then execute the following commands:
+Portable Installer
+------------------
 
-To install the 32 bit version:
+New as of ooRexx 5.0.0 is the possibility to use a "portable" installer
+that is available for almost all platforms. On sourceforge they are stored
+in the files section in a separate subfolder /portable. There are two
+flavors:
+a "release.zip" version containing the "whole shebang"
+a "release-runtime.zip" containing just a runtime version or ooRexx
+The steps are basically the same for all platforms, here for OpenIndiana
+and ooRexx 5.1.0:
 
-root@box # inutoc ./
-root@box # installp -a -c -X -v -Y -V2 -g -d./ ooRexx.32.rte 4.1.0.1
+1. Find and download the relevant zip file to the users home directory
 
-To uninstall the 32 bit version:
+2. Unpack the content
 
-root@box # installp -u ooRexx.32.rte
+   unzip oorexx-5.0.0-12583.openindiana2021.i386-portable-release.zip
 
-To install the 64 bit version:
+3. Move into the unzipped directory and run
+   cd oorexx-5.0.0-12583.openindiana2021.i386-portable-release
+   ./setupoorexx.sh
 
-root@box # inutoc ./
-root@box # installp -a -c -X -v -Y -V2 -g -d./ ooRexx.64.rte 4.1.0.1
+4. Thereafter you can run ooRexx using
 
-To uninstall the 64 bit version:
+   ./rxenv.sh rexx <anyRexxProgram.rex>
 
-root@box # installp -u ooRexx.64.rte
+5. You can also make this change permanent for the current session using
+
+   source ./setenv2rxenv.sh
+
+   Thereafter you can run ooRexx using only
+
+   rexx <anyRexxProgram.rex>
 
 
 Build and Install From a Release Source Archive
@@ -239,7 +271,7 @@ Windows
 The "windows-build.txt" file included in the archive has the details for
 building and installing on a Windows system.
 
-Unix-like Systems (Linux, Solaris, macOS, AIX, etc.)
+Unix-like Systems (Linux, Solaris, BSD, macOS, AIX, etc.)
 ---------------------------------------------
 
 The "unix-like-build.txt" file included in the archive has the details for
@@ -258,7 +290,7 @@ available at:
   https://subversion.apache.org/
 
 Once the Subversion client is installed, the command to checkout is as
-follows, using the 5.0.0 trunk as an example:
+follows, using the current trunk as an example:
 
 svn co svn://svn.code.sf.net/p/oorexx/code-0/main/trunk oorexxSVN
 
@@ -266,10 +298,10 @@ For a specific revision:
 svn co svn://svn.code.sf.net/p/oorexx/code-0/main/trunk@12000 oorexxSVN
 
 You can also check out the release code for any prior version of ooRexx.
-Using the 4.2.0 relase as an example, use the proper release number for 
+Using the 5.0.0 relase as an example, use the proper release number for 
 other versions:
 
-svn co svn://svn.code.sf.net/p/oorexx/code-0/main/releases/4.2.0/trunk OldSVN
+svn co svn://svn.code.sf.net/p/oorexx/code-0/main/releases/5.0.0 oorexxSVN
 
 In this command, the last word of the command is the directory into which
 the source tree will be checked out.  The name of the directory can be any
@@ -282,4 +314,3 @@ When the source tree is checked out, it will include the "windows-build.txt"
 and the "unix-like-build.txt" files.  Pick the file appropriate for the
 platform on which the build is to take place, and follow the directions in
 the file.
-%
