@@ -443,7 +443,7 @@ set (PACKAGE ${PROJECT_NAME})
 set (PACKAGE_BUGREPORT "https://sourceforge.net/projects/oorexx/")
 set (PACKAGE_NAME ${PROJECT_NAME})
 set (PACKAGE_STRING ${PROJECT_NAME})
-set (PACKAGE_TARNAME "ooRexx.tar")
+set (PACKAGE_TARNAME "oorexx.tar")
 set (PACKAGE_URL "https://www.oorexx.org/")
 set (PACKAGE_VERSION ${ORX_VER_STR})
 set (VERSION ${ORX_VER_STR})
@@ -452,7 +452,6 @@ set (STDC_HEADERS 1)
 
 # Configure files config.h
 configure_file(config.h.in.cmake ${PROJECT_BINARY_DIR}/config.h)
-
 
 
 #/*----------------------------------------------------------------------------*/
@@ -1869,7 +1868,7 @@ if (DOC_SOURCE_DIR)
    set(NSIS_INSTALL_COMPONENTS Core Docs DevLib Samples)
 
 
-   # Add addititional Windows-only install files
+   # Add additional Windows-only install files
    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_platform_dir}/rexx.ico COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/CPLv1.0.txt COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
 
@@ -2164,7 +2163,9 @@ if (BUILD_RPM)
       set(CPACK_PACKAGE_RELEASE ${ORX_BLD_LVL})
    endif ()
 
-   set(CPACK_RPM_PACKAGE_VERSION ${ORX_VERSION})
+# changed from ORX_VERSION to ORX_VER_STR because ORX_VERSION is redefined for versioning
+# resulting in an incorrect version number here
+   set(CPACK_RPM_PACKAGE_VERSION ${ORX_VER_STR})
    set(CPACK_RPM_PACKAGE_RELEASE ${CPACK_PACKAGE_RELEASE})
    set(CPACK_RPM_PACKAGE_LICENSE "CPL")
    set(CPACK_RPM_PACKAGE_URL "https://www.oorexx.org/")
