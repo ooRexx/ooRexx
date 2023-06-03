@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2008-2021 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2008-2023 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -61,14 +61,15 @@ size_t REXXENTRY TestFunction(
 
 
 
-RexxMethod1(RexxObjectPtr,              // Return type
+RexxMethod2(RexxObjectPtr,              // Return type
             TestCreateQueue,            // Method name
-            OPTIONAL_CSTRING, qname)    // Queue name
+            OPTIONAL_CSTRING, qname,    // Queue name
+            OPTIONAL_size_t, qnameLen)  // Queue name length
 {
-    char newQueueName[MAX_QUEUE_NAME_LENGTH];
+    char newQueueName[MAX_QUEUE_NAME_LENGTH * 2]; // allow tests for names that are too long
     size_t flag;
 
-    RexxReturnCode rc = RexxCreateQueue(newQueueName, sizeof(newQueueName),
+    RexxReturnCode rc = RexxCreateQueue(newQueueName, argumentExists(2) ? qnameLen : sizeof(newQueueName),
                                         qname, &flag);
     context->SetObjectVariable("RETC", context->Int32ToObject(rc));
     context->SetObjectVariable("FLAG", context->StringSizeToObject(flag));

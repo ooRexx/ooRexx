@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2023 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -110,7 +110,7 @@ RexxReturnCode RexxEntry RexxCreateQueue(
             // must be at least big enough for the requested name
             if (strlen(userRequested) >= size)
             {
-                throw new ServiceException(MEMORY_ERROR, "Insufficient space for created queue name");
+                throw new ServiceException(BAD_STORAGE, "Insufficient space for created queue name");
             }
         }
         return lam->queueManager.createNamedQueue(userRequested, size, name, pdup);
