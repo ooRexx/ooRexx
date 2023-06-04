@@ -609,6 +609,9 @@ RexxString* LanguageParser::packBinaryLiteral(size_t start, size_t length)
     // scanning right-to-left makes it easier to identify correct whitespace positioning
     const char *inPointer = current + start + length - 1;
 
+    // update the current clause location in case there are any errors
+    clauseLocation = clause->getLocation();
+
     /* first scan is to check REXX rules for validity of grouping             */
     /* and to remove blanks                                                   */
 
@@ -627,8 +630,6 @@ RexxString* LanguageParser::packBinaryLiteral(size_t start, size_t length)
             // nibble (4 bit) boundaries.
             if (i == length)              // this is the test for the end
             {
-                // update the error information
-                clauseLocation = clause->getLocation();
                 syntaxError(Error_Invalid_hex_binblank, new_integer(i));
 
             }
