@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2023 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -225,7 +225,7 @@ void LanguageParser::scanComment()
             if (!moreLines())
             {
                 // record the ending position in our current clause
-                clause->setEnd(lineCount, lineOffset);
+                clause->setEnd(lineNumber, lineOffset);
                 // update the error information
                 clauseLocation = clause->getLocation();
                 syntaxError(Error_Unmatched_quote_comment, new_integer(startLine));
@@ -272,7 +272,7 @@ CharacterClass LanguageParser::locateToken(unsigned int &character, bool blanksS
     // default to having an invalid character
     character = INVALID_CHARACTER;
 
-    // no more lines?  indicate a we've hit the end of the file.
+    // no more lines?  indicate we've hit the end of the file.
     if (!moreLines())
     {
         return CLAUSE_EOF;
@@ -284,7 +284,7 @@ CharacterClass LanguageParser::locateToken(unsigned int &character, bool blanksS
         return CLAUSE_EOL;
     }
 
-    // ok, we will scan as long as we have line left.
+    // ok, we will scan as long as we have lines left.
     while (moreChars())
     {
         // next character from the line.
@@ -307,7 +307,7 @@ CharacterClass LanguageParser::locateToken(unsigned int &character, bool blanksS
         // continuation, but we also need to recognize that "--" is a line comment.
         else if (inch == ',' || inch == '-')
         {
-            // line comment?  Just truncate the line and and process as if
+            // line comment?  Just truncate the line and process as if
             // we ran out of characters and hit the end of the line.
             if (inch == '-' && followingChar() == '-')
             {
@@ -606,7 +606,7 @@ RexxString* LanguageParser::packBinaryLiteral(size_t start, size_t length)
     // our count of bit characters we find...we can calculate the result length from this
     int bitCount = 0;
     // a pointer for scanning the data
-    // scanning right-to-left makes it easier to identify correct whitepace positioning
+    // scanning right-to-left makes it easier to identify correct whitespace positioning
     const char *inPointer = current + start + length - 1;
 
     /* first scan is to check REXX rules for validity of grouping             */
@@ -770,7 +770,7 @@ RexxToken *LanguageParser::sourceNextToken(RexxToken *previous )
         SourceLocation location;
         // record a starting location.
         startLocation(location);
-        // record this as just a single characters by default
+        // record this as just a single character by default
         location.adjustEnd(1);
 
         // hit the end of the file while scanning for the next token?  Return nothing
@@ -792,11 +792,11 @@ RexxToken *LanguageParser::sourceNextToken(RexxToken *previous )
         // we have what should be a significant blank character
         else if (tokenClass == SIGNIFICANT_BLANK )
         {
-            // ok, this is possibly a significant blanks, so scan ahead to the
+            // ok, this is possibly a significant blank, so scan ahead to the
             // next real token, ignoring the possibility of additional blanks.
             tokenClass = locateToken(inch, false);
 
-            // in order for this blank to be truely significant, the next token
+            // in order for this blank to be truly significant, the next token
             // needs to be the start of a symbol, the start of a quoted literal,
             // or a paren or square bracket.
             if ((tokenClass == NORMAL_CHAR && isSymbolCharacter(inch)) ||
@@ -941,7 +941,7 @@ RexxToken *LanguageParser::sourceNextToken(RexxToken *previous )
                         // two slashes is a special operator
                         if (nextSpecial('/', location))
                         {
-                            // remainder operatior
+                            // remainder operator
                             CHECK_ASSIGNMENT(REMAINDER);
                         }
                         // normal division
@@ -1248,7 +1248,7 @@ RexxToken *LanguageParser::scanSymbol()
 
     // we're in a clean scan state now
     SymbolScanState state = EXP_START;
-    size_t eoffset = 0;                   // position of expoential sign for backing up.
+    size_t eoffset = 0;                   // position of exponential sign for backing up.
     size_t start = lineOffset;            // remember token start position
     int dotCount = 0;                     // no periods yet
 
@@ -1651,7 +1651,7 @@ RexxToken *LanguageParser::scanLiteral()
             // update the error information
             clauseLocation = clause->getLocation();
 
-            // we have different errors depending on the type of delimier
+            // we have different errors depending on the type of delimiter
             if (literalDelimiter == '\'')
             {
                 syntaxError(Error_Unmatched_quote_single);
@@ -1770,7 +1770,7 @@ RexxToken *LanguageParser::scanLiteral()
                 inch = getChar(j);
                 if (inch == literalDelimiter)
                 {
-                    // just step one extra character for the doubleds.
+                    // just step one extra character for the doubles.
                     j++;
                 }
                 value->putChar(i, inch);
@@ -1915,7 +1915,7 @@ StringSymbolType LanguageParser::scanSymbol(RexxString *string)
                 return STRING_NUMERIC;
             }
 
-            // found a potential exponent.  If the next characater is
+            // found a potential exponent.  If the next character is
             // "+" or "-", we already validated everything past that point
             if (Utilities::toUpper(*scan) == 'E')
             {
