@@ -1909,16 +1909,11 @@ RexxObject  *RexxObject::unsetMethod(RexxString *name)
  *
  * @return The converted object, or .nil of can't be converted.
  */
-RexxObject *RexxObject::requestRexx(RexxString *name)
+RexxObject* RexxObject::requestRexx(RexxString *name)
 {
     // we need this in uppercase to search for a method name.
     Protected<RexxString> className = stringArgument(name, ARG_ONE)->upper();
     Protected<RexxString> class_id = behaviour->getOwningClass()->getId()->upper();
-    // if the existing class id and the target name are the same, we are there already.
-    if (className->strictEqual(class_id) == TheTrueObject)
-    {
-        return this;
-    }
     // Get "MAKE"||class methodname
     Protected<RexxString>make_method = className->concatToCstring("MAKE");
     // find the MAKExxxx method
@@ -1932,6 +1927,16 @@ RexxObject *RexxObject::requestRexx(RexxString *name)
     }
     else
     {
+        // Bug #1904: This test was orignally done first, however the MAKExxxx method might do more
+        // than just return the same object. For example, MAKEARRAY for the array class returns
+        // a new non-sparse array object. We only accept a class name match when there is not
+        // corresponding MAKE method.
+
+        // if the existing class id and the target name are the same, we will accept that
+        if (className->strictEqual(class_id) == TheTrueObject)
+        {
+            return this;
+        }
         return TheNilObject;
     }
 }
