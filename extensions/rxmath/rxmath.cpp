@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2023 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -112,22 +112,12 @@
 class NumericFormatter
 {
 public:
-    NumericFormatter(RexxCallContext *c, bool explicitPrecision, uint32_t p)
+    NumericFormatter(RexxCallContext *c, bool explicitPrecision, wholenumber_t p)
     {
         optionError = false;
         precision = p;
         context = c;
-        if (explicitPrecision)
-        {
-            if (p == 0)
-            {
-                // raise an error on return
-                context->InvalidRoutine();
-                // remember we rejected this
-                optionError = true;
-            }
-        }
-        else
+        if (!explicitPrecision)
         {
             precision = (int)context->GetContextDigits();
         }
@@ -150,7 +140,7 @@ public:
     }
 
 protected:
-    uint32_t precision;
+    wholenumber_t precision;
     RexxCallContext *context;
 
     bool optionError;     // had invalid options and we're going to raise an error
@@ -160,7 +150,7 @@ class TrigFormatter : public NumericFormatter
 {
 public:
 
-    TrigFormatter(RexxCallContext *c, bool explicitPrecision, uint32_t p, const char *u) : NumericFormatter(c, explicitPrecision, p)
+    TrigFormatter(RexxCallContext *c, bool explicitPrecision, wholenumber_t p, const char *u) : NumericFormatter(c, explicitPrecision, p)
     {
         units = DEGREES;
         // process any units option
@@ -185,6 +175,11 @@ public:
 
                 default:
                     context->InvalidRoutine();
+                    context->RaiseException(Rexx_Error_Invalid_argument_list,
+                      context->ArrayOfThree(
+                        context->WholeNumberToObject(2),
+                        context->String("D, R, or G"),
+                        context->String(u)));
                     optionError = true;
             }
         }
@@ -406,16 +401,13 @@ RexxRoutine0(CSTRING, MathDropFuncs)
 /* Description:         Returns function value of argument.         */
 /* Input:               One number.                                 */
 /* Output:              Value of the function requested for arg.    */
-/*                      Returns 0 if the function executed OK,      */
-/*                      40 otherwise.  The interpreter will fail    */
-/*                      if the function returns a negative result.  */
 /* Notes:                                                           */
 /*   These routines take one to two parameters.                     */
 /*   The form of the call is:                                       */
 /*   result = func_name(x <, prec>)                                 */
 /*                                                                  */
 /********************************************************************/
-RexxRoutine2(RexxObjectPtr, RxCalcSqrt, double, x, OPTIONAL_uint32_t, precision)
+RexxRoutine2(RexxObjectPtr, RxCalcSqrt, double, x, OPTIONAL_positive_wholenumber_t, precision)
 {
     NumericFormatter formatter(context, argumentExists(2), precision);
 
@@ -424,7 +416,7 @@ RexxRoutine2(RexxObjectPtr, RxCalcSqrt, double, x, OPTIONAL_uint32_t, precision)
 }
 
 /*==================================================================*/
-RexxRoutine2(RexxObjectPtr, RxCalcExp, double, x, OPTIONAL_uint32_t, precision)
+RexxRoutine2(RexxObjectPtr, RxCalcExp, double, x, OPTIONAL_positive_wholenumber_t, precision)
 {
     NumericFormatter formatter(context, argumentExists(2), precision);
 
@@ -433,7 +425,7 @@ RexxRoutine2(RexxObjectPtr, RxCalcExp, double, x, OPTIONAL_uint32_t, precision)
 }
 
 /*==================================================================*/
-RexxRoutine2(RexxObjectPtr, RxCalcLog, double, x, OPTIONAL_uint32_t, precision)
+RexxRoutine2(RexxObjectPtr, RxCalcLog, double, x, OPTIONAL_positive_wholenumber_t, precision)
 {
     NumericFormatter formatter(context, argumentExists(2), precision);
 
@@ -447,7 +439,7 @@ RexxRoutine2(RexxObjectPtr, RxCalcLog, double, x, OPTIONAL_uint32_t, precision)
     return formatter.format(log(x));
 }
 
-RexxRoutine2(RexxObjectPtr, RxCalcLog10, double, x, OPTIONAL_uint32_t, precision)
+RexxRoutine2(RexxObjectPtr, RxCalcLog10, double, x, OPTIONAL_positive_wholenumber_t, precision)
 {
     NumericFormatter formatter(context, argumentExists(2), precision);
 
@@ -463,7 +455,7 @@ RexxRoutine2(RexxObjectPtr, RxCalcLog10, double, x, OPTIONAL_uint32_t, precision
 
 
 /*==================================================================*/
-RexxRoutine2(RexxObjectPtr, RxCalcSinH, double, x, OPTIONAL_uint32_t, precision)
+RexxRoutine2(RexxObjectPtr, RxCalcSinH, double, x, OPTIONAL_positive_wholenumber_t, precision)
 {
     NumericFormatter formatter(context, argumentExists(2), precision);
 
@@ -472,7 +464,7 @@ RexxRoutine2(RexxObjectPtr, RxCalcSinH, double, x, OPTIONAL_uint32_t, precision)
 }
 
 /*==================================================================*/
-RexxRoutine2(RexxObjectPtr, RxCalcCosH, double, x, OPTIONAL_uint32_t, precision)
+RexxRoutine2(RexxObjectPtr, RxCalcCosH, double, x, OPTIONAL_positive_wholenumber_t, precision)
 {
     NumericFormatter formatter(context, argumentExists(2), precision);
 
@@ -481,7 +473,7 @@ RexxRoutine2(RexxObjectPtr, RxCalcCosH, double, x, OPTIONAL_uint32_t, precision)
 }
 
 /*==================================================================*/
-RexxRoutine2(RexxObjectPtr, RxCalcTanH, double, x, OPTIONAL_uint32_t, precision)
+RexxRoutine2(RexxObjectPtr, RxCalcTanH, double, x, OPTIONAL_positive_wholenumber_t, precision)
 {
     NumericFormatter formatter(context, argumentExists(2), precision);
 
@@ -503,7 +495,7 @@ RexxRoutine2(RexxObjectPtr, RxCalcTanH, double, x, OPTIONAL_uint32_t, precision)
 /*   result = func_name(x, y <, prec>)                              */
 /*                                                                  */
 /********************************************************************/
-RexxRoutine3(RexxObjectPtr, RxCalcPower, double, x, double, y, OPTIONAL_uint32_t, precision)
+RexxRoutine3(RexxObjectPtr, RxCalcPower, double, x, double, y, OPTIONAL_positive_wholenumber_t, precision)
 {
     NumericFormatter formatter(context, argumentExists(3), precision);
 
@@ -516,16 +508,13 @@ RexxRoutine3(RexxObjectPtr, RxCalcPower, double, x, double, y, OPTIONAL_uint32_t
 /* Description:         Returns trigonometric angle value.          */
 /* Input:               Angle in radian or degree or grade          */
 /* Output:              Trigonometric function value for Angle.     */
-/*                      Returns 0 if the function executed OK,      */
-/*                      -1 otherwise.  The interpreter will fail    */
-/*                      if the function returns a negative result.  */
 /* Notes:                                                           */
 /*   These routines take one to three parameters.                   */
 /*   The form of the call is:                                       */
 /*   x = func_name(angle <, prec> <, [R | D | G]>)                  */
 /*                                                                  */
 /********************************************************************/
-RexxRoutine3(RexxObjectPtr, RxCalcSin, double, angle, OPTIONAL_uint32_t, precision, OPTIONAL_CSTRING, units)
+RexxRoutine3(RexxObjectPtr, RxCalcSin, double, angle, OPTIONAL_positive_wholenumber_t, precision, OPTIONAL_CSTRING, units)
 {
     TrigFormatter formatter(context, argumentExists(2), precision, units);
     // calculate and return
@@ -533,7 +522,7 @@ RexxRoutine3(RexxObjectPtr, RxCalcSin, double, angle, OPTIONAL_uint32_t, precisi
 }
 
 /*==================================================================*/
-RexxRoutine3(RexxObjectPtr, RxCalcCos, double, angle, OPTIONAL_uint32_t, precision, OPTIONAL_CSTRING, units)
+RexxRoutine3(RexxObjectPtr, RxCalcCos, double, angle, OPTIONAL_positive_wholenumber_t, precision, OPTIONAL_CSTRING, units)
 {
     TrigFormatter formatter(context, argumentExists(2), precision, units);
     // calculate and return
@@ -541,7 +530,7 @@ RexxRoutine3(RexxObjectPtr, RxCalcCos, double, angle, OPTIONAL_uint32_t, precisi
 }
 
 /*==================================================================*/
-RexxRoutine3(RexxObjectPtr, RxCalcTan, double, angle, OPTIONAL_uint32_t, precision, OPTIONAL_CSTRING, units)
+RexxRoutine3(RexxObjectPtr, RxCalcTan, double, angle, OPTIONAL_positive_wholenumber_t, precision, OPTIONAL_CSTRING, units)
 {
     TrigFormatter formatter(context, argumentExists(2), precision, units);
     // calculate and return
@@ -549,7 +538,7 @@ RexxRoutine3(RexxObjectPtr, RxCalcTan, double, angle, OPTIONAL_uint32_t, precisi
 }
 
 /*==================================================================*/
-RexxRoutine3(RexxObjectPtr, RxCalcCotan, double, angle, OPTIONAL_uint32_t, precision, OPTIONAL_CSTRING, units)
+RexxRoutine3(RexxObjectPtr, RxCalcCotan, double, angle, OPTIONAL_positive_wholenumber_t, precision, OPTIONAL_CSTRING, units)
 {
     TrigFormatter formatter(context, argumentExists(2), precision, units);
     // calculate and return
@@ -567,7 +556,7 @@ RexxRoutine3(RexxObjectPtr, RxCalcCotan, double, angle, OPTIONAL_uint32_t, preci
 /*   result = RxCalcpi(<precision>)                                    */
 /*                                                                  */
 /********************************************************************/
-RexxRoutine1(RexxObjectPtr, RxCalcPi, OPTIONAL_uint32_t, precision)
+RexxRoutine1(RexxObjectPtr, RxCalcPi, OPTIONAL_positive_wholenumber_t, precision)
 {
     NumericFormatter formatter(context, argumentExists(1), precision);
     return formatter.format(pi);
@@ -586,7 +575,7 @@ RexxRoutine1(RexxObjectPtr, RxCalcPi, OPTIONAL_uint32_t, precision)
 /*   a = func_name(arg <, prec> <, [R | D | G]>)                    */
 /*                                                                  */
 /********************************************************************/
-RexxRoutine3(RexxObjectPtr, RxCalcArcSin, double, x, OPTIONAL_uint32_t, precision, OPTIONAL_CSTRING, units)
+RexxRoutine3(RexxObjectPtr, RxCalcArcSin, double, x, OPTIONAL_positive_wholenumber_t, precision, OPTIONAL_CSTRING, units)
 {
     TrigFormatter formatter(context, argumentExists(2), precision, units);
 
@@ -602,7 +591,7 @@ RexxRoutine3(RexxObjectPtr, RxCalcArcSin, double, x, OPTIONAL_uint32_t, precisio
 }
 
 /*==================================================================*/
-RexxRoutine3(RexxObjectPtr, RxCalcArcCos, double, x, OPTIONAL_uint32_t, precision, OPTIONAL_CSTRING, units)
+RexxRoutine3(RexxObjectPtr, RxCalcArcCos, double, x, OPTIONAL_positive_wholenumber_t, precision, OPTIONAL_CSTRING, units)
 {
     TrigFormatter formatter(context, argumentExists(2), precision, units);
 
@@ -618,7 +607,7 @@ RexxRoutine3(RexxObjectPtr, RxCalcArcCos, double, x, OPTIONAL_uint32_t, precisio
 }
 
 /*==================================================================*/
-RexxRoutine3(RexxObjectPtr, RxCalcArcTan, double, x, OPTIONAL_uint32_t, precision, OPTIONAL_CSTRING, units)
+RexxRoutine3(RexxObjectPtr, RxCalcArcTan, double, x, OPTIONAL_positive_wholenumber_t, precision, OPTIONAL_CSTRING, units)
 {
     TrigFormatter formatter(context, argumentExists(2), precision, units);
     // calculate and return
