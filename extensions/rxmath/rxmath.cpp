@@ -174,10 +174,9 @@ public:
                     break;
 
                 default:
-                    context->InvalidRoutine();
                     context->RaiseException(Rexx_Error_Invalid_argument_list,
                       context->ArrayOfThree(
-                        context->WholeNumberToObject(2),
+                        context->WholeNumberToObject(3),
                         context->String("D, R, or G"),
                         context->String(u)));
                     optionError = true;
