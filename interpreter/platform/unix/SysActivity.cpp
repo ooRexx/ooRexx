@@ -130,7 +130,7 @@ void SysActivity::useCurrentThread()
  */
 char* SysActivity::getStackBase()
 {
-#ifdef PTHREAD_GETATTR_NP
+#ifdef HAVE_PTHREAD_GETATTR_NP
     pthread_attr_t attrs;
     pthread_getattr_np(pthread_self(), &attrs);
     void   *stackAddr;
@@ -161,7 +161,7 @@ char* SysActivity::getStackBase()
  */
 size_t SysActivity::getStackSize()
 {
-#ifdef PTHREAD_GETATTR_NP
+#ifdef HAVE_PTHREAD_GETATTR_NP
     pthread_attr_t attrs;
     pthread_getattr_np(pthread_self(), &attrs);
     void   *stackAddr;
