@@ -126,12 +126,57 @@ void SysActivity::useCurrentThread()
  * Return the pointer to the base of the current stack.
  * This is used for checking recursion overflows.
  *
- * @param base      A local variable at the base of the stack.
- * @param stackSize
- *
  * @return The character pointer for the stack base.
  */
-char *SysActivity::getStackBase(int32_t *base, size_t stackSize)
+char* SysActivity::getStackBase()
 {
-    return (char *)base - stackSize;
+#ifdef PTHREAD_GETATTR_NP
+    pthread_attr_t attrs;
+    pthread_getattr_np(pthread_self(), &attrs);
+    void   *stackAddr;
+    size_t  stackSize;
+    pthread_attr_getstack(&attrs, &stackAddr, &stackSize);
+    pthread_attr_destroy(&attrs);
+    return (char *)stackAddr;
+#else
+    pthread_t thread = pthread_self();
+
+#ifdef __APPLE__
+    // on the Mac pthread_get_stacksize_np() returns an incorrect smaller value, so if we're the main
+    // thread just assume the default
+    size_t size = pthread_main_np() ? (8 * 1024 * 1024) : pthread_get_stacksize_np(thread);
+#else
+    size_t size = pthread_get_stacksize_np(pthread_self());
+#endif
+    // stack address points to the start of the stack (the high address), not the base, how it's returned by pthread_get_stackaddr_np
+    return (char *)pthread_get_stackaddr_np(thread) - size;
+#endif
+}
+
+
+/**
+ * Return the size of the stack used by the current thread.
+ *
+ * @return The size of the current stack
+ */
+size_t SysActivity::getStackSize()
+{
+#ifdef PTHREAD_GETATTR_NP
+    pthread_attr_t attrs;
+    pthread_getattr_np(pthread_self(), &attrs);
+    void   *stackAddr;
+    size_t  stackSize;
+    pthread_attr_getstack(&attrs, &stackAddr, &stackSize);
+    pthread_attr_destroy(&attrs);
+    return stackSize;
+#else
+
+#ifdef __APPLE__
+    // pthread_get_stacksize_np() returns an incorrect value on the Mac, so we fall back on
+    // the default stack size if we're the main thread.
+    return pthread_main_np() ? (8 * 1024 * 1024) : pthread_get_stacksize_np(pthread_self());
+#else
+    return pthread_get_stacksize_np(pthread_self());
+#endif
+#endif
 }

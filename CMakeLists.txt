@@ -316,7 +316,7 @@ if (WIN32)
       set (NSIS_CPU "x86_32")
    endif ()
    file(TO_NATIVE_PATH ${EXE_MANIFEST_FILE} EXE_MANIFEST_FILE)
-   set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /STACK:524288")
+   set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /STACK:8388608")
    add_definitions(/DORX_VER=${ORX_MAJOR}
             /DORX_REL=${ORX_MINOR}
             /DORX_MOD=${ORX_MOD_LVL}
@@ -387,6 +387,9 @@ if (NOT WIN32)
   set(CMAKE_REQUIRED_LIBRARIES pthread)
   set(CMAKE_REQUIRED_DEFINITIONS "-D_GNU_SOURCE=1")
   check_function_exists(pthread_mutex_timedlock HAVE_PTHREAD_MUTEX_TIMEDLOCK)
+  check_function_exists(pthread_getattr_np HAVE_PTHREAD_GETATTR_NP)
+  check_function_exists(pthread_get_stackaddr_np HAVE_PTHREAD_GET_STACKADDR_NP)
+  check_function_exists(pthread_get_stacksize_np HAVE_PTHREAD_GET_STACKSIZE_NP)
   # this requires -ldl on the link
   set(CMAKE_REQUIRED_LIBRARIES ${CMAKE_DL_LIBS})
   check_c_source_compiles("#include <dlfcn.h>

@@ -61,10 +61,11 @@ public:
     void close();
     void useCurrentThread();
     bool validateThread();
-    char *getStackBase(int32_t *base, size_t stackSize);
     inline thread_id_t getThreadID() { return threadId; }
 
     static thread_id_t queryThreadID();
+    static char* getStackBase();
+    static size_t getStackSize();
 
 protected:
     thread_id_t   threadId;         // the thread identifier

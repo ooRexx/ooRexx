@@ -56,24 +56,7 @@
 #pragma warning(default:4263)
 #pragma warning(default:4266)
 
-/******************************************************************************/
-/* REQUIRED:  The implemenation must decide on the C_STACK_SIZE defining      */
-/* constants that are compiler/linker dependent.                              */
-/******************************************************************************/
-// we need a little more space on 64-bit platforms, so add some padding based on
-// the size of a pointer
-#define MIN_C_STACK 1024*(32 + sizeof(void *))
-#define TOTAL_STACK_SIZE 1024*512
-#define C_STACK_SIZE TOTAL_STACK_SIZE
-
 #define SysCall _cdecl
-
-/******************************************************************************/
-/* OPTIONAL:  Perform stack bounds checking on new message invocations.  If   */
-/* this is a non-stack based calling convention, or it is not possible to     */
-/* determine the bounds of the stack, leave this undefined.                   */
-/******************************************************************************/
-#define STACKCHECK
 
 /******************************************************************************/
 /* REQUIRED:  Define the string used for the default initial address setting. */

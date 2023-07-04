@@ -125,12 +125,64 @@ void SysActivity::useCurrentThread()
  * Return the pointer to the base of the current stack.
  * This is used for checking recursion overflows.
  *
- * @param base      A local variable at the base of the stack.
- * @param stackSize
- *
  * @return The character pointer for the stack base.
  */
-char *SysActivity::getStackBase(int32_t *base, size_t stackSize)
+char* SysActivity::getStackBase()
 {
-    return (char *)base - stackSize;
+// this is the ideal solution, but it's only available with Windows 8 and above.
+#if 0
+    ULONG_PTR stackBottom;
+    ULONG_PTR stackTop;
+
+    GetCurrentThreadStackLimits(&stackBottom, &stackTop);
+    return (char *)stackBottom;
+#else
+    NT_TIB *tib = (NT_TIB *)NtCurrentTeb();
+    char *highLimit = (char *)tib->StackBase;
+
+    // the StackLimit field in the tib is the current committed lowbound of the
+    // stack, not the actual bound that has been reserved for the stack. To get that,
+    // we need to use VirtualQuery() to find the beginning of the memory segment
+    // used for the stack. Since the beginning of the stack is probably uncommitted
+    // memory, don't panic if the value obtained from VirtualQuery() is pointing to
+    // non-addressible memory when viewed in the debugger.
+    MEMORY_BASIC_INFORMATION mbi;
+    VirtualQuery(tib->StackLimit, &mbi, sizeof(mbi));
+    char *lowLimit = (char *)mbi.AllocationBase;
+    return lowLimit;
+#endif
 }
+
+
+/**
+ * Return the size of the stack used by the current thread.
+ *
+ * @return The size of the current stack
+ */
+size_t SysActivity::getStackSize()
+{
+
+// this is the ideal solution, but it's only available with Windows 8 and above.
+#if 0
+    ULONG_PTR stackBottom;
+    ULONG_PTR stackTop;
+
+    GetCurrentThreadStackLimits(&stackBottom, &stackTop);
+    return (char *)stackTop - (char *)stackBottom;
+#else
+    NT_TIB *tib = (NT_TIB *)NtCurrentTeb();
+    char *highLimit = (char *)tib->StackBase;
+
+    // the StackLimit field in the tib is the current committed lowbound of the
+    // stack, not the actual bound that has been reserved for the stack. To get that,
+    // we need to use VirtualQuery() to find the beginning of the memory segment
+    // used for the stack. Since the beginning of the stack is probably uncommitted
+    // memory, don't panic if the value obtained from VirtualQuery() is pointing to
+    // non-addressible memory when viewed in the debugger.
+    MEMORY_BASIC_INFORMATION mbi;
+    VirtualQuery(tib->StackLimit, &mbi, sizeof(mbi));
+    char *lowLimit = (char *)mbi.AllocationBase;
+    return highLimit - lowLimit;
+#endif
+}
+

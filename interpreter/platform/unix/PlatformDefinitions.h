@@ -51,34 +51,12 @@
 #ifndef PlatformDefinitions_Included
 #define PlatformDefinitions_Included
 
-/******************************************************************************/
-/* REQUIRED:  The implemenation must decide on the C_STACK_SIZE defining      */
-/* constants that are compiler/linker dependent.                              */
-/******************************************************************************/
-#define MIN_C_STACK 1024*(32 + sizeof(void *))
-#define TOTAL_STACK_SIZE 1024*512
-#define C_STACK_SIZE TOTAL_STACK_SIZE
-
 // No definition needed on Linux systems.
 #define SysCall
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
-
-/******************************************************************************/
-/* OPTIONAL:  Perform stack checking on new message invocations.  If this type*/
-/* of information is not available, then do not include this define           */
-/******************************************************************************/
-
-#define STACKCHECK
-
-/******************************************************************************/
-/* REQUIRED:  Define the REXX type for semaphores.  These can be system       */
-/* specific semaphore types or the REXX define OSEM.                          */
-/******************************************************************************/
-
-#define _POSIX_THREADS_
 
 /******************************************************************************/
 /* REQUIRED:  Define the string used for the default initial address setting. */

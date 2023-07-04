@@ -78,12 +78,13 @@ public:
     void create(Activity *activity, size_t stackSize);
     void close();
     void useCurrentThread();
-    char *getStackBase(int32_t *base, size_t stackSize);
     void setPriority(int p);
     bool validateThread();
     inline thread_id_t getThreadID() { return (thread_id_t)threadId; }
 
     static thread_id_t queryThreadID();
+    static char* getStackBase();
+    static size_t getStackSize();
 
 protected:
     bool          valid;      // indicates whether opaque threadId is valid
