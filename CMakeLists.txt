@@ -388,6 +388,7 @@ if (NOT WIN32)
   set(CMAKE_REQUIRED_DEFINITIONS "-D_GNU_SOURCE=1")
   check_function_exists(pthread_mutex_timedlock HAVE_PTHREAD_MUTEX_TIMEDLOCK)
   check_function_exists(pthread_getattr_np HAVE_PTHREAD_GETATTR_NP)
+  check_function_exists(pthread_attr_getstack HAVE_PTHREAD_ATTR_GETSTACK)
   check_function_exists(pthread_get_stackaddr_np HAVE_PTHREAD_GET_STACKADDR_NP)
   check_function_exists(pthread_get_stacksize_np HAVE_PTHREAD_GET_STACKSIZE_NP)
   # this requires -ldl on the link
