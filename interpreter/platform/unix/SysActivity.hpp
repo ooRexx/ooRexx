@@ -52,6 +52,11 @@
 # include <pthread.h>
 #endif
 
+// FreeBSD, OpenBSD, DragonFly
+#if defined( HAVE_PTHREAD_NP_H )
+# include <pthread_np.h>
+#endif
+
 #include <memory.h>
 
 #if defined( HAVE_SYS_SCHED_H )

@@ -66,6 +66,15 @@
 
 /* Define to 1 if you have the <pthread.h> header file. */
 #cmakedefine HAVE_PTHREAD_H
+/* Define to 1 if you have the <pthread_np.h> header file. */
+#cmakedefine HAVE_PTHREAD_NP_H
+
+/* Define to 1 if you have the 'pthread_getattr_np' function. */
+#cmakedefine HAVE_PTHREAD_GETATTR_NP
+/* Define to 1 if you have the 'pthread_get_stacksize_np' function. */
+#cmakedefine HAVE_PTHREAD_GET_STACKSIZE_NP
+/* Define to 1 if you have the 'pthread_attr_get_np' function. */
+#cmakedefine HAVE_PTHREAD_ATTR_GET_NP
 
 /* Define to 1 if you have pthread_mutex_timedlock function */
 #cmakedefine HAVE_PTHREAD_MUTEX_TIMEDLOCK

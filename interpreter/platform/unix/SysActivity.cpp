@@ -135,6 +135,7 @@ void SysActivity::useCurrentThread()
 char* SysActivity::getStackBase()
 {
 #ifdef HAVE_PTHREAD_GETATTR_NP
+    // Linux
     pthread_attr_t attrs;
     pthread_getattr_np(pthread_self(), &attrs);
     void   *stackAddr;
@@ -142,18 +143,25 @@ char* SysActivity::getStackBase()
     pthread_attr_getstack(&attrs, &stackAddr, &stackSize);
     pthread_attr_destroy(&attrs);
     return (char *)stackAddr;
-#else
+#elif defined HAVE_PTHREAD_ATTR_GET_NP
+    // FreeBSD, OpenBSD, DragonFly
+    pthread_attr_t attrs;
+    pthread_attr_init(&attrs);
+    pthread_attr_get_np(pthread_self(), &attrs);
+    void   *stackAddr;
+    size_t  stackSize;
+    pthread_attr_getstack(&attrs, &stackAddr, &stackSize);
+    pthread_attr_destroy(&attrs);
+    return (char *)stackAddr;
+#elif defined HAVE_PTHREAD_GET_STACKSIZE_NP
+    // MacOS
     pthread_t thread = pthread_self();
-
-#ifdef __APPLE__
-    // on the Mac pthread_get_stacksize_np() returns an incorrect smaller value, so if we're the main
-    // thread just assume the default
-    size_t size = pthread_main_np() ? (8 * 1024 * 1024) : pthread_get_stacksize_np(thread);
-#else
-    size_t size = pthread_get_stacksize_np(pthread_self());
-#endif
-    // stack address points to the start of the stack (the high address), not the base, how it's returned by pthread_get_stackaddr_np
+    size_t size = pthread_get_stacksize_np(thread);
+    // stack address points to the start of the stack (the high address),
+    // not the base, how it's returned by pthread_get_stackaddr_np
     return (char *)pthread_get_stackaddr_np(thread) - size;
+#else
+#error no code for getStackBase()
 #endif
 }
 
@@ -166,6 +174,7 @@ char* SysActivity::getStackBase()
 size_t SysActivity::getStackSize()
 {
 #ifdef HAVE_PTHREAD_GETATTR_NP
+    // Linux
     pthread_attr_t attrs;
     pthread_getattr_np(pthread_self(), &attrs);
     void   *stackAddr;
@@ -173,14 +182,20 @@ size_t SysActivity::getStackSize()
     pthread_attr_getstack(&attrs, &stackAddr, &stackSize);
     pthread_attr_destroy(&attrs);
     return stackSize;
-#else
-
-#ifdef __APPLE__
-    // pthread_get_stacksize_np() returns an incorrect value on the Mac, so we fall back on
-    // the default stack size if we're the main thread.
-    return pthread_main_np() ? (8 * 1024 * 1024) : pthread_get_stacksize_np(pthread_self());
-#else
+#elif defined HAVE_PTHREAD_ATTR_GET_NP
+    // FreeBSD, OpenBSD, DragonFly
+    pthread_attr_t attrs;
+    pthread_attr_init(&attrs);
+    pthread_attr_get_np(pthread_self(), &attrs);
+    void   *stackAddr;
+    size_t  stackSize;
+    pthread_attr_getstack(&attrs, &stackAddr, &stackSize);
+    pthread_attr_destroy(&attrs);
+    return stackSize;
+#elif defined HAVE_PTHREAD_GET_STACKSIZE_NP
+    // MacOS
     return pthread_get_stacksize_np(pthread_self());
-#endif
+#else
+#error no code for getStackSize()
 #endif
 }
