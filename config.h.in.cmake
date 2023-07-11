@@ -75,6 +75,8 @@
 #cmakedefine HAVE_PTHREAD_GET_STACKSIZE_NP
 /* Define to 1 if you have the 'pthread_attr_get_np' function. */
 #cmakedefine HAVE_PTHREAD_ATTR_GET_NP
+/* Define to 1 if you have the 'pthread_stackseg_np' function. */
+#cmakedefine HAVE_PTHREAD_STACKSEG_NP
 
 /* Define to 1 if you have pthread_mutex_timedlock function */
 #cmakedefine HAVE_PTHREAD_MUTEX_TIMEDLOCK

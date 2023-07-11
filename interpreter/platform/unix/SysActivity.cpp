@@ -134,6 +134,10 @@ void SysActivity::useCurrentThread()
  */
 char* SysActivity::getStackBase()
 {
+// The interpreter assumes a downwards-growing stack, which is true for most
+// modern ABIs resp. CPU architectures.  Fixes will be needed for a CPU with
+// an upwards-growing stack.  Also, we have to cope with all those different
+// non-portable implementations.
 #ifdef HAVE_PTHREAD_GETATTR_NP
     // Linux
     pthread_attr_t attrs;
@@ -144,7 +148,7 @@ char* SysActivity::getStackBase()
     pthread_attr_destroy(&attrs);
     return (char *)stackAddr;
 #elif defined HAVE_PTHREAD_ATTR_GET_NP
-    // FreeBSD, OpenBSD, DragonFly
+    // FreeBSD, OpenIndiana
     pthread_attr_t attrs;
     pthread_attr_init(&attrs);
     pthread_attr_get_np(pthread_self(), &attrs);
@@ -153,6 +157,13 @@ char* SysActivity::getStackBase()
     pthread_attr_getstack(&attrs, &stackAddr, &stackSize);
     pthread_attr_destroy(&attrs);
     return (char *)stackAddr;
+#elif defined HAVE_PTHREAD_STACKSEG_NP
+    // OpenBSD
+    stack_t stack;
+    pthread_stackseg_np(pthread_self(), &stack);
+    // as documented on https://man.openbsd.org/pthread_stackseg_np.3
+    // the ss_sp variable points to the top of the stack instead of the base
+    return (char *)stack.ss_sp - stack.ss_size;
 #elif defined HAVE_PTHREAD_GET_STACKSIZE_NP
     // MacOS
     pthread_t thread = pthread_self();
@@ -183,7 +194,7 @@ size_t SysActivity::getStackSize()
     pthread_attr_destroy(&attrs);
     return stackSize;
 #elif defined HAVE_PTHREAD_ATTR_GET_NP
-    // FreeBSD, OpenBSD, DragonFly
+    // FreeBSD, OpenIndiana
     pthread_attr_t attrs;
     pthread_attr_init(&attrs);
     pthread_attr_get_np(pthread_self(), &attrs);
@@ -192,6 +203,11 @@ size_t SysActivity::getStackSize()
     pthread_attr_getstack(&attrs, &stackAddr, &stackSize);
     pthread_attr_destroy(&attrs);
     return stackSize;
+#elif defined HAVE_PTHREAD_STACKSEG_NP
+    // OpenBSD
+    stack_t stack;
+    pthread_stackseg_np(pthread_self(), &stack);
+    return stack.ss_size;
 #elif defined HAVE_PTHREAD_GET_STACKSIZE_NP
     // MacOS
     return pthread_get_stacksize_np(pthread_self());
