@@ -82,6 +82,7 @@
 #include "CommandIOConfiguration.hpp"
 #include "CommandIOContext.hpp"
 #include "LibraryPackage.hpp"
+#include <stdexcept> // std::exception_ptr, std::current_exception, std::rethrow_exception
 
 /**
  * Create a new activation object
@@ -570,8 +571,10 @@ RexxObject* RexxActivation::run(RexxObject *_receiver, RexxString *name, RexxObj
 
     // this is the main execution loop...continue until we get a terminating
     // condition, such as a RETURN or EXIT, or just reaching the end of the code stream.
+    std::exception_ptr ex; // manage delayed exception (see explanation below)
     while (true)
     {
+        ex = NULL; // we have no delayed exception yet
         try
         {
             RexxInstruction *nextInst = next;
@@ -712,59 +715,69 @@ RexxObject* RexxActivation::run(RexxObject *_receiver, RexxString *name, RexxObj
         }
         // an error has occurred.  The thrown object is an activation pointer,
         // which tells us when to stop unwinding
-        catch (RexxActivation *t)
+        catch (const RexxActivation *t)
         {
             // if we're not the target of this throw, we've already been unwound
             // keep throwing this until it reaches the target activation.
             if (t != this)
             {
-                throw;
+                // due to Windows 64-bit issue https://sourceforge.net/p/oorexx/bugs/1914/
+                // reported to Microsoft and closed as "Not a Bug" in
+                // https://developercommunity.visualstudio.com/t/msconnect-3136060-c-extreme-stack-growth-and-stack/206155
+                // we need to use this workaround instead of a simple "throw"
+                ex = std::current_exception(); // do a "delayed throw"
             }
-
-            // if we're not the current kernel holder when things return, make sure we
-            // get the lock before we continue
-            if (ActivityManager::currentActivity != activity)
+            else
             {
-                activity->requestAccess();
-            }
-
-            // unwind the activation stack back to our frame
-            activity->unwindToFrame(this);
-
-            // do the normal between clause clean up.
-            stack.clear();
-            settings.timeStamp.valid = false;
-
-            // if we were in a debug pause, we had a error interpreting the
-            // line typed at the pause.  We're just going to terminate this
-            // like it was a return
-            if (debugPause)
-            {
-                stopExecution(RETURNED);
-            }
-
-            // we might have caught a condition.  See if we have something to do.
-            if (conditionQueue != OREF_NULL)
-            {
-                // if we have pending traps, process them now
-                if (!conditionQueue->isEmpty())
+                // if we're not the current kernel holder when things return, make sure we
+                // get the lock before we continue
+                if (ActivityManager::currentActivity != activity)
                 {
-                    bool caught = processTraps();
-                    // a condition might have raised an error because of a missing label
-                    // go process it now
-                    if (caught && !conditionQueue->isEmpty())
-                    {
-                        processTraps();
-                    }
-                    // processing the traps might have deferred handling until clause
-                    // termination (CALL ON conditions)...turn on the clauseBoundary
-                    // flag to check for them after instruction completion.
+                    activity->requestAccess();
+                }
+
+                // unwind the activation stack back to our frame
+                activity->unwindToFrame(this);
+
+                // do the normal between clause clean up.
+                stack.clear();
+                settings.timeStamp.valid = false;
+
+                // if we were in a debug pause, we had a error interpreting the
+                // line typed at the pause.  We're just going to terminate this
+                // like it was a return
+                if (debugPause)
+                {
+                    stopExecution(RETURNED);
+                }
+
+                // we might have caught a condition.  See if we have something to do.
+                if (conditionQueue != OREF_NULL)
+                {
+                    // if we have pending traps, process them now
                     if (!conditionQueue->isEmpty())
                     {
-                        clauseBoundary = true;
+                        bool caught = processTraps();
+                        // a condition might have raised an error because of a missing label
+                        // go process it now
+                        if (caught && !conditionQueue->isEmpty())
+                        {
+                            processTraps();
+                        }
+                        // processing the traps might have deferred handling until clause
+                        // termination (CALL ON conditions)...turn on the clauseBoundary
+                        // flag to check for them after instruction completion.
+                        if (!conditionQueue->isEmpty())
+                        {
+                            clauseBoundary = true;
+                        }
                     }
                 }
             }
+        }
+        if (ex) // if we've had a delayed throw, execute it now
+        {
+            std::rethrow_exception(ex);
         }
     }
 }
@@ -781,6 +794,7 @@ bool RexxActivation::processTraps()
     bool caught = false;
     size_t i = conditionQueue->items();
 
+    std::exception_ptr ex; // manage delayed exception (see explanation below)
     // process each item currently in the queue
     while (i--)
     {
@@ -805,6 +819,7 @@ bool RexxActivation::processTraps()
 
             // it's possible that the condition can raise an error because of a
             // missing label, so we need to catch any conditions that might be thrown
+            ex = NULL; // we have no delayed exception yet
             try
             {
                 // process the trap
@@ -817,15 +832,25 @@ bool RexxActivation::processTraps()
                 // keep throwing this until it reaches the target activation.
                 if (t != this)
                 {
-                    throw;
+                    // due to Windows 64-bit issue https://sourceforge.net/p/oorexx/bugs/1914/
+                    // reported to Microsoft and closed as "Not a Bug" in
+                    // https://developercommunity.visualstudio.com/t/msconnect-3136060-c-extreme-stack-growth-and-stack/206155
+                    // we need to use this workaround instead of a simple "throw"
+                    ex = std::current_exception(); // delay the throw to after the catch block
                 }
-
-                // if we're not the current kernel holder when things return, make sure we
-                // get the lock before we continue
-                if (ActivityManager::currentActivity != activity)
+                else
                 {
-                    activity->requestAccess();
+                    // if we're not the current kernel holder when things return, make sure we
+                    // get the lock before we continue
+                    if (ActivityManager::currentActivity != activity)
+                    {
+                        activity->requestAccess();
+                    }
                 }
+            }
+            if (ex) // if we've had a delayed throw, execute it now
+            {
+                std::rethrow_exception(ex);
             }
         }
     }
@@ -2679,6 +2704,7 @@ void RexxActivation::debugInterpret(RexxString *codestring)
 {
     // mark that this is debug mode
     debugPause = true;
+    std::exception_ptr ex; // manage delayed exception (see explanation below)
     try
     {
         // translate the code
@@ -2699,15 +2725,25 @@ void RexxActivation::debugInterpret(RexxString *codestring)
         // keep throwing this until it reaches the target activation.
         if (t != this)
         {
-            throw;
+            // due to Windows 64-bit issue https://sourceforge.net/p/oorexx/bugs/1914/
+            // reported to Microsoft and closed as "Not a Bug" in
+            // https://developercommunity.visualstudio.com/t/msconnect-3136060-c-extreme-stack-growth-and-stack/206155
+            // we need to use this workaround instead of a simple "throw"
+            ex = std::current_exception(); // delay the throw to after the catch block
         }
-
-        // if we're not the current kernel holder when things return, make sure we
-        // get the lock before we continue
-        if (ActivityManager::currentActivity != activity)
+        else
         {
-            activity->requestAccess();
+            // if we're not the current kernel holder when things return, make sure we
+            // get the lock before we continue
+            if (ActivityManager::currentActivity != activity)
+            {
+                activity->requestAccess();
+            }
         }
+    }
+    if (ex) // if we've had a delayed throw, execute it now
+    {
+        std::rethrow_exception(ex);
     }
 }
 
