@@ -2384,6 +2384,7 @@ add_custom_target(portable
 # <-- portable Rexx Home ENVironment archive <--
 
 # Create a source package
+set (CMAKE_INSTALL_PREFIX .)
 set(CPACK_SOURCE_GENERATOR "TGZ")
 set(CPACK_SOURCE_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL}-${CPACK_PACKAGE_RELEASE}")
 
