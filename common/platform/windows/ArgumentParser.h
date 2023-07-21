@@ -130,6 +130,7 @@ PCONSTRXSTRING getArguments(const char **program, const char *argptr, size_t *co
 {
     ULONG i, isave, len;
     /* don't forget the break after program_name */
+    BOOL lastSW = false;
 
     i = 0;
     if (program)
@@ -138,24 +139,26 @@ PCONSTRXSTRING getArguments(const char **program, const char *argptr, size_t *co
     }
     else {
         nextArgument(FALSE, argptr, &i, &len, FALSE);             /* skip REXX*.EXE */
+        /* need to skip any switches before the script name/-e switch   */
         const char *tmp = nextArgument(FALSE, argptr, &i, &len, FALSE);       /* skip REXX script or -e switch */
-        /* the following test ensure that the -e switch on rexx.exe is not included in the arguments */
-        /* passed to the running program as specified on the command line. Unfortunately it also     */
-        /* affects rexxhide, rexxpaws, etc, that all use this code; may not be important             */
-        if (tmp && strlen(tmp) > 1 && (tmp[0] == '/' || tmp[0] == '-') && (tmp[1] == 'e' || tmp[1] == 'E') )
-        {
-            nextArgument(FALSE, argptr, &i, &len, FALSE);           /* skip REXX code*/
+        while (tmp && strlen(tmp) > 1 && (tmp[0] == '/' || tmp[0] == '-') && !lastSW) {
+            /* the following test ensure that the -e switch on rexx.exe is not included in the arguments */
+            /* passed to the running program as specified on the command line. Unfortunately it also     */
+            /* affects rexxhide, rexxpaws, etc, that all use this code; may not be important             */
+            if (tmp[1] == 'e' || tmp[1] == 'E') {   /* no more switches after -e    */
+                lastSW = true;
+            }
+            tmp = nextArgument(FALSE, argptr, &i, &len, FALSE);
         }
     }
 
     retarr->strptr = NULL;
     isave = i;
     *count = 0;
-    if (nextArgument(FALSE, argptr, &i, &len, FALSE))
-    {
-        (*count)++;
-    }
-
+    /* scan for any non-blank characters to determine if arguments are present */
+    while (argptr[i] == ' ')
+        i++;
+    if (argptr[i]) (*count)++;
     if (*count)
     {
         i = isave;

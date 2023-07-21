@@ -106,18 +106,19 @@ int WINAPI WinMain(
 
         // set up the C args into the .local environment
         dir = (RexxDirectoryObject)pgmThrdInst->GetLocalEnvironment();
-        if ( argc > 2 )
+        // lpCmdLine does NOT include the program name, i.e. rexxhide
+        if ( argc > 1 )
         {
-            rxcargs = pgmThrdInst->NewArray(argc - 2);
+            rxcargs = pgmThrdInst->NewArray(argc - 1);
         }
         else
         {
             rxcargs = pgmThrdInst->NewArray(0);
         }
 
-        for (i = 2; i < argc; i++)
+        for (i = 1; i < argc; i++)
         {
-            pgmThrdInst->ArrayPut(rxcargs, pgmThrdInst->NewStringFromAsciiz(argv[i]), i - 1);
+            pgmThrdInst->ArrayPut(rxcargs, pgmThrdInst->NewStringFromAsciiz(argv[i]), i);
         }
 
         pgmThrdInst->DirectoryPut(dir, rxcargs, "SYSCARGS");
