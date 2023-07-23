@@ -2384,9 +2384,12 @@ add_custom_target(portable
 # <-- portable Rexx Home ENVironment archive <--
 
 # Create a source package
-set (CMAKE_INSTALL_PREFIX .)
-set(CPACK_SOURCE_GENERATOR "TGZ")
-set(CPACK_SOURCE_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL}-${CPACK_PACKAGE_RELEASE}")
+  set(CPACK_PACKAGING_INSTALL_PREFIX "/")
+  set(CPACK_SOURCE_GENERATOR "TGZ")
+  set(CPACK_SOURCE_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL}-${CPACK_PACKAGE_RELEASE}")
+
+   message(STATUS "CPACK_PACKAGING_INSTALL_PREFIX ${CPACK_PACKAGING_INSTALL_PREFIX}")
+   message(STATUS "CPACK_SOURCE_PACKAGE_FILE_NAME ${CPACK_SOURCE_PACKAGE_FILE_NAME}")
 
 # Do not move the following statement!! It must be the last statement in this file.
 include(CPack)
