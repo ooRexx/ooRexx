@@ -4013,6 +4013,7 @@ size_t RexxEntry WSClipboard(const char *funcname, size_t argc, CONSTRXSTRING ar
                     retstr->strptr = (char *)GlobalAlloc(GMEM_FIXED, s);
                     if (retstr->strptr == NULL)
                     {
+                        GlobalUnlock(membase);
                         CloseClipboard();
                         return -1;
                     }
@@ -4027,6 +4028,111 @@ size_t RexxEntry WSClipboard(const char *funcname, size_t argc, CONSTRXSTRING ar
             else
             {
                 CloseClipboard();
+            }
+        }
+        retstr->strlength = 0;
+        return 0;
+    }
+    else if (!strcmp(argv[0].strptr, "PASTE UNICODE"))
+    {
+        // returns Unicode text (UTF-16)
+        HGLOBAL hmem;
+        char * membase;
+        if (IsClipboardFormatAvailable(CF_UNICODETEXT) && OpenClipboard(NULL))
+        {
+            hmem = GetClipboardData(CF_UNICODETEXT);
+            membase = (char *) GlobalLock(hmem);
+            if (membase == NULL) CloseClipboard();
+            else
+            {
+                size_t s = GlobalSize(hmem);
+                if (s>255)
+                {
+                    retstr->strptr = (char *)GlobalAlloc(GMEM_FIXED, s);
+                    if (retstr->strptr == NULL)
+                    {
+                        GlobalUnlock(membase);
+                        CloseClipboard();
+                        return -1;
+                    }
+                }
+                memcpy(retstr->strptr, membase, s); // including the final 0000
+                retstr->strlength = s-2; // don't count the final 0000
+                GlobalUnlock(membase);
+                CloseClipboard();
+                return 0;
+            }
+        }
+        retstr->strlength = 0;
+        return 0;
+    }
+    else if (!strcmp(argv[0].strptr, "LOCALE"))
+    {
+        /*
+        returns the locale name as Unicode text (UTF-16)
+
+        https://learn.microsoft.com/en-us/windows/win32/dataxchg/standard-clipboard-formats
+        locale identifier (LCID) associated with text in the clipboard.
+        An application that pastes text from the clipboard can retrieve this
+        format to determine which character set was used to generate the text.
+        The system uses the code page associated with CF_LOCALE to implicitly
+        convert from CF_TEXT to CF_UNICODETEXT.
+
+        https://learn.microsoft.com/en-us/windows/win32/intl/locale-identifiers
+        32-bit value
+        +-------------+---------+-------------------------+
+        |   Reserved  | Sort ID |      Language ID        |
+        +-------------+---------+-------------------------+
+        31         20 19     16 15                      0   bit
+
+        https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-lcid/
+        Windows Language Code Identifier (LCID) Reference
+
+        Example:
+        09040000 --> "en-US"
+            LangID = 0x409    en-US
+            SortID = 0
+            Reserved = 0
+        */
+
+        HGLOBAL hmem;
+        char * membase;
+        if (IsClipboardFormatAvailable(CF_LOCALE) && OpenClipboard(NULL))
+        {
+            hmem = GetClipboardData(CF_LOCALE); // 4 bytes
+            membase = (char *) GlobalLock(hmem);
+            if (membase == NULL) CloseClipboard();
+            else
+            {
+                LCID localeId;
+                size_t s = GlobalSize(hmem);
+                if (s != sizeof(localeId)) // should not happen
+                {
+                    GlobalUnlock(membase);
+                    CloseClipboard();
+                }
+                else
+                {
+                    memcpy(&localeId, membase, s);
+                    GlobalUnlock(membase);
+                    CloseClipboard();
+
+                    // required size, in characters (including nulls), for the locale name buffer.
+                    int wcharCount = LCIDToLocaleName(localeId, NULL, 0, 0);
+                    s = wcharCount * sizeof(WCHAR);
+                    if (s != 0)
+                    {
+                        if (s>255)
+                        {
+                            retstr->strptr = (char *)GlobalAlloc(GMEM_FIXED, s);
+                            if (retstr->strptr == NULL) return -1;
+                        }
+                        wcharCount = LCIDToLocaleName(localeId, (LPWSTR)retstr->strptr, wcharCount, 0);
+                        s = wcharCount * sizeof(WCHAR);
+                        retstr->strlength = s;
+                        return 0;
+                    }
+                }
             }
         }
         retstr->strlength = 0;

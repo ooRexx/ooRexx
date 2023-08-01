@@ -1089,7 +1089,19 @@
    return WSClipboard("COPY", txt)
 
 ::method Paste
-   return WSClipboard("PASTE")
+   use arg codepage="", mappingflags="", defaultchar=""
+   if codepage == "" then return WSClipboard("PASTE") -- conversion to ANSI code page done by the system
+   ustr = WSClipboard("PASTE UNICODE") -- UTF-16
+   if codepage~caselessEquals("UNICODE") then return ustr -- raw (UTF-16)
+   error = SysFromUnicode(ustr, codepage, mappingflags, defaultchar, "str") -- conversion from Unicode driven by the user
+   if error \== 0 then raise syntax 93.900 array(SysGetErrorText(error))
+   return str.!text
+
+::method Locale
+   ustr = WSClipboard("LOCALE") -- name in UTF-16 format
+   error = SysFromUnicode(ustr, "UTF8", "", "", "str")
+   if error \== 0 then raise syntax 93.900 array(SysGetErrorText(error))
+   return str.!text
 
 ::method Empty
    return WSClipboard("EMPTY")
