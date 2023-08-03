@@ -3997,6 +3997,29 @@ size_t RexxEntry WSClipboard(const char *funcname, size_t argc, CONSTRXSTRING ar
         }
         RETC(!ret)
     }
+    else if (!strcmp(argv[0].strptr, "COPY UNICODE"))
+    {
+        // put Unicode text (UTF-16) in the clipboard
+        HGLOBAL hmem;
+        char * membase;
+
+        CHECKARG(2,2);
+        hmem = (char *)GlobalAlloc(GMEM_MOVEABLE | GMEM_DDESHARE, argv[1].strlength + 2); // +2 to support the final \0\0
+        membase = (char *) GlobalLock(hmem);
+
+        if (membase)
+        {
+            memcpy(membase, argv[1].strptr, argv[1].strlength + 1); // including the \0 managed by oorexx
+            membase[argv[1].strlength + 1] = '\0'; // 2nd \0 to have a final \0\0 (yes, you need it!)
+            if (OpenClipboard(NULL) && EmptyClipboard())
+            {
+                ret = SetClipboardData(CF_UNICODETEXT, hmem) != NULL;
+            }
+            GlobalUnlock(membase);
+            CloseClipboard();
+        }
+        RETC(!ret)
+    }
     else if (!strcmp(argv[0].strptr, "PASTE"))
     {
         HGLOBAL hmem;
@@ -4018,9 +4041,15 @@ size_t RexxEntry WSClipboard(const char *funcname, size_t argc, CONSTRXSTRING ar
                         return -1;
                     }
                 }
+#if 0
+                // legacy behavior: forbids to get the clipboard contents as a binay string (truncated at first \0)
                 s = strlen(membase);
                 memcpy(retstr->strptr, membase, s+1);
                 retstr->strlength = s;
+#else
+                memcpy(retstr->strptr, membase, s); // including the final \0
+                retstr->strlength = s-1; // don't count the final \0
+#endif
                 GlobalUnlock(membase);
                 CloseClipboard();
                 return 0;
@@ -4056,8 +4085,8 @@ size_t RexxEntry WSClipboard(const char *funcname, size_t argc, CONSTRXSTRING ar
                         return -1;
                     }
                 }
-                memcpy(retstr->strptr, membase, s); // including the final 0000
-                retstr->strlength = s-2; // don't count the final 0000
+                memcpy(retstr->strptr, membase, s); // including the final \0\0
+                retstr->strlength = s-2; // don't count the final \0\0
                 GlobalUnlock(membase);
                 CloseClipboard();
                 return 0;
@@ -4117,7 +4146,7 @@ size_t RexxEntry WSClipboard(const char *funcname, size_t argc, CONSTRXSTRING ar
                     GlobalUnlock(membase);
                     CloseClipboard();
 
-                    // required size, in characters (including nulls), for the locale name buffer.
+                    // required size, in characters (including the final \0\0), for the locale name buffer.
                     int wcharCount = LCIDToLocaleName(localeId, NULL, 0, 0);
                     s = wcharCount * sizeof(WCHAR);
                     if (s != 0)
@@ -4129,7 +4158,7 @@ size_t RexxEntry WSClipboard(const char *funcname, size_t argc, CONSTRXSTRING ar
                         }
                         wcharCount = LCIDToLocaleName(localeId, (LPWSTR)retstr->strptr, wcharCount, 0);
                         s = wcharCount * sizeof(WCHAR);
-                        retstr->strlength = s;
+                        retstr->strlength = s-2; // don't count the final \0\0
                         return 0;
                     }
                 }

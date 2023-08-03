@@ -1085,22 +1085,42 @@
 ::class 'WindowsClipboard' public
 
 ::method Copy
-   use arg txt
-   return WSClipboard("COPY", txt)
+   use arg txt, codepage="", translateflags=""
+   if codepage == "" then return WSClipboard("COPY", txt) -- conversion to Unicode done by the system
+   if codepage~caselessEquals("UNICODE") then do
+       if arg(3, "e") then raise syntax 88.900 array('The translateflags argument is not supported when the codepage argument is "UNICODE"')
+       ustr = txt -- txt is already UTF-16
+   end
+   else if txt == "" then ustr = txt -- SysToUnicode doesn't support empty strings
+   else do
+       -- conversion to Unicode driven by the user
+       -- can't pass the default value of translateflags because SysToUnicode raises an error if translateflags is empty
+       if arg(3, "e") then error = SysToUnicode(txt, codepage, translateflags, "str")
+                      else error = SysToUnicode(txt, codepage,               , "str")
+       if error \== 0 then raise syntax 93.900 array("SysToUnicode error" error":" SysGetErrorText(error))
+       ustr = str.!text
+   end
+   return WSClipboard("COPY UNICODE", ustr)
 
 ::method Paste
    use arg codepage="", mappingflags="", defaultchar=""
    if codepage == "" then return WSClipboard("PASTE") -- conversion to ANSI code page done by the system
    ustr = WSClipboard("PASTE UNICODE") -- UTF-16
-   if codepage~caselessEquals("UNICODE") then return ustr -- raw (UTF-16)
+   if codepage~caselessEquals("UNICODE") then do
+       if arg(2, "e") then raise syntax 88.900 array('The mappingflags argument is not supported when the codepage argument is "UNICODE"')
+       if arg(3, "e") then raise syntax 88.900 array('The defaultchar argument is not supported when the codepage argument is "UNICODE"')
+       return ustr -- raw (UTF-16)
+   end
+   if ustr == "" then return ustr -- SysFromUnicode doesn't support empty strings
    error = SysFromUnicode(ustr, codepage, mappingflags, defaultchar, "str") -- conversion from Unicode driven by the user
-   if error \== 0 then raise syntax 93.900 array(SysGetErrorText(error))
+   if error \== 0 then raise syntax 93.900 array("SysFromUnicode error" error":" SysGetErrorText(error))
    return str.!text
 
 ::method Locale
    ustr = WSClipboard("LOCALE") -- name in UTF-16 format
+   if ustr == "" then return ustr -- SysFromUnicode doesn't support empty strings
    error = SysFromUnicode(ustr, "UTF8", "", "", "str")
-   if error \== 0 then raise syntax 93.900 array(SysGetErrorText(error))
+   if error \== 0 then raise syntax 93.900 array("SysFromUnicode error" error":" SysGetErrorText(error))
    return str.!text
 
 ::method Empty
