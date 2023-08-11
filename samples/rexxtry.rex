@@ -2,7 +2,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2023 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -80,7 +80,8 @@ done:
 
 house:                                         /* Housekeeping.             */
   parse version version                        /* Fill-in 2 user variables. */
-  parse source sysrx .                         /* Get system name.          */
+  parse source source
+  sysrx = word(source, 1)                      /* Get system name.          */
   remindrx = "Enter 'exit' to end."            /* How to escape rexxtry.    */
   helprx = '   ',                              /* add extra help info       */
     "  Or '?' for online REXX help."
