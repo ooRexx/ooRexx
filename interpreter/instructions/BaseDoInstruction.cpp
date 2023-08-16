@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2023 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -274,10 +274,12 @@ void RexxInstructionBaseLoop::execute(RexxActivation *context, ExpressionStack *
 
     // all we do here is create a new doblock and make it active
     Protected<DoBlock> doblock = new DoBlock(context, this);
-    context->newBlockInstruction(doblock);
 
-    // perform loop specific initialization
+    // perform loop specific initialization before pushing the doblock
     setup(context, stack, doblock);
+
+    // set the block to the top of the context stack.
+    context->newBlockInstruction(doblock);
 
     // update the iteration counters
     doblock->newIteration();

@@ -123,7 +123,7 @@ void DoBlock::setCounter(RexxActivation *context)
 {
     if (countVariable != OREF_NULL)
     {
-        // assign the control variable and trace this result
+        // assign the COUNTER variable and trace this result
         Protected<RexxObject> c =  Numerics::uint64ToObject(counter);
         countVariable->assign(context, c);
         context->traceKeywordResult(GlobalNames::COUNTER, c);
@@ -189,8 +189,10 @@ bool DoBlock::checkControl(RexxActivation *context, ExpressionStack *stack, bool
     {
         // get the control variable value and trace
         result = control->evaluate(context, stack);
+        context->traceResult(result);
         // increment using the plus operator
         result = result->callOperatorMethod(OPERATOR_PLUS, by);
+        context->traceResult(result); // trace if necessary
 
         // the control variable gets set immediately, and and the assignment will also get traced
         // increment result
