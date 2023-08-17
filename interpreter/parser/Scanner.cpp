@@ -425,47 +425,41 @@ RexxString* LanguageParser::packHexLiteral(size_t start, size_t length)
         return GlobalNames::NULLSTRING;
     }
 
-    // the first group gets special handling in terms of padding
-    bool firstGroup = true;
     // this is our counter for group packing
     int groupCount = 0;
     // our count of nibble characters we find...we can calculate the result length from this
     int nibbleCount = 0;
     // a pointer for scanning the data
-    const char *inPointer = current + start;
+    // scanning right-to-left makes it easier to identify correct whitespace positioning
+    const char *inPointer = current + start + length - 1;
 
     // update the current clause location in case there are any errors
     clauseLocation = clause->getLocation();
 
-    /* first scan is to check REXX rules for validity of grouping             */
-    /* and to remove blanks                                                   */
+    // first scan is to check REXX rules for validity of grouping
 
-    // this is our counter of the packed string length.  We only count
-    // the characters that get packed.
-    size_t packedlength = length;
-
-    // scan the entire input string
-    for (size_t i = 0; i < length; i++)
+    // scan the entire input string from right to left
+    for (size_t i = length; i > 0; i--)
     {
         // do we have a white space character?
         if (*inPointer == ' ' || *inPointer == '\t')
         {
             // now check to see if this is in a valid position.  We do not allow
-            // blanks at the beginning of the string, and if we are past the
-            // first group, then blanks must appear at even character boundaries.
-            if (i == 0  ||                 // this is the test for the beginning
-                (!firstGroup &&             // ok, we've processed the first group, this must be on a boundary
-                 ((groupCount & 1) != 0)))  // not evenly divisible by two...bad placement.
+            // blanks at the start or the end of the string, and blanks may
+            // only appear at even hex digit (byte) boundaries.
+            if (i == 1 || i == length) // no blank at string start or end
             {
-                // NOTE:  our position is origin 0, we need to report this using
-                // origin 1 position.
-                syntaxError(Error_Invalid_hex_hexblank, new_integer(i + 1));
+                syntaxError(Error_Invalid_hex_hexblank, new_integer(i));
 
             }
+            // not evenly divisible by two...bad blank placement
+            else if ((groupCount & 1) != 0)
+            {
+                syntaxError(Error_Invalid_hex_invhex_group);
+            }
+
             // we start a new group now
             groupCount = 0;
-            // once we see a blank, we're no longer in the first group
-            firstGroup = false;
         }
 
         // non-blank character...for now, just count how many we have.
@@ -477,23 +471,7 @@ RexxString* LanguageParser::packHexLiteral(size_t start, size_t length)
             nibbleCount++;
         }
 
-        inPointer++;                        /* step the input position           */
-    }
-
-    // now we need to check for trailing blanks.  If our last group count is
-    // now zero, which means we've not seen a real character since our last
-    // blank character.  This means trailing blanks!
-
-    if (groupCount == 0)
-    {
-        // report this at the end position...there might be
-        // prior trailing blanks, but one is as good as another.
-        syntaxError(Error_Invalid_hex_hexblank, new_integer(length));
-    }
-    // check the size of the last group and make sure it is not odd.
-    else if (!firstGroup && (groupCount & 1) != 0)
-    {
-        syntaxError(Error_Invalid_hex_invhex_group);
+        inPointer--;                        // step the input position
     }
 
     // second scan is to create the string value determined by the
@@ -612,12 +590,7 @@ RexxString* LanguageParser::packBinaryLiteral(size_t start, size_t length)
     // update the current clause location in case there are any errors
     clauseLocation = clause->getLocation();
 
-    /* first scan is to check REXX rules for validity of grouping             */
-    /* and to remove blanks                                                   */
-
-    // this is our counter of the packed string length.  We only count
-    // the characters that get packed.
-    size_t packedlength = length;
+    // first scan is to check REXX rules for validity of grouping
 
     // scan the entire input string from right to left
     for (size_t i = length; i > 0; i--)
@@ -626,9 +599,9 @@ RexxString* LanguageParser::packBinaryLiteral(size_t start, size_t length)
         if (*inPointer == ' ' || *inPointer == '\t')
         {
             // now check to see if this is in a valid position.  We do not allow
-            // blanks at the end of the string, and blanks must appear at even
-            // nibble (4 bit) boundaries.
-            if (i == length)              // this is the test for the end
+            // blanks at the start or the end of the string, and blanks may
+            // only appear at 4-bit boundaries.
+            if (i == 1 || i == length) // no blank at string start or end
             {
                 syntaxError(Error_Invalid_hex_binblank, new_integer(i));
 
@@ -654,19 +627,6 @@ RexxString* LanguageParser::packBinaryLiteral(size_t start, size_t length)
 
         inPointer--;                        // step the input position
     }
-
-    // now we need to check for leading blanks.  If our last group count is
-    // now zero, which means we've not seen a real character since our last
-    // blank character.  This means leading blanks!  Since we scan backwards,
-    // the last seen group can have an odd number.
-
-    if (groupCount == 0)
-    {
-        // report this at the first position...there might be
-        // more leading blanks, but one is as good as another.
-        syntaxError(Error_Invalid_hex_binblank, new_integer(1));
-    }
-
 
     // second scan is to create the string value determined by the
     // hex constant.
