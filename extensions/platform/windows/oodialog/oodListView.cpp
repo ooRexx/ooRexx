@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2023 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -207,33 +207,33 @@ static uint32_t parseExtendedStyle(const char * style)
 {
     uint32_t dwStyle = 0;
 
-    if ( strstr(style, "BORDERSELECT"    ) ) dwStyle |= LVS_EX_BORDERSELECT;
-    if ( strstr(style, "CHECKBOXES"      ) ) dwStyle |= LVS_EX_CHECKBOXES;
-    if ( strstr(style, "FLATSB"          ) ) dwStyle |= LVS_EX_FLATSB;
-    if ( strstr(style, "FULLROWSELECT"   ) ) dwStyle |= LVS_EX_FULLROWSELECT;
-    if ( strstr(style, "GRIDLINES"       ) ) dwStyle |= LVS_EX_GRIDLINES;
-    if ( strstr(style, "HEADERDRAGDROP"  ) ) dwStyle |= LVS_EX_HEADERDRAGDROP;
-    if ( strstr(style, "INFOTIP"         ) ) dwStyle |= LVS_EX_INFOTIP;
-    if ( strstr(style, "MULTIWORKAREAS"  ) ) dwStyle |= LVS_EX_MULTIWORKAREAS;
-    if ( strstr(style, "ONECLICKACTIVATE") ) dwStyle |= LVS_EX_ONECLICKACTIVATE;
-    if ( strstr(style, "REGIONAL"        ) ) dwStyle |= LVS_EX_REGIONAL;
-    if ( strstr(style, "SUBITEMIMAGES"   ) ) dwStyle |= LVS_EX_SUBITEMIMAGES;
-    if ( strstr(style, "TRACKSELECT"     ) ) dwStyle |= LVS_EX_TRACKSELECT;
-    if ( strstr(style, "TWOCLICKACTIVATE") ) dwStyle |= LVS_EX_TWOCLICKACTIVATE;
-    if ( strstr(style, "UNDERLINECOLD"   ) ) dwStyle |= LVS_EX_UNDERLINECOLD;
-    if ( strstr(style, "UNDERLINEHOT"    ) ) dwStyle |= LVS_EX_UNDERLINEHOT;
+    if ( StrStrI(style, "BORDERSELECT"    ) ) dwStyle |= LVS_EX_BORDERSELECT;
+    if ( StrStrI(style, "CHECKBOXES"      ) ) dwStyle |= LVS_EX_CHECKBOXES;
+    if ( StrStrI(style, "FLATSB"          ) ) dwStyle |= LVS_EX_FLATSB;
+    if ( StrStrI(style, "FULLROWSELECT"   ) ) dwStyle |= LVS_EX_FULLROWSELECT;
+    if ( StrStrI(style, "GRIDLINES"       ) ) dwStyle |= LVS_EX_GRIDLINES;
+    if ( StrStrI(style, "HEADERDRAGDROP"  ) ) dwStyle |= LVS_EX_HEADERDRAGDROP;
+    if ( StrStrI(style, "INFOTIP"         ) ) dwStyle |= LVS_EX_INFOTIP;
+    if ( StrStrI(style, "MULTIWORKAREAS"  ) ) dwStyle |= LVS_EX_MULTIWORKAREAS;
+    if ( StrStrI(style, "ONECLICKACTIVATE") ) dwStyle |= LVS_EX_ONECLICKACTIVATE;
+    if ( StrStrI(style, "REGIONAL"        ) ) dwStyle |= LVS_EX_REGIONAL;
+    if ( StrStrI(style, "SUBITEMIMAGES"   ) ) dwStyle |= LVS_EX_SUBITEMIMAGES;
+    if ( StrStrI(style, "TRACKSELECT"     ) ) dwStyle |= LVS_EX_TRACKSELECT;
+    if ( StrStrI(style, "TWOCLICKACTIVATE") ) dwStyle |= LVS_EX_TWOCLICKACTIVATE;
+    if ( StrStrI(style, "UNDERLINECOLD"   ) ) dwStyle |= LVS_EX_UNDERLINECOLD;
+    if ( StrStrI(style, "UNDERLINEHOT"    ) ) dwStyle |= LVS_EX_UNDERLINEHOT;
 
     // Needs Comctl32.dll version 5.8 or higher
     if ( ComCtl32Version >= COMCTL32_5_8 )
     {
-      if ( strstr(style, "LABELTIP") ) dwStyle |= LVS_EX_LABELTIP;
+      if ( StrStrI(style, "LABELTIP") ) dwStyle |= LVS_EX_LABELTIP;
     }
 
     // Needs Comctl32 version 6.0 or higher
     if ( ComCtl32Version >= COMCTL32_6_0 )
     {
-      if ( strstr(style, "DOUBLEBUFFER") ) dwStyle |= LVS_EX_DOUBLEBUFFER;
-      if ( strstr(style, "SIMPLESELECT") ) dwStyle |= LVS_EX_SIMPLESELECT;
+      if ( StrStrI(style, "DOUBLEBUFFER") ) dwStyle |= LVS_EX_DOUBLEBUFFER;
+      if ( StrStrI(style, "SIMPLESELECT") ) dwStyle |= LVS_EX_SIMPLESELECT;
     }
     return dwStyle;
 }
