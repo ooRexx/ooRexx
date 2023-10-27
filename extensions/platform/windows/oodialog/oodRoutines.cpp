@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2023 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -251,7 +251,7 @@ UINT_PTR CALLBACK  OFNSetForegroundHookProc(HWND hdlg, UINT uiMsg, WPARAM wParam
     }
 
     // Return 0 for all messages so that the default dialog box procedure
-    // processess everything.
+    // processes everything.
     return 0;
 }
 
@@ -291,11 +291,11 @@ RexxRoutine8(RexxObjectPtr, fileNameDlg_rtn,
             OPTIONAL_CSTRING, multi,       OPTIONAL_CSTRING, _sep)
 {
     // The bulk of the work here is setting up the open file name struct based
-    // on the arguements passed by the user.
+    // on the arguments passed by the user.
 
     OPENFILENAME OpenFileName = {0};
     OpenFileName.lStructSize  = sizeof(OPENFILENAME);
-    OpenFileName.Flags = OFN_SHOWHELP | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY | OFN_ENABLEHOOK |
+    OpenFileName.Flags = OFN_PATHMUSTEXIST | OFN_HIDEREADONLY | OFN_ENABLEHOOK |
                          OFN_EXPLORER | OFN_ENABLESIZING;
 
     // Open or save file dialog.  Allow multiple file selection on open, or not.
@@ -564,8 +564,8 @@ RexxObjectPtr getSrcDirString(RexxCallContext *c)
  *  the .application object's srcDir attribute.
  *
  *  @param  update [optional]  By default this routine only sets the
- *                 .aplication's srcDir attriute the first time it is invoked.
- *                 On succesive invocations, it does not change the attribute.
+ *                 .application's srcDir attribute the first time it is invoked.
+ *                 On successive invocations, it does not change the attribute.
  *                 If update is set to true it resets the .application object's
  *                 srcDir attribute to the value it is returning.
  *
@@ -603,7 +603,7 @@ done_out:
  *
  *  @param  text
  *  @param  hwnd  Handle of owner window.  If the user specifies 0 we do not use
- *                an owner window.  If the user omits hwnd, then we try the to
+ *                an owner window.  If the user omits hwnd, then we try to
  *                find and use the topmost dialog.
  *
  *
@@ -708,14 +708,14 @@ done_out:
 
 /** msSleep()
  *
- *  Sleeps the specified number of miliseconds.
+ *  Sleeps the specified number of milliseconds.
  *
  *  Prior to ooRexx 4.0.0, both the public routine msSleep() and the external
  *  function sleepMS() were both documented.  For backward compatibility, both
  *  need to be maintained.  sleepMS() is marked as deprecated and mapped to this
  *  function.
  *
- *  @param ms   The number of miliseconds to sleep.
+ *  @param ms   The number of milliseconds to sleep.
  *
  *  @return     Always returns 0.
  *
@@ -814,13 +814,13 @@ RexxRoutine3(RexxObjectPtr, play_rtn, OPTIONAL_CSTRING, fileName, OPTIONAL_CSTRI
  *  svn revision 8968 and previous contains the original implementation if there
  *  is a need to review that code.
  *
- *  The original implmentation was replaced in ooDialog 4.2.2 with this
+ *  The original implementation was replaced in ooDialog 4.2.2 with this
  *  implementation using waitable timers instead.  It is backwards compatible
  *  with the original implementation, and needs to remain that way.
  *
  *  For very small periods, SetTimer replaces the specified time with
  *  USER_TIMER_MINIMUM.  So when Rexx programmers specified 1 or 2 or 6
- *  milliseconds, the got USER_TIMER_MINIMUM instead.  We mimic that behaviour
+ *  milliseconds, they got USER_TIMER_MINIMUM instead.  We mimic that behaviour
  *  here, otherwise programs using a delay of 1 millisecond do not work the
  *  same.  We actually use 1.5 times USER_TIMER_MINIMUM because it seems to work
  *  the best.
@@ -829,7 +829,7 @@ RexxRoutine3(RexxObjectPtr, play_rtn, OPTIONAL_CSTRING, fileName, OPTIONAL_CSTRI
  *                  starts it.  WAIT waits on the timer.  STOP destroys the
  *                  timer.
  *
- *  @param  msOrId  Either the period of the timer, in miliseconds, if mode is
+ *  @param  msOrId  Either the period of the timer, in milliseconds, if mode is
  *                  START, or the timer ID for the other modes.
  *
  *  @return The timer ID for the START mode, or success / error return code for
