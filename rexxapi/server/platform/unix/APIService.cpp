@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2023 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -42,7 +42,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <sys/file.h>
+#include <unistd.h>              // lockf()
 #include <sys/types.h>
 #include <fcntl.h>
 #include <signal.h>
@@ -84,9 +84,11 @@ int acquireLock (const char *lockFileName)
         return -1;
     }
 
-    if (flock (lockFd, LOCK_EX | LOCK_NB) < 0)
+    // locks for exclusive use if another process has not already locked
+    // if already locked by another process, returns -1
+    if (lockf(lockFd, F_TLOCK, 0) < 0)
     {
-        close (lockFd);
+        close(lockFd);
         return -1;
     }
 
@@ -102,7 +104,9 @@ int acquireLock (const char *lockFileName)
  */
 void releaseLock (const char *lockFileName, int lockFd)
 {
-    flock(lockFd, LOCK_UN);
+    int ignore; // avoid warning: ignoring return value of 'int lockf(int, int, __off_t)
+
+    ignore = lockf(lockFd, F_ULOCK, 0);
     close(lockFd);
     unlink(lockFileName);
 }
