@@ -2,7 +2,7 @@
 -- note: the above hashbang is intentional: will run the archive's bin/rexx
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2021-2022 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2021-2023 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -55,6 +55,7 @@
 
        changed:   - 20220130, rgf: ren setup.{*} to setupoorexx.{*}, and rhenv{*} to rxenv{*}
                   - 20220209, rgf: changed "test.rex" to "testoorexx.rex"
+                  - 20231113, rgf: changed eCopy for Unix to "cp -RpPf" as suggested by P.O.
 */
 
 local=.context~package~local     -- get package's local directory
@@ -92,9 +93,10 @@ if .bDebug=.true then say .leadin "RC"~left(.lw,".")":" pp(rc) "(by" cmd")" "gen
 -- define some operating system dependent values
 if op_sys='W' then
    eCopy="copy"
-else
+else  -- Unix
 -- v option not available on all platforms, removed 2023-02-15 POJ
-   eCopy="cp -af"
+-- changed "cp -af" with "cp -RpPf" as suggested by POJ
+   eCopy="cp -RpPf"
 
 targetRootDir=zipDir || .rexxinfo~directorySeparator || zipName  -- the archive's exploded root directory
 if .bDebug=.true then say .leadin "targetRootDir"~left(.lw,".")":" pp(targetRootDir) "zipDir:" pp(zipDir) "zipName:" pp(zipName)
@@ -210,7 +212,8 @@ end
    address system "chmod" dirMask scriptFullPath
 
 -- v option not available on all platforms, removed 2023-02-15 POJ
-   eCopy = "cp -af"    -- should work on both, Linux and Darwin, preserving symbolic links
+-- changed "cp -af" with "cp -RpPf" as suggested by POJ
+   eCopy="cp -RpPf"
 
       -- create and copy to the "bin" directory, locating the installed directory with SysFileTree()
    call sysFileTree zipDir"/rexx", "files.", "FOS"
@@ -368,7 +371,7 @@ end
 @echo off
 rem ----------------------------------------------------------------------------
 rem
-rem Copyright (c) 2021 Rexx Language Association. All rights reserved.
+rem Copyright (c) 2021-2023 Rexx Language Association. All rights reserved.
 rem
 rem This program and the accompanying materials are made available under
 rem the terms of the Common Public License v1.0 which accompanies this
@@ -415,7 +418,7 @@ bin\rexx.exe setupoorexx.rex
 #!/bin/sh
 # ----------------------------------------------------------------------------
 #
-# Copyright (c) 2021 Rexx Language Association. All rights reserved.
+# Copyright (c) 2021-2023 Rexx Language Association. All rights reserved.
 #
 # This program and the accompanying materials are made available under
 # the terms of the Common Public License v1.0 which accompanies this
