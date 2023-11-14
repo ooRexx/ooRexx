@@ -301,7 +301,7 @@
     buffer~append('[')
     level+=1   -- indent
     items=rexxObject~items
-    if items == 0 then buffer~append(']', crlf)
+    if items == 0 then buffer~append(']')
     else do
         buffer~append(crlf, leadin~copies(level))
         do counter c item over rexxObject
@@ -319,7 +319,7 @@
     buffer~append('{')
     level+=1   -- indent
     items=rexxObject~items
-    if tems == 0 then buffer~append('}', crlf)
+    if items == 0 then buffer~append('}')
     else do
         buffer~append(crlf, leadin~copies(level))
         do counter c index over rexxObject~allIndexes~sort -- index in JSON must be a quoted string
