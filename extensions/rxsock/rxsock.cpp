@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2023 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -47,16 +47,10 @@
 # include "config.h"
 #endif
 
-#define PROG_DESC "REXX function package for tcp/ip sockets"
-#define PROG_COPY "(c) Copyright International Business Machines Corporation 1993, 2004"
-#define PROG_COPY1 "(c) Copyright Rexx Language Association 2005-2014"
-#define PROG_ALRRa "All Rights Reserved."
-#define PROG_ALRRb "This program and the accompanying materials"
-#define PROG_ALRRc "are made available under the terms of the Common Public License v1.0"
-
-
-#ifdef OPSYS_LINUX
-  #define SO_USELOOPBACK  0x0040    /* bypass hardware when possible         */
+// some platforms (e. g. Linux) don't support SO_USELOOPBACK
+// also it is defined, but not supported for Winsock
+#ifndef SO_USELOOPBACK
+  #define SO_USELOOPBACK  0x0040
 #endif
 
 /*------------------------------------------------------------------

@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2023 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -369,7 +369,7 @@ RexxRoutine0(RexxStringObject, SockGetHostId)
     for(struct ifaddrs* tia = tifaddrs; tia->ifa_next != NULL; tia = tia->ifa_next) {
       if (tia->ifa_addr != NULL && tia->ifa_addr->sa_family == AF_INET) {
         struct sockaddr_in* si = (struct sockaddr_in*)tia->ifa_addr;
-        if(memcmp("127", inet_ntoa(si->sin_addr), 3)) { /* filter out loopbacks */  
+        if(memcmp("127", inet_ntoa(si->sin_addr), 3)) { /* filter out loopbacks */
           ia.s_addr = si->sin_addr.s_addr;
           break;
         }
@@ -853,7 +853,7 @@ RexxRoutine5(int, SockRecvFrom, int, sock, CSTRING, var, int, dataLen, RexxObjec
 /*------------------------------------------------------------------
  *  select()
  *------------------------------------------------------------------*/
-RexxRoutine4(int, SockSelect, OPTIONAL_RexxObjectPtr, array1, OPTIONAL_RexxObjectPtr, array2, OPTIONAL_RexxObjectPtr, array3, OPTIONAL_int, timeout)
+RexxRoutine4(int, SockSelect, OPTIONAL_RexxObjectPtr, array1, OPTIONAL_RexxObjectPtr, array2, OPTIONAL_RexxObjectPtr, array3, OPTIONAL_float, timeout)
 {
     struct timeval  timeOutS;
     struct timeval *timeOutP;
@@ -866,15 +866,9 @@ RexxRoutine4(int, SockSelect, OPTIONAL_RexxObjectPtr, array1, OPTIONAL_RexxObjec
     int             i;
     int             j;
     int             rc;
-#if defined(OPSYS_LINUX)
     fd_set   rSetS, *rSet = &rSetS;
     fd_set   wSetS, *wSet = &wSetS;
     fd_set   eSetS, *eSet = &eSetS;
-#else
-    struct fd_set   rSetS, *rSet = &rSetS;
-    struct fd_set   wSetS, *wSet = &wSetS;
-    struct fd_set   eSetS, *eSet = &eSetS;
-#endif
     int             max;
 
     /*---------------------------------------------------------------
@@ -891,8 +885,8 @@ RexxRoutine4(int, SockSelect, OPTIONAL_RexxObjectPtr, array1, OPTIONAL_RexxObjec
             timeout = 0;
         }
 
-        timeOutS.tv_sec  = timeout;
-        timeOutS.tv_usec = 0;
+        timeOutS.tv_sec  = (int)timeout;
+        timeOutS.tv_usec = (int)((timeout - timeOutS.tv_sec) * 1000000);
         timeOutP = &timeOutS;
     }
 
@@ -1179,8 +1173,8 @@ RexxRoutine4(int, SockSendTo, int, sock, RexxStringObject, dataObj, RexxObjectPt
 RexxRoutine4(int, SockSetSockOpt, int, sock, CSTRING, target, CSTRING, option, CSTRING, arg)
 {
     struct linger  lingStruct;
-    int            intVal;
-    int            intVal2;
+    int            intVal = 0;
+    int            intVal2 = 0;
     socklen_t      lenVal;
     int            len;
     void          *ptr;
