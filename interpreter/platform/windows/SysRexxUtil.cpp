@@ -138,36 +138,30 @@
 static   int   ExtendedFlag = 0;       /* extended character saved   */
 static   char  ExtendedChar;           /* saved extended character   */
 
-/**********************************************************************
-***             <<<<<< REXXUTIL Functions Follow >>>>>>>            ***
-***             <<<<<< REXXUTIL Functions Follow >>>>>>>            ***
-***             <<<<<< REXXUTIL Functions Follow >>>>>>>            ***
-***             <<<<<< REXXUTIL Functions Follow >>>>>>>            ***
-**********************************************************************/
+
 /**********************************************************************
 * Function:  SysCls                                                   *
 *                                                                     *
 * Syntax:    call SysCls                                              *
 *                                                                     *
-* Return:    NO_UTIL_ERROR - Successful.                              *
+* Return:    0 on success, else Windows error code                    *
 **********************************************************************/
 RexxRoutine0(int, SysCls)
 {
     DWORD dummy;
-    COORD Home = { 0, 0 };                 /* Home coordinates on console*/
-    CONSOLE_SCREEN_BUFFER_INFO csbiInfo; /* Console information        */
+    COORD home = { 0, 0 };           // console home coordinates
+    CONSOLE_SCREEN_BUFFER_INFO csbi; // console information
 
-    HANDLE hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
-    /* if in character mode       */
-    if (GetConsoleScreenBufferInfo(hStdout, &csbiInfo))
-    {
-        FillConsoleOutputCharacter(hStdout, ' ',
-                                   csbiInfo.dwSize.X * csbiInfo.dwSize.Y,
-                                   Home, &dummy);
-        SetConsoleCursorPosition(hStdout, Home);
-    }
+    HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
+    // fill console buffer with spaces, reset attributes, and set cursor home
+    if (
+      GetConsoleScreenBufferInfo(h, &csbi) &&
+      FillConsoleOutputCharacter(h, ' ', csbi.dwSize.X * csbi.dwSize.Y, home, &dummy) &&
+      FillConsoleOutputAttribute(h, csbi.wAttributes, csbi.dwSize.X * csbi.dwSize.Y, home, &dummy) &&
+      SetConsoleCursorPosition(h, home)
+    ) return 0;
 
-    return 0;
+    return GetLastError();
 }
 
 /*************************************************************************
