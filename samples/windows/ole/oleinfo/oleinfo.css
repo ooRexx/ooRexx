@@ -1,0 +1,195 @@
+/*
+   *----------------------------------------------------------------------------*
+   *                                                                            *
+   * Copyright (c) 2002-2022 Rony G. Flatscher. All rights reserved.            *
+   * Copyright (c) 2023      Rexx Language Association. All rights reserved.    *
+   *                                                                            *
+   * This program and the accompanying materials are made available under       *
+   * the terms of the Common Public License v1.0 which accompanies this         *
+   * distribution. A copy is also available at the following address:           *
+   * https:  www.oorexx.org license.html                                        *
+   *                                                                            *
+   * Redistribution and use in source and binary forms, with or                 *
+   * without modification, are permitted provided that the following            *
+   * conditions are met:                                                        *
+   *                                                                            *
+   * Redistributions of source code must retain the above copyright             *
+   * notice, this list of conditions and the following disclaimer.              *
+   * Redistributions in binary form must reproduce the above copyright          *
+   * notice, this list of conditions and the following disclaimer in            *
+   * the documentation and or other materials provided with the distribution.   *
+   *                                                                            *
+   * Neither the name of Rexx Language Association nor the names                *
+   * of its contributors may be used to endorse or promote products             *
+   * derived from this software without specific prior written permission.      *
+   *                                                                            *
+   * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS        *
+   * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT          *
+   * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS          *
+   * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT   *
+   * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,      *
+   * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED   *
+   * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,        *
+   * OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY     *
+   * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING    *
+   * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS         *
+   * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               *
+   *                                                                            *
+   *----------------------------------------------------------------------------*
+
+   purpose: formatting information for the "oleinfo*" set of Object Rexx programs
+            and HTML-files which embed Object Rexx code
+
+*/
+
+@media screen {
+
+     H1      { color: blue;
+             }
+
+     body    { background-color:  lightgoldenrodyellow        /* #ffffdd */ ;
+               font-family: Times, Avantgarde;
+               font-family: Arial,sans-serif;
+               font-size: 14pt;
+               }
+
+     div.alert {
+                  background-color: black;
+                  color:            white;
+                  text-align: center;
+                  padding: 5 5 5 5;
+               }
+
+
+     .choose { color: brown;
+                 font-weight: bold;
+             }
+
+     A.choose {
+                 text-decoration: none;
+             }
+
+     .choose:hover  {
+                 font-size: 150%;
+                 font-weight: bolder;
+                 text-decoration: none;
+             }
+
+     .hint_not_found {
+                 font-weight: bold;
+                 color: red;
+             }
+
+     .hint   {
+                 font-size: 75%;
+             }
+
+      table.hint {
+                 color: blue;
+                 }
+
+
+      col.th_hint {  color: orange;
+                 text-align: right;
+               }
+
+      col.td_hint {
+                 color: black;
+               }
+
+}
+
+
+@media screen, print {
+
+     H1      { color: blue;
+               text-align: center;
+               font-family: Arial,sans-serif;
+               font-size: 200%;
+             }
+
+     table.all_CLSIDs {
+                font-size: 75%;
+             }
+
+     .doc    { color: blue;
+               font-style: italic;
+             }
+
+     .name   {
+               color:  red    /* red */ ;
+               font-weight: bold;
+               }
+
+     .hilite { background-color: yellow; }
+
+     .optional { font-style: italic;
+                 font-size: 90%;
+               }
+
+     .inout  {   vertical-align: sub;
+                 font-size: smaller;
+             }
+
+
+     .info   { font-style: italic;
+               font-weight: bold;
+               font-variant: small-caps;
+               font-size: 80%;
+               text-align: right;
+             }
+
+
+     .type   { font-variant: small-caps;
+               font-family: Arial,sans-serif;
+               font-size: 75%;
+               font-style: italic;
+               font-weight: bold;
+               color: green;
+             }
+
+     .number { text-align: right;
+               font-style: italic;
+             }
+
+
+     tr.odd  {
+               background-color: rgb(235, 235, 235) ;   /* also in hex possible, e.g. #f1f1f1 */
+             }
+
+     td.indent {
+                text-indent: 1cm;
+             }
+
+     .bottom_info   { font-variant: small-caps;
+               font-family: Arial,sans-serif;
+               font-size: 65%;
+               font-style: italic;
+               text-align: center;
+               font-weight: bold;
+             }
+
+
+}
+
+
+@media print {
+     BODY {
+            font-size:   12pt;
+          }
+
+     TABLE {
+             padding: 1px;
+             font-size: 10pt;
+           }
+
+     tr.return { color: green; border: 1px solid black; }
+}
+
+
+@media all {
+
+/*  BODY { line-height: 1.2;} */
+}
+
+
