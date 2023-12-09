@@ -1,7 +1,7 @@
 #!@OOREXX_SHEBANG_PROGRAM@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2007-2021 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2007-2023 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -43,10 +43,8 @@
 
 /*  instantiate an instance of the inetaddress class
     with the host information of the server we will
-    contact: localhost and port 50010
-    we use the "gethostid" class method of the socket
-    class to determine the localhost address  */
-    host = .inetaddress~new(.socket~gethostid(), '50010')
+    contact: localhost and port 50010  */
+    host = .inetaddress~new('localhost', '50010')
 
 /*  connect to the server  */
     if sock~connect(host) < 0 then do

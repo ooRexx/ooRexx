@@ -1232,7 +1232,7 @@ RexxRoutine4(int, SockSetSockOpt, int, sock, CSTRING, target, CSTRING, option, C
             len = sizeof(tv);
             sscanf(arg, "%d", &intVal);
             tv.tv_sec = intVal / 1000;
-            tv.tv_usec = (intVal - tv.tv_sec * 1000) * 1000 + 333;
+            tv.tv_usec = (intVal - tv.tv_sec * 1000) * 1000;
             break;
 #endif
 

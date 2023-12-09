@@ -1,9 +1,7 @@
 #!@OOREXX_SHEBANG_PROGRAM@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Description: Simple socket client using socket function package            */
-/*                                                                            */
-/* Copyright (c) 2007-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2007-2023 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -36,16 +34,16 @@
 /* NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS         */
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
-/* Author: David Ruggles                                                      */
-/*                                                                            */
 /*----------------------------------------------------------------------------*/
+
+/* Simple socket client using socket function package                         */
 
 /*  create a socket  */
     socket = socksocket('AF_INET', 'SOCK_STREAM', 'IPPROTO_TCP')
 
 /*  specify the host we will connect to  */
     host.!family = 'AF_INET'        --  Protocol family (only AF_INET is supported)
-    host.!addr = SockGetHostId()    --  IP address (use the sockgethostid function to get address of the localhost)
+    host.!addr = '127.0.0.1'        --  localhost IP address
     host.!port = '50010'            --  Port number
 
 /*  connect to the server  */

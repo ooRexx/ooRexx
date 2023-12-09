@@ -1,9 +1,7 @@
 #!@OOREXX_SHEBANG_PROGRAM@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Description: Simple socket server using socket class                       */
-/*                                                                            */
-/* Copyright (c) 2007-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2007-2023 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -36,9 +34,9 @@
 /* NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS         */
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
-/* Author: David Ruggles                                                      */
-/*                                                                            */
 /*----------------------------------------------------------------------------*/
+
+/* Simple socket server using socket class                                    */
 
 srv = .myserver~new()
 srv~listen()
@@ -73,7 +71,7 @@ srv~listen()
 /*  instantiate an instance of the socket class  */
     sock = .socket~new()
 
-    host = .inetaddress~new(.socket~gethostid(), '50010')
+    host = .inetaddress~new('localhost', '50010')
 
 /*  connect to the server (if it hasn't already shutdown)  */
     if sock~connect(host) < 0 then
@@ -85,10 +83,8 @@ srv~listen()
 
 /*  instantiate an instance of the inetaddress class
     with the host information of the server we will
-    contact: localhost and port 50010
-    we use the "gethostid" class method of the socket
-    class to determine the localhost address  */
-    host = .inetaddress~new(.socket~gethostid(), '50010')
+    contact: localhost and port 50010  */
+    host = .inetaddress~new('localhost', '50010')
 
 /*  bind to the host information  */
     sock~setOption('SO_REUSEADDR', 1)
