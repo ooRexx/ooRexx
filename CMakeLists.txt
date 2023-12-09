@@ -347,67 +347,98 @@ else ()
    add_definitions(-DORX_VER=${ORX_MAJOR} -DORX_REL=${ORX_MINOR} -DORX_MOD=${ORX_MOD_LVL} -DORX_BLD=${ORX_BLD_LVL}
             -DOOREXX_COPY_YEAR="${ORX_COPY_YEAR}"
             -DORX_SYS_STR="${ORX_SYS_STR}"
-             -D_GNU_SOURCE
+            -D_GNU_SOURCE
             -DORX_SHARED_LIBRARY_EXT="${CMAKE_SHARED_LIBRARY_SUFFIX}"
             -DORX_SYSTEM_PROCESSOR="${CMAKE_SYSTEM_PROCESSOR}"
             -DORX_REXXPATH="${CMAKE_REXXPATH}"
             -D${ORX_SYS_STR} -DOPSYS_${ORX_SYS_STR} -DHAVE_CONFIG_H)
-    set (ORX_SYSLIB_DL ${CMAKE_DL_LIBS})
-    set (ORX_SYSLIB_PTHREAD pthread)
 endif ()
 
 # Check header files and functions. These are all defined to the config.h file.
-check_include_file(xlocale.h HAVE_XLOCALE_H)
-check_include_file(malloc.h HAVE_MALLOC_H)
-check_include_file(alloca.h HAVE_ALLOCA_H)
-check_include_file(signal.h HAVE_SIGNAL_H)
-check_include_file(time.h HAVE_TIME_H)
+message(STATUS "-- determine available header files --")
+check_include_file(alloca.h   HAVE_ALLOCA_H)
 check_include_file(inttypes.h HAVE_INTTYPES_H)
-check_include_file(stdint.h HAVE_STDINT_H)
-if (NOT WIN32)
-  check_function_exists(nsleep HAVE_NSLEEP)
-  check_function_exists(nanosleep HAVE_NANOSLEEP)
+check_include_file(malloc.h   HAVE_MALLOC_H)
+check_include_file(signal.h   HAVE_SIGNAL_H)
+check_include_file(stdint.h   HAVE_STDINT_H)
+check_include_file(time.h     HAVE_TIME_H)
+check_include_file(xlocale.h  HAVE_XLOCALE_H)
+
+if (NOT WIN32) # Unix header files, libraries, and functions
+  check_include_file(dlfcn.h      HAVE_DLFCN_H)
+  check_include_file(features.h   HAVE_FEATURES_H)
+  check_include_file(filehdr.h    HAVE_FILEHDR_H)
+  check_include_file(ifaddrs.h    HAVE_IFADDRS_H)
+  check_include_file(nl_types.h   HAVE_NL_TYPES_H)
+  check_include_file(pthread.h    HAVE_PTHREAD_H)
+  check_include_file(pthread_np.h HAVE_PTHREAD_NP_H)
+  check_include_file(pwd.h        HAVE_PWD_H)
+  check_include_file(sched.h      HAVE_SCHED_H)
+  check_include_file(strings.h    HAVE_STRINGS_H)
+  check_include_file(sys/filio.h  HAVE_SYS_FILIO_H)
+  check_include_file(sys/ldr.h    HAVE_SYS_LDR_H)
+  check_include_file(sys/resource.h HAVE_SYS_RESOURCE_H)
+  check_include_file(sys/select.h HAVE_SYS_SELECT_H)
+  check_include_file(sys/sem.h    HAVE_SYS_SEM_H)
+  check_include_file(sys/signal.h HAVE_SYS_SIGNAL_H)
+  check_include_file(sys/time.h   HAVE_SYS_TIME_H)
+  check_include_file(sys/utsname.h HAVE_SYS_UTSNAME_H)
+  check_include_file(sys/wait.h   HAVE_SYS_WAIT_H)
+  check_include_file(sys/xattr.h  HAVE_SYS_XATTR_H)
+  check_include_file(wordexp.h    HAVE_WORDEXP_H)
+  set (CURSES_NEED_NCURSES TRUE)
+  include(FindCurses) # sets CURSES_HAVE_NCURSES_H and CURSES_HAVE_NCURSES_NCURSES_H
+  message(STATUS "CURSES_HAVE_NCURSES_H is ${CURSES_HAVE_NCURSES_H}")
+  message(STATUS "CURSES_HAVE_NCURSES_NCURSES_H is ${CURSES_HAVE_NCURSES_NCURSES_H}")
+
+  message(STATUS "-- determine available libraries --")
+  set(CMAKE_REQUIRED_LIBRARIES ${CMAKE_DL_LIBS})
+  check_library_exists(rt nanosleep "" HAVE_LIBRT)
+  if (HAVE_LIBRT)
+    list(APPEND CMAKE_REQUIRED_LIBRARIES rt)
+  endif ()
+  check_library_exists(pthread pthread_create "" HAVE_LIBPTHREAD)
+  if (HAVE_LIBPTHREAD)
+    list(APPEND CMAKE_REQUIRED_LIBRARIES pthread)
+  endif ()
   check_library_exists(crypt crypt "" HAVE_LIBCRYPT)
   if (HAVE_LIBCRYPT)
-    set(CMAKE_REQUIRED_LIBRARIES crypt)
+    list(APPEND CMAKE_REQUIRED_LIBRARIES crypt)
   endif ()
-  check_function_exists(crypt HAVE_CRYPT)
-  check_symbol_exists(wordexp "wordexp.h;stdlib.h" HAVE_WORDEXP)
-  check_include_file(wordexp.h HAVE_WORDEXP_H)
-  check_include_file(sys/xattr.h HAVE_SYS_XATTR_H)
-  check_function_exists(catopen HAVE_CATOPEN)
-  check_include_file(dlfcn.h HAVE_DLFCN_H)
-  check_include_file(features.h HAVE_FEATURES_H)
-  check_include_file(filehdr.h HAVE_FILEHDR_H)
-  check_function_exists(euidaccess HAVE_EUIDACCESS)
-  find_library(HAVE_LIBPTHREAD pthread)
-  find_library(HAVE_LIBRT rt)
-  check_include_file(nl_types.h HAVE_NL_TYPES_H)
-  check_include_file(pthread.h HAVE_PTHREAD_H)
-  check_include_file(pthread_np.h HAVE_PTHREAD_NP_H)
-  set(CMAKE_REQUIRED_LIBRARIES pthread)
-  set(CMAKE_REQUIRED_DEFINITIONS "-D_GNU_SOURCE=1")
-  check_function_exists(pthread_mutex_timedlock HAVE_PTHREAD_MUTEX_TIMEDLOCK)
+  # SunOS/Solaris libraries
+  check_library_exists(socket getaddrinfo "" HAVE_LIBSOCKET)
+  if (HAVE_LIBSOCKET)
+    list(APPEND CMAKE_REQUIRED_LIBRARIES socket)
+  endif ()
+  check_library_exists(nsl gethostbyname "" HAVE_LIBNSL)
+  if (HAVE_LIBNSL)
+    list(APPEND CMAKE_REQUIRED_LIBRARIES nsl)
+  endif ()
+  check_library_exists(resolv hstrerror "" HAVE_LIBRESOLV)
+  if (HAVE_LIBRESOLV)
+    list(APPEND CMAKE_REQUIRED_LIBRARIES resolv)
+  endif ()
+
+  message(STATUS "-- determine available functions --")
+  # pthread_getattr_np() and dladdr() require _GNU_SOURCE
   list(APPEND CMAKE_REQUIRED_DEFINITIONS -D_GNU_SOURCE)
-  list(APPEND CMAKE_REQUIRED_LIBRARIES pthread)
-  check_function_exists(pthread_getattr_np HAVE_PTHREAD_GETATTR_NP)
+  check_function_exists(catopen HAVE_CATOPEN)
+  check_function_exists(crypt HAVE_CRYPT)
+  check_symbol_exists(dladdr dlfcn.h HAVE_DLADDR)
+  check_function_exists(euidaccess HAVE_EUIDACCESS)
+  check_symbol_exists(getifaddrs "sys/types.h;sys/socket.h;ifaddrs.h" HAVE_GETIFADDRS)
+  check_function_exists(nanosleep HAVE_NANOSLEEP)
+  check_function_exists(nsleep HAVE_NSLEEP)
+  check_function_exists(pthread_mutex_timedlock HAVE_PTHREAD_MUTEX_TIMEDLOCK)
+  check_symbol_exists(pthread_getattr_np pthread.h HAVE_PTHREAD_GETATTR_NP)
   if (HAVE_PTHREAD_NP_H)
     check_symbol_exists(pthread_attr_get_np "pthread.h;pthread_np.h" HAVE_PTHREAD_ATTR_GET_NP)
   else ()
     check_symbol_exists(pthread_attr_get_np pthread.h HAVE_PTHREAD_ATTR_GET_NP)
   endif ()
   check_symbol_exists(pthread_stackseg_np pthread_np.h HAVE_PTHREAD_STACKSEG_NP)
-  list(REMOVE_ITEM CMAKE_REQUIRED_DEFINITIONS -D_GNU_SOURCE)
-  check_function_exists(pthread_attr_getstack HAVE_PTHREAD_ATTR_GETSTACK)
-  check_function_exists(pthread_get_stacksize_np HAVE_PTHREAD_GET_STACKSIZE_NP)
-  # this requires -ldl on the link
-  set(CMAKE_REQUIRED_LIBRARIES ${CMAKE_DL_LIBS})
-  check_c_source_compiles("#include <dlfcn.h>
-                           int main(int arg, char **argv) {
-                           Dl_info DlInfo;
-                           dladdr((void*)0, &DlInfo);
-                           return 0;}"
-                          HAVE_DLADDR)
+  check_symbol_exists(pthread_get_stacksize_np pthread.h HAVE_PTHREAD_GET_STACKSIZE_NP)
+  check_symbol_exists(wordexp "wordexp.h;stdlib.h" HAVE_WORDEXP)
   check_symbol_exists(_PC_CASE_SENSITIVE unistd.h HAVE_PC_CASE_SENSITIVE)
   check_symbol_exists(FNM_CASEFOLD fnmatch.h HAVE_FNM_CASEFOLD)
   check_symbol_exists(KDMKTONE linux/kd.h HAVE_KDMKTONE)
@@ -418,43 +449,8 @@ if (NOT WIN32)
   check_symbol_exists(KERN_PROC_ARGV "sys/types.h;sys/sysctl.h" HAVE_KERN_PROC_ARGV)
   check_struct_has_member("struct stat" st_mtim sys/stat.h HAVE_STAT_ST_MTIM)
   check_struct_has_member("struct stat" st_mtimespec sys/stat.h HAVE_STAT_ST_MTIMESPEC)
-  check_include_file(pwd.h HAVE_PWD_H)
-  check_include_file(sched.h HAVE_SCHED_H)
-  check_include_file(strings.h HAVE_STRINGS_H)
-  check_include_file(sys/filio.h HAVE_SYS_FILIO_H)
-  check_include_file(sys/ldr.h HAVE_SYS_LDR_H)
-  check_include_file(sys/resource.h HAVE_SYS_RESOURCE_H)
-  check_include_file(sys/select.h HAVE_SYS_SELECT_H)
-  check_include_file(sys/sem.h HAVE_SYS_SEM_H)
-  check_include_file(sys/signal.h HAVE_SYS_SIGNAL_H)
-  check_include_file(sys/time.h HAVE_SYS_TIME_H)
-  check_include_file(sys/utsname.h HAVE_SYS_UTSNAME_H)
-  check_include_file(sys/wait.h HAVE_SYS_WAIT_H)
-  check_include_file(ifaddrs.h HAVE_IFADDRS_H)
-  check_symbol_exists(getifaddrs "sys/types.h;sys/socket.h;ifaddrs.h" HAVE_GETIFADDRS)
-  set (CURSES_NEED_NCURSES TRUE)
-  include(FindCurses) # sets CURSES_HAVE_NCURSES_H and CURSES_HAVE_NCURSES_NCURSES_H
-  message(STATUS "CURSES_HAVE_NCURSES_H is ${CURSES_HAVE_NCURSES_H}")
-  message(STATUS "CURSES_HAVE_NCURSES_NCURSES_H is ${CURSES_HAVE_NCURSES_NCURSES_H}")
-  if (CMAKE_SYSTEM_NAME MATCHES "(SunOS|Solaris)")
-    check_library_exists(socket getaddrinfo "" HAVE_LIBSOCKET)
-    if (HAVE_LIBSOCKET)
-      set(CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES} socket)
-    endif (HAVE_LIBSOCKET)
-    check_library_exists(nsl gethostbyname "" HAVE_LIBNSL)
-    if (HAVE_LIBNSL)
-      set(CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES} nsl)
-    endif (HAVE_LIBNSL)
-    check_library_exists(resolv hstrerror "" HAVE_LIBRESOLV)
-    if (HAVE_LIBRESOLV)
-      set(CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES} resolv)
-    endif (HAVE_LIBRESOLV)
-    check_library_exists(rt nanosleep "" HAVE_LIBRT)
-    if (HAVE_LIBRT)
-      set(CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES} rt)
-    endif (HAVE_LIBRT)
-  endif ()
 endif ()
+
 set (PACKAGE ${PROJECT_NAME})
 set (PACKAGE_BUGREPORT "https://sourceforge.net/projects/oorexx/")
 set (PACKAGE_NAME ${PROJECT_NAME})
@@ -464,7 +460,6 @@ set (PACKAGE_URL "https://www.oorexx.org/")
 set (PACKAGE_VERSION ${ORX_VER_STR})
 set (VERSION ${ORX_VER_STR})
 set (STDC_HEADERS 1)
-
 
 # Configure files config.h
 configure_file(config.h.in.cmake ${PROJECT_BINARY_DIR}/config.h)
@@ -630,7 +625,6 @@ if (WIN32)
 else ()
    set (platform_rexxapi_sources
             ${build_rexxapi_common_platform_dir}/SysCSStream.cpp)
-   set (platform_rexxapi_libs ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
 endif ()
 # Library definition
 add_library(rexxapi SHARED
@@ -898,7 +892,6 @@ if (WIN32)
    set (platform_interpreter_libs comctl32 shlwapi version)
 else ()
    set (platform_interpreter_sources ${build_interpreter_platform_dir}/RexxMain.cpp)
-   set (platform_rexx_libs ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
 endif ()
 
 # Library definition
@@ -941,10 +934,7 @@ create_install_symlink(rexx)
 
 #################### orexx (executable) ##########################
 if (WIN32)
-   set (platform_rexx_exe_sources
-            ${build_platform_dir}/rexx.rc)
-else ()
-   set (platform_rexx_exe_libs ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
+   set (platform_rexx_exe_sources ${build_platform_dir}/rexx.rc)
 endif ()
 # Sources for rexx.  Note, the target must not be rexx, since we already
 # have a rexx library target
@@ -974,7 +964,7 @@ target_include_directories(rexx_exe PUBLIC
             ${build_api_platform_dir}
             ${build_messages_dir})
 # Extra link library definitions
-target_link_libraries(rexx_exe rexx rexxapi ${platform_rexx_exe_libs} ${CMAKE_REQUIRED_LIBRARIES})
+target_link_libraries(rexx_exe rexx rexxapi ${CMAKE_REQUIRED_LIBRARIES})
 # Merge in extra manifestinformation on Windows
 if (WIN32)
 add_custom_command(TARGET rexx_exe POST_BUILD
@@ -991,8 +981,7 @@ set (core_classes ${build_rexx_classes_dir}/CoreClasses.orx
             ${build_rexx_classes_dir}/StreamClasses.orx)
 # additional source files required by specific platforms
 if (WIN32)
-   set (platform_rexximage_sources
-            ${build_platform_dir}/verinfo.rc)
+   set (platform_rexximage_sources ${build_platform_dir}/verinfo.rc)
 endif ()
 # Sources for rexximg
 add_executable(rexximage ${build_utilities_rexximage_dir}/rexximage.cpp
@@ -1004,7 +993,7 @@ target_include_directories(rexximage PUBLIC
             ${build_api_dir}
             ${build_api_platform_dir})
 # Extra link library definitions
-target_link_libraries(rexximage rexx rexxapi ${platform_rexximg_libs} ${CMAKE_REQUIRED_LIBRARIES})
+target_link_libraries(rexximage rexx rexxapi ${CMAKE_REQUIRED_LIBRARIES})
 
 # handy macro for copying files from the source into the build directory.
 macro (copy_build_file name source)
@@ -1071,7 +1060,6 @@ else ()
    set (platform_rxapi_sources
             ${build_rexxapi_common_platform_dir}/SysCSStream.cpp
             ${build_rexxapi_server_platform_dir}/APIService.cpp)
-   set (platform_rxapi_libs ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
 endif ()
 # Sources for rxapi
 add_executable(rxapi ${rxapi_executable_type}
@@ -1180,10 +1168,7 @@ endif ()
 #################### rexxc (executable) #########################
 # additional source files required by specific platforms
 if (WIN32)
-   set (platform_rexxc_sources
-            ${build_platform_dir}/verinfo.rc)
-else ()
-   set (platform_rexxc_libs ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
+   set (platform_rexxc_sources ${build_platform_dir}/verinfo.rc)
 endif ()
 # Sources for rexxc
 add_executable(rexxc ${build_utilities_rexxc_dir}/RexxCompiler.cpp
@@ -1195,16 +1180,13 @@ target_include_directories(rexxc PUBLIC
             ${build_api_platform_dir}
             ${build_messages_dir})
 # Extra link library definitions
-target_link_libraries(rexxc rexx rexxapi ${platform_rexxc_libs} ${CMAKE_REQUIRED_LIBRARIES})
+target_link_libraries(rexxc rexx rexxapi ${CMAKE_REQUIRED_LIBRARIES})
 install(TARGETS rexxc RUNTIME COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
 
 #################### rxqueue (executable) #########################
 # additional source files required by specific platforms
 if (WIN32)
-   set (platform_rxqueue_sources
-            ${build_platform_dir}/verinfo.rc)
-else ()
-   set (platform_rxqueue_libs ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
+   set (platform_rxqueue_sources ${build_platform_dir}/verinfo.rc)
 endif ()
 # Sources for rxqueue
 add_executable(rxqueue ${build_utilities_rxqueue_dir}/rxqueue.cpp
@@ -1217,16 +1199,13 @@ target_include_directories(rxqueue PUBLIC
             ${build_interpreter_platform_dir}
             ${build_messages_dir})
 # Extra link library definitions
-target_link_libraries(rxqueue rexx rexxapi ${platform_rxqueue_libs} ${CMAKE_REQUIRED_LIBRARIES})
+target_link_libraries(rxqueue rexx rexxapi ${CMAKE_REQUIRED_LIBRARIES})
 install(TARGETS rxqueue RUNTIME COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
 
 #################### rxsubcom (executable) #########################
 # additional source files required by specific platforms
 if (WIN32)
-   set (platform_subcom_sources
-            ${build_platform_dir}/verinfo.rc)
-else ()
-   set (platform_subcom_libs ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
+   set (platform_subcom_sources ${build_platform_dir}/verinfo.rc)
 endif ()
 # Sources for rxsubcom
 add_executable(rxsubcom ${build_utilities_rxsubcom_dir}/rxsubcom.cpp
@@ -1239,14 +1218,13 @@ target_include_directories(rxsubcom PUBLIC
              ${build_interpreter_platform_dir}
              ${build_messages_dir})
 # Extra link library definitions
-target_link_libraries(rxsubcom rexx rexxapi ${platform_subcom_libs} ${CMAKE_REQUIRED_LIBRARIES})
+target_link_libraries(rxsubcom rexx rexxapi ${CMAKE_REQUIRED_LIBRARIES})
 install(TARGETS rxsubcom RUNTIME COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
 
 #################### librxmath.so ################
 # additional source files required by specific platforms
 if (WIN32)
-   set (platform_rxmath_sources
-            ${build_platform_dir}/verinfo.rc)
+   set (platform_rxmath_sources ${build_platform_dir}/verinfo.rc)
 endif ()
 # Sources for librxmath.so
 add_library(rxmath SHARED ${build_extensions_rxmath_dir}/rxmath.cpp
@@ -1258,7 +1236,7 @@ target_include_directories(rxmath PUBLIC
              ${build_api_dir}
              ${build_api_platform_dir})
 # Extra link library definitions
-target_link_libraries(rxmath rexx rexxapi ${platform_rxmath_libs} ${CMAKE_REQUIRED_LIBRARIES})
+target_link_libraries(rxmath rexx rexxapi ${CMAKE_REQUIRED_LIBRARIES})
 install(TARGETS rxmath RUNTIME COMPONENT Core DESTINATION ${INSTALL_LIB_DIR}
                        LIBRARY DESTINATION ${INSTALL_LIB_DIR} COMPONENT Core)
 set_target_properties(rxmath PROPERTIES SOVERSION ${ORX_API_LEVEL})
@@ -1267,8 +1245,7 @@ create_install_symlink(rxmath)
 #################### librxsock.so ################
 # additional source files required by specific platforms
 if (WIN32)
-   set (platform_rxsock_sources
-            ${build_platform_dir}/verinfo.rc)
+   set (platform_rxsock_sources ${build_platform_dir}/verinfo.rc)
 endif ()
 
 # Sources for librxsock.so
@@ -1276,7 +1253,7 @@ add_library(rxsock SHARED ${build_extensions_rxsock_dir}/rxsock.cpp
              ${build_extensions_rxsock_dir}/rxsockfn.cpp
              ${platform_rxsock_sources})
 # Extra link library definitions
-target_link_libraries(rxsock rexx rexxapi ${platform_rxsock_libs} ${CMAKE_REQUIRED_LIBRARIES})
+target_link_libraries(rxsock rexx rexxapi ${CMAKE_REQUIRED_LIBRARIES})
 install(TARGETS rxsock RUNTIME COMPONENT Core DESTINATION ${INSTALL_LIB_DIR}
                        LIBRARY DESTINATION ${INSTALL_LIB_DIR} COMPONENT Core)
 set_target_properties(rxsock PROPERTIES SOVERSION ${ORX_API_LEVEL})
@@ -1286,8 +1263,7 @@ create_install_symlink(rxsock)
 #################### librxregexp.so ################
 # additional source files required by specific platforms
 if (WIN32)
-   set (platform_rxregexp_sources
-            ${build_platform_dir}/verinfo.rc)
+   set (platform_rxregexp_sources ${build_platform_dir}/verinfo.rc)
 endif ()
 
 # Sources for librxregexp.so
@@ -1302,7 +1278,7 @@ target_include_directories(rxregexp PUBLIC
              ${build_api_platform_dir}
              ${build_messages_dir})
 # Extra link library definitions
-target_link_libraries(rxregexp rexx rexxapi ${platform_rxregexp_libs} ${CMAKE_REQUIRED_LIBRARIES})
+target_link_libraries(rxregexp rexx rexxapi ${CMAKE_REQUIRED_LIBRARIES})
 install(TARGETS rxregexp RUNTIME COMPONENT Core DESTINATION ${INSTALL_LIB_DIR}
                          LIBRARY DESTINATION ${INSTALL_LIB_DIR} COMPONENT Core)
 set_target_properties(rxregexp PROPERTIES SOVERSION ${ORX_API_LEVEL})
@@ -1311,10 +1287,7 @@ create_install_symlink(rxregexp)
 #################### libhostemu.so ################
 # additional source files required by specific platforms
 if (WIN32)
-   set (platform_hostemu_sources
-            ${build_platform_dir}/verinfo.rc)
-else ()
-   set (platform_hostemu_libs ${ORX_SYSLIB_DL} ${ORX_SYSLIB_PTHREAD})
+   set (platform_hostemu_sources ${build_platform_dir}/verinfo.rc)
 endif ()
 # Sources for libhostemu.so
 # Note that we ignore the dependency on hostemu.ypp for now.
@@ -1327,7 +1300,7 @@ target_include_directories(hostemu PUBLIC
              ${build_api_platform_dir}
              ${build_extensions_hostemu_dir})
 # Extra link library definitions
-target_link_libraries(hostemu rexx rexxapi ${platform_hostemu_libs} ${CMAKE_REQUIRED_LIBRARIES})
+target_link_libraries(hostemu rexx rexxapi ${CMAKE_REQUIRED_LIBRARIES})
 install(TARGETS hostemu RUNTIME COMPONENT Core DESTINATION ${INSTALL_LIB_DIR}
                         LIBRARY DESTINATION ${INSTALL_LIB_DIR} COMPONENT Core)
 set_target_properties(hostemu PROPERTIES SOVERSION ${ORX_API_LEVEL})
@@ -1336,10 +1309,6 @@ create_install_symlink(hostemu)
 #################### librxunixsys.so ################
 if (NOT WIN32)
 # Sources for librxunixsys.so
-check_library_exists(crypt crypt "" HAVE_LIBCRYPT)
-if (HAVE_LIBCRYPT)
-   set (platform_rxunixsys_libs crypt)
-endif ()
 add_library(rxunixsys SHARED ${build_extensions_platform_dir}/rxunixsys/rxunixsys.cpp)
 # Include file definition
 target_include_directories(rxunixsys PUBLIC
@@ -1347,7 +1316,7 @@ target_include_directories(rxunixsys PUBLIC
              ${build_api_platform_dir}
              ${extensions_unix_dir}/rxunixsys)
 # Extra link library definitions
-target_link_libraries(rxunixsys rexx rexxapi ${platform_rxunixsys_libs} ${CMAKE_REQUIRED_LIBRARIES})
+target_link_libraries(rxunixsys rexx rexxapi ${CMAKE_REQUIRED_LIBRARIES})
 set_target_properties(rxunixsys PROPERTIES SOVERSION ${ORX_API_LEVEL})
 install(TARGETS rxunixsys RUNTIME DESTINATION ${INSTALL_LIB_DIR}
                           LIBRARY DESTINATION ${INSTALL_LIB_DIR} COMPONENT Core)
@@ -1367,7 +1336,7 @@ if (NOT WIN32)
              ${build_extensions_dir}/orxncurses
              ${CURSES_INCLUDE_DIRS})
    # Extra link library definitions
-   target_link_libraries(orxncurses rexx rexxapi  ${CURSES_LIBRARIES} ${CMAKE_REQUIRED_LIBRARIES})
+   target_link_libraries(orxncurses rexx rexxapi ${CURSES_LIBRARIES} ${CMAKE_REQUIRED_LIBRARIES})
    # Make sure ncurses.cls gets copied
    add_custom_target(ncurses_cls  ALL DEPENDS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/ncurses.cls)
    set_target_properties(orxncurses PROPERTIES SOVERSION ${ORX_API_LEVEL})
