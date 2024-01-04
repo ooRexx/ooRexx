@@ -43,10 +43,8 @@
             <https://docs.microsoft.com/en-us/office/vba/api/overview/access/object-model>
 */
 
-accessApp = .OleObject~new("Access.Application")
-
+accessApp =.OleObject~new("Access.Application")
 dbFileName=directory()"\ooRexxDemo.mdb"   -- define database file name
-
 if SysFileExists(dbFileName) then         -- open existing database
    accessApp~openCurrentDatabase(dbFileName)
 else
@@ -61,8 +59,8 @@ call showTable       conn        -- show presently stored records
 call deleteAndShow   conn        -- delete a record, show results
 call updateAndShow   conn        -- update a few records, show results
 conn~close                       -- close connection to the database
-accessApp~closeCurrentDatabase   -- close database
 
+accessApp~closeCurrentDatabase   -- close database
 call compressAndRepair accessApp, dbFileName -- compress database
 
 say ".rexxInfo~architecture:" pp(.rexxInfo~architecture) "(bitness)"
@@ -109,14 +107,16 @@ any:
              "Walter Pachl"                                                                -
             )
 
-   .local~tmp.nrRecs=s~items              -- save number of records in local environment
-   .local~tmp.length=length(.tmp.nrRecs)  -- save length
-   say "inserting" pp(.tmp.nrRecs) "record(s) into the table..."
+   -- an entry in the .local or .environment directory can be referenced by using an
+   -- environment symbol, e.g. the entry "TOTAL.RECS" can be referred to with its
+   -- environment symbol ".TOTAL.RECS" (note the leading dot) from any Rexx program
+   .local~total.recs=s~items        -- save number of records in local environment
+   say "inserting" pp(.total.recs) "record(s) into the table..."
    say
 
-   do counter i name over s         -- iterate over collected items (arbitrary order)
-      sql="insert into myTable (id, name) values ("i~right(.tmp.length)", '"name"' )"
-      say "  " i~right(.tmp.length)":" pp(sql)  -- show sql statement
+   do counter c name over s         -- iterate over collected items (arbitrary order)
+      sql="insert into myTable (id, name) values ("right(c,2)", '"name"' )"
+      say "  " right(c,2)":" pp(sql)  -- show sql statement
       conn~execute(sql)            -- execute the statement
    end
    say center(" end of fillTable ", 70, "-")
@@ -129,9 +129,9 @@ any:
    sql="select * from myTable order by id"
    rs=conn~execute(sql)
    rs~moveFirst                  -- just make sure, it is pointing to the first record
-   do counter i while rs~eof=.false  -- loop over record set
-      say "  " i~right(.tmp.length)":"                             -
-                 "id="pp(rs~fields["id"]~value~right(.tmp.length)) -
+   do counter c while rs~eof=.false  -- loop over record set
+      say "  " right(c,2)                                -
+                 "id="pp(rs~fields["id"]~value~right(2)) -
                  "name="pp(rs~fields["name"]~value)
       rs~moveNext
    end
@@ -147,16 +147,15 @@ any:
    say "deleting a record from the table:"
    say
       -- delete row with an arbitrary value for the field "id"
-   sql="delete from myTable where id="random(1,.tmp.nrRecs)
+   sql="delete from myTable where id="random(1,.total.recs)
    say "   executing" pp(sql) "..."
 
-   param = .OLEVariant~new(count)
+   param=.OLEVariant~new(count)
    conn~execute(sql, param)
    say "  " pp(param~!varValue_) "record deleted."
    say
 
-   .local~tmp.nrRecs=.tmp.nrRecs-1        -- subtract 1 from total number of records
-   .local~tmp.length=length(.tmp.nrRecs)  -- save length
+   .local~total.recs=.total.recs-1  -- adjust total number of records
 
    call showTable   conn         -- show presently stored records
 
@@ -167,7 +166,7 @@ any:
    say "updating a few records from the table:"
    say
       -- update some records randomly
-   sql="update myTable set id=id*3 where id >" random(1,.tmp.nrRecs)
+   sql="update myTable set id=id*3 where id >" random(1,.total.recs)
    say "   executing" pp(sql) "..."
    param = .OLEVariant~new(count)
    conn~execute(sql, param)
@@ -183,11 +182,8 @@ any:
   say "before compress & repair, database file size:" pp(stream(dbFileName, "c", "query size"))
   compressedName=SysTempFileName(dbFileName"-cmp???") -- get a unique new file name
 
-  fromString=dbFileName
-  toString  =compressedName
-
-  dbEngine=accessApp~DBEngine
-  dbEngine~compactDatabase(fromString, toString)   -- carry out compact & repair
+  dbEngine=accessApp~DBEngine    -- get database engine
+  dbEngine~compactDatabase(dbFileName, compressedName)   -- carry out compact & repair
 
   say "after  compress & repair, database file size:" pp(stream(compressedName, "c", "query size"))
       -- create a unique backup file name containing date and time of backup
@@ -197,7 +193,7 @@ any:
       -- rename original database file name to backup file name
   cmdText="ren" '"'dbFileName'"' filespec("Name", newBkpFileName)
   say "DOS command:" pp(cmdText)
-  address system cmdText         -- use ADDRESS SYSTEM explicitly
+  address cmd cmdText            -- use ADDRESS CMD explicitly
 
       -- now rename new compressed file to original databse file name
   cmdText="ren" '"'compressedName'"' filespec("Name", dbFileName)
