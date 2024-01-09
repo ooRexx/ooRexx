@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -778,7 +778,7 @@ RexxVariableBase *VariableDictionary::getVariableRetriever(RexxString *variable 
  */
 RexxVariableBase  *VariableDictionary::getDirectVariableRetriever(RexxString *variable)
 {
-    // we don't perform any uppercasing here...the name is either good, nor not.
+    // we don't perform any uppercasing here...the name is either good, or not.
     size_t length = variable->getLength();
     // get the first character
     char character = variable->getChar(0);
@@ -856,21 +856,27 @@ RexxVariableBase  *VariableDictionary::getDirectVariableRetriever(RexxString *va
                     return OREF_NULL;
                 }
             }
+            // lower case characters fail on a direct lookup
+            else if (LanguageParser::translateChar(character) != character)
+            {
+                return OREF_NULL;
+            }
             // non-special character...keep count of any non-digit characters
             else if (character < '0' || character > '9')
             {
                 nonnumeric++;
-            }
-            // lower case characters fail on a symbolic lookup
-            else if (LanguageParser::translateChar(character) != character)
-            {
-                return OREF_NULL;
             }
             // keep track of the last character and continue
             last = character;
             scan++;
         }
     }
+    else
+    {
+        // either nullstring or too long
+        return OREF_NULL;
+    }
+
     // we've screend out all of the invalid cases.  This is either just a
     // literal value or a real simple variable.
     if (literal)
