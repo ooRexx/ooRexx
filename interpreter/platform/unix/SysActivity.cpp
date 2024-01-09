@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2023 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -146,6 +146,12 @@ char* SysActivity::getStackBase()
     size_t  stackSize;
     pthread_attr_getstack(&attrs, &stackAddr, &stackSize);
     pthread_attr_destroy(&attrs);
+#ifdef OPSYS_AIX
+    // although POSIX requires pthread_attr_getstack() to return stackaddr
+    // pointing to the lowest addressable byte of the stack, on AIX 7.2 it
+    // instead points to the highest addressable byte of the stack.  Fix this.
+    return (char *)stackAddr - stackSize;
+#endif
     return (char *)stackAddr;
 #elif defined HAVE_PTHREAD_ATTR_GET_NP
     // FreeBSD, OpenIndiana
