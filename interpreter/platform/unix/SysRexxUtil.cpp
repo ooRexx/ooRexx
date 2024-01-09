@@ -96,7 +96,12 @@
 #include <sys/wait.h>                  // wait()
 #include <sys/ipc.h>
 #include <memory.h>
+
+// not available on macOS and BSDs
+#if defined( HAVE_MALLOC_H )
 #include <malloc.h>
+#endif
+
 #include <fcntl.h>
 #include <ctype.h>
 #include <string.h>

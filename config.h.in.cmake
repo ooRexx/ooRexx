@@ -1,44 +1,22 @@
 /* config.h.in.  Generated from CMake.  */
 
-/* Define to 1 if you have the <sys/xattr.h> header file. */
-#cmakedefine HAVE_SYS_XATTR_H
+/* Define to 1 if you have the <stdint.h> header file. */
+#cmakedefine HAVE_STDINT_H
 
-/* Define to 1 if you have the 'catopen' function. */
-#cmakedefine HAVE_CATOPEN
-
-/* Define to 1 if you have the 'euidaccess' function. */
-#cmakedefine HAVE_EUIDACCESS
-
-/* Define to 1 if you have the <features.h> header file. */
-#cmakedefine HAVE_FEATURES_H
-
-/* Define to 1 if you have the 'getifaddrs' function. */
-#cmakedefine HAVE_GETIFADDRS
-
-/* Define to 1 if you have the <ifaddrs.h> header file. */
-#cmakedefine HAVE_IFADDRS_H
+/* Define to 1 if you have the <malloc.h> header file. */
+#cmakedefine HAVE_MALLOC_H
 
 /* Define to 1 if you have the <xlocale.h> header file. */
 #cmakedefine HAVE_XLOCALE_H
 
-/* crypt() is known to be unavailable on Android */
-/* Define to 1 if you have the 'crypt' function. */
-#cmakedefine HAVE_CRYPT
+/* Define to 1 if you have the <features.h> header file. */
+#cmakedefine HAVE_FEATURES_H
 
-/* wordexp() is known to be unavailable on OpenBSD and Android */
-/* Define to 1 if you have the <wordexp.h> header file. */
-#cmakedefine HAVE_WORDEXP_H
-/* Define to 1 if you have the 'wordexp' function. */
-#cmakedefine HAVE_WORDEXP
-
-/* Define to 1 if you have nanosleep function */
-#cmakedefine HAVE_NANOSLEEP
+/* Define to 1 if you have the <ifaddrs.h> header file. */
+#cmakedefine HAVE_IFADDRS_H
 
 /* Define to 1 if you have the <nl_types.h> header file. */
 #cmakedefine HAVE_NL_TYPES_H
-
-/* Define to 1 if you have the 'nsleep' function. */
-#cmakedefine HAVE_NSLEEP
 
 /* Define to 1 if you have the <pthread_np.h> header file. */
 #cmakedefine HAVE_PTHREAD_NP_H
@@ -51,6 +29,66 @@
 #cmakedefine HAVE_PTHREAD_ATTR_GET_NP
 /* Define to 1 if you have the 'pthread_stackseg_np' function. */
 #cmakedefine HAVE_PTHREAD_STACKSEG_NP
+
+/* Define to 1 if you have the <strings.h> header file. */
+#cmakedefine HAVE_STRINGS_H
+
+/* Define to 1 if you have the <sys/filio.h> header file. */
+#cmakedefine HAVE_SYS_FILIO_H
+
+/* Define to 1 if you have the <sys/ldr.h> header file. */
+#cmakedefine HAVE_SYS_LDR_H
+
+/* Define to 1 if you have the <sys/resource.h> header file. */
+#cmakedefine HAVE_SYS_RESOURCE_H
+
+/* Define to 1 if you have the <sys/select.h> header file. */
+#cmakedefine HAVE_SYS_SELECT_H
+
+/* Define to 1 if you have the <sys/sem.h> header file. */
+#cmakedefine HAVE_SYS_SEM_H
+
+/* Define to 1 if you have the <sys/signal.h> header file. */
+#cmakedefine HAVE_SYS_SIGNAL_H
+
+/* Define to 1 if you have the <sys/xattr.h> header file. */
+#cmakedefine HAVE_SYS_XATTR_H
+
+/* wordexp() is known to be unavailable on OpenBSD and Android */
+/* Define to 1 if you have the <wordexp.h> header file. */
+#cmakedefine HAVE_WORDEXP_H
+/* Define to 1 if you have the 'wordexp' function. */
+#cmakedefine HAVE_WORDEXP
+
+/* Define to 1 if you have the <ncurses.h> header file. */
+#cmakedefine CURSES_HAVE_NCURSES_H
+/* Define to 1 if you have the <ncurses/ncurses.h> header file. */
+#cmakedefine CURSES_HAVE_NCURSES_NCURSES_H
+
+/* Define to 1 if struct lstat has a member st_mtim */
+#cmakedefine HAVE_STAT_ST_MTIM
+
+/* Define to 1 if struct lstat has a member st_mtimespec */
+#cmakedefine HAVE_STAT_ST_MTIMESPEC
+
+/* Define to 1 if you have the 'catopen' function. */
+#cmakedefine HAVE_CATOPEN
+
+/* Define to 1 if you have the 'euidaccess' function. */
+#cmakedefine HAVE_EUIDACCESS
+
+/* Define to 1 if you have the 'getifaddrs' function. */
+#cmakedefine HAVE_GETIFADDRS
+
+/* crypt() is known to be unavailable on Android */
+/* Define to 1 if you have the 'crypt' function. */
+#cmakedefine HAVE_CRYPT
+
+/* Define to 1 if you have nanosleep function */
+#cmakedefine HAVE_NANOSLEEP
+
+/* Define to 1 if you have the 'nsleep' function. */
+#cmakedefine HAVE_NSLEEP
 
 /* Define to 1 if you have pthread_mutex_timedlock function */
 #cmakedefine HAVE_PTHREAD_MUTEX_TIMEDLOCK
@@ -76,45 +114,11 @@
 /* Define to 1 if getexecname is a valid function */
 #cmakedefine HAVE_GETEXECNAME
 
-/* Define to 1 if KERN_PROC_PATHNAME is a valid symbol */
-#cmakedefine HAVE_KERN_PROC_PATHNAME
 /* Define to 1 if KERN_PROC_ARGV is a valid symbol */
 #cmakedefine HAVE_KERN_PROC_ARGV
 
-/* Define to 1 if struct lstat has a member st_mtim */
-#cmakedefine HAVE_STAT_ST_MTIM
-
-/* Define to 1 if struct lstat has a member st_mtimespec */
-#cmakedefine HAVE_STAT_ST_MTIMESPEC
-
-/* Define to 1 if you have the <stdint.h> header file. */
-#cmakedefine HAVE_STDINT_H
-
-/* Define to 1 if you have the <strings.h> header file. */
-#cmakedefine HAVE_STRINGS_H
-
-/* Define to 1 if you have the <sys/filio.h> header file. */
-#cmakedefine HAVE_SYS_FILIO_H
-
-/* Define to 1 if you have the <sys/ldr.h> header file. */
-#cmakedefine HAVE_SYS_LDR_H
-
-/* Define to 1 if you have the <sys/resource.h> header file. */
-#cmakedefine HAVE_SYS_RESOURCE_H
-
-/* Define to 1 if you have the <sys/select.h> header file. */
-#cmakedefine HAVE_SYS_SELECT_H
-
-/* Define to 1 if you have the <sys/sem.h> header file. */
-#cmakedefine HAVE_SYS_SEM_H
-
-/* Define to 1 if you have the <sys/signal.h> header file. */
-#cmakedefine HAVE_SYS_SIGNAL_H
-
-/* Define to 1 if you have the <ncurses.h> header file. */
-#cmakedefine CURSES_HAVE_NCURSES_H
-/* Define to 1 if you have the <ncurses/ncurses.h> header file. */
-#cmakedefine CURSES_HAVE_NCURSES_NCURSES_H
+/* Define to 1 if KERN_PROC_PATHNAME is a valid symbol */
+#cmakedefine HAVE_KERN_PROC_PATHNAME
 
 /* Name of package */
 #define PACKAGE ${PACKAGE}

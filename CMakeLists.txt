@@ -1,6 +1,6 @@
 #/*----------------------------------------------------------------------------*/
 #/*                                                                            */
-#/* Copyright (c) 2014-2023 Rexx Language Association. All rights reserved.    */
+#/* Copyright (c) 2014-2024 Rexx Language Association. All rights reserved.    */
 #/*                                                                            */
 #/* This program and the accompanying materials are made available under       */
 #/* the terms of the Common Public License v1.0 which accompanies this         */
@@ -356,6 +356,7 @@ endif ()
 
 # Check header files and functions. These are all defined to the config.h file.
 message(STATUS "-- determine available header files --")
+check_include_file(malloc.h   HAVE_MALLOC_H)
 check_include_file(stdint.h   HAVE_STDINT_H)
 check_include_file(xlocale.h  HAVE_XLOCALE_H)
 
