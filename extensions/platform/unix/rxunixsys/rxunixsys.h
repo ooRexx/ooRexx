@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2009-2021 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2009-2024 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -59,9 +59,6 @@
 #include <arpa/inet.h>
 #ifdef HAVE_WORDEXP_H
 #include <wordexp.h>
-#endif
-#ifdef HAVE_ALLOCA
-#include <alloca.h>
 #endif
 #include <pthread.h>
 #include <errno.h>

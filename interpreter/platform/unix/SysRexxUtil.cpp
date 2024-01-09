@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2023 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -93,17 +93,10 @@
 
 #include "oorexxapi.h"
 
-#if defined( HAVE_SYS_WAIT_H )
-#include <sys/wait.h>
-#endif
-
+#include <sys/wait.h>                  // wait()
 #include <sys/ipc.h>
 #include <memory.h>
-
-#if defined( HAVE_MALLOC_H )
 #include <malloc.h>
-#endif
-
 #include <fcntl.h>
 #include <ctype.h>
 #include <string.h>
@@ -113,21 +106,16 @@
 #include <limits.h>
 #include <math.h>
 #include <limits.h>
-#include <sys/stat.h>                  /* mkdir() function           */
-#include <errno.h>                     /* get the errno variable     */
+#include <sys/stat.h>                  // mkdir()
+#include <errno.h>                     // errno variable
 #include <stddef.h>
 #include <sys/types.h>
-#if !defined(AIX)
-#include <sys/syscall.h>
-#endif
-#include <sys/utsname.h>
-#include <sys/ipc.h>
+#include <sys/utsname.h>               // uname()
 #include <pthread.h>
 #include <semaphore.h>
 #include <signal.h>
 #include <time.h>
 #include <netdb.h>
-
 
 #if defined( HAVE_SYS_SEM_H )
 #include <sys/sem.h>
@@ -151,12 +139,6 @@
 #endif
 
 #include <utime.h>                /* moved, used by AIX & Linux          */
-
-#if defined( HAVE_SYS_UTSNAME_H )
-#include <sys/utsname.h>               /* get the uname() function   */
-#endif
-
-#include <signal.h>
 
 #if defined( HAVE_SYS_RESOURCE_H )
 #include <sys/resource.h>              /* get the getpriority() func */

@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -51,19 +51,13 @@
 
 #include "RexxCore.h"
 
-#if defined( HAVE_SIGNAL_H )
-# include <signal.h>
-#endif
-
+#include <signal.h>
 #if defined( HAVE_SYS_SIGNAL_H )
 # include <sys/signal.h>
 #endif
 
-#ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
-#else
 #include <time.h>
-#endif
 
 
 class InterpreterInstance;

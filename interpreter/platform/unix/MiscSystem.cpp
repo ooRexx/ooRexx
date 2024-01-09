@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -47,45 +47,11 @@
 /*   Function:  Miscellaneous system specific routines               */
 /*                                                                   */
 /*********************************************************************/
-#ifdef HAVE_CONFIG_H
-    #include "config.h"
-#endif
 
 #include "RexxCore.h"
 #include "StringClass.hpp"
-#include "DirectoryClass.hpp"
-#include "Activity.hpp"
-#include "RexxActivation.hpp"
-#include "ActivityManager.hpp"
-#include "PointerClass.hpp"
 #include "SystemInterpreter.hpp"
-#include <stdlib.h>
-#include <unistd.h>
-#include <errno.h>
-
-#if defined( HAVE_SIGNAL_H )
-    #include <signal.h>
-#endif
-
-#if defined( HAVE_SYS_SIGNAL_H )
-    #include <sys/signal.h>
-#endif
-
-#if defined( HAVE_SYS_LDR_H )
-    #include <sys/ldr.h>
-#endif
-
-#if defined( HAVE_FILEHDR_H )
-    #include <filehdr.h>
-#endif
-
-#include <dlfcn.h>
-
-#if defined( HAVE_SYS_UTSNAME_H )
-    #include <sys/utsname.h>               /* get the uname() function   */
-#endif
-
-#define LOADED_OBJECTS 100
+#include "ActivityManager.hpp"
 
 
 // maximum length of an environment name.

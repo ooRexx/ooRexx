@@ -45,14 +45,8 @@
 # include "config.h"
 #endif
 
-#ifdef HAVE_PWD_H
-# include <pwd.h>
-#endif
-
-#ifdef HAVE_DLFCN_H
-# include <dlfcn.h>
-#endif
-
+#include <pwd.h>
+#include <dlfcn.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdlib.h>

@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -49,10 +49,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <limits.h>
-
-#if defined( HAVE_SCHED_H )
-# include <sched.h>
-#endif
 
 #include "RexxCore.h"                    /* bring in global defines           */
 #include "StringClass.hpp"
