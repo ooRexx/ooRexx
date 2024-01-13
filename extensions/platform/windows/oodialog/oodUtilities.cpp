@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -239,7 +239,7 @@ done_out:
 
 #define CONST_DIR_USAGE_OPTS            "[O]nly, [F]irst, [L]ast, or [N]ever"
 #define CONST_DIR_SYMBOL_SRC_OPTS       "a collection class object, or a file name"
-#define SETDEFAULTS_INDEXES             "constDirUsage, symbolSrc, autoDetction, fontName, or fontSize"
+#define SETDEFAULTS_INDEXES             "constDirUsage, symbolSrc, autoDetection, fontName, or fontSize"
 
 
 inline bool checkApplicationMagic(RexxMethodContext *c, RexxObjectPtr magic)

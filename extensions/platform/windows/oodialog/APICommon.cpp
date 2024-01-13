@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -194,7 +194,7 @@ void *baseClassInitializationException(RexxMethodContext *c)
  *
  *  900 User message.
  *
- *  The ooSQLiteDB base class has not been initialized correctly
+ *  The base class has not been initialized correctly
  *
  * @param c         The method context we are operating under.
  * @param clsName   The name of the base class.
@@ -255,7 +255,7 @@ void *baseClassInitializationException(RexxMethodContext *c, CSTRING clsName, CS
 /**
  * Message
  *
- * Argument 1, the database connection object, can not be null
+ * The owner dialog attribute can not be set after the underlying dialog is created.
  *
  * Raises 88.900
  *
@@ -1513,25 +1513,30 @@ RexxClassObject rxGetContextClass(RexxMethodContext *c, CSTRING name)
  *
  *   909: Class "class" not found
  *
- *           This function will load the package named by pkgName.  If the
- *           pacakge is already loaded this should be relatively expensive.
- *           This also implies that this function could be used to load a
- *           package that has not been loaded.
+ *           The current code is an ugly, temporary hack for [bugs:#1647].
+ *           With only a thread context available and no package to search, it
+ *           seems to be difficult to find a context class.  We really don't want
+ *           to re-load the whole package with LoadPackage(pkgName) so we instead
+ *           hope we have an ApplicationManager instance at .local~application
+ *           which we query for a constant attribute PKG.
+ *           The pkgName argument is completely ignored now.
+ *           This is a bad fix as APICommon is meant to be used also for any code
+ *           outside of ooDialog.  ooShapes is such an example.
  */
 RexxClassObject rxGetPackageClass(RexxThreadContext *c, CSTRING pkgName, CSTRING clsName)
 {
-    RexxClassObject theClass = NULL;
+    RexxObjectPtr app, pkg, cls;
+    if (
+        (app = c->DirectoryAt(TheDotLocalObj, "APPLICATION")) &&
+        (pkg = c->SendMessage0(app, "PKG")) &&
+        (cls = c->FindPackageClass((RexxPackageObject)pkg, clsName))
+       )
+    {
+        return (RexxClassObject)cls;
+    }
 
-    RexxPackageObject pkg = c->LoadPackage(pkgName);
-    if ( pkg != NULL )
-    {
-        theClass = c->FindPackageClass(pkg, clsName);
-    }
-    if ( theClass == NULL )
-    {
-        c->RaiseException1(Rexx_Error_Execution_noclass, c->String(clsName));
-    }
-    return theClass;
+    c->RaiseException1(Rexx_Error_Execution_noclass, c->String(clsName));
+    return NULL;
 }
 
 /**
@@ -1821,7 +1826,7 @@ bool isInt(int testFor, RexxObjectPtr val, RexxThreadContext *c)
 
 
 /**
- * Test if a genric Rexx object is the type of specified class object.
+ * Test if a generic Rexx object is the type of specified class object.
  *
  * @param c        The method context we are executing under.
  * @param obj      The object to test.

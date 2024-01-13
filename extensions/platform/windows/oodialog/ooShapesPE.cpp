@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -93,8 +93,7 @@
  *
  * The package loader function is called when the library package is first
  * loaded.  This makes it the ideal place for any initialization that must be
- * done prior to the Rexx program start up.  We call sqlite3_initialize() and
- * set up a few global values.
+ * done prior to the Rexx program start up.  We set up a few global values.
  *
  * @param c  Thread context pointer passed from the interpreter when this package
  *           is loaded.
@@ -103,10 +102,7 @@
  */
 void RexxEntry ooShapesLoad(RexxThreadContext *c)
 {
-    if ( packageLoadHelper(c) )
-    {
-        c->DirectoryPut(TheDotLocalObj, c->NullString(), "ROUTINEERRORMESSAGE");
-    }
+    packageLoadHelper(c);
 }
 
 /**
