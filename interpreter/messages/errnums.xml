@@ -1140,7 +1140,7 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>012</term>
 <listitem>
-<para>PARSE must be followed by one of the keywords ARG, LINEIN, PULL, SOURCE, VALUE, VAR, or VERSION; found "<emphasis role="italic">word</emphasis>".</para>
+<para>PARSE must be followed by optional keywords LOWER or UPPER, by an optional keyword CASELESS, and by one of the keywords ARG, LINEIN, PULL, SOURCE, VALUE, VAR, or VERSION; found "<emphasis role="italic">word</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>

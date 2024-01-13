@@ -219,7 +219,7 @@ ERROR_MESSAGE Message_table[] = {      /* table of major and minor errors   */
     MESSAGE(Error_Invalid_subkeyword_signalon, "SIGNAL ON must be followed by one of the keywords ERROR, FAILURE, HALT, LOSTDIGITS, NOTREADY, NOMETHOD, NOSTRING, NOVALUE, SYNTAX, USER, or ANY; found \"&1\".")
     MESSAGE(Error_Invalid_subkeyword_signaloff, "SIGNAL OFF must be followed by one of the keywords ERROR, FAILURE, HALT, LOSTDIGITS, NOTREADY, NOMETHOD, NOSTRING, NOVALUE, SYNTAX, USER, or ANY; found \"&1\".")
     MESSAGE(Error_Invalid_subkeyword_form, "NUMERIC FORM must be followed by one of the keywords SCIENTIFIC or ENGINEERING; found \"&1\".")
-    MESSAGE(Error_Invalid_subkeyword_parse, "PARSE must be followed by one of the keywords ARG, LINEIN, PULL, SOURCE, VALUE, VAR, or VERSION; found \"&1\".")
+    MESSAGE(Error_Invalid_subkeyword_parse, "PARSE must be followed by optional keywords LOWER or UPPER, by an optional keyword CASELESS, and by one of the keywords ARG, LINEIN, PULL, SOURCE, VALUE, VAR, or VERSION; found \"&1\".")
     MESSAGE(Error_Invalid_subkeyword_numeric, "NUMERIC must be followed by one of the keywords DIGITS, FORM, or FUZZ; found \"&1\".")
     MESSAGE(Error_Invalid_subkeyword_procedure, "PROCEDURE must be followed by the keyword EXPOSE or nothing; found \"&1\".")
     MESSAGE(Error_Invalid_subkeyword_string_user_defined, "&1.")

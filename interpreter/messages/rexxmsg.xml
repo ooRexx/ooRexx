@@ -20,7 +20,7 @@ in the Rexx component.  The Translation component are elements of translatable t
 do not correspond to error conditions.  Otherwise, the component should be the utility
 that uses the message (e.g., RXQUEUE, SUBCOM, etc.)
 
-Severity - Not really used.  Rexx component messages should be Warning, the utilities Error
+Severity - Not really used.  Rexx component messages should be Info, Warning, or Error
 
 SymbolicName - A unique symbolic name for code to reference the error message from code.  Rexx
 error conditions should start with Error_, and sub messages should add modifiers on to the
@@ -1633,7 +1633,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Invalid_subkeyword_parse</SymbolicName>
-        <Text>PARSE must be followed by one of the keywords ARG, LINEIN, PULL, SOURCE, VALUE, VAR, or VERSION; found <q><Sub position="1" name="word"/></q>.</Text>
+        <Text>PARSE must be followed by optional keywords LOWER or UPPER, by an optional keyword CASELESS, and by one of the keywords ARG, LINEIN, PULL, SOURCE, VALUE, VAR, or VERSION; found <q><Sub position="1" name="word"/></q>.</Text>
       </SubMessage>
       <SubMessage>
         <Code>25</Code>
