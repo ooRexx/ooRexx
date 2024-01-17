@@ -40,7 +40,7 @@
 #/* Global settings                                                            */
 #/*----------------------------------------------------------------------------*/
 message(STATUS "CMake version is ${CMAKE_VERSION}")
-if (APPLE)
+if ( APPLE )
     # apple builds with prior cmake version have an @rpath problem
     cmake_minimum_required (VERSION 3.12)
 else ()
@@ -52,14 +52,24 @@ cmake_policy(VERSION 2.8...3.3)
 
 # must come before the project command
 # 10.13.6 High Sierra is the minimum system supported
-if( APPLE AND BUILD_OSX_UNIVERSAL_BINARIES )
+if( APPLE )
   set( CMAKE_OSX_DEPLOYMENT_TARGET 10.13.6 CACHE STRING  "" FORCE)
 endif()
 
 project (ooRexx)
 
+# Cater for 3 versions of binaries on macOS
+
 if( APPLE AND BUILD_OSX_UNIVERSAL_BINARIES )
   set( CMAKE_OSX_ARCHITECTURES arm64 x86_64 )
+endif()
+
+if( APPLE AND BUILD_X86_64_BINARIES )
+  set( CMAKE_OSX_ARCHITECTURES x86_64 )
+endif()
+
+if( APPLE AND BUILD_ARM64_BINARIES )
+  set( CMAKE_OSX_ARCHITECTURES arm64 )
 endif()
 
 include(CheckIncludeFile)
