@@ -54,7 +54,7 @@ size_t REXXENTRY TestFunction(
     }
 
     // return the name, count of arguments, and first argument as a return value
-    sprintf(Retstr->strptr, "%s %zd %s", Name, Argc, Argv[0].strptr);
+    snprintf(Retstr->strptr, 256, "%s %zd %s", Name, Argc, Argv[0].strptr);
     Retstr->strlength = strlen(Retstr->strptr);
     return 0;
 }
@@ -152,7 +152,7 @@ RexxMethod1(int,                        // Return type
         // year is years since 1900
         // month is 0 .. 11
         // hundredths and microseconds are not available
-        sprintf(stamp, "%d-%d-%d %d:%d:%d (%d, %d)",
+        snprintf(stamp, sizeof(stamp), "%d-%d-%d %d:%d:%d (%d, %d)",
           1900 + timestamp.year, 1 + timestamp.month, timestamp.day,
           timestamp.hours, timestamp.minutes, timestamp.seconds,
           timestamp.yearday, timestamp.weekday);

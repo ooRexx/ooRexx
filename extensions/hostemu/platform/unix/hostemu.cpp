@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2009-2017 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2009-2024 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -33,9 +33,6 @@
 /* NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS         */
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
-/* Authors;                                                                   */
-/*       W. David Ashley <dashley@us.ibm.com>                                 */
-/*                                                                            */
 /*----------------------------------------------------------------------------*/
 
 
@@ -56,8 +53,6 @@
 /* Global variables                                                   */
 /*                                                                    */
 /*--------------------------------------------------------------------*/
-
-// #define HOSTEMU_DEBUG
 
 PCONSTRXSTRING prxCmd = NULL;
 EXECIO_OPTIONS ExecIO_Options;
@@ -137,8 +132,6 @@ static char * pull(
 /*                                                                    */
 /* Returns:     ULONG - return code from RexxVariablePool()           */
 /*                                                                    */
-/* Notes:       None.                                                 */
-/*                                                                    */
 /*--------------------------------------------------------------------*/
 
 unsigned long FetchRexxVar (
@@ -146,7 +139,6 @@ unsigned long FetchRexxVar (
    PRXSTRING prxVar)             /* REXX variable contents            */
    {
 
-   /* local function variables */
    SHVBLOCK      RxVarBlock;
    unsigned long ulRetc;
    char *        pszTemp;
@@ -208,8 +200,6 @@ unsigned long FetchRexxVar (
 /*                                                                    */
 /* Returns:     ULONG - return code from RexxVariablePool()           */
 /*                                                                    */
-/* Notes:       None.                                                 */
-/*                                                                    */
 /*--------------------------------------------------------------------*/
 
 unsigned long SetRexxVar (
@@ -218,7 +208,6 @@ unsigned long SetRexxVar (
    size_t        ulLen)          /* Value length                      */
    {
 
-   /* local function data */
    SHVBLOCK      RxVarBlock;
    unsigned long ulRetc;
 
@@ -257,10 +246,6 @@ unsigned long SetRexxVar (
 /*                                                                    */
 /* Returns:     Return indicating success or failure                  */
 /*                                                                    */
-/* References:  None.                                                 */
-/*                                                                    */
-/* Notes:                                                             */
-/*                                                                    */
 /*--------------------------------------------------------------------*/
 
 RexxReturnCode RexxEntry GrxHost(PCONSTRXSTRING command,
@@ -268,13 +253,8 @@ RexxReturnCode RexxEntry GrxHost(PCONSTRXSTRING command,
                                  PRXSTRING retc)
    {
 
-   /* Local function variables */
    unsigned long i, rc = 0;
    PLL pll;
-
-   #ifdef HOSTEMU_DEBUG
-   printf("HOSTEMU: Subcom called.\n");
-   #endif
 
    /* request the semaphore so we can get exclusive access to         */
    /* our variables                                                   */
@@ -293,11 +273,6 @@ RexxReturnCode RexxEntry GrxHost(PCONSTRXSTRING command,
 
    /* parse the command */
    if (!yyparse ()) {
-      #ifdef HOSTEMU_DEBUG
-      printf("HOSTEMU: Parse complete, lStartRcd=%d, lRcdCnt=%d, lDirection=%d, fRW=%d, fFinis=%d\n",
-       ExecIO_Options.lStartRcd, ExecIO_Options.lRcdCnt, ExecIO_Options.lDirection,
-       ExecIO_Options.fRW, ExecIO_Options.fFinis);
-      #endif
       if (lStmtType == HI_STMT) {
          RexxSetHalt(getpid(), pthread_self());
          }
@@ -308,9 +283,6 @@ RexxReturnCode RexxEntry GrxHost(PCONSTRXSTRING command,
          RexxSetTrace(getpid(), pthread_self());
          }
       else if (lStmtType == EXECIO_STMT) {
-         #ifdef HOSTEMU_DEBUG
-         printf("HOSTEMU: Executing execio statement.\n");
-         #endif
          /* check to see if the file is already open */
          pll = Search_LL(ExecIO_Options.aFilename);
          if (pll == NULL) {
@@ -397,11 +369,8 @@ RexxReturnCode RexxEntry GrxHost(PCONSTRXSTRING command,
 
    pthread_mutex_unlock(&hmtxExecIO);
 
-   sprintf(retc->strptr, "%ld", rc);
+   snprintf(retc->strptr, 32, "%ld", rc);
    retc->strlength = strlen(retc->strptr);
-   #ifdef HOSTEMU_DEBUG
-   printf("HOSTEMU: Subcom return code = %u.\n", rc);
-   #endif
    return rc;
    }
 
@@ -416,18 +385,12 @@ RexxReturnCode RexxEntry GrxHost(PCONSTRXSTRING command,
 /*                                                                    */
 /* Returns:     Return indicating success or failure                  */
 /*                                                                    */
-/* References:  None.                                                 */
-/*                                                                    */
-/* Notes:                                                             */
-/*                                                                    */
-/*                                                                    */
 /*--------------------------------------------------------------------*/
 
 static unsigned long ExecIO_Write_From_Stem (
    PLL pll)                      /* Pointer to file linked list item  */
    {
 
-   /* Local function variables */
    char *      Stem;             /* Stem variable name                */
    char *      Index;            /* Stem index value (string)         */
    RXSTRING rxVal;               /* Rexx stem variable value          */
@@ -445,7 +408,7 @@ static unsigned long ExecIO_Write_From_Stem (
    if (ExecIO_Options.lRcdCnt == -1) {
       /* process an "*" record count */
       // get the number of elements
-      sprintf(Index, "%u", 0);
+      snprintf(Index, 32, "%u", 0);
       if (FetchRexxVar(Stem, &rxVal))
       {
         return ERR_EXECIO_VAR_INVALID; // Variable name supplied on STEM or VAR option was not valid
@@ -453,7 +416,7 @@ static unsigned long ExecIO_Write_From_Stem (
       elements = atoi(rxVal.strptr);
       RexxFreeMemory(rxVal.strptr);
       while (ExecIO_Options.lStartRcd <= elements) {
-         sprintf(Index, "%ld", ExecIO_Options.lStartRcd);
+         snprintf(Index, 32, "%ld", ExecIO_Options.lStartRcd);
          if (FetchRexxVar(Stem, &rxVal))
          {
            return ERR_EXECIO_VAR_INVALID; // Variable name supplied on STEM or VAR option was not valid
@@ -467,7 +430,7 @@ static unsigned long ExecIO_Write_From_Stem (
    else {
       /* process a specific record count */
       while (ExecIO_Options.lStartRcd <= ExecIO_Options.lRcdCnt) {
-         sprintf(Index, "%ld", ExecIO_Options.lStartRcd);
+         snprintf(Index, 32, "%ld", ExecIO_Options.lStartRcd);
          if (FetchRexxVar(Stem, &rxVal))
          {
            return ERR_EXECIO_VAR_INVALID; // Variable name supplied on STEM or VAR option was not valid
@@ -495,17 +458,12 @@ static unsigned long ExecIO_Write_From_Stem (
 /*                                                                    */
 /* Returns:     Return indicating success or failure                  */
 /*                                                                    */
-/* References:  None.                                                 */
-/*                                                                    */
-/* Notes:                                                             */
-/*                                                                    */
 /*--------------------------------------------------------------------*/
 
 static unsigned long ExecIO_Write_From_Queue (
    PLL pll)                      /* Pointer to file linked list item  */
    {
 
-   /* Local function variables */
    char * Item;                  /* Item pulled from the queue        */
    long items;
 
@@ -573,18 +531,12 @@ static unsigned long ExecIO_Write_From_Queue (
 /*                                                                    */
 /* Returns:     Return indicating success or failure                  */
 /*                                                                    */
-/* References:  None.                                                 */
-/*                                                                    */
-/* Notes:                                                             */
-/*                                                                    */
-/*                                                                    */
 /*--------------------------------------------------------------------*/
 
 static unsigned long ExecIO_Read_To_Stem (
    PLL pll)                      /* Pointer to file linked list item  */
    {
 
-   /* Local function variables */
    char *   Stem;                /* Stem variable name                */
    char *   Index;               /* Stem index value (string)         */
    unsigned long ulRc = 0;       /* Return code                       */
@@ -596,7 +548,7 @@ static unsigned long ExecIO_Read_To_Stem (
       return ERR_EXECIO_NO_STORAGE; // Insufficient free storage to load EXECIO
       }
 
-   // skip until we reach line number 'StartRcd' 
+   // skip until we reach line number 'StartRcd'
    for (i = 1; i < ExecIO_Options.lStartRcd; i++)
    {
      char* ignore; // avoid warning: ignoring return value of 'char* fgets(char*, int, FILE*)'
@@ -613,7 +565,7 @@ static unsigned long ExecIO_Read_To_Stem (
          if (*(szInline + strlen(szInline) - 1) == '\n')
             *(szInline + strlen(szInline) - 1) = '\0';
          i++;
-         sprintf(Index, "%d", i);
+         snprintf(Index, 32, "%d", i);
          if (SetRexxVar(Stem, szInline, strlen(szInline)))
          {
            return ERR_EXECIO_VAR_INVALID; // Variable name supplied on STEM or VAR option was not valid
@@ -628,7 +580,7 @@ static unsigned long ExecIO_Read_To_Stem (
                *(szInline + strlen(szInline) - 1) = '\0';
                }
             i++;
-            sprintf(Index, "%d", i);
+            snprintf(Index, 32, "%d", i);
             if (SetRexxVar(Stem, szInline, strlen(szInline)))
             {
               return ERR_EXECIO_VAR_INVALID; // Variable name supplied on STEM or VAR option was not valid
@@ -641,8 +593,8 @@ static unsigned long ExecIO_Read_To_Stem (
          ExecIO_Options.lRcdCnt--;
          }
       }
-   sprintf(szInline, "%d", i);
-   sprintf(Index, "%d", 0);
+   snprintf(szInline, 32, "%d", i);
+   snprintf(Index, 32, "%d", 0);
    if (SetRexxVar(Stem, szInline, strlen(szInline)))
    {
      return ERR_EXECIO_VAR_INVALID; // Variable name supplied on STEM or VAR option was not valid
@@ -664,22 +616,17 @@ static unsigned long ExecIO_Read_To_Stem (
 /*                                                                    */
 /* Returns:     Return indicating success or failure                  */
 /*                                                                    */
-/* References:  None.                                                 */
-/*                                                                    */
-/* Notes:                                                             */
-/*                                                                    */
 /*--------------------------------------------------------------------*/
 
 static unsigned long ExecIO_Read_To_Queue (
    PLL pll)                      /* Pointer to file linked list item  */
    {
 
-   /* Local function variables */
    int i;
 
    /* process request */
 
-   // skip until we reach line number 'StartRcd' 
+   // skip until we reach line number 'StartRcd'
    for (i = 1; i < ExecIO_Options.lStartRcd; i++)
    {
      char* ignore; // avoid warning: ignoring return value of 'char* fgets(char*, int, FILE*)'
@@ -730,17 +677,12 @@ static unsigned long ExecIO_Read_To_Queue (
 /*                                                                    */
 /* Returns:     Pointer to found struct or NULL if not found          */
 /*                                                                    */
-/* References:  None.                                                 */
-/*                                                                    */
-/* Notes:                                                             */
-/*                                                                    */
 /*--------------------------------------------------------------------*/
 
 static PLL Search_LL (
    char * SFilename)             /* Source file name                  */
    {
 
-   /* Local function variables */
    PLL pll = pHead;
 
    while (pll != NULL) {
@@ -762,10 +704,6 @@ static PLL Search_LL (
 /* Input:       Pointer to new item struct.                           */
 /*                                                                    */
 /* Returns:     None.                                                 */
-/*                                                                    */
-/* References:  None.                                                 */
-/*                                                                    */
-/* Notes:                                                             */
 /*                                                                    */
 /*--------------------------------------------------------------------*/
 
@@ -795,10 +733,6 @@ static void Insert_LL (
 /* Input:       Pointer to item to be deleted.                        */
 /*                                                                    */
 /* Returns:     None.                                                 */
-/*                                                                    */
-/* References:  None.                                                 */
-/*                                                                    */
-/* Notes:                                                             */
 /*                                                                    */
 /*--------------------------------------------------------------------*/
 
@@ -833,17 +767,12 @@ static void Delete_LL (
 /*                                                                    */
 /* Returns:     Number of queued items                                */
 /*                                                                    */
-/* References:  None.                                                 */
-/*                                                                    */
-/* Notes:                                                             */
-/*                                                                    */
 /*--------------------------------------------------------------------*/
 
 static long queued (
    void)                         /* No arguments                      */
    {
 
-   /* local function variables */
    size_t elements;
 
    RexxQueryQueue("SESSION", &elements);
@@ -860,10 +789,6 @@ static long queued (
 /* Input:       Pointer to the string to be pushed                    */
 /*                                                                    */
 /* Returns:     Number of queued items                                */
-/*                                                                    */
-/* References:  None.                                                 */
-/*                                                                    */
-/* Notes:                                                             */
 /*                                                                    */
 /*--------------------------------------------------------------------*/
 
@@ -891,17 +816,12 @@ static void push (
 /*                                                                    */
 /* Returns:     Pointer to the pulled string                          */
 /*                                                                    */
-/* References:  None.                                                 */
-/*                                                                    */
-/* Notes:                                                             */
-/*                                                                    */
 /*--------------------------------------------------------------------*/
 
 static char * pull (
    void)                         /* No arguments                      */
    {
 
-   /* local function variables */
    RXSTRING       result = {0, NULL};
    RexxReturnCode rc;
 
@@ -914,10 +834,6 @@ static void hostemu_loader(RexxThreadContext *context) {
    RexxReturnCode rc;
 
    rc = RexxRegisterSubcomExe("HostEmu", (void *)GrxHost, NULL);
-   #ifdef HOSTEMU_DEBUG
-   printf("HOSTEMU: Library loaded.\n");
-   printf("HOSTEMU: RexxRegisterSubcomExe retc = %d.\n", rc);
-   #endif
    }
 
 

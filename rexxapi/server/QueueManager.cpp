@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -602,11 +602,11 @@ void ServerQueueManager::createUniqueQueue(ServiceMessage &message)
 
         // linux uses a 0x prefix for pointers, Windows doesn't.  Just pull off
         // the address characters without any "0x" prefix.
-        sprintf(session, "%p", (void *)message.parameter1);
-        sprintf(tagstring, "%p", (void *)tag);
+        snprintf(session, sizeof(session), "%p", (void *)message.parameter1);
+        snprintf(tagstring, sizeof(tagstring), "%p", (void *)tag);
 
         // message parameter1 is the session identifier.
-        sprintf(message.nameArg, "S%sQ%s", (char *)(session[1] == 'x' ? session + 2 : session),
+        snprintf(message.nameArg, ServiceMessage::NAMESIZE, "S%sQ%s", (char *)(session[1] == 'x' ? session + 2 : session),
             (char *)(tagstring[1] == 'x' ? tagstring + 2 : tagstring));
         if (namedQueues.locate(message.nameArg) == 0)
         {

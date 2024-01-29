@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -150,24 +150,19 @@ public:
     bool setSeconds(wholenumber_t s);
     bool setMinutes(wholenumber_t m);
     bool adjustTimeZone(int64_t o);
-    void formatBaseDate(char *buffer);
     void formatBaseTime(char *buffer);
     void formatUnixTime(char *buffer);
-    void formatDays(char *buffer);
-    void formatEuropeanDate(char *buffer, const char *sep);
+    void formatEuropeanDate(char *buffer, wholenumber_t bufferSize, const char *sep);
     void formatMonthName(char *buffer);
-    void formatNormalDate(char *buffer, const char *sep);
-    void formatOrderedDate(char *buffer, const char *sep);
-    void formatISODate(char *buffer, const char *sep);
-    void formatStandardDate(char *buffer, const char *sep);
-    void formatUsaDate(char *buffer, const char *sep);
+    void formatNormalDate(char *buffer, wholenumber_t bufferSize, const char *sep);
+    void formatOrderedDate(char *buffer, wholenumber_t bufferSize, const char *sep);
+    void formatISODate(char *buffer, wholenumber_t bufferSize, const char *sep);
+    void formatStandardDate(char *buffer, wholenumber_t bufferSize, const char *sep);
+    void formatUsaDate(char *buffer, wholenumber_t bufferSize, const char *sep);
     void formatWeekDay(char *buffer);
-    void formatCivilTime(char *buffer);
-    void formatHours(char *buffer);
-    void formatLongTime(char *buffer);
-    void formatMinutes(char *buffer);
-    void formatNormalTime(char *buffer);
-    void formatSeconds(char *buffer);
+    void formatCivilTime(char *buffer, wholenumber_t bufferSize);
+    void formatLongTime(char *buffer, wholenumber_t bufferSize);
+    void formatNormalTime(char *buffer, wholenumber_t bufferSize);
     void formatTimeZone(char *buffer);
     inline void setTimeZoneOffset(int64_t o) { timeZoneOffset = o; }
     inline int64_t getTimeZoneOffset() { return timeZoneOffset; }

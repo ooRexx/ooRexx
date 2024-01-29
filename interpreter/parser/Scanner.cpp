@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2023 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -1169,8 +1169,8 @@ RexxToken *LanguageParser::sourceNextToken(RexxToken *previous )
                         clause->setEnd(lineNumber, lineOffset);
                         // update the error information
                         clauseLocation = clause->getLocation();
-                        sprintf(badchar, "%c", inch);
-                        sprintf(hexbadchar, "%2.2X", inch);
+                        snprintf(badchar, sizeof(badchar), "%c", inch);
+                        snprintf(hexbadchar, sizeof(hexbadchar), "%2.2X", inch);
                         // report the error with the invalid character displayed normally and in hex.
                         syntaxError(Error_Invalid_character_char, new_string(badchar), new_string(hexbadchar));
                         break;

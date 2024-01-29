@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -251,7 +251,7 @@ NormalSegmentSet::NormalSegmentSet(MemoryObject *mem) :
     for (int i = 0; i < DeadPools; i++)
     {
         char buffer[100];
-        sprintf(buffer, "Normal allocation subpool %d for blocks of size %zu", i, deadPoolToLength(i));
+        snprintf(buffer, sizeof(buffer), "Normal allocation subpool %d for blocks of size %zu", i, deadPoolToLength(i));
         subpools[i].setID(buffer);
         // make sure these are properly set up as single size keepers
         subpools[i].emptySingle();
@@ -548,7 +548,7 @@ void NormalSegmentSet::addDeadObject(char *object, size_t length)
  */
 void MemorySegmentSet::addSegment(MemorySegment *segment)
 {
-    memory->verboseMessage("Adding a segment of %zu bytes to %s\n", segment->size(), name);
+    memory->verboseMessage("Adding a segment of %zu bytes to %s" line_end, segment->size(), name);
 
     MemorySegment *insertPosition = anchor.next;
 
@@ -571,7 +571,7 @@ void MemorySegmentSet::addSegment(MemorySegment *segment)
  */
 void MemorySegmentSet::transferSegment(MemorySegment *segment)
 {
-    memory->verboseMessage("Segment of %zu bytes transferred to %s\n", segment->size(), name);
+    memory->verboseMessage("Segment of %zu bytes transferred to %s" line_end, segment->size(), name);
     MemorySegment *insertPosition = anchor.next;
 
     // insert this at the head of the chain.
@@ -669,7 +669,7 @@ size_t NormalSegmentSet::suggestMemoryExpansion()
     // and dead storage. Get the current percentage
     float freePercent = freeMemoryPercentage();
 
-    memory->verboseMessage("Normal segment set free memory percentage is %d\n", (int)(freePercent * 100.0));
+    memory->verboseMessage("Normal segment set free memory percentage is %d" line_end, (int)(freePercent * 100.0));
 
     // if we are less than 30% full, we should try to expand to the
     // 30% mark.
@@ -704,7 +704,7 @@ size_t LargeSegmentSet::suggestMemoryExpansion()
     // and dead storage. Get the current percentage
     float freePercent = freeMemoryPercentage();
 
-    memory->verboseMessage("Large segment set free memory percentage is %d\n", (int)(freePercent * 100.0));
+    memory->verboseMessage("Large segment set free memory percentage is %d" line_end, (int)(freePercent * 100.0));
 
     // We use different percentages for the large object pool and the normal
     // pool, attempting to give the large pool a better opportunity to fit in large size blocks.
@@ -743,7 +743,7 @@ void MemorySegmentSet::adjustMemorySize()
     {
         // go add as many segments as are required to reach that
         // level.
-        memory->verboseMessage("Expanding %s by %zu bytes\n", name, suggestedExpansion);
+        memory->verboseMessage("Expanding %s by %zu bytes" line_end, name, suggestedExpansion);
         addSegments(suggestedExpansion);
     }
 }
@@ -891,7 +891,7 @@ void NormalSegmentSet::completeSweepOperation()
  */
 void LargeSegmentSet::completeSweepOperation()
 {
-    memory->verboseMessage("Large segment sweep complete.  Largest block is %zu, smallest block is %zu\n", largestObject, smallestObject);
+    memory->verboseMessage("Large segment sweep complete.  Largest block is %zu, smallest block is %zu" line_end, largestObject, smallestObject);
 }
 
 
@@ -917,7 +917,7 @@ void SingleObjectSegmentSet::completeSweepOperation()
             // remove this from the segment set chain and asked the memory object to return
             // it to the system.
             sweepSegment->remove();
-            memory->verboseMessage("Returning memory segment of %zu bytes\n", sweepSegment->size());
+            memory->verboseMessage("Returning memory segment of %zu bytes" line_end, sweepSegment->size());
             memory->freeSegment(sweepSegment);
         }
         else
@@ -931,7 +931,7 @@ void SingleObjectSegmentSet::completeSweepOperation()
             if (bytes != sweepSegment->size())
             {
                 sweepSegment->remove();
-                memory->verboseMessage("Transfering memory segment of %zu bytes to the Normal segment set\n", sweepSegment->size());
+                memory->verboseMessage("Transfering memory segment of %zu bytes to the Normal segment set" line_end, sweepSegment->size());
                 memory->transferSegmentToNormalSet(sweepSegment);
             }
         }
@@ -1134,7 +1134,7 @@ RexxInternalObject *NormalSegmentSet::findObject(size_t allocationLength)
  */
 RexxInternalObject *NormalSegmentSet::handleAllocationFailure(size_t allocationLength)
 {
-    memory->verboseMessage("Normal allocation failure for %zu bytes\n", allocationLength);
+    memory->verboseMessage("Normal allocation failure for %zu bytes" line_end, allocationLength);
 
     // Step 1, force a GC
     memory->collect();
@@ -1217,7 +1217,7 @@ RexxInternalObject *LargeSegmentSet::findObject(size_t allocationLength)
  */
 RexxInternalObject *LargeSegmentSet::handleAllocationFailure(size_t allocationLength)
 {
-    memory->verboseMessage("Large object allocation failure for %zu bytes\n", allocationLength);
+    memory->verboseMessage("Large object allocation failure for %zu bytes" line_end, allocationLength);
 
     // Step 1, force a GC
     memory->collect();
@@ -1276,7 +1276,7 @@ RexxInternalObject *LargeSegmentSet::handleAllocationFailure(size_t allocationLe
  */
 RexxInternalObject *SingleObjectSegmentSet::handleAllocationFailure(size_t allocationLength)
 {
-    memory->verboseMessage("Single object allocation failure for %zu bytes\n", allocationLength);
+    memory->verboseMessage("Single object allocation failure for %zu bytes" line_end, allocationLength);
 
     // to ahead and do the collection. If we're lucky, we can free up enough memory
     // to satisify this request.
@@ -1330,7 +1330,7 @@ RexxInternalObject *OldSpaceSegmentSet::findObject(size_t allocationLength)
  */
 RexxInternalObject *SingleObjectSegmentSet::allocateObject(size_t requestLength)
 {
-    memory->verboseMessage("Allocating a single segment object of %zu bytes to %s\n", requestLength, name);
+    memory->verboseMessage("Allocating a single segment object of %zu bytes to %s" line_end, requestLength, name);
 
     // it is possible that we could have a pattern where a large number of
     // short-lived objects get allocated without triggering a garbage collection. Since
@@ -1340,7 +1340,7 @@ RexxInternalObject *SingleObjectSegmentSet::allocateObject(size_t requestLength)
     // accumulating
     if (allocationsSinceLastGC > ForceGCThreshold)
     {
-        memory->verboseMessage("Single object force threshold reached\n");
+        memory->verboseMessage("Single object force threshold reached" line_end);
         return OREF_NULL;       // this will trigger the GC
     }
 
@@ -1355,7 +1355,7 @@ RexxInternalObject *SingleObjectSegmentSet::allocateObject(size_t requestLength)
     allocationsSinceLastGC++;          // update the allocation counters
     allocationCount++;
 
-    memory->verboseMessage("Adding a segment of %zu bytes to %s\n", segment->size(), name);
+    memory->verboseMessage("Adding a segment of %zu bytes to %s" line_end, segment->size(), name);
 
     // we don't attempt and recombinations in this set, so just push it on
     // to the head of our segment chain
@@ -1436,7 +1436,7 @@ void LargeSegmentSet::expandSegmentSet(size_t allocationLength)
     // always be smaller than our default expansion size, so that is our
     // first attempt. If that fails, we'll round to a page boundary and
     // try for the smaller size
-    memory->verboseMessage("Expanding large segment set by %d\n", LargeSegmentDeadSpace);
+    memory->verboseMessage("Expanding large segment set by %d" line_end, LargeSegmentDeadSpace);
     newSegment(LargeSegmentDeadSpace, MemorySegment::roundSegmentBoundary(allocationLength));
 }
 

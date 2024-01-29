@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -553,7 +553,7 @@ RexxString *PackageClass::traceBack(RexxActivation *activation, SourceLocation &
     char         linenumber[11];         /* formatted line number             */
 
     // format the line number as a string
-    sprintf(linenumber,"%zu", location.getLineNumber());
+    snprintf(linenumber, sizeof(linenumber), "%zu", location.getLineNumber());
 
     // get the line from the source string...this can return "" if the source is
     // not available or this string is somehow out of bounds.

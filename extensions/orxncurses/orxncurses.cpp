@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2010-2021 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2010-2024 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -1373,7 +1373,7 @@ RexxMethod1(RexxObjectPtr,             // Return type
         return 0;
     }
     getbegyx((WINDOW *)cself, y, x);
-    sprintf(buf, "%d %d", ADDONE(y), ADDONE(x));
+    snprintf(buf, sizeof(buf), "%d %d", ADDONE(y), ADDONE(x));
     return (RexxObjectPtr)context->NewStringFromAsciiz(buf);
 }
 
@@ -1477,7 +1477,7 @@ RexxMethod1(RexxObjectPtr,             // Return type
         return 0;
     }
     getmaxyx((WINDOW *)cself, y, x);
-    sprintf(buf, "%d %d", y, x);
+    snprintf(buf, sizeof(buf), "%d %d", y, x);
     return (RexxObjectPtr)context->NewStringFromAsciiz(buf);
 }
 
@@ -1503,7 +1503,7 @@ RexxMethod1(RexxObjectPtr,             // Return type
         return 0;
     }
     getparyx((WINDOW *)cself, y, x);
-    sprintf(buf, "%d %d", ADDONE(y), ADDONE(x));
+    snprintf(buf, sizeof(buf), "%d %d", ADDONE(y), ADDONE(x));
     return (RexxObjectPtr)context->NewStringFromAsciiz(buf);
 }
 
@@ -1695,7 +1695,7 @@ RexxMethod1(RexxObjectPtr,             // Return type
         return 0;
     }
     getyx((WINDOW *)cself, y, x);
-    sprintf(buf, "%d %d", ADDONE(y), ADDONE(x));
+    snprintf(buf, sizeof(buf), "%d %d", ADDONE(y), ADDONE(x));
     return (RexxObjectPtr)context->NewStringFromAsciiz(buf);
 }
 
@@ -2673,7 +2673,7 @@ RexxMethod4(RexxObjectPtr,             // Return type
         return 0;
     }
     wmouse_trafo((WINDOW *)cself, &y, &x, bf);
-    sprintf(buf, "%d %d", ADDONE(y), ADDONE(x));
+    snprintf(buf, sizeof(buf), "%d %d", ADDONE(y), ADDONE(x));
     return (RexxObjectPtr)context->NewStringFromAsciiz(buf);
 }
 
@@ -2804,7 +2804,7 @@ RexxMethod0(RexxObjectPtr,             // Return type
 {
     char buf[64];
 
-    sprintf(buf, "%d", NCURSES_MOUSE_VERSION);
+    snprintf(buf, sizeof(buf), "%d", NCURSES_MOUSE_VERSION);
     return (RexxObjectPtr)context->NewStringFromAsciiz(buf);
 }
 
@@ -2986,7 +2986,7 @@ RexxMethod1(RexxObjectPtr,             // Return type
     short f, b;
 
     int retc = pair_content((short)num, &f, &b);
-    sprintf(buf, "%d %d", f, b);
+    snprintf(buf, sizeof(buf), "%d %d", f, b);
     return (RexxObjectPtr)context->NewStringFromAsciiz(buf);
 }
 

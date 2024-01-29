@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2023 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -570,7 +570,7 @@ RexxRoutine4(int, SockGetSockOpt, int, sock, CSTRING, level, CSTRING, option, CS
     switch (opt)
     {
         case SO_LINGER:
-            sprintf(buffer,"%d %d", lingStruct.l_onoff, lingStruct.l_linger);
+            snprintf(buffer, sizeof(buffer), "%d %d", lingStruct.l_onoff, lingStruct.l_linger);
             break;
 
         case SO_TYPE:
@@ -588,12 +588,12 @@ RexxRoutine4(int, SockGetSockOpt, int, sock, CSTRING, level, CSTRING, option, CS
         // DWORD argument, whereas on Unix a struct timeval is expected
         case SO_RCVTIMEO:
         case SO_SNDTIMEO:
-            sprintf(buffer, "%d", (int)(tv.tv_sec * 1000 + tv.tv_usec / 1000));
+            snprintf(buffer, sizeof(buffer), "%d", (int)(tv.tv_sec * 1000 + tv.tv_usec / 1000));
             break;
 #endif
 
         default:
-            sprintf(buffer,"%d", intVal);
+            snprintf(buffer, sizeof(buffer), "%d", intVal);
     }
 
     // set the variable

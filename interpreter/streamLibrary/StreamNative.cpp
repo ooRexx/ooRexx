@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2023 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -832,7 +832,7 @@ void StreamInfo::implicitOpen(int type)
             if (defaultResult == NULLOBJECT)
             {
                 char work[30];
-                sprintf(work, "ERROR:%d", fileInfo.errorInfo());
+                snprintf(work, sizeof(work), "ERROR:%d", fileInfo.errorInfo());
                 defaultResult = context->NewStringFromAsciiz(work);
             }
             notreadyError();
@@ -2222,7 +2222,7 @@ const char *StreamInfo::streamFlush()
     if (!fileInfo.flush())
     {
         char         work[30];              /* error information buffer          */
-        sprintf(work, "ERROR:%d", fileInfo.errorInfo());   /* format the error return           */
+        snprintf(work, sizeof(work), "ERROR:%d", fileInfo.errorInfo());   /* format the error return           */
                                         /* go raise a notready condition     */
         notreadyError(fileInfo.errorInfo(), context->NewStringFromAsciiz(work));
     }
@@ -2374,32 +2374,6 @@ const char *StreamInfo::streamOpen(const char *options)
             ParseAction()
         };
 
-    #ifdef STREAM_AUTOSYNC
-        ParseAction OpenActionautosync[] = {
-            ParseAction(BitOr, oflag, RX_O_SYNC),
-            ParseAction()
-        };
-    #endif
-
-    #ifdef STREAM_SHAREDOPEN
-        ParseAction OpenActionshareread[] = {
-            ParseAction(MI, oflag, RX_O_DELAY),
-            ParseAction(BitOr, oflag, RX_O_RSHARE),
-            ParseAction()
-        };
-        ParseAction OpenActionnoshare[] = {
-            ParseAction(MI, oflag, RX_O_DELAY),
-            ParseAction(BitOr, oflag, RX_O_NSHARE),
-            ParseAction()
-        };
-        ParseAction OpenActiondelay[] = {
-            ParseAction(MI, oflag, RX_O_RSHARE),
-            ParseAction(MI, oflag, RX_O_NSHARE),
-            ParseAction(BitOr, oflag, RX_O_DELAY),
-            ParseAction()
-        };
-    #endif
-
     /* Token table for open parameters */
         TokenDefinition  tts[] = {
             TokenDefinition("READ",3,      OpenActionread),
@@ -2413,16 +2387,6 @@ const char *StreamInfo::streamOpen(const char *options)
             TokenDefinition("SHARED",6,    OpenActionshared),
             TokenDefinition("SHAREREAD",6, OpenActionsharedread),
             TokenDefinition("SHAREWRITE",6,OpenActionsharedwrite),
-
-    #ifdef STREAM_AUTOSYNC
-            TokenDefinition("AUTOSYNC",2, OpenActionautosync),
-    #endif
-
-    #ifdef STREAM_SHAREDOPEN
-            TokenDefinition("SHAREREAD",1,OpenActionshareread),
-            TokenDefinition("NOSHARE",3,  OpenActionnoshare),
-            TokenDefinition("DELAY",1,    OpenActiondelay),
-    #endif
             TokenDefinition(unknown_tr)
         };
 
@@ -2440,12 +2404,9 @@ const char *StreamInfo::streamOpen(const char *options)
         pmode |= IREAD_IWRITE;
     }
 
-    resolveStreamName();                /* get the fully qualified name      */
+    resolveStreamName(); // get the fully qualified name
 
-                                        /* if replace and binary specified,  */
-                                        /* but not reclength, give back a    */
-                                        /* syntax error - don't know what to */
-                                        /* do                                */
+    // if REPLACE and BINARY is specified, RECLENGTH is required
     if (record_based && (oflag & RX_O_TRUNC) && !binaryRecordLength)
     {
         raiseException(Rexx_Error_Incorrect_method);
@@ -2467,19 +2428,16 @@ const char *StreamInfo::streamOpen(const char *options)
     }
 
     if (read_only)
-    {                       /* read-only stream?                 */
-                            /* check if the stream exists        */
+    {
+        // the stream must exist if opened for READ only
         if (!SysFileSystem::fileExists(qualified_name))
         {
             char work[32];
-
-            /* format the error return           */
             snprintf(work, sizeof(work), "ERROR:%d", ENOENT);
-            /* go raise a notready condition     */
+            // raise a notready condition
             notreadyError(ENOENT, context->NewStringFromAsciiz(work));
         }
-        /* and clear all of the write        */
-        /* information                       */
+        // and clear all of the write information
         charWritePosition = 0;
         lineWritePosition = 0;
         lineWriteCharPosition = 0;
@@ -2509,7 +2467,7 @@ const char *StreamInfo::streamOpen(const char *options)
             {
                 char work[32];
 
-                sprintf(work, "ERROR:%d", fileInfo.errorInfo()); /* format the error return           */
+                snprintf(work, sizeof(work), "ERROR:%d", fileInfo.errorInfo()); /* format the error return           */
                 /* go raise a notready condition     */
                 notreadyError(fileInfo.errorInfo(), context->NewStringFromAsciiz(work));
             }
@@ -2519,7 +2477,7 @@ const char *StreamInfo::streamOpen(const char *options)
         else
         {
             char work[32];
-            sprintf(work, "ERROR:%d", fileInfo.errorInfo()); /* format the error return           */
+            snprintf(work, sizeof(work), "ERROR:%d", fileInfo.errorInfo()); /* format the error return           */
             /* go raise a notready condition     */
             notreadyError(fileInfo.errorInfo(), context->NewStringFromAsciiz(work));
         }
@@ -2775,6 +2733,7 @@ int64_t StreamInfo::streamPosition(const char *options)
             /* set both stream pointers to last active position          */
             if (last_op_was_read)
             {
+printf("streamPosition: last_op_was_read: read c=%zd/l=%zd, write c=%zd/l=%zd\r\n", charReadPosition, lineReadPosition, charWritePosition, lineWritePosition);
                 charWritePosition = charReadPosition;
                 lineWritePosition = lineReadPosition;
             }
@@ -2793,16 +2752,6 @@ int64_t StreamInfo::streamPosition(const char *options)
         implicitOpen(operation_nocreate);
     }
 
-    /* if the write stream is being      */
-    /* repositioned                      */
-    if (position_flags & operation_write)
-    {
-        if (append)    /* opened append?                    */
-        {
-            notreadyError(0);             // cause a notready condition
-            return 0;
-        }
-    }
     // if moving the read position reset the pseudo lines
     if (position_flags & operation_read)
     {
@@ -3694,12 +3643,12 @@ RexxStringObject StreamInfo::getDescription()
             if (errorString != NULL)
             {
                                                  /* format the result string          */
-                sprintf(work, "NOTREADY:%d %s", errorInfo, errorString);
+                snprintf(work, sizeof(work), "NOTREADY:%d %s", errorInfo, errorString);
             }
             else
             {
                                                  /* format the result string          */
-                sprintf(work, "NOTREADY:%d", errorInfo);
+                snprintf(work, sizeof(work), "NOTREADY:%d", errorInfo);
 
             }
             return context->NewStringFromAsciiz(work);
@@ -3716,12 +3665,12 @@ RexxStringObject StreamInfo::getDescription()
             if (errorString != NULL)
             {
                                                  /* format the result string          */
-                sprintf(work, "ERROR:%d %s", errorInfo, errorString);
+                snprintf(work, sizeof(work), "ERROR:%d %s", errorInfo, errorString);
             }
             else
             {
                                                  /* format the result string          */
-                sprintf(work, "ERROR:%d", errorInfo);
+                snprintf(work, sizeof(work), "ERROR:%d", errorInfo);
 
             }
             return context->NewStringFromAsciiz(work);

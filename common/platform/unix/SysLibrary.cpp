@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -54,7 +54,7 @@
 
 
 #define MAX_LIBRARY_NAME_LENGTH 250
-#define LIBARY_NAME_BUFFER_LENGTH (MAX_LIBRARY_NAME_LENGTH + sizeof("/usr/lib/lib") + sizeof(ORX_SHARED_LIBRARY_EXT))
+#define LIBARY_NAME_BUFFER_LENGTH (1 + MAX_LIBRARY_NAME_LENGTH + sizeof("/usr/lib/lib") + sizeof(ORX_SHARED_LIBRARY_EXT))
 
 SysLibrary::SysLibrary()
 {
@@ -85,13 +85,13 @@ bool SysLibrary::load(
         return false;
     }
 
-    sprintf(nameBuffer, "lib%s%s", name, ORX_SHARED_LIBRARY_EXT);
+    snprintf(nameBuffer, LIBARY_NAME_BUFFER_LENGTH, "lib%s%s", name, ORX_SHARED_LIBRARY_EXT);
     // try loading directly
     libraryHandle = dlopen(nameBuffer, RTLD_LAZY);
     // if not found, then try from /usr/lib
     if (libraryHandle == NULL)
     {
-        sprintf(nameBuffer, "/usr/lib/lib%s%s", name, ORX_SHARED_LIBRARY_EXT);
+        snprintf(nameBuffer, LIBARY_NAME_BUFFER_LENGTH, "/usr/lib/lib%s%s", name, ORX_SHARED_LIBRARY_EXT);
         libraryHandle = dlopen(nameBuffer, RTLD_LAZY);
         // still can't find it?
         if (libraryHandle == NULL)

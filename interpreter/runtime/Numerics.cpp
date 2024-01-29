@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -893,10 +893,10 @@ RexxString *Numerics::pointerToString(void *p)
     // unfortunately, the formation of %p is not consistent across platforms.
     // We first format this directly, and if the value does not give use the
     // desired form, we force it.
-    sprintf(temp, "%p", p);
+    snprintf(temp, sizeof(temp), "%p", p);
     if (temp[1] != 'x')
     {
-        sprintf(temp, "0x%p", p);
+        snprintf(temp, sizeof(temp), "0x%p", p);
     }
     return new_string(temp);
 }

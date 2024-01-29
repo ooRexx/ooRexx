@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2008 Rexx Language Association. All rights reserved.         */
+/* Copyright (c) 2008-2024 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -43,13 +43,13 @@
 size_t REXXENTRY MyTestExtFunc(const char *Name, long Argc, CONSTRXSTRING Argv[],
                                const char *Queuename, PRXSTRING Retstr) {
     int retc = 0;
-    sprintf(Retstr->strptr, "%d", 0);
+    snprintf(Retstr->strptr, 256, "%d", 0);
     Retstr->strlength = strlen(Retstr->strptr);
 
     if (Argc > 0) {
         retc = RexxDeregisterFunction("MyTestExtFunc");
         if (retc) {
-            sprintf(Retstr->strptr, "%d", -2);
+            snprintf(Retstr->strptr, 256, "%d", -2);
             Retstr->strlength = strlen(Retstr->strptr);
         }
     }
@@ -61,23 +61,23 @@ size_t REXXENTRY TestExternalFunction(const char *Name, long Argc, CONSTRXSTRING
                                     const char *Queuename, PRXSTRING Retstr) {
     int retc = 0;
     int i;
-    sprintf(Retstr->strptr, "%d", 0);
+    snprintf(Retstr->strptr, 256, "%d", 0);
     Retstr->strlength = strlen(Retstr->strptr);
 
     if (strcmp(Name, "TESTEXTERNALFUNCTION")) {
-        sprintf(Retstr->strptr, "%d", -1);
+        snprintf(Retstr->strptr, 256, "%d", -1);
         Retstr->strlength = strlen(Retstr->strptr);
         return 0;
     }
     if (strcmp(Queuename, "SESSION")) {
-        sprintf(Retstr->strptr, "%d", -1);
+        snprintf(Retstr->strptr, 256, "%d", -1);
         Retstr->strlength = strlen(Retstr->strptr);
         return 0;
     }
     if (Argc == 0) {
         retc = RexxRegisterFunctionDll("MyTestExtFunc", "orxclassic1", "MyTestExtFunc");
         if (retc) {
-            sprintf(Retstr->strptr, "%d", -2);
+            snprintf(Retstr->strptr, 256, "%d", -2);
             Retstr->strlength = strlen(Retstr->strptr);
             return 0;
         }
@@ -85,21 +85,21 @@ size_t REXXENTRY TestExternalFunction(const char *Name, long Argc, CONSTRXSTRING
     else {
         for (i = 0; i < Argc; i++) {
             if (!RXVALIDSTRING(Argv[i])) {
-                sprintf(Retstr->strptr, "%d", -4);
+                snprintf(Retstr->strptr, 256, "%d", -4);
                 Retstr->strlength = strlen(Retstr->strptr);
                 return 0;
             }
         }
         retc = RexxRegisterFunctionExe("MyTestExtFunc", MyTestExtFunc);
         if (retc) {
-            sprintf(Retstr->strptr, "%d", -2);
+            snprintf(Retstr->strptr, 256, "%d", -2);
             Retstr->strlength = strlen(Retstr->strptr);
             return 0;
         }
     }
     retc = RexxQueryFunction("MyTestExtFunc");
     if (retc) {
-        sprintf(Retstr->strptr, "%d", -3);
+        snprintf(Retstr->strptr, 256, "%d", -3);
         Retstr->strlength = strlen(Retstr->strptr);
         return 0;
     }
@@ -126,11 +126,11 @@ size_t REXXENTRY TestSubcomHandler(const char *Name, long Argc, CONSTRXSTRING Ar
     unsigned short flags;
     char userarea[2*sizeof(void *)];  // different size on 64-bit systems
     int retc;
-    sprintf(Retstr->strptr, "%d", 0);
+    snprintf(Retstr->strptr, 256, "%d", 0);
     Retstr->strlength = strlen(Retstr->strptr);
 
     if (Argc != 2) {
-        sprintf(Retstr->strptr, "%d", -1);
+        snprintf(Retstr->strptr, 256, "%d", -1);
         Retstr->strlength = strlen(Retstr->strptr);
         return 0;
     }
@@ -139,13 +139,13 @@ size_t REXXENTRY TestSubcomHandler(const char *Name, long Argc, CONSTRXSTRING Ar
                                      "MyTestSubcomHandler",
                                      (char*)malloc(8), RXSUBCOM_DROPPABLE);
         if (retc != 0) {
-            sprintf(Retstr->strptr, "%d", -2);
+            snprintf(Retstr->strptr, 256, "%d", -2);
             Retstr->strlength = strlen(Retstr->strptr);
             return 0;
         }
         retc = RexxQuerySubcom(Argv[1].strptr, "orxclassic1", &flags, userarea);
         if (retc != 0) {
-            sprintf(Retstr->strptr, "%d", -2);
+            snprintf(Retstr->strptr, 256, "%d", -2);
             Retstr->strlength = strlen(Retstr->strptr);
             return 0;
         }
@@ -154,13 +154,13 @@ size_t REXXENTRY TestSubcomHandler(const char *Name, long Argc, CONSTRXSTRING Ar
         retc = RexxRegisterSubcomExe(Argv[1].strptr, (REXXPFN)MyTestSubcomHandler,
                                      (char*)malloc(8));
         if (retc != 0) {
-            sprintf(Retstr->strptr, "%d", -2);
+            snprintf(Retstr->strptr, 256, "%d", -2);
             Retstr->strlength = strlen(Retstr->strptr);
             return 0;
         }
         retc = RexxQuerySubcom(Argv[1].strptr, NULL, &flags, userarea);
         if (retc != 0) {
-            sprintf(Retstr->strptr, "%d", -2);
+            snprintf(Retstr->strptr, 256, "%d", -2);
             Retstr->strlength = strlen(Retstr->strptr);
             return 0;
         }
@@ -168,13 +168,13 @@ size_t REXXENTRY TestSubcomHandler(const char *Name, long Argc, CONSTRXSTRING Ar
     else if (*Argv[0].strptr == 'D') {
         retc = RexxDeregisterSubcom(Argv[1].strptr, "orxclassic1");
         if (retc != 0) {
-            sprintf(Retstr->strptr, "%d", -2);
+            snprintf(Retstr->strptr, 256, "%d", -2);
             Retstr->strlength = strlen(Retstr->strptr);
             return 0;
         }
         retc = RexxQuerySubcom(Argv[1].strptr, "orxclassic1", &flags, userarea);
         if (retc != 0) {
-            sprintf(Retstr->strptr, "%d", -2);
+            snprintf(Retstr->strptr, 256, "%d", -2);
             Retstr->strlength = strlen(Retstr->strptr);
             return 0;
         }
@@ -182,19 +182,19 @@ size_t REXXENTRY TestSubcomHandler(const char *Name, long Argc, CONSTRXSTRING Ar
     else if (*Argv[0].strptr == 'X') {
         retc = RexxDeregisterSubcom(Argv[1].strptr, NULL);
         if (retc != 0) {
-            sprintf(Retstr->strptr, "%d", -2);
+            snprintf(Retstr->strptr, 256, "%d", -2);
             Retstr->strlength = strlen(Retstr->strptr);
             return 0;
         }
         retc = RexxQuerySubcom(Argv[1].strptr, NULL, &flags, userarea);
         if (retc != 0) {
-            sprintf(Retstr->strptr, "%d", -2);
+            snprintf(Retstr->strptr, 256, "%d", -2);
             Retstr->strlength = strlen(Retstr->strptr);
             return 0;
         }
     }
     else {
-        sprintf(Retstr->strptr, "%d", -2);
+        snprintf(Retstr->strptr, 256, "%d", -2);
         Retstr->strlength = strlen(Retstr->strptr);
         return 0;
     }

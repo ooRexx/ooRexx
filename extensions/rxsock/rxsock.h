@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -187,7 +187,7 @@ public:
         else
         {
             char fullName[256];
-            sprintf(fullName, "%s%s", prefix, name);
+            snprintf(fullName, sizeof(fullName), "%s%s", prefix, name);
             context->SetStemElement(stem, fullName, value);
         }
     }
@@ -207,7 +207,7 @@ public:
         else
         {
             char fullName[256];
-            sprintf(fullName, "%s.%d", prefix, (int)index);
+            snprintf(fullName, sizeof(fullName), "%s.%d", prefix, (int)index);
             context->SetStemElement(stem, fullName, value);
         }
     }
@@ -228,7 +228,7 @@ public:
         else
         {
             char fullName[256];
-            sprintf(fullName, "%s%s", prefix, name);
+            snprintf(fullName, sizeof(fullName), "%s%s", prefix, name);
             return context->GetStemElement(stem, fullName);
         }
     }
@@ -242,7 +242,7 @@ public:
         else
         {
             char fullName[256];
-            sprintf(fullName, "%s.%d", prefix, (int)index);
+            snprintf(fullName, sizeof(fullName), "%s.%d", prefix, (int)index);
             return context->GetStemElement(stem, fullName);
         }
     }

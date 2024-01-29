@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -278,7 +278,7 @@ void SystemInterpreter::restoreEnvironment(
     if (chdir(current) == -1)             /* restore the curr dir       */
     {
         char msg[1024];
-        sprintf(msg, "Error restoring current directory: %s", current);
+        snprintf(msg, sizeof(msg), "Error restoring current directory: %s", current);
         reportException(Error_System_service_service, msg);
     }
     current += strlen(current);          /* update the pointer         */
