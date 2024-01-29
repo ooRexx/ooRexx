@@ -2723,7 +2723,7 @@ int64_t StreamInfo::streamPosition(const char *options)
         {
             position_flags |= operation_read | operation_write;
 
-            // below block of code has issues (or is in errror)
+            // below block of code has issues (or is in error)
             // for one, last_op_was_read is currently always true
             // and two, collapsing our independent read and write pointers
             // is bad in a SEEK_CUR +/-offset situation.
@@ -2733,7 +2733,8 @@ int64_t StreamInfo::streamPosition(const char *options)
             /* set both stream pointers to last active position          */
             if (last_op_was_read)
             {
-printf("streamPosition: last_op_was_read: read c=%zd/l=%zd, write c=%zd/l=%zd\r\n", charReadPosition, lineReadPosition, charWritePosition, lineWritePosition);
+//@@ this needs revisiting
+//@@ printf("streamPosition: last_op_was_read: read c=%zd/l=%zd, write c=%zd/l=%zd\r\n", charReadPosition, lineReadPosition, charWritePosition, lineWritePosition);
                 charWritePosition = charReadPosition;
                 lineWritePosition = lineReadPosition;
             }
