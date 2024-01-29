@@ -40,7 +40,7 @@
 #/* Global settings                                                            */
 #/*----------------------------------------------------------------------------*/
 message(STATUS "CMake version is ${CMAKE_VERSION}")
-if ( APPLE )
+if (APPLE)
     # apple builds with prior cmake version have an @rpath problem
     cmake_minimum_required (VERSION 3.12)
 else ()
@@ -52,24 +52,14 @@ cmake_policy(VERSION 2.8...3.3)
 
 # must come before the project command
 # 10.13.6 High Sierra is the minimum system supported
-if( APPLE )
+if( APPLE AND BUILD_OSX_UNIVERSAL_BINARIES )
   set( CMAKE_OSX_DEPLOYMENT_TARGET 10.13.6 CACHE STRING  "" FORCE)
 endif()
 
 project (ooRexx)
 
-# Cater for 3 versions of binaries on macOS
-
 if( APPLE AND BUILD_OSX_UNIVERSAL_BINARIES )
   set( CMAKE_OSX_ARCHITECTURES arm64 x86_64 )
-endif()
-
-if( APPLE AND BUILD_X86_64_BINARIES )
-  set( CMAKE_OSX_ARCHITECTURES x86_64 )
-endif()
-
-if( APPLE AND BUILD_ARM64_BINARIES )
-  set( CMAKE_OSX_ARCHITECTURES arm64 )
 endif()
 
 include(CheckIncludeFile)
@@ -2270,16 +2260,8 @@ if (BUILD_DMG)
 # This was changed to cope with arm64 or x86_64 or both
    if( APPLE AND BUILD_OSX_UNIVERSAL_BINARIES )
       set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL}-${CPACK_PACKAGE_RELEASE}.${OS_DIST}.arm64.x86_64")
-   endif ()
-
-# Build binaries for x86_64
-if( APPLE AND BUILD_X86_64_BINARIES )
-      set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL}-${CPACK_PACKAGE_RELEASE}.${OS_DIST}.x86_64")
-   endif ()
-
-# Build binaries for arm64
-if( APPLE AND BUILD_ARM64_BINARIES )
-      set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL}-${CPACK_PACKAGE_RELEASE}.${OS_DIST}.arm64")
+   else ()
+      set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${ORX_MAJOR}.${ORX_MINOR}.${ORX_MOD_LVL}-${CPACK_PACKAGE_RELEASE}.${OS_DIST}.${CMAKE_SYSTEM_PROCESSOR}")
    endif ()
 
    message(STATUS "ORX_BLD_LVL ${ORX_BLD_LVL}")
@@ -2308,14 +2290,8 @@ else  () # Unix
 
    if( APPLE AND BUILD_OSX_UNIVERSAL_BINARIES )
       set(rexx_exe_cpu "universal")
-   endif ()
-
-   if( APPLE AND BUILD_X86_64_BINARIES )
-      set(rexx_exe_cpu "x86_64")
-   endif ()
-
-   if( APPLE AND BUILD_ARM64_BINARIES )
-      set(rexx_exe_cpu "arm64")
+   else ()
+      set(rexx_exe_cpu ${CMAKE_SYSTEM_PROCESSOR})
    endif ()
 endif ()
 string(TOLOWER ${rexx_exe_opsys} rexx_exe_opsys) # make sure operating system is lowercase
