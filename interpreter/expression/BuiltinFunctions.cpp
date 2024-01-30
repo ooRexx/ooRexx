@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -1241,7 +1241,7 @@ BUILTIN(DATE)
 #ifdef __REXX64__
             return new_integer(timestamp.getBaseTime());
 #else
-            timestamp.formatBaseTime(work, sizeof(work));
+            timestamp.formatBaseTime(work);
             break;
 #endif
 
@@ -1250,7 +1250,7 @@ BUILTIN(DATE)
 #ifdef __REXX64__
             return new_integer(timestamp.getUnixTime());
 #else
-            timestamp.formatUnixTime(work, sizeof(work));
+            timestamp.formatUnixTime(work);
             break;
 #endif
 
@@ -1514,7 +1514,7 @@ BUILTIN(TIME)
 #ifdef __REXX64__
             return new_integer(timestamp.getBaseTime());
 #else
-            timestamp.formatBaseTime(work, sizeof(work));
+            timestamp.formatBaseTime(work);
             break;
 #endif
 
@@ -1523,7 +1523,7 @@ BUILTIN(TIME)
 #ifdef __REXX64__
             return new_integer(timestamp.getUnixTime());
 #else
-            timestamp.formatUnixTime(work, sizeof(work));
+            timestamp.formatUnixTime(work);
             break;
 #endif
 
@@ -1532,7 +1532,7 @@ BUILTIN(TIME)
 #ifdef __REXX64__
             return new_integer(timestamp.timeZoneOffset);
 #else
-            timestamp.formatTimeZone(work, sizeof(work));
+            timestamp.formatTimeZone(work);
             break;
 #endif
 
