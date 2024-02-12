@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -52,6 +52,16 @@
 #include "WeakReferenceClass.hpp"
 #include "RoutineClass.hpp"
 #include "NativeActivation.hpp"
+#include <atomic>
+
+
+static std::atomic<uint32_t> counter(0); // to generate idntfr for concurrency trace
+
+uint32_t InterpreterInstance::getIdntfr()
+{
+    if (idntfr == 0) idntfr = ++counter;
+    return idntfr;
+}
 
 
 /**

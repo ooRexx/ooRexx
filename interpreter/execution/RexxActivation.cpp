@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2023 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -82,7 +82,19 @@
 #include "CommandIOConfiguration.hpp"
 #include "CommandIOContext.hpp"
 #include "LibraryPackage.hpp"
+
+#include <atomic>
+
 #include <stdexcept> // std::exception_ptr, std::current_exception, std::rethrow_exception
+
+
+static std::atomic<uint32_t> counter(0); // to generate idntfr for concurrency trace
+
+uint32_t RexxActivation::getIdntfr()
+{
+    if (idntfr == 0) idntfr = ++counter;
+    return idntfr;
+}
 
 /**
  * Create a new activation object
@@ -450,6 +462,7 @@ RexxObject* RexxActivation::run(RexxObject *_receiver, RexxString *name, RexxObj
     // the "msgname" can also be the name of an external routine, the label
     // name of an internal routine.
     settings.messageName = name;
+    bool traceEntryDone = false;
 
     // not a reply restart situation?  We need to do the full
     // initial setup
@@ -495,6 +508,19 @@ RexxObject* RexxActivation::run(RexxObject *_receiver, RexxString *name, RexxObj
                 {
                     // get the object variables and reserve these
                     settings.objectVariables = receiver->getObjectVariables(scope);
+
+                    // For proper diagnostic in case of deadlock, do the trace now
+                    if (tracingLabels() && isMethodOrRoutine())
+                    {
+                        traceEntry();
+                        if (!tracingAll())
+                        {
+                            // we pause on the label only for ::OPTIONS TRACE LABELS
+                            pauseLabel();
+                        }
+                        traceEntryDone = true;
+                    }
+
                     settings.objectVariables->reserve(activity);
                     objectScope = SCOPE_RESERVED;
                 }
@@ -559,7 +585,7 @@ RexxObject* RexxActivation::run(RexxObject *_receiver, RexxString *name, RexxObj
     // is a routine or method invocation in one of those packages, give the
     // initial entry trace so the user knows where we are.
     // Must be one of ::OPTIONS TRACE ALL/RESULTS/INTERMEDIATES/LABELS
-    if (tracingLabels() && isMethodOrRoutine())
+    if (!traceEntryDone && tracingLabels() && isMethodOrRoutine())
     {
         traceEntry();
         if (!tracingAll())

@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -204,6 +204,9 @@ class VariableDictionary : public RexxInternalObject
 
     RexxObject  *realStemValue(RexxString *stemName);
 
+    uint32_t getIdntfr();
+    inline unsigned short getReserveCount() { return reserveCount; } // for concurrency trace
+
     inline bool isScope(RexxClass *otherScope) { return scope == otherScope; }
     inline VariableDictionary *getNextDictionary() { return nextDictionary; }
     inline Activity *getReservingActivity() { return reservingActivity; }
@@ -226,6 +229,7 @@ protected:
     unsigned short reserveCount;         // number of times reserved
     VariableDictionary *nextDictionary;  // chained object dictionary
     RexxClass *scope;                    // scopy of this object dictionary
+    uint32_t idntfr;                     // idntfr for concurrency trace
 };
 
 inline VariableDictionary *new_variableDictionary(size_t s) { return new VariableDictionary(s); }

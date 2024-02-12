@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2023 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -122,6 +122,7 @@ class RexxActivation : public ActivationBase
    void live(size_t) override;
    void liveGeneral(MarkReason reason) override;
 
+   uint32_t getIdntfr();
    RexxObject *dispatch() override;
    wholenumber_t digits() override;
    wholenumber_t fuzz() override;
@@ -407,6 +408,9 @@ class RexxActivation : public ActivationBase
    inline bool              isTopLevel() { return (activationContext&TOP_LEVEL_CALL) != 0; }
    inline bool              isGuarded() { return settings.isGuarded(); }
    inline void              setGuarded() { settings.setGuarded(true); }
+   inline bool              isObjectScopeLocked() { return this->objectScope == SCOPE_RESERVED; } // for concurrency trace
+   unsigned short           getReserveCount() { VariableDictionary *ovd = this->getVariableDictionary(); return ovd ? ovd->getReserveCount() : 0; } // for concurrency trace. Try to get the ovd counter, even if not yet assigned to current activation.
+   VariableDictionary *     getVariableDictionary() { return this->receiver ? this->receiver->getObjectVariables(this->scope) : NULL; } // for concurrency trace. Try to get the ovd, even if not yet assigned to current activation.
 
           void              enableExternalTrace();
           void              disableExternalTrace();
@@ -631,5 +635,6 @@ class RexxActivation : public ActivationBase
     bool                 randomSet;     // random seed has been set
     size_t               blockNest;     // block instruction nesting level
     size_t               instructionCount;  // The number of instructions since we last yielded control
+    uint32_t             idntfr;        // idntfr for concurrency trace
  };
  #endif

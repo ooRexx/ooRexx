@@ -3979,3 +3979,164 @@ nomethod:
      s=result           -- fetch & save the returned instance
   end
   return s              -- return singleton instance
+
+
+/** This class maintains trace information meant to support debugging and analyzing
+*   execution traces. The makeString method will return a string that will be formatted
+*   according to the current setting of the OPTION class attribute. If the COLLECTOR
+*   class attribute is not .nil then the traceObject will be appended to it.
+*
+*/
+::class "TraceObject" subclass StringTable public
+
+---------------------- class level ----------------------
+::method    activate    class
+  expose option collector counter
+  self~activate:super
+  option   ='N'         -- normal (makeString returns the TRACELINE entry)
+  collector=.nil        -- no appending to the collector will take place
+  counter  =0           -- value will be used to number the TraceObject instances
+
+::method    new         class    -- a new instance gets requested
+  expose option collector counter
+  dt = .dateTime~new    -- take the current date and time
+  forward class (super) continue -- let the superclass do the job
+  newObj = result       -- fetch freshly created object
+  newObj["TIMESTAMP"]=dt
+  newObj["OPTION"]   =option
+  counter += 1
+  newObj["NR"]       =counter
+  if \collector~isNil then -- collector exists, append traceObject
+     collector~append(newObj)
+  return newObj         -- return the new object
+
+::attribute collector   class       -- .nil or an object that does understand APPEND(object)
+
+::attribute counter     get class   -- we only allow get access
+
+::attribute option      set class
+  expose option
+  parse upper arg o +1  -- extract first letter
+  pos=pos(o,"NTSFP")    -- option letter in hand? (Normal, Thread, Standard, Full, Profiling)
+  if pos>0 then         -- valid option, use it
+     option=o
+  else                  -- unknown option, raise condition
+     raise syntax 93.914 array (1, '"N" (normal), "T" (thread), "S" (standard), "F" (full) or "P" (profiling)', arg(1))
+
+::attribute option      get class
+
+::method setMakeString  class -- allow replacing the predefined makeStringImpl method
+  use strict arg newMethod
+  self~setMethod("makeStringImpl",newMethod) -- replace the makeStringImpl method with the new one
+
+::method unsetMakeString  class  -- allow replacing the predefined makeStringImpl method
+  use strict arg
+  self~unsetMethod("makeStringImpl")   -- remove any set makeStringImpl method
+
+
+/** Create the traceline string, if option:
+*     'N' ... just return the traceline (default)
+
+*     'T' ... inserts the thread in the trace prefix after the second character ... thread
+
+*     'S' ... return prefix [T1   I1  ]          ... thread, invocation
+                          for a method statement:
+*                           [T1   I1   G L1   *] ... thread, invocation, guarded/unguarded, lockcount, hasObjectLock
+*     'F' ... return prefix [R1   T1   I1   ]... interpreter, thread, invocation
+                          for a method statement:
+*                           [R1   T1   I1   G A1   L1   *] ... interpreter, thread, invocation, guarded/unguarded, attribute pool, lockcount, hasObjectLock
+*     'P' ... will cause ooRexx to not forward the traceObject (this option is meant for profiling);
+              if set while makeString gets invoked via a Rexx program, then makeString will
+              format the traceline with the option in effect of creating the TraceObject (if still
+              'P', then use 'N' formating)
+*/
+::method makeStringImpl class    -- the formatting method
+  expose option
+  use strict arg traceObj
+
+  tmpOption=option         -- get current option
+
+  if tmpOption='P' then    -- currently profiling/probing, use original option if not 'P'
+  do
+     oriOption=str(traceObj["OPTION"])     -- get original option, if also 'P', then use 'N' formatting
+     if oriOption='?' then -- OPTION entry does not exist, resort to 'N' formatting
+        tmpOption='N'      -- if no option available, format as normal
+     else      -- if original option is P as well then format as normal, otherwise as original option
+        tmpOption=(oriOption='P')~?('N',oriOption)
+  end
+
+  if tmpOption='N' then return str(traceObj["TRACELINE"])
+
+  if tmpOption='T' then
+  do
+     parse value traceObj~traceline with line 7 prefix rest
+     return line prefix~insert(traceObj["THREAD"],2) rest
+  end
+
+  mb = .MutableBuffer~new  -- for performance reasons
+  mb~append("[")
+  if tmpOption='F' then    -- full information
+     mb~append("R", adjLeft(str(traceObj["INTERPRETER"]),3), " ")  -- R_exx interpreter instance
+
+  mb~append("T", adjLeft(str(traceObj["THREAD"])    ,3), " ")  -- T_hread/activity
+  mb~append("I", adjLeft(str(traceObj["INVOCATION"]),4)     )  -- I_nvocation/activation
+  ap=traceObj["ATTRIBUTEPOOL"]
+  if \ap~isNil then        -- an object's variable dictionary in hand, we are in a method
+  do
+     mb~append(" ")
+     isTrue=str(traceObj["ISGUARDED"])
+     if isTrue='?' then
+        mb~append(isTrue)                    -- ? (if not set), else G_uarded or U_unguarded
+     else
+        mb~append(isTrue~?("G","U"), " ")    -- G_uarded or U_unguarded
+
+     if tmpOption='F' then    -- full information
+         mb~append("A", adjLeft(ap,4), " ")  -- Attribute pool (variable dictionary)
+
+     mb~append("L", adjLeft(str(traceObj["OBJECTLOCKCOUNT"]),3), " ")   -- L ... lock reserve count
+     isTrue=str(traceObj["HASOBJECTLOCK"])
+     if isTrue='?' then
+        mb~append(isTrue)              -- indicates that value is not present
+     else
+        mb~append(isTrue~?("*"," "))   -- asterisk to indicate holding object lock (can execute)
+     mb~append("] ")
+  end
+  else   -- no object related information in this traceObject
+  do
+     if tmpOption='S' then
+        mb~append("]          ")     -- Standard: make sure we align traceline
+     else
+        mb~append("]                ")  -- Full: make sure we align traceline
+  end
+
+  mb~append(str(traceObj["TRACELINE"]))
+  return mb~string   -- return trace line with mtPrefix
+
+
+adjLeft: procedure   -- left adjust, but make sure we show all chars
+  use arg value, width
+  if value~length>=width then -- no left adjustment
+     return value
+  return value~left(width)    -- left adjust with given width
+
+str: procedure       -- make sure we supply a string if .nil, otherwise MutableBuffer causes an error
+  use arg value
+  if value~isNil then return '?' -- no entry, Rexx user omitted or deleted it
+  return value
+
+
+---------------------- instance level -------------------
+
+::method compareTo   -- allow sorting, by default by NR which represents the creation sequence
+  use arg other
+  return sign(nz(self["NR"],-1) - nz(other["NR"],-1)) -- cf. rexxref.pdf, ComparableClass' compareTo definition
+
+nz: procedure  -- in case a Rexx user removed the NR entry, make sure the subtraction can take place
+  use arg val,ifNilValue=0
+  if val~isNil then return ifNilValue
+  return val
+
+::method makeString  -- returns the traceline string
+  return self~class~makeStringImpl(self)  -- let the class method makeStringImpl do the work
+
+

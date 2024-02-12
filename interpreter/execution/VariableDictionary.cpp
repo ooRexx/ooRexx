@@ -62,6 +62,16 @@
 #include "DirectoryClass.hpp"
 #include "GlobalNames.hpp"
 #include "CompoundTableElement.hpp"
+#include <atomic>
+
+
+static std::atomic<uint32_t> counter(0); // to generate idntfr for concurrency trace
+
+uint32_t VariableDictionary::getIdntfr()
+{
+    if (idntfr == 0) idntfr = ++counter;
+    return idntfr;
+}
 
 
 /**

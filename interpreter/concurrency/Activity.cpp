@@ -78,8 +78,12 @@
 #include "MutexSemaphore.hpp"
 #include "IdentityTableClass.hpp"
 
+#include "StringTableClass.hpp"
+
 #include <stdio.h>
 #include <time.h>
+#include <atomic>
+#include <unordered_map>
 
 
 const size_t ACT_STACK_SIZE = 20;
@@ -95,6 +99,17 @@ const size_t ACT_STACK_SIZE = 20;
 void *Activity::operator new(size_t size)
 {
    return new_object(size, T_Activity);
+}
+
+
+static std::atomic<uint32_t> counter(0); // to generate idntfr for concurrency trace information
+static std::unordered_map<thread_id_t, uint32_t> threadIDs; // to associate idntfr to system threads
+
+uint32_t Activity::getIdntfr()
+{
+    thread_id_t threadID = currentThread.getThreadID();
+    if (threadIDs.find(threadID) == threadIDs.end()) threadIDs[threadID] = ++counter;
+    return threadIDs[threadID];
 }
 
 
@@ -3059,6 +3074,49 @@ SecurityManager* Activity::getInstanceSecurityManager()
 }
 
 
+
+// ---- begin TraceObject; caching class for performance reasons (if the Rexx user
+//      should be allowed to change the class object after tracing has started, we
+//      need to change the logic to do the findClass() each time)
+inline RexxClass *getRexxPackageTraceObject()    // only do the findClass() once
+{
+    static RexxClass *RexxPackageTraceObject = OREF_NULL;
+    if (RexxPackageTraceObject==OREF_NULL)
+    {
+        RexxObject *t = OREF_NULL;   // required for the findClass call
+        RexxPackageTraceObject = TheRexxPackage->findClass(GlobalNames::TRACEOBJECT, t);
+    }
+    return RexxPackageTraceObject;
+}
+
+
+/** Fill in additional trace information, some concurrency related. */
+StringTable* CreateTraceObject(Activity *activity, RexxActivation *activation, RexxString *traceline)
+{
+    ProtectedObject result;
+    StringTable *traceObject = (StringTable *) getRexxPackageTraceObject()->messageSend(GlobalNames::NEW, OREF_NULL, 0, result);
+    ProtectedObject p(traceObject);
+
+    traceObject -> put(traceline, GlobalNames::TRACELINE );
+    traceObject -> put(new_integer(activity->getInstance()->getIdntfr()), GlobalNames::INTERPRETER );
+    traceObject -> put(new_integer(activity->getIdntfr()), GlobalNames::THREAD );
+
+    traceObject -> put(new_integer(activation ? activation->getIdntfr() : 0), GlobalNames::INVOCATION);
+
+        // get variableDictionary if any
+    VariableDictionary *variableDictionary = (activation ? activation->getVariableDictionary() : NULL);
+    size_t variableDictionaryNr = variableDictionary ? variableDictionary->getIdntfr() : 0;
+    if (variableDictionaryNr > 0)   // if method routine, get further information
+    {
+        traceObject -> put(new_integer(variableDictionaryNr), GlobalNames::ATTRIBUTEPOOL);  // Rexx users relate better if using ATTRIBUTE
+        traceObject -> put(activation->isGuarded() ? TheTrueObject : TheFalseObject, GlobalNames::ISGUARDED );
+        traceObject -> put(new_integer(activation ? activation->getReserveCount() : 0), GlobalNames::OBJECTLOCKCOUNT);
+        traceObject -> put(activation->isObjectScopeLocked() ? TheTrueObject : TheFalseObject, GlobalNames::HASOBJECTLOCK);
+    }
+    return traceObject;
+}
+
+
 /**
  * Write out a line of trace output.
  *
@@ -3068,11 +3126,19 @@ SecurityManager* Activity::getInstanceSecurityManager()
 void  Activity::traceOutput(RexxActivation *activation, RexxString *line)
 {
     // make sure this is a real string value (likely, since we constructed it in the first place)
-    line = line->stringTrace();
+    Protected<RexxString> pline = line->stringTrace();
+
+    Protected<StringTable> traceObject=CreateTraceObject(this, activation, pline);
 
     // if the exit passes on the call, we write this to the .traceouput
-    if (callTraceExit(activation, line))
+    if (callTraceExit(activation, pline))
     {
+        // if in profiling mode we only let collect the traceObjects, but do not issue the tracelin
+        // we do not output the traceLine if currently in profiling mode
+        RexxObject *option = (RexxString *) traceObject->get(GlobalNames::OPTION); // the entry may be missing
+        if (option && ((RexxString *) option)->getStringData()[0] == 'P')
+            return;
+
         RexxObject *stream = getLocalEnvironment(GlobalNames::TRACEOUTPUT);
 
         if (stream != OREF_NULL && stream != TheNilObject)
@@ -3082,17 +3148,18 @@ void  Activity::traceOutput(RexxActivation *activation, RexxString *line)
             try
             {
                 ProtectedObject result;
-                stream->sendMessage(GlobalNames::LINEOUT, line, result);
+
+                stream->sendMessage(GlobalNames::LINEOUT, traceObject, result);
             }
             catch (NativeActivation *)
             {
-                lineOut(line); // don't lose the data!
+                lineOut(traceObject->requestString()); // don't lose the data!
             }
         }
         // could not find the target, but don't lose the data!
         else
         {
-            lineOut(line);
+            lineOut(traceObject->requestString()); // don't lose the data!
         }
     }
 }
