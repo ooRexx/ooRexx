@@ -3110,8 +3110,8 @@ StringTable* CreateTraceObject(Activity *activity, RexxActivation *activation, R
     {
         traceObject -> put(new_integer(variableDictionaryNr), GlobalNames::ATTRIBUTEPOOL);  // Rexx users relate better if using ATTRIBUTE
         traceObject -> put(activation->isGuarded() ? TheTrueObject : TheFalseObject, GlobalNames::ISGUARDED );
-        traceObject -> put(new_integer(activation ? activation->getReserveCount() : 0), GlobalNames::OBJECTLOCKCOUNT);
-        traceObject -> put(activation->isObjectScopeLocked() ? TheTrueObject : TheFalseObject, GlobalNames::HASOBJECTLOCK);
+        traceObject -> put(new_integer(activation ? activation->getReserveCount() : 0), GlobalNames::SCOPELOCKCOUNT);
+        traceObject -> put(activation->isObjectScopeLocked() ? TheTrueObject : TheFalseObject, GlobalNames::HASSCOPELOCK);
     }
     return traceObject;
 }

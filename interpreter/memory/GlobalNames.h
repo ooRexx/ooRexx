@@ -259,12 +259,12 @@ GLOBAL_NAME(TIMESPAN, "TIMESPAN")
 GLOBAL_NAME(TOTALSECONDS, "TOTALSECONDS")
 
 GLOBAL_NAME(ATTRIBUTEPOOL,       "ATTRIBUTEPOOL")       // TraceObject: a counter (number)
-GLOBAL_NAME(HASOBJECTLOCK,       "HASOBJECTLOCK")       // TraceObject: .true/.false (isObjectScopeLocked)
+GLOBAL_NAME(HASSCOPELOCK,        "HASSCOPELOCK")        // TraceObject: .true/.false (isObjectScopeLocked)
 GLOBAL_NAME(INTERPRETER,         "INTERPRETER")         // TraceObject: a counter (number)
 GLOBAL_NAME(INVOCATION,          "INVOCATION")          // TraceObject: a counter (number)
 GLOBAL_NAME(ISGUARDED,           "ISGUARDED")           // TraceObject: .true/.false (method definition)
-GLOBAL_NAME(OBJECTLOCKCOUNT,     "OBJECTLOCKCOUNT")     // TraceObject: a counter (number, reserveCount)
 GLOBAL_NAME(OPTION,              "OPTION")              // TraceObject: option at creation time
+GLOBAL_NAME(SCOPELOCKCOUNT,      "SCOPELOCKCOUNT")      // TraceObject: a counter (number, reserveCount)
 GLOBAL_NAME(THREAD,              "THREAD")              // TraceObject: a counter (number, activity)
 GLOBAL_NAME(TRACELINE,           "TRACELINE")           // TraceObject: a trace line string
 GLOBAL_NAME(TRACEOBJECT,         "TRACEOBJECT")         // TraceObject: class name

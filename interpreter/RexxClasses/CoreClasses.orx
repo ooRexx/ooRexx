@@ -4093,8 +4093,8 @@ nomethod:
      if tmpOption='F' then    -- full information
          mb~append("A", adjLeft(ap,4), " ")  -- Attribute pool (variable dictionary)
 
-     mb~append("L", adjLeft(str(traceObj["OBJECTLOCKCOUNT"]),3), " ")   -- L ... lock reserve count
-     isTrue=str(traceObj["HASOBJECTLOCK"])
+     mb~append("L", adjLeft(str(traceObj["SCOPELOCKCOUNT"]),3), " ") -- L ... lock reserve count
+     isTrue=str(traceObj["HASSCOPELOCK"])
      if isTrue='?' then
         mb~append(isTrue)              -- indicates that value is not present
      else
