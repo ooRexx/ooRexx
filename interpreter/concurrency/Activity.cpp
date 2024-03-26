@@ -3133,7 +3133,7 @@ void  Activity::traceOutput(RexxActivation *activation, RexxString *line)
     // if the exit passes on the call, we write this to the .traceouput
     if (callTraceExit(activation, pline))
     {
-        // if in profiling mode we only let collect the traceObjects, but do not issue the tracelin
+        // if in profiling mode we only let collect the traceObjects,
         // we do not output the traceLine if currently in profiling mode
         RexxObject *option = (RexxString *) traceObject->get(GlobalNames::OPTION); // the entry may be missing
         if (option && ((RexxString *) option)->getStringData()[0] == 'P')
