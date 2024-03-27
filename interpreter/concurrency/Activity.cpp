@@ -3112,6 +3112,8 @@ StringTable* CreateTraceObject(Activity *activity, RexxActivation *activation, R
         traceObject -> put(activation->isGuarded() ? TheTrueObject : TheFalseObject, GlobalNames::ISGUARDED );
         traceObject -> put(new_integer(activation ? activation->getReserveCount() : 0), GlobalNames::SCOPELOCKCOUNT);
         traceObject -> put(activation->isObjectScopeLocked() ? TheTrueObject : TheFalseObject, GlobalNames::HASSCOPELOCK);
+        traceObject -> put(new_integer(activation->getReceiver()->identityHash()), GlobalNames::OBJECTID);  // save receiver's identityHash
+        traceObject -> put(activation->getMethod()->getScope(), GlobalNames::SCOPE);  // save method's scope
     }
     return traceObject;
 }
