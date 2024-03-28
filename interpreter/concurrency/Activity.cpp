@@ -3113,7 +3113,11 @@ StringTable* CreateTraceObject(Activity *activity, RexxActivation *activation, R
         traceObject -> put(new_integer(activation ? activation->getReserveCount() : 0), GlobalNames::SCOPELOCKCOUNT);
         traceObject -> put(activation->isObjectScopeLocked() ? TheTrueObject : TheFalseObject, GlobalNames::HASSCOPELOCK);
         traceObject -> put(new_integer(activation->getReceiver()->identityHash()), GlobalNames::OBJECTID);  // save receiver's identityHash
-        traceObject -> put(activation->getMethod()->getScope(), GlobalNames::SCOPE);  // save method's scope
+        MethodClass *meth = activation->getMethod();
+        if (meth != NULLOBJECT) // TRACE.testGroup has a test where activation->getMethod() returns NULL
+        {
+            traceObject -> put(meth->getScope(), GlobalNames::SCOPE); // save method's scope
+        }
     }
     return traceObject;
 }
