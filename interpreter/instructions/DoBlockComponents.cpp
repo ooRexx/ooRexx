@@ -139,7 +139,7 @@ void ControlledLoop::setup( RexxActivation *context,
             {
                 // get the too value and round...which has the side effect
                 // of also validating that this is a valid numeric.
-                RexxObject *result = to->evaluate(context, stack);
+                Protected<RexxObject> result = to->evaluate(context, stack);
                 context->traceKeywordResult(GlobalNames::TO, result);
 
                 // prefix + is like adding zero
@@ -162,7 +162,7 @@ void ControlledLoop::setup( RexxActivation *context,
             case EXP_BY:
             {
                 // get the expression value and round
-                RexxObject *result = by->evaluate(context, stack);
+                Protected<RexxObject> result = by->evaluate(context, stack);
                 context->traceKeywordResult(GlobalNames::BY, result);
                 result = result->callOperatorMethod(OPERATOR_PLUS, OREF_NULL);
                 // this gets saved in the doblock

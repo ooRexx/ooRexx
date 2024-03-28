@@ -181,7 +181,7 @@ bool DoBlock::checkOver(RexxActivation *context, ExpressionStack *stack)
  */
 bool DoBlock::checkControl(RexxActivation *context, ExpressionStack *stack, bool increment)
 {
-    RexxObject *result = OREF_NULL;
+    Protected<RexxObject> result = (RexxObject *)OREF_NULL;
 
     // if this is time to increment the value, perform the plus operation
     // to add in the BY increment.
