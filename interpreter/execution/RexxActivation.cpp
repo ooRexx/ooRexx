@@ -4928,7 +4928,17 @@ StackFrameClass *RexxActivation::createStackFrame()
     // to be inadvertently reclaimed if a GC is triggered while evaluating the constructor
     // arguments.
     RexxString *traceback = getTraceBack();
-    return new StackFrameClass(type, getMessageName(), getExecutableObject(), target, arguments, traceback, getContextLineNumber());
+
+    // it may be the case that no current instruction is available if triggered via native code
+    // in that case do not use getContextLineNumber() if not isInterpret() with an existing
+    // parent is available, instead use 1 as the context line
+    if (current || (isInterpret() && parent) )
+    {
+        return new StackFrameClass(type, getMessageName(), getExecutableObject(), target, arguments, traceback, getContextLineNumber());
+    }
+
+    // use 1 as the context line number
+    return new StackFrameClass(type, getMessageName(), getExecutableObject(), target, arguments, traceback, 1);
 }
 
 /**

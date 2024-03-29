@@ -267,6 +267,7 @@ GLOBAL_NAME(OBJECTID,            "OBJECTID")            // TraceObject: receiver
 GLOBAL_NAME(OPTION,              "OPTION")              // TraceObject: option at creation time
 GLOBAL_NAME(SCOPE,               "SCOPE")               // TraceObject: method's scope
 GLOBAL_NAME(SCOPELOCKCOUNT,      "SCOPELOCKCOUNT")      // TraceObject: a counter (number, reserveCount)
+GLOBAL_NAME(STACKFRAME,          "STACKFRAME")          // TraceObject: the RexxActivation's stack frame
 GLOBAL_NAME(THREAD,              "THREAD")              // TraceObject: a counter (number, activity)
 GLOBAL_NAME(TRACELINE,           "TRACELINE")           // TraceObject: a trace line string
 GLOBAL_NAME(TRACEOBJECT,         "TRACEOBJECT")         // TraceObject: class name

@@ -3103,6 +3103,15 @@ StringTable* CreateTraceObject(Activity *activity, RexxActivation *activation, R
 
     traceObject -> put(new_integer(activation ? activation->getIdntfr() : 0), GlobalNames::INVOCATION);
 
+    // TODO: decide what to do and then delete the non-functional version
+    // version # 1:
+    // the TRACE.tracegroup causes a crash as activation -> current is NULL (triggered from native code)
+    // but gets used to fetch the line number in createStackFrame(), hence catering for that situation
+    // traceObject -> put(activation && activation->getCurrent() ? activation->createStackFrame() : TheNilObject, GlobalNames::STACKFRAME);
+
+    // version # 2: changed RexxActivation::createStackFrame() accordingly
+    traceObject -> put(activation ? activation->createStackFrame() : TheNilObject, GlobalNames::STACKFRAME);
+
         // get variableDictionary if any
     VariableDictionary *variableDictionary = (activation ? activation->getVariableDictionary() : NULL);
     size_t variableDictionaryNr = variableDictionary ? variableDictionary->getIdntfr() : 0;
@@ -3112,7 +3121,10 @@ StringTable* CreateTraceObject(Activity *activity, RexxActivation *activation, R
         traceObject -> put(activation->isGuarded() ? TheTrueObject : TheFalseObject, GlobalNames::ISGUARDED );
         traceObject -> put(new_integer(activation ? activation->getReserveCount() : 0), GlobalNames::SCOPELOCKCOUNT);
         traceObject -> put(activation->isObjectScopeLocked() ? TheTrueObject : TheFalseObject, GlobalNames::HASSCOPELOCK);
-        traceObject -> put(new_integer(activation->getReceiver()->identityHash()), GlobalNames::OBJECTID);  // save receiver's identityHash
+
+// TODO: remove OBJECTID, only important if externalizing and can be generated then from OBJECT itself
+//        traceObject -> put(new_integer(activation->getReceiver()->identityHash()), GlobalNames::OBJECTID);  // save receiver's identityHash
+        traceObject -> put(activation -> getReceiver(), GlobalNames::OBJECT);  // save receiver (self)
         // if NULLOBJECT use TheNilObject, else method's scope (TRACE.testGroup has a test where meth is NULLOBJECT)
         MethodClass *meth = activation->getMethod();    // get method object
         traceObject -> put(meth == NULLOBJECT ? TheNilObject : meth->getScope(), GlobalNames::SCOPE);
