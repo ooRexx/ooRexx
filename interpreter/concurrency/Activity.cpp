@@ -3102,14 +3102,6 @@ StringTable* CreateTraceObject(Activity *activity, RexxActivation *activation, R
     traceObject -> put(new_integer(activity->getIdntfr()), GlobalNames::THREAD );
 
     traceObject -> put(new_integer(activation ? activation->getIdntfr() : 0), GlobalNames::INVOCATION);
-
-    // TODO: decide what to do and then delete the non-functional version
-    // version # 1:
-    // the TRACE.tracegroup causes a crash as activation -> current is NULL (triggered from native code)
-    // but gets used to fetch the line number in createStackFrame(), hence catering for that situation
-    // traceObject -> put(activation && activation->getCurrent() ? activation->createStackFrame() : TheNilObject, GlobalNames::STACKFRAME);
-
-    // version # 2: changed RexxActivation::createStackFrame() accordingly
     traceObject -> put(activation ? activation->createStackFrame() : TheNilObject, GlobalNames::STACKFRAME);
 
         // get variableDictionary if any
@@ -3122,8 +3114,10 @@ StringTable* CreateTraceObject(Activity *activity, RexxActivation *activation, R
         traceObject -> put(new_integer(activation ? activation->getReserveCount() : 0), GlobalNames::SCOPELOCKCOUNT);
         traceObject -> put(activation->isObjectScopeLocked() ? TheTrueObject : TheFalseObject, GlobalNames::HASSCOPELOCK);
 
-// TODO: remove OBJECTID, only important if externalizing and can be generated then from OBJECT itself
-//        traceObject -> put(new_integer(activation->getReceiver()->identityHash()), GlobalNames::OBJECTID);  // save receiver's identityHash
+        // TODO: receiving object may be resolved via StackFrame's target and scope via
+        //       StackFreame's executable~scope if type='METHOD' therefore there may be no
+        //       need anymore to explicitly put OBJECT and SCOPE into the TraceObject and
+        //       therefore can be safely removed?
         traceObject -> put(activation -> getReceiver(), GlobalNames::OBJECT);  // save receiver (self)
         // if NULLOBJECT use TheNilObject, else method's scope (TRACE.testGroup has a test where meth is NULLOBJECT)
         MethodClass *meth = activation->getMethod();    // get method object

@@ -2885,13 +2885,16 @@ size_t RexxActivation::getContextLineNumber()
 {
     // if this is an interpret, we need to report the line number of
     // the context that calls the interpret.
+    // it may be the case that no current instruction is available if triggered via native code
+    // in that case current (parent?) may be NULL (cf. TRACE.testgroup),
+    // if so return 1 as the context line number
     if (isInterpret())
     {
-        return parent->getContextLineNumber();
+        return (parent ? parent->getContextLineNumber() : 1);
     }
     else
     {
-        return current->getLineNumber();
+        return (current ? current->getLineNumber() : 1);
     }
 }
 
@@ -4929,16 +4932,7 @@ StackFrameClass *RexxActivation::createStackFrame()
     // arguments.
     RexxString *traceback = getTraceBack();
 
-    // it may be the case that no current instruction is available if triggered via native code
-    // in that case do not use getContextLineNumber() if not isInterpret() with an existing
-    // parent is available, instead use 1 as the context line
-    if (current || (isInterpret() && parent) )
-    {
-        return new StackFrameClass(type, getMessageName(), getExecutableObject(), target, arguments, traceback, getContextLineNumber());
-    }
-
-    // use 1 as the context line number
-    return new StackFrameClass(type, getMessageName(), getExecutableObject(), target, arguments, traceback, 1);
+    return new StackFrameClass(type, getMessageName(), getExecutableObject(), target, arguments, traceback, getContextLineNumber());
 }
 
 /**
