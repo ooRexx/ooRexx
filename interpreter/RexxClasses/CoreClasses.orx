@@ -3991,10 +3991,11 @@ nomethod:
 
 ---------------------- class level ----------------------
 ::method    activate    class
-  expose option collector counter
+  expose option collector counter makeStringMethod
   self~activate:super
   option   ='N'         -- normal (makeString returns the TRACELINE entry)
   collector=.nil        -- no appending to the collector will take place
+  makeStringMethod = .nil
   counter  =0           -- value will be used to number the TraceObject instances
 
 ::method    new         class    -- a new instance gets requested
@@ -4026,12 +4027,24 @@ nomethod:
 ::attribute option      get class
 
 ::method setMakeString  class -- allow replacing the predefined makeStringImpl method
-  use strict arg newMethod
-  self~setMethod("makeStringImpl",newMethod) -- replace the makeStringImpl method with the new one
+  expose makeStringMethod
+  use strict arg newMakeStringMeth
+  if newMakeStringMethod~isA(.method) then   -- a method object already
+     makeStringMethod=newMakeStringMeth
+  else   -- create and save method object for performance
+  do
+     signal on syntax
+     makeStringMethod=.method~new("newMakeStringMethod", newMakeStringMeth)
+  end
+  return
+
+syntax:
+  raise propagate       -- propagate the error
 
 ::method unsetMakeString  class  -- allow replacing the predefined makeStringImpl method
+  expose makeStringMethod
   use strict arg
-  self~unsetMethod("makeStringImpl")   -- remove any set makeStringImpl method
+  makeStringMethod = .nil        -- cancel this out
 
 
 /** Create the traceline string, if option:
@@ -4051,8 +4064,13 @@ nomethod:
               'P', then use 'N' formating)
 */
 ::method makeStringImpl class    -- the formatting method
-  expose option
+  expose option makeStringMethod
   use strict arg traceObj
+
+  -- this is customizable, so check first for the override
+  if makeStringMethod \= .nil then do
+    return self~run(makeStringMethod, 'Individual', traceObj)  -- run it directly on ourselves
+  end
 
   tmpOption=option         -- get current option
 
