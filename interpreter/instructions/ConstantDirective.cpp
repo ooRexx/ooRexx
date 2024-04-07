@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -132,6 +132,7 @@ void ConstantDirective::execute(RexxActivation *context, ExpressionStack *stack 
     context->traceInstruction(this);
     // get the expression value
     RexxObject *result = expression->evaluate(context, stack);
+    ProtectedObject p(result);
     // trace the result
     context->traceResult(result);
     // complete the method for the constant with the resolved value

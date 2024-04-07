@@ -3592,6 +3592,7 @@ void RexxActivation::traceEntry()
     // we build this directly into a raw character string.
     size_t outlength = message->getLength() + INSTRUCTION_OVERHEAD;
     RexxString *buffer = raw_string(outlength);
+    ProtectedObject p2(buffer);
     // insert the leading blanks for the prefix area
     buffer->set(0, ' ', INSTRUCTION_OVERHEAD);
     // copy in the prefix information
@@ -3903,6 +3904,7 @@ void RexxActivation::traceSourceString()
     // and build the trace line into a raw string
     size_t outlength = string->getLength() + INSTRUCTION_OVERHEAD + 2;
     RexxString *buffer = raw_string(outlength);
+    ProtectedObject p(buffer);
     buffer->set(0, ' ', INSTRUCTION_OVERHEAD);
     buffer->put(PREFIX_OFFSET, trace_prefix_table[TRACE_PREFIX_ERROR], PREFIX_LENGTH);
     buffer->putChar(INSTRUCTION_OVERHEAD, '\"');
@@ -4151,6 +4153,7 @@ bool RexxActivation::doDebugPause()
             }
             else
             {
+                ProtectedObject p(response);
                 // interpret the instruction
                 debugInterpret(response);
                 // if we've had a flow of control change, we're done.
@@ -4189,6 +4192,7 @@ void RexxActivation::traceClause(RexxInstruction *clause, TracePrefix prefix)
     }
     // format the trace line
     RexxString *line = formatTrace(clause, code->getPackageObject());
+    ProtectedObject p(line);
     // do we have a real source line we can trace, go output it.
     if (line != OREF_NULL)
     {

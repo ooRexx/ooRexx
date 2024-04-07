@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -304,6 +304,7 @@ void RexxCompoundVariable::procedureExpose(RexxActivation *context, RexxActivati
 {
     // first get (and possible create) the compound variable in the parent context.
     CompoundTableElement *variable = parent->exposeLocalCompoundVariable(stemName, stemIndex, &tails[0], tailCount);
+    ProtectedObject p(variable);
     // get the stem index from the current level.  This may end up
     // creating the stem that holds the exposed value.
     StemClass *stem_table = context->getLocalStem(stemName, stemIndex);
@@ -330,6 +331,7 @@ void RexxCompoundVariable::expose(RexxActivation *context, VariableDictionary *o
     // first get (and possible create) the compound variable in the
     // object context.
     CompoundTableElement *variable = source_stem->exposeCompoundVariable(resolved_tail);
+    ProtectedObject p(variable);
     // get the stem index from the current level.  This may end up
     // creating the stem that holds the exposed value.
     StemClass *stem_table = context->getLocalStem(stemName, stemIndex);

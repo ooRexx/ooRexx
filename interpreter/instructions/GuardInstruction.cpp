@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -161,6 +161,7 @@ void RexxInstructionGuard::execute(RexxActivation *context, ExpressionStack *sta
         context->getActivity()->guardSet();
         // get the expression result
         RexxObject *result = expression->evaluate(context, stack);
+        ProtectedObject p(result);
         context->traceKeywordResult(GlobalNames::WHEN, result);
 
         // do first evaluation without establishing doing any waits

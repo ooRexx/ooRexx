@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -278,6 +278,7 @@ InputRedirector *CommandIOConfiguration::createInputSource(RexxActivation *conte
     }
 
     RexxObject *inputObject = inputSource->evaluate(context, stack);
+    ProtectedObject p(inputObject);
     // need to trace this if on
     context->traceKeywordResult(GlobalNames::INPUT, inputObject);
 
@@ -436,6 +437,7 @@ OutputRedirector *CommandIOConfiguration::createErrorTarget(RexxActivation *cont
 OutputRedirector *CommandIOConfiguration::createOutputTarget(RexxString *keyword, RexxActivation *context, ExpressionStack *stack, RexxInternalObject *outputTarget, RedirectionType::Enum type, OutputOption::Enum option)
 {
     RexxObject *outputObject = outputTarget->evaluate(context, stack);
+    ProtectedObject p(outputObject);
     // need to trace this if on
     context->traceKeywordResult(keyword, outputObject);
     switch (type)

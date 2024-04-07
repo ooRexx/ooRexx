@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -151,10 +151,12 @@ void RexxInstructionCaseWhen::execute(RexxActivation *context, ExpressionStack *
     {
         // and the compare target (which needs tracing, but only as an intermediate
         RexxObject *compareValue = expressions[i]->evaluate(context, stack);
+        ProtectedObject p(compareValue);
         context->traceResult(compareValue);
         // now perform the compare using the "==" operator method.
         // NOTE that the case value is the left hand side.
         RexxObject *result = caseValue->callOperatorMethod(OPERATOR_STRICT_EQUAL, compareValue);
+        p=result;
         context->traceResult(result);
 
         // Remove the compare object from the stack

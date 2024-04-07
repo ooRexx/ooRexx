@@ -2091,8 +2091,10 @@ BUILTIN(TRACE)
     fix_args(TRACE);
 
     RexxString *setting = optional_string(TRACE, setting);
+    ProtectedObject p(setting);
     // get the existing setting before setting a new one
     RexxString *result = context->traceSetting();
+    ProtectedObject q(result);
     // if we have a new value, then set it
     if (setting != OREF_NULL)
     {
