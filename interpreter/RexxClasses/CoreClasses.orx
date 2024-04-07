@@ -4006,7 +4006,7 @@ nomethod:
   newObj["TIMESTAMP"]=dt
   newObj["OPTION"]   =option
   counter += 1
-  newObj["NR"]       =counter
+  newObj["NUMBER"]   =counter
   if \collector~isNil then -- collector exists, append traceObject
      collector~append(newObj)
   return newObj         -- return the new object
@@ -4147,7 +4147,7 @@ str: procedure       -- make sure we supply a string if .nil, otherwise MutableB
 
 ::method compareTo   -- allow sorting, by default by NR which represents the creation sequence
   use arg other
-  return sign(nz(self["NR"],-1) - nz(other["NR"],-1)) -- cf. rexxref.pdf, ComparableClass' compareTo definition
+  return sign(nz(self["NUMBER"],-1) - nz(other["NUMBER"],-1))  -- cf. rexxref.pdf, ComparableClass' compareTo definition
 
 nz: procedure  -- in case a Rexx user removed the NR entry, make sure the subtraction can take place
   use arg val,ifNilValue=0
@@ -4156,5 +4156,4 @@ nz: procedure  -- in case a Rexx user removed the NR entry, make sure the subtra
 
 ::method makeString  -- returns the traceline string
   return self~class~makeStringImpl(self)  -- let the class method makeStringImpl do the work
-
 
