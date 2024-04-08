@@ -264,7 +264,6 @@ GLOBAL_NAME(INTERPRETER,         "INTERPRETER")         // TraceObject: a counte
 GLOBAL_NAME(INVOCATION,          "INVOCATION")          // TraceObject: a counter (number)
 GLOBAL_NAME(ISGUARDED,           "ISGUARDED")           // TraceObject: .true/.false (method definition)
 GLOBAL_NAME(OPTION,              "OPTION")              // TraceObject: option at creation time
-GLOBAL_NAME(SCOPE,               "SCOPE")               // TraceObject: method's scope
 GLOBAL_NAME(SCOPELOCKCOUNT,      "SCOPELOCKCOUNT")      // TraceObject: a counter (number, reserveCount)
 GLOBAL_NAME(STACKFRAME,          "STACKFRAME")          // TraceObject: the RexxActivation's stack frame
 GLOBAL_NAME(THREAD,              "THREAD")              // TraceObject: a counter (number, activity)

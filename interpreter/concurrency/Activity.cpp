@@ -3113,15 +3113,6 @@ StringTable* CreateTraceObject(Activity *activity, RexxActivation *activation, R
         traceObject -> put(activation->isGuarded() ? TheTrueObject : TheFalseObject, GlobalNames::ISGUARDED );
         traceObject -> put(new_integer(activation ? activation->getReserveCount() : 0), GlobalNames::SCOPELOCKCOUNT);
         traceObject -> put(activation->isObjectScopeLocked() ? TheTrueObject : TheFalseObject, GlobalNames::HASSCOPELOCK);
-
-        // TODO: receiving object may be resolved via StackFrame's target and scope via
-        //       StackFreame's executable~scope if type='METHOD' therefore there may be no
-        //       need anymore to explicitly put OBJECT and SCOPE into the TraceObject and
-        //       therefore can be safely removed?
-        traceObject -> put(activation -> getReceiver(), GlobalNames::OBJECT);  // save receiver (self)
-        // if NULLOBJECT use TheNilObject, else method's scope (TRACE.testGroup has a test where meth is NULLOBJECT)
-        MethodClass *meth = activation->getMethod();    // get method object
-        traceObject -> put(meth == NULLOBJECT ? TheNilObject : meth->getScope(), GlobalNames::SCOPE);
     }
     return traceObject;
 }
