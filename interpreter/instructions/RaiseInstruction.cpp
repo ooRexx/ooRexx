@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2023 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -168,13 +168,9 @@ void RexxInstructionRaise::execute(RexxActivation *context, ExpressionStack *sta
 
     // set defaults for anything we need to evaluate.
     RexxObject *_additional = OREF_NULL;
-    ProtectedObject p1(_additional);
     RexxString *_description = OREF_NULL;
-    ProtectedObject p2(_description);
     RexxObject *rc = OREF_NULL;
-    ProtectedObject p3(rc);
     RexxObject *_result = OREF_NULL;
-    ProtectedObject p4(_result);
 
     // and start evaluating
     // extra RC information (SYNTAX, ERROR, and FAILURE only)
@@ -229,7 +225,6 @@ void RexxInstructionRaise::execute(RexxActivation *context, ExpressionStack *sta
             {
                 // trace each of these as arguments
                 RexxObject *arg = (additional[i])->evaluate(context, stack);
-                ProtectedObject p(arg);
                 // trace each of these as arguments
                 context->traceArgument(arg);
                 ((ArrayClass *)_additional)->put(arg, i + 1);

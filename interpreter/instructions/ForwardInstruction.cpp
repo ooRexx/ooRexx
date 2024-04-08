@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2023 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -138,11 +138,8 @@ void RexxInstructionForward::execute(RexxActivation *context, ExpressionStack *s
     // the context figures out what has been overridden from the current context, so
     // we only set the pieces we've been given
     RexxObject *_target = OREF_NULL;
-    ProtectedObject p1(_target);
     RexxObject *_message = OREF_NULL;
-    ProtectedObject p2(_message);
     RexxClass  *_superClass = OREF_NULL;
-    ProtectedObject p3(_superClass);
     RexxObject **_arguments = OREF_NULL;
     size_t      count = 0;
 
@@ -158,7 +155,6 @@ void RexxInstructionForward::execute(RexxActivation *context, ExpressionStack *s
     {
         // we need this as a string value...and in upper case.
         RexxObject *temp = message->evaluate(context, stack);
-        ProtectedObject p(temp);
         // needs tracing too
         context->traceKeywordResult(GlobalNames::MESSAGE, temp);
         _message = temp->requestString()->upper();
@@ -185,7 +181,6 @@ void RexxInstructionForward::execute(RexxActivation *context, ExpressionStack *s
     {
         // we need to evaluate this argument, then get as an array
         RexxObject *temp = arguments->evaluate(context, stack);
-        ProtectedObject p(temp);
         context->traceKeywordResult(GlobalNames::ARGUMENTS, temp);
         ArrayClass *argArray = temp->requestArray();
         // protect this on the stack too

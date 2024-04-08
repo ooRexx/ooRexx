@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -141,7 +141,6 @@ size_t ParseTrigger::integerTrigger(RexxActivation *context, ExpressionStack *st
 {
     // if we have a value that requires evaluation, get the value and trace.
     RexxObject *trigger = value->evaluate(context, stack);
-    ProtectedObject p(trigger);
     context->traceResult(trigger);
 
     // NOTE:  We leave this on the stack to protect from GC until after we convert.
@@ -171,7 +170,6 @@ RexxString *ParseTrigger::stringTrigger(RexxActivation *context, ExpressionStack
 {
     // if we have a value that requires evaluation, get the value and trace.
     RexxObject *trigger = value->evaluate(context, stack);
-    ProtectedObject p(trigger);
     context->traceResult(trigger);
 
     // NOTE:  We leave this on the stack to protect from GC until after we are finished with this.

@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -95,7 +95,6 @@ void RexxInstructionNumeric::execute(RexxActivation *context, ExpressionStack *s
         {
             // need to evaluate
             RexxObject *result = expression->evaluate(context, stack);
-            ProtectedObject p(result);
             context->traceKeywordResult(GlobalNames::DIGITS, result);
 
             size_t setting;
@@ -133,7 +132,6 @@ void RexxInstructionNumeric::execute(RexxActivation *context, ExpressionStack *s
         {
             // get the expression value and convert to a numeric
             RexxObject *result = expression->evaluate(context, stack);
-            ProtectedObject p(result);
             context->traceKeywordResult(GlobalNames::FUZZ, result);
 
             size_t setting;
@@ -173,7 +171,6 @@ void RexxInstructionNumeric::execute(RexxActivation *context, ExpressionStack *s
         {
             // evaluate the expression and get as a string value.
             RexxObject *result = expression->evaluate(context, stack);
-            ProtectedObject p(result);
             context->traceKeywordResult(GlobalNames::FORM, result);
             RexxString *stringResult = result->requestString();
 

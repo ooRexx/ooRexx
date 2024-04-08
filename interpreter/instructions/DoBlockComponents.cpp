@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -72,7 +72,6 @@ void ForLoop::setup(RexxActivation *context,
     // validate and convert now.
     wholenumber_t count = 0;
     RexxObject *result = forCount->evaluate(context, stack);
-    ProtectedObject p(result);
 
     context->traceKeywordResult(GlobalNames::FOR, result);
 
@@ -224,7 +223,6 @@ void OverLoop::setup( RexxActivation *context,
 {
     // evaluate the array target
     RexxObject* result = target->evaluate(context, stack);
-    ProtectedObject p(result);
     // anchor immediately to protect from GC
     doblock->setTo(result);
 
@@ -271,7 +269,6 @@ bool WhileUntilLoop::checkWhile(RexxActivation *context, ExpressionStack *stack 
 {
     // evaluate the condition and trace
     RexxObject *result = conditional->evaluate(context, stack);
-    ProtectedObject p(result);
     context->traceKeywordResult(GlobalNames::WHILE, result);
 
     // most comparisons return either true or false directly, so we
@@ -306,7 +303,6 @@ bool WhileUntilLoop::checkUntil(RexxActivation *context, ExpressionStack *stack 
 {
     // evaluate the condition and trace
     RexxObject *result = conditional->evaluate(context, stack);
-    ProtectedObject p(result);
     context->traceKeywordResult(GlobalNames::UNTIL, result);
 
     // most comparisons return either true or false directly, so we
@@ -338,7 +334,6 @@ void WithLoop::setup( RexxActivation *context,
 {
     // evaluate the supplier provider
     RexxObject* result = supplierSource->evaluate(context, stack);
-    ProtectedObject p2(result);
 
     context->traceKeywordResult(GlobalNames::WITH, result);
     // Now send this expression result the supplier message
