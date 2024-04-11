@@ -108,6 +108,7 @@ class RexxActivation : public ActivationBase
         TRACE_PREFIX_NAMESPACE,
         TRACE_PREFIX_KEYWORD,
         TRACE_PREFIX_ALIAS,
+        TRACE_PREFIX_INVOCATION_EXIT,
     } TracePrefix;
 
    void *operator new(size_t);
@@ -229,7 +230,7 @@ class RexxActivation : public ActivationBase
    void              traceOperatorValue(TracePrefix prefix, const char *tag, RexxObject *value);
    void              traceSourceString();
    void              traceClause(RexxInstruction *, TracePrefix);
-   void              traceEntry();
+   void              traceEntryOrExit(TracePrefix);
    void              resetElapsed();
    RexxString      * formatTrace(RexxInstruction *, PackageClass *);
    RexxString      * getTraceBack();

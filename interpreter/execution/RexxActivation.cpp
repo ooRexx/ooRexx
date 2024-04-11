@@ -512,7 +512,7 @@ RexxObject* RexxActivation::run(RexxObject *_receiver, RexxString *name, RexxObj
                     // For proper diagnostic in case of deadlock, do the trace now
                     if (tracingLabels() && isMethodOrRoutine())
                     {
-                        traceEntry();
+                        traceEntryOrExit(TRACE_PREFIX_INVOCATION);
                         if (!tracingAll())
                         {
                             // we pause on the label only for ::OPTIONS TRACE LABELS
@@ -587,7 +587,7 @@ RexxObject* RexxActivation::run(RexxObject *_receiver, RexxString *name, RexxObj
     // Must be one of ::OPTIONS TRACE ALL/RESULTS/INTERMEDIATES/LABELS
     if (!traceEntryDone && tracingLabels() && isMethodOrRoutine())
     {
-        traceEntry();
+        traceEntryOrExit(TRACE_PREFIX_INVOCATION);
         if (!tracingAll())
         {
             // we pause on the label only for ::OPTIONS TRACE LABELS
@@ -1379,8 +1379,9 @@ void RexxActivation::exitFrom(RexxObject *resultObj)
         {
             activity->callTerminationExit(this);
         }
+// TODO: superfluous for an explicit EXIT (cf. ::returnFrom(RexxObject *resultObj) )
         // terminate this level
-        termination();
+//        termination();
     }
     else
     {
@@ -1433,6 +1434,17 @@ void RexxActivation::termination()
 {
     // remove any guard locks for this activity.
     guardOff();
+
+    if (tracingLabels() && isMethodOrRoutine())
+    {
+        traceEntryOrExit(TRACE_PREFIX_INVOCATION_EXIT);
+        if (!tracingAll())
+        {
+            // we pause on the label only for ::OPTIONS TRACE LABELS
+            pauseLabel();
+        }
+    }
+
     // have any setlocals we need to undo?
     if (environmentList != OREF_NULL && !environmentList->isEmpty())
     {
@@ -3527,6 +3539,7 @@ static const char * trace_prefix_table[] =
   ">N>",                               // TRACE_PREFIX_NAMESPACE
   ">K>",                               // TRACE_PREFIX_KEYWORD
   ">R>",                               // TRACE_PREFIX_ALIAS
+  "<I<",                               // TRACE_PREFIX_INVOCATION_EXIT
 };
 
 // size of a line number
@@ -3562,9 +3575,9 @@ const char *RexxActivation::ASSIGNMENT_MARKER = " <= ";
 
 
 /**
- * Trace program entry for a method or routine
+ * Trace program entry or exit for a method or routine
  */
-void RexxActivation::traceEntry()
+void RexxActivation::traceEntryOrExit(TracePrefix tp)
 {
     // since we're advertising the entry location up front, we want to disable
     // the normal trace-turn on notice.  We'll get one or the other, but not
@@ -3596,7 +3609,7 @@ void RexxActivation::traceEntry()
     // insert the leading blanks for the prefix area
     buffer->set(0, ' ', INSTRUCTION_OVERHEAD);
     // copy in the prefix information
-    buffer->put(PREFIX_OFFSET, trace_prefix_table[TRACE_PREFIX_INVOCATION], PREFIX_LENGTH);
+    buffer->put(PREFIX_OFFSET, trace_prefix_table[tp], PREFIX_LENGTH);
     // copy the message stuff over this
     buffer->put(INSTRUCTION_OVERHEAD, message->getStringData(), message->getLength());
     // and write out the trace line
