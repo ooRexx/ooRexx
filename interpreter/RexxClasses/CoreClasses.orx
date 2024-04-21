@@ -4028,13 +4028,13 @@ nomethod:
 
 ::method setMakeString  class -- allow replacing the predefined makeStringImpl method
   expose makeStringMethod
-  use strict arg newMakeStringMeth
-  if newMakeStringMethod~isA(.method) then   -- a method object already
-     makeStringMethod=newMakeStringMeth
+  use strict arg newMethod
+  if newMethod~isA(.method) then    -- a method object already
+     makeStringMethod=newMethod
   else   -- create and save method object for performance
   do
-     signal on syntax
-     makeStringMethod=.method~new("newMakeStringMethod", newMakeStringMeth)
+     signal on syntax   -- create method object from newMethod and save it
+     makeStringMethod=.method~new("newMakeStringMethod", newMethod)
   end
   return
 
