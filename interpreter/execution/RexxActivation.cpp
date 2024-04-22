@@ -684,6 +684,17 @@ RexxObject* RexxActivation::run(RexxObject *_receiver, RexxString *name, RexxObj
             {
                 // save the reply result for handing back to the caller.
                 resultObj = result;
+
+                // indicate exit of the activity for the current invocation
+                if (tracingLabels() && isMethodOrRoutine())
+                {
+                    traceEntryOrExit(TRACE_PREFIX_INVOCATION_EXIT);
+                    if (!tracingAll())
+                    {
+                        // we pause on the label only for ::OPTIONS TRACE LABELS
+                        pauseLabel();
+                    }
+                }
                 // reset the next instruction
                 next = current->nextInstruction;
 
@@ -1379,9 +1390,6 @@ void RexxActivation::exitFrom(RexxObject *resultObj)
         {
             activity->callTerminationExit(this);
         }
-// TODO: superfluous for an explicit EXIT (cf. ::returnFrom(RexxObject *resultObj) )
-        // terminate this level
-//        termination();
     }
     else
     {
