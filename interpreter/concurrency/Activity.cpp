@@ -3104,16 +3104,14 @@ StringTable* CreateTraceObject(Activity *activity, RexxActivation *activation, R
     traceObject -> put(new_integer(activation ? activation->getIdntfr() : 0), GlobalNames::INVOCATION);
     traceObject -> put(activation ? activation->createStackFrame() : TheNilObject, GlobalNames::STACKFRAME);
 
-        // get variableDictionary if any
-    VariableDictionary *variableDictionary = (activation ? activation->getVariableDictionary() : NULL);
-    size_t variableDictionaryNr = variableDictionary ? variableDictionary->getIdntfr() : 0;
-    if (variableDictionaryNr > 0)   // if method routine, get further information
+    if (activation && activation->isMethod())   // METHODCALL, fill in method related information
     {
-        traceObject -> put(new_integer(variableDictionaryNr), GlobalNames::ATTRIBUTEPOOL);  // Rexx users relate better if using ATTRIBUTE
+        traceObject -> put(new_integer(activation->getVariableDictionary()->getIdntfr()), GlobalNames::ATTRIBUTEPOOL);
         traceObject -> put(activation->isGuarded() ? TheTrueObject : TheFalseObject, GlobalNames::ISGUARDED );
-        traceObject -> put(new_integer(activation ? activation->getReserveCount() : 0), GlobalNames::SCOPELOCKCOUNT);
+        traceObject -> put(new_integer(activation->getReserveCount()), GlobalNames::SCOPELOCKCOUNT);
         traceObject -> put(activation->isObjectScopeLocked() ? TheTrueObject : TheFalseObject, GlobalNames::HASSCOPELOCK);
     }
+
     return traceObject;
 }
 
