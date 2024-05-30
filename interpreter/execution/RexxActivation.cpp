@@ -58,6 +58,7 @@
 #include "MessageClass.hpp"
 #include "RexxCode.hpp"
 #include "RexxInstruction.hpp"
+#include "TraceInstruction.hpp"
 #include "CallInstruction.hpp"
 #include "DoBlock.hpp"
 #include "DoInstruction.hpp"
@@ -462,7 +463,8 @@ RexxObject* RexxActivation::run(RexxObject *_receiver, RexxString *name, RexxObj
     // the "msgname" can also be the name of an external routine, the label
     // name of an internal routine.
     settings.messageName = name;
-    bool traceEntryDone = false;
+    traceEntryAllowed = (start == OREF_NULL);
+    traceEntryDone = false;
 
     // not a reply restart situation?  We need to do the full
     // initial setup
@@ -510,16 +512,7 @@ RexxObject* RexxActivation::run(RexxObject *_receiver, RexxString *name, RexxObj
                     settings.objectVariables = receiver->getObjectVariables(scope);
 
                     // For proper diagnostic in case of deadlock, do the trace now
-                    if (tracingLabels() && isMethodOrRoutine())
-                    {
-                        traceEntryOrExit(TRACE_PREFIX_INVOCATION);
-                        if (!tracingAll())
-                        {
-                            // we pause on the label only for ::OPTIONS TRACE LABELS
-                            pauseLabel();
-                        }
-                        traceEntryDone = true;
-                    }
+                    traceEntry();
 
                     settings.objectVariables->reserve(activity);
                     objectScope = SCOPE_RESERVED;
@@ -585,15 +578,7 @@ RexxObject* RexxActivation::run(RexxObject *_receiver, RexxString *name, RexxObj
     // is a routine or method invocation in one of those packages, give the
     // initial entry trace so the user knows where we are.
     // Must be one of ::OPTIONS TRACE ALL/RESULTS/INTERMEDIATES/LABELS
-    if (!traceEntryDone && tracingLabels() && isMethodOrRoutine())
-    {
-        traceEntryOrExit(TRACE_PREFIX_INVOCATION);
-        if (!tracingAll())
-        {
-            // we pause on the label only for ::OPTIONS TRACE LABELS
-            pauseLabel();
-        }
-    }
+    traceEntry();
 
     // this is the main execution loop...continue until we get a terminating
     // condition, such as a RETURN or EXIT, or just reaching the end of the code stream.
@@ -633,6 +618,12 @@ RexxObject* RexxActivation::run(RexxObject *_receiver, RexxString *name, RexxObj
                 {
                     processClauseBoundary();
                 }
+
+                // retro-trace of entry in a routine/method is allowed only if
+                // - the TRACE instruction is the first instruction (or the second if the first instruction is an expose).
+                // - the TRACE function is called from the first instruction (or the second if the first instruction is EXPOSE).
+                if (current->getType() != KEYWORD_EXPOSE) traceEntryAllowed = false;
+
                 // get our next instruction and loop around
                 nextInst = next;
             }
@@ -992,6 +983,8 @@ void RexxActivation::setTrace(const TraceSetting &source)
     {
         // set the new flags
         settings.packageSettings.traceSettings.set(source);
+        // if applicable then trace the entry in the current routine/method
+        traceEntry();
     }
 
     if (debug && !settings.packageSettings.traceSettings.isDebug())
@@ -3583,6 +3576,59 @@ const char *RexxActivation::ASSIGNMENT_MARKER = " <= ";
 
 
 /**
+ * Trace program entry for a method or routine
+ */
+void RexxActivation::traceEntry()
+{
+    if (!traceEntryAllowed) return;
+    if (traceEntryDone) return;
+
+    bool earlyTraceEntry = false;
+    {
+        // Code analysis (allow to trace the entry before a possible lock)
+        // If the first instruction other than expose is a non-dynamic TRACE A or TRACE I or TRACE L or TRACE R then activate the entry trace.
+        // We are on the first instruction because traceEntryAllowed is true.
+        RexxInstruction *instruction = current;
+        if (instruction != OREF_NULL && instruction->getType() == KEYWORD_EXPOSE) instruction = instruction->nextInstruction;
+        if (instruction != OREF_NULL && instruction->getType() == KEYWORD_TRACE)
+        {
+            RexxInstructionTrace *instructionTrace = (RexxInstructionTrace *)instruction;
+            earlyTraceEntry = instructionTrace->nonDynamicTracingLabels() && isMethodOrRoutine();
+        }
+    }
+
+    bool traceEntry = false;
+    if (isInterpret())
+    {
+        traceEntry = tracingLabels() && parent->isMethodOrRoutine();
+        // Next line: don't test parent->tracingLabels() because it's not yet updated with the latest value.
+        // See RexxActivation::setTrace, there is a call of traceEntry after having updated the trace settings.
+        // Here, we are in interpret, these trace settings will be pushed back to the parent ONLY after returning from the interpret activation.
+        traceEntry = traceEntry && parent->traceEntryAllowed && !parent->traceEntryDone /* && parent->tracingLabels() */;
+    }
+    else
+    {
+        traceEntry = tracingLabels() && isMethodOrRoutine();
+    }
+
+    if (earlyTraceEntry || traceEntry)
+    {
+        // Should we use this->settings.traceEntryDone instead of this->traceEntryDone?
+        // and let RexxActivation::run push back to the parent using parent->getSettings(settings)
+        // when executionState == RETURNED?
+        traceEntryDone = true; // set it now, to avoid any recursion
+        if (isInterpret()) parent->traceEntryDone = true; // push back to the parent now, because nobody will do it for us
+        traceEntryOrExit(TRACE_PREFIX_INVOCATION);
+        if (!tracingAll())
+        {
+            // we pause on the label only for [::OPTIONS] TRACE LABELS
+            pauseLabel();
+        }
+    }
+}
+
+
+/**
  * Trace program entry or exit for a method or routine
  */
 void RexxActivation::traceEntryOrExit(TracePrefix tp)
@@ -3592,22 +3638,26 @@ void RexxActivation::traceEntryOrExit(TracePrefix tp)
     // both
     settings.setSourceTraced(true);
 
+    RexxActivation *context = this;
+    if (isInterpret()) context = parent;
+
     ArrayClass *info = OREF_NULL;
 
     // the substitution information is different depending on whether this
     // is a method or a routine.
-    if (isMethod())
+    if (context->isMethod())
     {
-        info = new_array(getMessageName(), ((MethodClass *)executable)->getScopeName(), getPackage()->getProgramName());
+        info = new_array(context->getMessageName(), ((MethodClass *)context->executable)->getScopeName(), context->getPackage()->getProgramName());
     }
     else
     {
-        info = new_array(getExecutable()->getName(), getPackage()->getProgramName());
+        info = new_array(context->getExecutable()->getName(), context->getPackage()->getProgramName());
     }
     ProtectedObject p(info);
 
     // and the message is slightly different
-    RexxString *message = activity->buildMessage(isRoutine() ? Message_Translations_routine_invocation : Message_Translations_method_invocation, info);
+ // RexxString *message = activity->buildMessage(isRoutine() ? Message_Translations_routine_invocation : Message_Translations_method_invocation, info);
+    RexxString *message = activity->buildMessage(context->isMethod() ? Message_Translations_method_invocation : Message_Translations_routine_invocation, info);
     p = message;
 
     // we build this directly into a raw character string.

@@ -60,6 +60,7 @@ public:
     void flatten(Envelope*) override;
 
     void execute(RexxActivation *, ExpressionStack *) override;
+    inline bool nonDynamicTracingLabels() { return expression == OREF_NULL && settings.tracingLabels(); }
 
 protected:
 

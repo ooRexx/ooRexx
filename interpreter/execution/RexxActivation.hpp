@@ -230,6 +230,7 @@ class RexxActivation : public ActivationBase
    void              traceOperatorValue(TracePrefix prefix, const char *tag, RexxObject *value);
    void              traceSourceString();
    void              traceClause(RexxInstruction *, TracePrefix);
+   void              traceEntry();
    void              traceEntryOrExit(TracePrefix);
    void              resetElapsed();
    RexxString      * formatTrace(RexxInstruction *, PackageClass *);
@@ -620,6 +621,8 @@ class RexxActivation : public ActivationBase
     RexxInstruction     *next;          // next instruction to execute
     bool                 debugPause;    // executing a debug pause
     bool                 clauseBoundary;// special flag for clause boundary checks
+    bool                 traceEntryAllowed; // true if first instruction (other than expose)
+    bool                 traceEntryDone;// true if the entry in a routine or method has been traced
     RexxObject          *result;        // result of execution
     ArrayClass          *trapInfo;      // current trap handler
     RexxContext         *contextObject; // the context object representing the execution context
