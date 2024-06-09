@@ -2311,32 +2311,19 @@ add_custom_target(portable
   # Rexx program that does a DESTDIR local install and creates the zip directory structure
   COMMAND ${run_rexx_exe}  ${run_rexx_create_script} -portable_dirname ${zip_dir_name} -zip_name ${zip_name}
 
-  # change into temporary directory and create runtime archive
-  COMMAND ${CMAKE_COMMAND} -E chdir "${zip_dir_name}"
-          ${CMAKE_COMMAND} -E tar "cfv" "${zip_name}-runtime.zip" --format=zip
-                                 "${zip_name}/bin"
-                                 "${zip_name}/lib"
-                                 "${zip_name}/include"
-                                 "${zip_name}/setupoorexx.${rexx_exe_shell_ft}"
-                                 "${zip_name}/setupoorexx.rex"
-                                 "${zip_name}/testoorexx.rex"
-                                 "${zip_name}/readme.txt"
-
   # change into temporary directory and create full archive
   COMMAND ${CMAKE_COMMAND} -E chdir "${zip_dir_name}"
           ${CMAKE_COMMAND} -E tar "cfv" "${zip_name}.zip" --format=zip
                                  "${zip_name}"
 
   # copy archives
-  COMMAND ${CMAKE_COMMAND} -E copy "${zip_dir_name}/${zip_name}-runtime.zip" "${CMAKE_CURRENT_BINARY_DIR}"
   COMMAND ${CMAKE_COMMAND} -E copy "${zip_dir_name}/${zip_name}.zip" "${CMAKE_CURRENT_BINARY_DIR}"
 
   # delete archives
-  COMMAND ${CMAKE_COMMAND} -E remove "${zip_dir_name}/${zip_name}-runtime.zip"
-                                     "${zip_dir_name}/${zip_name}.zip"
+  COMMAND ${CMAKE_COMMAND} -E remove "${zip_dir_name}/${zip_name}.zip"
 
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-  COMMENT "Creating portable Rexx Home ENVironment zip archives ...")
+  COMMENT "Creating portable Rexx Home ENVironment zip archive ...")
 # <-- portable Rexx Home ENVironment archive <--
 
 # Create a source package
