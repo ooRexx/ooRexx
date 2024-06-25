@@ -3671,7 +3671,7 @@ void RexxActivation::traceEntryOrExit(TracePrefix tp)
     // copy the message stuff over this
     buffer->put(INSTRUCTION_OVERHEAD, message->getStringData(), message->getLength());
     // and write out the trace line
-    activity->traceOutput(this, buffer);
+    activity->traceOutput(this, buffer, NULLOBJECT, NULLOBJECT, NULLOBJECT);
 }
 
 
@@ -3700,7 +3700,7 @@ void RexxActivation::traceValue(RexxObject *value, TracePrefix prefix)
     buffer->putChar(TRACE_OVERHEAD - 2 + settings.traceIndent * INDENT_SPACING, '\"');
     buffer->put(TRACE_OVERHEAD - 1 + settings.traceIndent * INDENT_SPACING, stringvalue->getStringData(), stringvalue->getLength());
     buffer->putChar(outlength - 1, '\"');
-    activity->traceOutput(this, buffer);
+    activity->traceOutput(this, buffer, NULLOBJECT, NULLOBJECT, NULLOBJECT);
 }
 
 
@@ -3790,7 +3790,15 @@ void RexxActivation::traceTaggedValue(TracePrefix prefix, const char *tagPrefix,
     buffer->putChar(dataOffset, '\"');
     dataOffset++;
                                        /* write out the line                */
-    activity->traceOutput(this, buffer);
+    // we need both to trace a variable, TRACE_PREFIX_VARIABLE and TRACE_PREFIX_ASSIGNMENT
+    if ( (prefix == TRACE_PREFIX_VARIABLE) || (prefix == TRACE_PREFIX_ASSIGNMENT) )
+    {
+        activity->traceOutput(this, buffer, tag, value, (prefix == TRACE_PREFIX_ASSIGNMENT ? TheTrueObject : TheFalseObject) );
+    }
+    else
+    {
+        activity->traceOutput(this, buffer, NULLOBJECT, NULLOBJECT, NULLOBJECT);
+    }
 }
 
 
@@ -3863,7 +3871,7 @@ void RexxActivation::traceOperatorValue(TracePrefix prefix, const char *tag, Rex
     buffer->putChar(dataOffset, '\"');
     dataOffset++;
                                        /* write out the line                */
-    activity->traceOutput(this, buffer);
+    activity->traceOutput(this, buffer, NULLOBJECT, NULLOBJECT, NULLOBJECT);
 }
 
 
@@ -3953,7 +3961,7 @@ void RexxActivation::traceCompoundValue(TracePrefix prefix, RexxString *stemName
     buffer->putChar(dataOffset, '\"');
     dataOffset++;
                                        /* write out the line                */
-    activity->traceOutput(this, buffer);
+    activity->traceOutput(this, buffer, NULLOBJECT, NULLOBJECT, NULLOBJECT);
 }
 
 
@@ -3981,7 +3989,7 @@ void RexxActivation::traceSourceString()
     buffer->putChar(INSTRUCTION_OVERHEAD, '\"');
     buffer->put(INSTRUCTION_OVERHEAD + 1, string->getStringData(), string->getLength());
     buffer->putChar(outlength - 1, '\"');
-    activity->traceOutput(this, buffer);
+    activity->traceOutput(this, buffer, NULLOBJECT, NULLOBJECT, NULLOBJECT);
 }
 
 
@@ -4200,7 +4208,7 @@ bool RexxActivation::doDebugPause()
         if (!settings.wasDebugPromptIssued())
         {
             // write the initial prompt and turn off for the next time.
-            activity->traceOutput(this, Interpreter::getMessageText(Message_Translations_debug_prompt));
+            activity->traceOutput(this, Interpreter::getMessageText(Message_Translations_debug_prompt), NULLOBJECT, NULLOBJECT, NULLOBJECT);
             settings.setDebugPromptIssued(true);
         }
         // save the next instruction in case we're asked to re-execute
@@ -4272,7 +4280,7 @@ void RexxActivation::traceClause(RexxInstruction *clause, TracePrefix prefix)
         {
             traceSourceString();
         }
-        activity->traceOutput(this, line);
+        activity->traceOutput(this, line, NULLOBJECT, NULLOBJECT, NULLOBJECT);
     }
 }
 
