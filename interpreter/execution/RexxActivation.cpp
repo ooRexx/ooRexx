@@ -3671,7 +3671,7 @@ void RexxActivation::traceEntryOrExit(TracePrefix tp)
     // copy the message stuff over this
     buffer->put(INSTRUCTION_OVERHEAD, message->getStringData(), message->getLength());
     // and write out the trace line
-    processTraceInfo(buffer, tp, NULLOBJECT, NULLOBJECT);
+    activity->traceOutput(this, buffer, NULLOBJECT, NULLOBJECT, NULLOBJECT);
 }
 
 
@@ -3700,7 +3700,7 @@ void RexxActivation::traceValue(RexxObject *value, TracePrefix prefix)
     buffer->putChar(TRACE_OVERHEAD - 2 + settings.traceIndent * INDENT_SPACING, '\"');
     buffer->put(TRACE_OVERHEAD - 1 + settings.traceIndent * INDENT_SPACING, stringvalue->getStringData(), stringvalue->getLength());
     buffer->putChar(outlength - 1, '\"');
-    processTraceInfo(buffer, prefix, NULLOBJECT, NULLOBJECT);
+    activity->traceOutput(this, buffer, NULLOBJECT, NULLOBJECT, NULLOBJECT);
 }
 
 
@@ -3790,7 +3790,15 @@ void RexxActivation::traceTaggedValue(TracePrefix prefix, const char *tagPrefix,
     buffer->putChar(dataOffset, '\"');
     dataOffset++;
                                        /* write out the line                */
-    processTraceInfo(buffer, prefix, tag, value);
+    // we need both to trace a variable, TRACE_PREFIX_VARIABLE and TRACE_PREFIX_ASSIGNMENT
+    if ( (prefix == TRACE_PREFIX_VARIABLE) || (prefix == TRACE_PREFIX_ASSIGNMENT) )
+    {
+        activity->traceOutput(this, buffer, tag, value, (prefix == TRACE_PREFIX_ASSIGNMENT ? TheTrueObject : TheFalseObject) );
+    }
+    else
+    {
+        activity->traceOutput(this, buffer, NULLOBJECT, NULLOBJECT, NULLOBJECT);
+    }
 }
 
 
@@ -3863,7 +3871,7 @@ void RexxActivation::traceOperatorValue(TracePrefix prefix, const char *tag, Rex
     buffer->putChar(dataOffset, '\"');
     dataOffset++;
                                        /* write out the line                */
-    processTraceInfo(buffer, prefix, NULLOBJECT, NULLOBJECT);
+    activity->traceOutput(this, buffer, NULLOBJECT, NULLOBJECT, NULLOBJECT);
 }
 
 
@@ -3953,7 +3961,7 @@ void RexxActivation::traceCompoundValue(TracePrefix prefix, RexxString *stemName
     buffer->putChar(dataOffset, '\"');
     dataOffset++;
                                        /* write out the line                */
-    processTraceInfo(buffer, prefix, NULLOBJECT, NULLOBJECT);
+    activity->traceOutput(this, buffer, NULLOBJECT, NULLOBJECT, NULLOBJECT);
 }
 
 
@@ -3981,7 +3989,7 @@ void RexxActivation::traceSourceString()
     buffer->putChar(INSTRUCTION_OVERHEAD, '\"');
     buffer->put(INSTRUCTION_OVERHEAD + 1, string->getStringData(), string->getLength());
     buffer->putChar(outlength - 1, '\"');
-    processTraceInfo(buffer, TRACE_OUTPUT_SOURCE, NULLOBJECT, NULLOBJECT);
+    activity->traceOutput(this, buffer, NULLOBJECT, NULLOBJECT, NULLOBJECT);
 }
 
 
@@ -4200,7 +4208,7 @@ bool RexxActivation::doDebugPause()
         if (!settings.wasDebugPromptIssued())
         {
             // write the initial prompt and turn off for the next time.
-            processTraceInfo(Interpreter::getMessageText(Message_Translations_debug_prompt), TRACE_OUTPUT, NULLOBJECT, NULLOBJECT);
+            activity->traceOutput(this, Interpreter::getMessageText(Message_Translations_debug_prompt), NULLOBJECT, NULLOBJECT, NULLOBJECT);
             settings.setDebugPromptIssued(true);
         }
         // save the next instruction in case we're asked to re-execute
@@ -4272,7 +4280,7 @@ void RexxActivation::traceClause(RexxInstruction *clause, TracePrefix prefix)
         {
             traceSourceString();
         }
-        processTraceInfo(line, prefix, NULLOBJECT, NULLOBJECT);
+        activity->traceOutput(this, line, NULLOBJECT, NULLOBJECT, NULLOBJECT);
     }
 }
 
@@ -5095,95 +5103,3 @@ void RexxActivation::removeFileName(RexxString *fullName)
         while (removed != OREF_NULL);
     }
 }
-
-
-
-
-// ---- begin TraceObject; caching class for performance reasons (if the Rexx user
-//      should be allowed to change the class object after tracing has started, we
-//      need to change the logic to do the findClass() each time)
-inline RexxClass *getRexxPackageTraceObject()    // only do the findClass() once
-{
-    static RexxClass *RexxPackageTraceObject = OREF_NULL;
-    if (RexxPackageTraceObject==OREF_NULL)
-    {
-        RexxObject *t = OREF_NULL;   // required for the findClass call
-        RexxPackageTraceObject = TheRexxPackage->findClass(GlobalNames::TRACEOBJECT, t);
-    }
-    return RexxPackageTraceObject;
-}
-
-
-/** Create an instance of TraceObject and fill in trace information, depending on the
- *  tracePrefix.
- *
- * @param traceLine a RexxString
- * @param tracePrefix a TracePrefix enum
- * @param tag a RexxString, e.g. the variable name
- * @param value a RexxObject
- * @return the created TraceObject (a StringTable)
- *
- */
-StringTable * RexxActivation::createTraceObject(RexxString *traceline, TracePrefix tracePrefix, RexxString *tag, RexxObject *value)
-{
-    ProtectedObject result;
-    StringTable *traceObject = (StringTable *) getRexxPackageTraceObject()->messageSend(GlobalNames::NEW, OREF_NULL, 0, result);
-    ProtectedObject p(traceObject);
-
-    traceObject -> put(traceline, GlobalNames::TRACELINE );
-    traceObject -> put(new_integer(activity->getInstance()->getIdntfr()), GlobalNames::INTERPRETER );
-    traceObject -> put(new_integer(activity->getIdntfr()), GlobalNames::THREAD );
-
-    traceObject -> put(new_integer(getIdntfr()), GlobalNames::INVOCATION);
-    traceObject -> put(createStackFrame(), GlobalNames::STACKFRAME);
-
-    // tracing a variable, create and fill in a StringTable with the variable related information
-    if (tracePrefix == TRACE_PREFIX_VARIABLE || tracePrefix == TRACE_PREFIX_ASSIGNMENT)
-    {
-        StringTable *varStringTable = new_string_table();
-        varStringTable -> put(tag,           GlobalNames::NAME);
-        varStringTable -> put(value,         GlobalNames::VALUE);
-        varStringTable -> put(tracePrefix == TRACE_PREFIX_ASSIGNMENT ? TheTrueObject : TheFalseObject, GlobalNames::ASSIGNMENT);
-        traceObject -> put(varStringTable,   GlobalNames::VARIABLE);
-    }
-
-    if (isMethod())   // METHODCALL, fill in method related information
-    {
-        traceObject -> put(new_integer(getVariableDictionary()->getIdntfr()), GlobalNames::ATTRIBUTEPOOL);
-        traceObject -> put(isGuarded() ? TheTrueObject : TheFalseObject, GlobalNames::ISGUARDED );
-        traceObject -> put(new_integer(getReserveCount()), GlobalNames::SCOPELOCKCOUNT);
-        traceObject -> put(isObjectScopeLocked() ? TheTrueObject : TheFalseObject, GlobalNames::HASSCOPELOCK);
-            // although receiver can be fetched via StackFrame's target, allow speeding up for debugger, hence add it always here as well
-        traceObject -> put(getReceiver(), GlobalNames::RECEIVER);
-    }
-
-    return traceObject;
-}
-
-
-/** Processes trace information and outputs it.
- *
- * @param traceLine the trace line to display
- * @param tracePrefix the kind of trace taking place
- * @param tag optional RexxString, e.g. the traced variable name
- * @param value optional RexxObject, e.g. the traced variable value
- */
-void RexxActivation::processTraceInfo(RexxString *traceLine, TracePrefix tracePrefix, RexxString *tag, RexxObject *value)
-{
-   // make sure this is a real string value (likely, since we constructed it in the first place)
-   Protected<RexxString> pline = traceLine->stringTrace();
-   Protected<StringTable> traceObject=createTraceObject(pline, tracePrefix, tag, value);
-   activity->traceOutput(this, pline, traceObject);
-}
-
-
-/** Outputs the line using the trace output destination.
- *
- * @param traceLine the trace line to display
- */
-void RexxActivation::displayUsingTraceOutput(RexxString *traceLine)
-{
-   processTraceInfo(traceLine, TRACE_OUTPUT, NULLOBJECT, NULLOBJECT);
-}
-
-

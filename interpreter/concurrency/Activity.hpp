@@ -207,7 +207,7 @@ class Activity : public RexxInternalObject
     bool callTraceTestExit(RexxActivation *, bool);
     bool callNovalueExit(RexxActivation *, RexxString *, RexxObject *&);
     bool callValueExit(RexxActivation *, RexxString *, RexxString *, RexxObject *, ProtectedObject&);
-    void traceOutput(RexxActivation *, RexxString *, StringTable *);
+    void traceOutput(RexxActivation *, RexxString *, RexxString *, RexxObject *, RexxObject *);
     void sayOutput(RexxActivation *, RexxString *);
     void queue(RexxActivation *, RexxString *, QueueOrder);
     RexxString *traceInput(RexxActivation *);
