@@ -68,7 +68,6 @@ class CommandIOConfiguration;
 class CommandIOContext;
 class RoutineClass;
 
-
 /**
  * An activation of a section of Rexx code.
  */
@@ -109,6 +108,11 @@ class RexxActivation : public ActivationBase
         TRACE_PREFIX_KEYWORD,
         TRACE_PREFIX_ALIAS,
         TRACE_PREFIX_INVOCATION_EXIT,
+
+        // note: these values are for tagging, not for retrieving strings from the prefix table
+        TRACE_OUTPUT_SOURCE,    // for: void RexxActivation::traceSourceString()
+        TRACE_OUTPUT,           // for: bool RexxActivation::doDebugPause(), void Activity::displayDebug(DirectoryClass *exobj),
+                                //      void Activity::display(DirectoryClass *exobj),
     } TracePrefix;
 
    void *operator new(size_t);
@@ -604,7 +608,12 @@ class RexxActivation : public ActivationBase
    // marker used for tagged traces to separate tag from the value
    static const char *ASSIGNMENT_MARKER;
 
+   void displayUsingTraceOutput(Activity *, RexxString *);
+
  protected:
+
+    static StringTable * createTraceObject(Activity *, RexxActivation *, RexxString *line, TracePrefix tracePrefix, RexxString *tag, RexxObject *value);
+    void processTraceInfo(Activity *, RexxString *traceLine, TracePrefix tracePrefix, RexxString *tag, RexxObject *value);
 
     ActivationSettings   settings;      // inherited REXX settings
     ExpressionStack      stack;         // current evaluation stack

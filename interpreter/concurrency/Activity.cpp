@@ -1379,7 +1379,7 @@ void Activity::display(DirectoryClass *exobj)
             // if we have a real line, write it out
             if (text != OREF_NULL && text != TheNilObject)
             {
-                traceOutput(currentRexxFrame, text, NULLOBJECT, NULLOBJECT, NULLOBJECT);
+                currentRexxFrame->displayUsingTraceOutput(this, text);
             }
         }
     }
@@ -1412,7 +1412,7 @@ void Activity::display(DirectoryClass *exobj)
 
     // and finally the primary error message
     text = text->concat((RexxString *)exobj->get(GlobalNames::ERRORTEXT));
-    traceOutput(currentRexxFrame, text, NULLOBJECT, NULLOBJECT, NULLOBJECT);
+    currentRexxFrame->displayUsingTraceOutput(this, text);
 
     // now add the secondary message if we have one.
     RexxString *secondary = (RexxString *)exobj->get(GlobalNames::MESSAGE);
@@ -1427,7 +1427,7 @@ void Activity::display(DirectoryClass *exobj)
         text = text->concat(secondary);
 
         // and write that out also
-        traceOutput(currentRexxFrame, text, NULLOBJECT, NULLOBJECT, NULLOBJECT);
+        currentRexxFrame->displayUsingTraceOutput(this, text);
     }
 }
 
@@ -1447,7 +1447,7 @@ void Activity::displayDebug(DirectoryClass *exobj)
     text = text->concatWith((exobj->get(GlobalNames::RC))->requestString(), ' ');
     text = text->concatWithCstring(":  ");
     text = text->concatWith((RexxString *)exobj->get(GlobalNames::ERRORTEXT), ' ');
-    traceOutput(currentRexxFrame, text, NULLOBJECT, NULLOBJECT, NULLOBJECT);
+    currentRexxFrame->displayUsingTraceOutput(this, text);
 
 
     // now any secondary message
@@ -1458,7 +1458,7 @@ void Activity::displayDebug(DirectoryClass *exobj)
         text = text->concatWith((RexxString *)exobj->get(GlobalNames::CODE), ' ');
         text = text->concatWithCstring(":  ");
         text = text->concat(secondary);
-        traceOutput(getCurrentRexxFrame(), text, NULLOBJECT, NULLOBJECT, NULLOBJECT);
+        currentRexxFrame->displayUsingTraceOutput(this, text);
     }
 }
 
@@ -3074,74 +3074,15 @@ SecurityManager* Activity::getInstanceSecurityManager()
 }
 
 
-
-// ---- begin TraceObject; caching class for performance reasons (if the Rexx user
-//      should be allowed to change the class object after tracing has started, we
-//      need to change the logic to do the findClass() each time)
-inline RexxClass *getRexxPackageTraceObject()    // only do the findClass() once
-{
-    static RexxClass *RexxPackageTraceObject = OREF_NULL;
-    if (RexxPackageTraceObject==OREF_NULL)
-    {
-        RexxObject *t = OREF_NULL;   // required for the findClass call
-        RexxPackageTraceObject = TheRexxPackage->findClass(GlobalNames::TRACEOBJECT, t);
-    }
-    return RexxPackageTraceObject;
-}
-
-
-/** Fill in additional trace information, some concurrency related. */
-StringTable* CreateTraceObject(Activity *activity, RexxActivation *activation, RexxString *traceline, RexxString *varName, RexxObject *varValue, RexxObject *varAssignment)
-{
-    ProtectedObject result;
-    StringTable *traceObject = (StringTable *) getRexxPackageTraceObject()->messageSend(GlobalNames::NEW, OREF_NULL, 0, result);
-    ProtectedObject p(traceObject);
-
-    traceObject -> put(traceline, GlobalNames::TRACELINE );
-    traceObject -> put(new_integer(activity->getInstance()->getIdntfr()), GlobalNames::INTERPRETER );
-    traceObject -> put(new_integer(activity->getIdntfr()), GlobalNames::THREAD );
-
-    traceObject -> put(new_integer(activation ? activation->getIdntfr() : 0), GlobalNames::INVOCATION);
-    traceObject -> put(activation ? activation->createStackFrame() : TheNilObject, GlobalNames::STACKFRAME);
-
-    if (varName!=NULLOBJECT)    // create, fill in variable related information, store
-    {
-        StringTable *varStringTable = new_string_table();
-        varStringTable -> put(varName,       GlobalNames::NAME);
-        varStringTable -> put(varValue,      GlobalNames::VALUE);
-        varStringTable -> put(varAssignment, GlobalNames::ASSIGNMENT);  // .true/.false
-        traceObject -> put(varStringTable,   GlobalNames::VARIABLE);
-    }
-
-    if (activation && activation->isMethod())   // METHODCALL, fill in method related information
-    {
-        traceObject -> put(new_integer(activation->getVariableDictionary()->getIdntfr()), GlobalNames::ATTRIBUTEPOOL);
-        traceObject -> put(activation->isGuarded() ? TheTrueObject : TheFalseObject, GlobalNames::ISGUARDED );
-        traceObject -> put(new_integer(activation->getReserveCount()), GlobalNames::SCOPELOCKCOUNT);
-        traceObject -> put(activation->isObjectScopeLocked() ? TheTrueObject : TheFalseObject, GlobalNames::HASSCOPELOCK);
-            // although receiver can be fetched via StackFrame's target, allow speeding up for debugger, hence add it always here as well
-        traceObject -> put(activation->getReceiver(), GlobalNames::RECEIVER);
-    }
-
-    return traceObject;
-}
-
-
 /**
  * Write out a line of trace output.
  *
  * @param activation The current activation context.
  * @param line       The output line
  */
-void  Activity::traceOutput(RexxActivation *activation, RexxString *line, RexxString *varName, RexxObject *varValue, RexxObject *varAssignment)
+void Activity::traceOutput(RexxActivation *activation, RexxString *line, StringTable *traceObject)
 {
-    // make sure this is a real string value (likely, since we constructed it in the first place)
-    Protected<RexxString> pline = line->stringTrace();
-
-    Protected<StringTable> traceObject=CreateTraceObject(this, activation, pline, varName, varValue, varAssignment);
-
-    // if the exit passes on the call, we write this to the .traceouput
-    if (callTraceExit(activation, pline))
+    if (callTraceExit(activation, line))
     {
         // if in profiling mode we only let collect the traceObjects,
         // we do not output the traceLine if currently in profiling mode
