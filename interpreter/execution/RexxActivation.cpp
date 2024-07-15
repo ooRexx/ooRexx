@@ -463,13 +463,15 @@ RexxObject* RexxActivation::run(RexxObject *_receiver, RexxString *name, RexxObj
     // the "msgname" can also be the name of an external routine, the label
     // name of an internal routine.
     settings.messageName = name;
-    traceEntryAllowed = (start == OREF_NULL);
-    traceEntryDone = false;
 
     // not a reply restart situation?  We need to do the full
     // initial setup
     if (executionState != REPLIED)
     {
+        // the trace entry is allowed if we are at the first instruction
+        traceEntryAllowed = (start == OREF_NULL);
+        traceEntryDone = false;
+
         // exits possible?  We don't use exits for methods in the image
         // we try not to check stuff between clauses unless we have to...the
         // clause boundary flag tells us we need to perform checks.
@@ -543,6 +545,11 @@ RexxObject* RexxActivation::run(RexxObject *_receiver, RexxString *name, RexxObj
     // resuming on a new thread after a reply
     else
     {
+        // the trace entry after the reply will be done only if the trace entry
+        // has been done before the reply
+        traceEntryAllowed = traceEntryDone;
+        traceEntryDone = false;
+
         // if we could not keep the guard lock when we were spun off, then
         // we need to reacquire (and potentially wait) for the lock now.
         if (settings.hasTransferFailed())
@@ -677,7 +684,7 @@ RexxObject* RexxActivation::run(RexxObject *_receiver, RexxString *name, RexxObj
                 resultObj = result;
 
                 // indicate exit of the activity for the current invocation
-                if (tracingLabels() && isMethodOrRoutine())
+                if (traceEntryDone && tracingLabels() && isMethodOrRoutine())
                 {
                     traceEntryOrExit(TRACE_PREFIX_INVOCATION_EXIT);
                     if (!tracingAll())
@@ -1436,7 +1443,7 @@ void RexxActivation::termination()
     // remove any guard locks for this activity.
     guardOff();
 
-    if (tracingLabels() && isMethodOrRoutine())
+    if (traceEntryDone && tracingLabels() && isMethodOrRoutine())
     {
         traceEntryOrExit(TRACE_PREFIX_INVOCATION_EXIT);
         if (!tracingAll())
