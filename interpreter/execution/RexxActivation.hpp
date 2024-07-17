@@ -89,30 +89,30 @@ class RexxActivation : public ActivationBase
      */
     typedef enum
     {
-        TRACE_PREFIX_CLAUSE   ,
-        TRACE_PREFIX_ERROR    ,
-        TRACE_PREFIX_RESULT   ,
-        TRACE_PREFIX_DUMMY    ,
-        TRACE_PREFIX_VARIABLE ,
-        TRACE_PREFIX_DOTVARIABLE ,
-        TRACE_PREFIX_LITERAL  ,
-        TRACE_PREFIX_FUNCTION ,
-        TRACE_PREFIX_PREFIX   ,
-        TRACE_PREFIX_OPERATOR ,
-        TRACE_PREFIX_COMPOUND ,
-        TRACE_PREFIX_MESSAGE  ,
-        TRACE_PREFIX_ARGUMENT ,
-        TRACE_PREFIX_ASSIGNMENT,
-        TRACE_PREFIX_INVOCATION,
-        TRACE_PREFIX_NAMESPACE,
-        TRACE_PREFIX_KEYWORD,
-        TRACE_PREFIX_ALIAS,
-        TRACE_PREFIX_INVOCATION_EXIT,
+        TRACE_PREFIX_CLAUSE   ,         //  0
+        TRACE_PREFIX_ERROR    ,         //  1
+        TRACE_PREFIX_RESULT   ,         //  2
+        TRACE_PREFIX_DUMMY    ,         //  3
+        TRACE_PREFIX_VARIABLE ,         //  4
+        TRACE_PREFIX_DOTVARIABLE ,      //  5
+        TRACE_PREFIX_LITERAL  ,         //  6
+        TRACE_PREFIX_FUNCTION ,         //  7
+        TRACE_PREFIX_PREFIX   ,         //  8
+        TRACE_PREFIX_OPERATOR ,         //  9
+        TRACE_PREFIX_COMPOUND ,         // 10
+        TRACE_PREFIX_MESSAGE  ,         // 11
+        TRACE_PREFIX_ARGUMENT ,         // 12
+        TRACE_PREFIX_ASSIGNMENT,        // 13
+        TRACE_PREFIX_INVOCATION,        // 14
+        TRACE_PREFIX_NAMESPACE,         // 15
+        TRACE_PREFIX_KEYWORD,           // 16
+        TRACE_PREFIX_ALIAS,             // 17
+        TRACE_PREFIX_INVOCATION_EXIT,   // 18
 
         // note: these values are for tagging, not for retrieving strings from the prefix table
-        TRACE_OUTPUT_SOURCE,    // for: void RexxActivation::traceSourceString()
-        TRACE_OUTPUT,           // for: bool RexxActivation::doDebugPause(), void Activity::displayDebug(DirectoryClass *exobj),
-                                //      void Activity::display(DirectoryClass *exobj),
+        TRACE_OUTPUT_SOURCE = 30,   // for: void RexxActivation::traceSourceString()
+        TRACE_OUTPUT,               // for: bool RexxActivation::doDebugPause(), void Activity::displayDebug(DirectoryClass *exobj),
+                                    //      void Activity::display(DirectoryClass *exobj),
     } TracePrefix;
 
    void *operator new(size_t);
@@ -609,6 +609,8 @@ class RexxActivation : public ActivationBase
    static const char *ASSIGNMENT_MARKER;
 
    void displayUsingTraceOutput(Activity *, RexxString *);
+
+   static StringTable *getStackFrameAsStringTable(StackFrameClass *);
 
  protected:
 

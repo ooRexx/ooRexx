@@ -75,6 +75,7 @@ class NativeActivation;
 class RexxActivation;
 class GlobalProtectedObject;
 class MutexSemaphoreClass;
+class StackFrameClass;
 
 typedef enum
 {
@@ -158,6 +159,8 @@ class Activity : public RexxInternalObject
     void        unwindToFrame(RexxActivation *frame);
     void        cleanupStackFrame(ActivationBase *poppedStackFrame);
     ArrayClass  *generateStackFrames(bool skipFirst);
+    StackFrameClass  *generateParentStackFrame();
+
     Activity *spawnReply();
 
     void        exitKernel();

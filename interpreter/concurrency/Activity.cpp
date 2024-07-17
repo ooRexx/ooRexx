@@ -1160,6 +1160,30 @@ ArrayClass* Activity::generateStackFrames(bool skipFirst)
 
 
 /**
+ * Generates a StackFrame from the parent and returns it.
+ *
+ * @return parent's StackFrame or NULLOBJECT, if no parent exists
+ */
+StackFrameClass* Activity::generateParentStackFrame()
+{
+    // create lists for both the stack frames and the traceback lines
+    StackFrameClass *parentStackFrame = NULLOBJECT;
+
+    ActivationFrame *frame = activationFrames;
+
+    if (frame != NULL)
+    {
+        frame = frame->next;    // get parent
+        if (frame != NULL)
+        {
+            parentStackFrame = frame->createStackFrame();
+        }
+    }
+    return parentStackFrame;
+}
+
+
+/**
  * Build a message and perform the indicated substitutions.
  *
  * @param messageCode

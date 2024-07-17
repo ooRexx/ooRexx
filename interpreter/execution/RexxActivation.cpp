@@ -5120,7 +5120,6 @@ inline RexxClass *getRexxPackageTraceObject()    // only do the findClass() once
     return RexxPackageTraceObject;
 }
 
-
 /** Create an instance of TraceObject and fill in trace information, depending on the
  *  tracePrefix.
  *
@@ -5142,7 +5141,10 @@ StringTable * RexxActivation::createTraceObject(Activity *activity, RexxActivati
     traceObject -> put(new_integer(activity->getIdntfr()), GlobalNames::THREAD );
 
     traceObject -> put(new_integer(activation ? activation->getIdntfr() : 0), GlobalNames::INVOCATION);
-    traceObject -> put(activation ? activation->createStackFrame() : TheNilObject, GlobalNames::STACKFRAME);
+
+    // make sure we save the stackFrame information in a StringTable
+    StackFrameClass *stackFrame = ( activation ?  activation->createStackFrame() : NULL);
+    traceObject -> put(stackFrame ? getStackFrameAsStringTable(stackFrame) : TheNilObject, GlobalNames::STACKFRAME);
 
     // tracing a variable, create and fill in a StringTable with the variable related information
     if (tracePrefix == TRACE_PREFIX_VARIABLE || tracePrefix == TRACE_PREFIX_ASSIGNMENT)
@@ -5153,8 +5155,14 @@ StringTable * RexxActivation::createTraceObject(Activity *activity, RexxActivati
         varStringTable -> put(tracePrefix == TRACE_PREFIX_ASSIGNMENT ? TheTrueObject : TheFalseObject, GlobalNames::ASSIGNMENT);
         traceObject -> put(varStringTable,   GlobalNames::VARIABLE);
     }
+    else if (tracePrefix == TRACE_PREFIX_INVOCATION)    // tracing an invocation entry
+    {
+        StackFrameClass *stackFrame = activity -> generateParentStackFrame();
+        traceObject -> put(stackFrame ? getStackFrameAsStringTable(stackFrame) : TheNilObject, GlobalNames::CALLERSTACKFRAME);
+    }
 
-    if (activation && activation -> isMethod())   // METHODCALL, fill in method related information
+    // METHODCALL, fill in method related information
+    if (activation && activation -> isMethod())
     {
         traceObject -> put(new_integer(activation -> getVariableDictionary()->getIdntfr()), GlobalNames::ATTRIBUTEPOOL);
         traceObject -> put(activation -> isGuarded() ? TheTrueObject : TheFalseObject, GlobalNames::ISGUARDED );
@@ -5162,6 +5170,18 @@ StringTable * RexxActivation::createTraceObject(Activity *activity, RexxActivati
         traceObject -> put(activation -> isObjectScopeLocked() ? TheTrueObject : TheFalseObject, GlobalNames::HASSCOPELOCK);
             // although receiver can be fetched via StackFrame's target, allow speeding up for debugger, hence add it always here as well
         traceObject -> put(activation -> getReceiver(), GlobalNames::RECEIVER);
+
+        // check result of an evaluated guard condition
+        if (tracePrefix == TRACE_PREFIX_KEYWORD)    // evaluation of the guard condition?
+        {
+            const char* tmpTag = tag -> getStringData();
+            // if a guard condition got evaluated tag will be "WHEN" and value exactly "0" or "1"
+            if (strcmp(tmpTag,"WHEN") == 0)
+            {
+                const char* tmpValue = value -> requestString() -> getStringData();
+                traceObject -> put((tmpValue[0]=='0') ? TheTrueObject : TheFalseObject, GlobalNames::ISWAITING);
+            }
+        }
     }
 
     return traceObject;
@@ -5193,4 +5213,45 @@ void RexxActivation::displayUsingTraceOutput(Activity *activity, RexxString *tra
    processTraceInfo(activity, traceLine, TRACE_OUTPUT, NULLOBJECT, NULLOBJECT);
 }
 
+
+/** Creates a StringTable with all entries from the supplied StackFrame object.
+ *  The executable object may not be present anymore, if its reference gets used
+ *  much later, e.g. in the case that a trace log gets created and analyzed after
+ *  the activity and the executable are potentially gone out of scope. Therefore
+ *  executable related information is explicitly queried and saved in form of
+ *  strings in the string table (executable's hashId, executable's name,
+ *  executable's package's name; if excutable is a method, then its scope's hashId,
+ *  its scope's name, its scope's package).
+ *  <br>
+ *  In the case the target is available it is an ooRexx object
+ *  that will remain available as long as it gets referred to (e.g. because of
+ *  being stored in an array like this one).
+ *
+
+using
+*   the identityHash of the StackFrame entries EXECUTABLE and TARGET if they are not
+*   .nil.
+*
+*   @param stackFrame the StackFrame object to use
+*   @return a StringTable with all the entries of stackFrame
+*/
+StringTable * RexxActivation::getStackFrameAsStringTable(StackFrameClass * stackFrame)
+{
+    ProtectedObject result;
+    StringTable *tmpStringTable = new_string_table();
+    // array
+    tmpStringTable -> put(stackFrame->sendMessage(GlobalNames::ARGUMENTS , result), GlobalNames::ARGUMENTS );
+
+    // strings
+    tmpStringTable -> put(stackFrame->sendMessage(GlobalNames::LINE      , result), GlobalNames::LINE      );
+    tmpStringTable -> put(stackFrame->sendMessage(GlobalNames::NAME      , result), GlobalNames::NAME      );
+    tmpStringTable -> put(stackFrame->sendMessage(GlobalNames::TRACELINE , result), GlobalNames::TRACELINE );
+    tmpStringTable -> put(stackFrame->sendMessage(GlobalNames::TYPE      , result), GlobalNames::TYPE      );
+
+    // objects
+    tmpStringTable -> put(stackFrame->sendMessage(GlobalNames::EXECUTABLE, result), GlobalNames::EXECUTABLE);
+    tmpStringTable -> put(stackFrame->sendMessage(GlobalNames::TARGET    , result), GlobalNames::TARGET    );
+
+    return tmpStringTable;
+}
 
