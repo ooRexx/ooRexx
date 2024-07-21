@@ -4119,16 +4119,9 @@ syntax:
         mb~append(isGuarded~?("G","U"))   -- method defined G_uarded or U_unguarded
 
      -- if current scope is not the method's defined one, indicate it
-     if isGuarded<>"?",hasScopeLock<>"?" then
-     do
-         if       isGuarded & \hasScopeLock then mb~append('u')
-         else if \isGuarded &  hasScopeLock then mb~append('g')
-         else mb~append(" ")
-     end
-     else
-        mb~append(" ")
-
-     mb~append(" ")  -- space to next column
+     if      isGuarded=.true,  hasScopeLock=.false then mb~append('u ')
+     else if isGuarded=.false, hasScopeLock=.true  then mb~append('g ')
+     else mb~append("  ")
 
      if tmpOption='S' then
      do
