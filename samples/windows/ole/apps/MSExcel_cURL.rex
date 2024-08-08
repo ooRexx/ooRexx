@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2022 Rexx Language Association. All rights reserved.         */
+/* Copyright (c) 2022-2024 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -53,7 +53,7 @@
 
 ***********************************************************************/
 
--- Get information using curl
+-- Get information using curl, save results in array
 cityArr = .array~of("Vienna", "Graz", "Linz", "Salzburg", "Innsbruck", "Klagenfurt", "Bregenz", "Eisenstadt", "Sankt-Poelten", "Wien")
 cityWeather = .array~new                                    -- array for weather information
 do counter i name over cityArr
@@ -71,21 +71,17 @@ Worksheet = excelApplication~Workbooks~Add~Worksheets[1]    -- add worksheet
 -- Create bold collum header in first row
 colhead = .array~of("City", "Celsius")                      -- array with header text
 do counter col name over colhead
-    colLetter = colTitles[col]
     Worksheet~cells(1,col)~Value = name                     -- insert items from array
     Worksheet~cells(1,col)~font~bold = .true                -- make bold
 end
 -- Insert information from gained with curl
 do counter row name over cityWeather
-    row +=1                                                 -- always add to start in second row
-    parse var name city ":" temperature "°C"                -- parse curled informations
-    Worksheet~cells(row,1)~Value = city                     -- city in collum 1
-    Worksheet~cells(row,2)~Value = temperature              -- temperature in collum 2
+    parse var name city ":" temperature "°C"               -- parse curled informations
+    Worksheet~cells(row+1,1)~Value = city                   -- city in collum 1
+    Worksheet~cells(row+1,2)~Value = temperature            -- temperature in collum 2
 end
-
--- Select range
-colTitle = "ABCDEFGHI"
-Worksheet~Range("A1:"colTitle[2]||row)~Select
+-- Select range for chart, use left upper and lower right cell location
+Worksheet~Range("A1:B" || (row+1))~Select                   -- include title row
 -- Add Chart
 excelApplication~Charts~Add                                 -- create new chart
 excelApplication~ActiveChart~HasTitle = .True               -- add title
