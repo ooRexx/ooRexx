@@ -192,7 +192,7 @@ ERROR_MESSAGE Message_table[] = {      /* table of major and minor errors   */
     MESSAGE(Error_Invalid_data_user_defined, "&1.")
     MESSAGE(Error_Invalid_data_nop, "Data must not follow the NOP keyword; found \"&1\".")
     MESSAGE(Error_Invalid_data_select, "Data must not follow the SELECT keyword; found \"&1\".")
-    MESSAGE(Error_Invalid_data_name, "Data must not follow the NAME keyword; found \"&1\".")
+    MESSAGE(Error_Invalid_data_name, "Data must not follow the NAME trap name; found \"&1\".")
     MESSAGE(Error_Invalid_data_condition, "Data must not follow the condition name; found \"&1\".")
     MESSAGE(Error_Invalid_data_signal, "Data must not follow the SIGNAL label name; found \"&1\".")
     MESSAGE(Error_Invalid_data_trace, "Data must not follow the TRACE setting; found \"&1\".")

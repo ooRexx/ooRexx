@@ -1373,7 +1373,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Invalid_data_name</SymbolicName>
-        <Text>Data must not follow the NAME keyword; found <q><Sub position="1" name="data"/></q>.</Text>
+        <Text>Data must not follow the NAME trap name; found <q><Sub position="1" name="data"/></q>.</Text>
       </SubMessage>
       <SubMessage>
         <Code>21</Code>
