@@ -250,7 +250,7 @@ else                      end
 <varlistentry>
 <term>002</term>
 <listitem>
-<para>Symbol following END ("<emphasis role="italic">symbol</emphasis>") must match block specification name ("<emphasis role="italic">control_variable</emphasis>") on line <emphasis role="italic">line_number</emphasis> or be omitted.</para>
+<para>Symbol following END ("<emphasis role="italic">symbol</emphasis>") must match block specification name ("<emphasis role="italic">name</emphasis>") on line <emphasis role="italic">line_number</emphasis> or be omitted.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
@@ -262,7 +262,7 @@ else                      end
 <varlistentry>
 <term>004</term>
 <listitem>
-<para>Symbol following END ("<emphasis role="italic">symbol</emphasis>") must match LABEL of SELECT specification ("<emphasis role="italic">control_variable</emphasis>") on line <emphasis role="italic">line_number</emphasis> or be omitted.</para>
+<para>Symbol following END ("<emphasis role="italic">symbol</emphasis>") must match LABEL of SELECT specification ("<emphasis role="italic">name</emphasis>") on line <emphasis role="italic">line_number</emphasis> or be omitted.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
@@ -975,19 +975,19 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>907</term>
 <listitem>
-<para>Data must not follow the LEAVE control variable name; found "<emphasis role="italic">data</emphasis>".</para>
+<para>Data must not follow the LEAVE name; found "<emphasis role="italic">data</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>908</term>
 <listitem>
-<para>Data must not follow the ITERATE control variable name; found "<emphasis role="italic">data</emphasis>".</para>
+<para>Data must not follow the ITERATE name; found "<emphasis role="italic">data</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>909</term>
 <listitem>
-<para>Data must not follow the END control variable name; found "<emphasis role="italic">data</emphasis>".</para>
+<para>Data must not follow the END name; found "<emphasis role="italic">data</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>

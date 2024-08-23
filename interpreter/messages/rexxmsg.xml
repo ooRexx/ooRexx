@@ -371,7 +371,7 @@ else                      end
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Unexpected_end_control</SymbolicName>
-        <Text>Symbol following END (<q><Sub position="1" name="symbol"/></q>) must match block specification name (<q><Sub position="2" name="control_variable"/></q>) on line <Sub position="3" name="line_number"/> or be omitted.</Text>
+        <Text>Symbol following END (<q><Sub position="1" name="symbol"/></q>) must match block specification name (<q><Sub position="2" name="name"/></q>) on line <Sub position="3" name="line_number"/> or be omitted.</Text>
       </SubMessage>
       <SubMessage>
         <Code>10</Code>
@@ -389,7 +389,7 @@ else                      end
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Unexpected_end_select</SymbolicName>
-        <Text>Symbol following END (<q><Sub position="1" name="symbol"/></q>) must match LABEL of SELECT specification (<q><Sub position="2" name="control_variable"/></q>) on line <Sub position="3" name="line_number"/> or be omitted.</Text>
+        <Text>Symbol following END (<q><Sub position="1" name="symbol"/></q>) must match LABEL of SELECT specification (<q><Sub position="2" name="name"/></q>) on line <Sub position="3" name="line_number"/> or be omitted.</Text>
       </SubMessage>
       <SubMessage>
         <Code>10</Code>
@@ -1409,7 +1409,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Invalid_data_leave</SymbolicName>
-        <Text>Data must not follow the LEAVE control variable name; found <q><Sub position="1" name="data"/></q>.</Text>
+        <Text>Data must not follow the LEAVE name; found <q><Sub position="1" name="data"/></q>.</Text>
       </SubMessage>
       <SubMessage>
         <Code>21</Code>
@@ -1418,7 +1418,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Invalid_data_iterate</SymbolicName>
-        <Text>Data must not follow the ITERATE control variable name; found <q><Sub position="1" name="data"/></q>.</Text>
+        <Text>Data must not follow the ITERATE name; found <q><Sub position="1" name="data"/></q>.</Text>
       </SubMessage>
       <SubMessage>
         <Code>21</Code>
@@ -1427,7 +1427,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Invalid_data_end</SymbolicName>
-        <Text>Data must not follow the END control variable name; found <q><Sub position="1" name="data"/></q>.</Text>
+        <Text>Data must not follow the END name; found <q><Sub position="1" name="data"/></q>.</Text>
       </SubMessage>
       <SubMessage>
         <Code>21</Code>
