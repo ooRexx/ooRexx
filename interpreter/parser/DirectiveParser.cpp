@@ -1079,7 +1079,7 @@ void LanguageParser::optionsDirective()
                     token = nextReal();
                     if (!token->isSymbol())
                     {
-                        syntaxError(Error_Symbol_or_string_keyword, GlobalNames::NOVALUE);
+                        syntaxError(Error_Symbol_expected_after_keyword, GlobalNames::NOVALUE);
                     }
 
                     switch (token->subDirective())
@@ -1109,7 +1109,7 @@ void LanguageParser::optionsDirective()
                     token = nextReal();
                     if (!token->isSymbol())
                     {
-                        syntaxError(Error_Symbol_or_string_keyword, GlobalNames::ERRORNAME);
+                        syntaxError(Error_Symbol_expected_after_keyword, GlobalNames::ERRORNAME);
                     }
 
                     switch (token->subDirective())
@@ -1138,7 +1138,7 @@ void LanguageParser::optionsDirective()
                     token = nextReal();
                     if (!token->isSymbol())
                     {
-                        syntaxError(Error_Symbol_or_string_keyword, GlobalNames::FAILURE);
+                        syntaxError(Error_Symbol_expected_after_keyword, GlobalNames::FAILURE);
                     }
 
                     switch (token->subDirective())
@@ -1168,7 +1168,7 @@ void LanguageParser::optionsDirective()
                     token = nextReal();
                     if (!token->isSymbol())
                     {
-                        syntaxError(Error_Symbol_or_string_keyword, GlobalNames::LOSTDIGITS);
+                        syntaxError(Error_Symbol_expected_after_keyword, GlobalNames::LOSTDIGITS);
                     }
 
                     switch (token->subDirective())
@@ -1198,7 +1198,7 @@ void LanguageParser::optionsDirective()
                     token = nextReal();
                     if (!token->isSymbol())
                     {
-                        syntaxError(Error_Symbol_or_string_keyword, GlobalNames::NOSTRING);
+                        syntaxError(Error_Symbol_expected_after_keyword, GlobalNames::NOSTRING);
                     }
 
                     switch (token->subDirective())
@@ -1228,7 +1228,7 @@ void LanguageParser::optionsDirective()
                     token = nextReal();
                     if (!token->isSymbol())
                     {
-                        syntaxError(Error_Symbol_or_string_keyword, GlobalNames::NOTREADY);
+                        syntaxError(Error_Symbol_expected_after_keyword, GlobalNames::NOTREADY);
                     }
 
                     switch (token->subDirective())
@@ -1258,7 +1258,7 @@ void LanguageParser::optionsDirective()
                     token = nextReal();
                     if (!token->isSymbol())
                     {
-                        syntaxError(Error_Symbol_or_string_keyword, GlobalNames::ALL);
+                        syntaxError(Error_Symbol_expected_after_keyword, GlobalNames::ALL);
                     }
 
                     switch (token->subDirective())
