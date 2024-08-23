@@ -4642,5 +4642,11 @@ RexxInternalObject *LanguageParser::parseLoopConditional(InstructionSubKeyword &
                 break;
         }
     }
+    else
+    {
+        // not a symbol, this is invalid
+        syntaxError(error_message, token);
+    }
+
     return conditional;
 }
