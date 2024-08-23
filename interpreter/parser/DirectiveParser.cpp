@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -979,8 +979,8 @@ void LanguageParser::optionsDirective()
 
                     size_t digits;
 
-                    // convert to a binary number
-                    if (!token->value()->requestUnsignedNumber(digits, number_digits()) || digits < 1)
+                    // convert to a binary number using either 9 or 18 digits
+                    if (!token->value()->requestUnsignedNumber(digits, Numerics::ARGUMENT_DIGITS) || digits < 1)
                     {
                         syntaxError(Error_Invalid_whole_number_digits, token->value());
                     }
@@ -1036,7 +1036,8 @@ void LanguageParser::optionsDirective()
 
                     size_t fuzz;
 
-                    if (!value->requestUnsignedNumber(fuzz, number_digits()))
+                    // convert to a binary number using either 9 or 18 digits
+                    if (!value->requestUnsignedNumber(fuzz, Numerics::ARGUMENT_DIGITS))
                     {
                         syntaxError(Error_Invalid_whole_number_fuzz, value);
                     }
@@ -1359,6 +1360,11 @@ void LanguageParser::decodeExternalMethod(RexxString *methodName, RexxString *ex
     // convert external into array of words (this also adds all words
     // to the common string pool and uppercases the first word)
     Protected<ArrayClass> _words = words(externalSpec);
+    if (_words->size() == 0)
+    {
+        syntaxError(Error_Translation_bad_external, externalSpec);
+    }
+
     // not 'LIBRARY library [entry]' form?
     if (((RexxString *)(_words->get(1)))->strCompare("LIBRARY"))
     {
@@ -2554,7 +2560,7 @@ void LanguageParser::routineDirective()
                 // this is a compound string descriptor, so it must be a literal
                 if (!token->isLiteral())
                 {
-                    syntaxError(Error_Symbol_or_string_directive_option, GlobalNames::ROUTINE_DIRECTIVE, GlobalNames::EXTERNAL);
+                    syntaxError(Error_Symbol_or_string_external, token);
                 }
 
                 externalname = token->value();
@@ -2592,8 +2598,13 @@ void LanguageParser::routineDirective()
             // convert external into array of words (this also adds all words
             // to the common string pool and uppercases the first word)
             Protected<ArrayClass> _words = words(externalname);
+            if (_words->size() == 0)
+            {
+                syntaxError(Error_Translation_bad_external, externalname);
+            }
+
             // ::ROUTINE foo EXTERNAL "LIBRARY libbar [foo]"
-            // NOTE:  decodeMethodLibrary doesn't really work for routines
+            // NOTE: decodeExternalMethod doesn't really work for routines
             // because we have a second form.  Not really worth writing
             // a second version just for one use.
             if (((RexxString *)(_words->get(1)))->strCompare("LIBRARY"))
