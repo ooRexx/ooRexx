@@ -1579,7 +1579,7 @@ RexxInstruction* LanguageParser::newDoOverLoop(RexxString *label, RexxVariableBa
  *
  * @return A constructed instruction object of the appropriate type.
  */
-RexxInstruction* LanguageParser::newDoWithLoop(RexxString *label, RexxVariableBase *countVariable)
+RexxInstruction* LanguageParser::newDoWithLoop(RexxString *label, RexxVariableBase *countVariable, RexxToken *token)
 {
     // a construct to fill in for the instruction.
     WithLoop withLoop;
@@ -1588,12 +1588,9 @@ RexxInstruction* LanguageParser::newDoWithLoop(RexxString *label, RexxVariableBa
     // track while/until forms
     InstructionSubKeyword conditionalType = SUBKEY_NONE;
 
-    // we have already parsed over the WITH keyword, so we're looing
+    // we have already parsed over the WITH keyword, so we're looking
     // for the INDEX, ITEM, and OVER keywords now.  OVER must be after
     // INDEX and ITEM, which can be in any order (and only one is needed).
-
-    // get the next real token.
-    RexxToken *token = nextReal();
 
     // these all options are marked by symbols, so keep looping while we have one
     while (token->isSymbol())
@@ -2124,6 +2121,12 @@ RexxInstruction* LanguageParser::createLoop(bool isLoop)
             // parse and return the DO OVER options
             return newDoOverLoop(label, countVariable, token);
         }
+        // WITH INDEX var ITEM var OVER expr....with a potential WHILE or UNTIL modifier
+        else if (token->subKeyword() == SUBKEY_WITH &&
+            (second->subKeyword() == SUBKEY_INDEX || second->subKeyword() == SUBKEY_ITEM))
+        {
+            return newDoWithLoop(label, countVariable, second);
+        }
         // not a controlled form, but this could be a conditional form.
         else
         {
@@ -2135,11 +2138,6 @@ RexxInstruction* LanguageParser::createLoop(bool isLoop)
             // now check the other keyword varieties.
             switch (token->subKeyword())
             {
-                // WITH INDEX var ITEM var OVER expr....with a potential WHILE or UNTIL modifier
-                case SUBKEY_WITH:
-                {
-                    return newDoWithLoop(label, countVariable);
-                }
                 // FOREVER...this can have either a WHILE or UNTIL modifier.
                 case SUBKEY_FOREVER:         // DO FOREVER
                 {

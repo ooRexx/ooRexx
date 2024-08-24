@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -256,7 +256,7 @@ class LanguageParser: public RexxInternalObject
     RexxInstruction *doNew();
     RexxInstruction *newControlledLoop(RexxString *label, RexxVariableBase *countVariable, RexxToken *nameToken);
     RexxInstruction *newDoOverLoop(RexxString *label, RexxVariableBase *countVariable, RexxToken *nameToken);
-    RexxInstruction *newDoWithLoop(RexxString *label, RexxVariableBase *countVariable);
+    RexxInstruction *newDoWithLoop(RexxString *label, RexxVariableBase *countVariable, RexxToken *nameToken);
     RexxInstruction *newSimpleDo(RexxString *label);
     RexxInstruction *newLoopForever(RexxString *label, RexxVariableBase *countVariable);
     RexxInstruction *newLoopWhile(RexxString *label, RexxVariableBase *countVariable, WhileUntilLoop &conditional);
