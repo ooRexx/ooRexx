@@ -159,7 +159,11 @@ class Activity : public RexxInternalObject
     void        unwindToFrame(RexxActivation *frame);
     void        cleanupStackFrame(ActivationBase *poppedStackFrame);
     ArrayClass  *generateStackFrames(bool skipFirst);
-    StackFrameClass  *generateParentStackFrame();
+
+    // allow TraceObject's callerStackFrame entry to indicate the caller that caused the spawned activity
+    StackFrameClass* Activity::generateCallerStackFrame(bool skipFirst);
+    static void Activity::setCallerStackFrameAsStringTable(Activity *oldActivity, Activity *newActivity, bool skipFirst);
+    StringTable *spawnerStackFrameInfo;
 
     Activity *spawnReply();
 

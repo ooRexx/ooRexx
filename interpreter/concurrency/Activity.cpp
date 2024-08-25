@@ -1160,27 +1160,47 @@ ArrayClass* Activity::generateStackFrames(bool skipFirst)
 
 
 /**
- * Generates a StackFrame from the parent and returns it.
+ * Generate the caller's stack frame.
  *
- * @return parent's StackFrame or NULLOBJECT, if no parent exists
+ * @param skipFirst Determines if we should skip the first frame:
+ *                  false for reply in RexxActivation::run(...),
+ *                  true for Message::start() and in the general case.
+ *
+ * @return The stackframe of the caller which caused a spawned activity.
  */
-StackFrameClass* Activity::generateParentStackFrame()
+StackFrameClass* Activity::generateCallerStackFrame(bool skipFirst)
 {
-    // create lists for both the stack frames and the traceback lines
-    StackFrameClass *parentStackFrame = NULLOBJECT;
-
     ActivationFrame *frame = activationFrames;
+    StackFrameClass *callerStackFrame = NULL;
 
-    if (frame != NULL)
+    if (frame && skipFirst)
     {
-        frame = frame->next;    // get parent
-        if (frame != NULL)
-        {
-            parentStackFrame = frame->createStackFrame();
-        }
+        frame = frame->next;
     }
-    return parentStackFrame;
+    if (frame)
+    {
+        callerStackFrame = frame->createStackFrame();
+    }
+    return callerStackFrame;
 }
+
+
+/**
+ * Generates and saves a StringTable to store stackFrame infos of oldActivity in newActivity
+ * (for TraceObject), used by MessageClass::start().
+ *
+ */
+void Activity::setCallerStackFrameAsStringTable(Activity *oldActivity, Activity *newActivity, bool skipFirst)
+{
+    // get caller stackframe, if any
+    StackFrameClass *oldActivityStackFrame = oldActivity -> generateCallerStackFrame(skipFirst);
+    // returns a StringTable that may be empty if oldActivityStackFrame==NULLOBJECT
+    newActivity -> spawnerStackFrameInfo=RexxActivation::getStackFrameAsStringTable(oldActivityStackFrame);
+    // save thread ID to indicate from which thread ID the spawnReply() came from (helpful, e.g., if StringTable is empty)
+    newActivity -> spawnerStackFrameInfo -> put(new_integer(oldActivity -> getIdntfr()), GlobalNames::THREAD);
+    return;
+}
+
 
 
 /**

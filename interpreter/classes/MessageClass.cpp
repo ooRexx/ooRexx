@@ -537,6 +537,10 @@ RexxObject *MessageClass::start()
     // spawn a new activity off of the old activity
     Activity *oldActivity = ActivityManager::currentActivity;
     Activity *newActivity = oldActivity->spawnReply();
+
+    // save current frame info in a StringTable as it has caused the creation of a new activity
+    Activity::setCallerStackFrameAsStringTable(oldActivity, newActivity, true); // create stackframe from parent/caller
+
     // mark which activity we're running on, then dispatch the message
     // on the new activity (which is sitting waiting for work to perform)
     setField(startActivity, newActivity);

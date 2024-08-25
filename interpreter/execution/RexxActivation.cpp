@@ -702,6 +702,9 @@ RexxObject* RexxActivation::run(RexxObject *_receiver, RexxString *name, RexxObj
 
                 activity = oldActivity->spawnReply();
 
+                // save current frame info in a StringTable as it has caused the creation of a new activity
+                Activity::setCallerStackFrameAsStringTable(oldActivity, activity, false);
+
                 // save the pointer to the start of our stack frame.  We're
                 // going to need to release this after we migrate everything
                 // over.
@@ -5157,8 +5160,23 @@ StringTable * RexxActivation::createTraceObject(Activity *activity, RexxActivati
     }
     else if (tracePrefix == TRACE_PREFIX_INVOCATION)    // tracing an invocation entry
     {
-        StackFrameClass *stackFrame = activity -> generateParentStackFrame();
-        traceObject -> put(stackFrame ? getStackFrameAsStringTable(stackFrame) : TheNilObject, GlobalNames::CALLERSTACKFRAME);
+        StackFrameClass *stackFrame = activity -> generateCallerStackFrame(true);
+        if (stackFrame)
+        {
+            traceObject -> put(getStackFrameAsStringTable(stackFrame), GlobalNames::CALLERSTACKFRAME);
+        }
+        else
+        {
+            if (activity -> spawnerStackFrameInfo)  // spawner's frame infos saved as a StringTable?
+            {
+                // allows for analyzing trace logs to identify the caller of a spawned activity
+                traceObject -> put(activity -> spawnerStackFrameInfo, GlobalNames::CALLERSTACKFRAME);
+            }
+            else
+            {
+                traceObject -> put(TheNilObject, GlobalNames::CALLERSTACKFRAME);
+            }
+        }
     }
 
     // METHODCALL, fill in method related information
@@ -5232,26 +5250,28 @@ using
 *   the identityHash of the StackFrame entries EXECUTABLE and TARGET if they are not
 *   .nil.
 *
-*   @param stackFrame the StackFrame object to use
-*   @return a StringTable with all the entries of stackFrame
+*   @param stackFrame the StackFrame object to use, may be NULLOBJECT
+*   @return a StringTable with all the entries of stackFrame, if available
 */
 StringTable * RexxActivation::getStackFrameAsStringTable(StackFrameClass * stackFrame)
 {
-    ProtectedObject result;
     StringTable *tmpStringTable = new_string_table();
-    // array
-    tmpStringTable -> put(stackFrame->sendMessage(GlobalNames::ARGUMENTS , result), GlobalNames::ARGUMENTS );
+    if (stackFrame != NULLOBJECT)
+    {
+        ProtectedObject result;
+        // array
+        tmpStringTable -> put(stackFrame->sendMessage(GlobalNames::ARGUMENTS , result), GlobalNames::ARGUMENTS );
 
-    // strings
-    tmpStringTable -> put(stackFrame->sendMessage(GlobalNames::LINE      , result), GlobalNames::LINE      );
-    tmpStringTable -> put(stackFrame->sendMessage(GlobalNames::NAME      , result), GlobalNames::NAME      );
-    tmpStringTable -> put(stackFrame->sendMessage(GlobalNames::TRACELINE , result), GlobalNames::TRACELINE );
-    tmpStringTable -> put(stackFrame->sendMessage(GlobalNames::TYPE      , result), GlobalNames::TYPE      );
+        // strings
+        tmpStringTable -> put(stackFrame->sendMessage(GlobalNames::LINE      , result), GlobalNames::LINE      );
+        tmpStringTable -> put(stackFrame->sendMessage(GlobalNames::NAME      , result), GlobalNames::NAME      );
+        tmpStringTable -> put(stackFrame->sendMessage(GlobalNames::TRACELINE , result), GlobalNames::TRACELINE );
+        tmpStringTable -> put(stackFrame->sendMessage(GlobalNames::TYPE      , result), GlobalNames::TYPE      );
 
-    // objects
-    tmpStringTable -> put(stackFrame->sendMessage(GlobalNames::EXECUTABLE, result), GlobalNames::EXECUTABLE);
-    tmpStringTable -> put(stackFrame->sendMessage(GlobalNames::TARGET    , result), GlobalNames::TARGET    );
-
+        // objects
+        tmpStringTable -> put(stackFrame->sendMessage(GlobalNames::EXECUTABLE, result), GlobalNames::EXECUTABLE);
+        tmpStringTable -> put(stackFrame->sendMessage(GlobalNames::TARGET    , result), GlobalNames::TARGET    );
+    }
     return tmpStringTable;
 }
 
