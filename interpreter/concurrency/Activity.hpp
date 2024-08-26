@@ -161,8 +161,8 @@ class Activity : public RexxInternalObject
     ArrayClass  *generateStackFrames(bool skipFirst);
 
     // allow TraceObject's callerStackFrame entry to indicate the caller that caused the spawned activity
-    StackFrameClass* Activity::generateCallerStackFrame(bool skipFirst);
-    static void Activity::setCallerStackFrameAsStringTable(Activity *oldActivity, Activity *newActivity, bool skipFirst);
+    StackFrameClass* generateCallerStackFrame(bool skipFirst);
+    static void setCallerStackFrameAsStringTable(Activity *oldActivity, Activity *newActivity, bool skipFirst);
     StringTable *spawnerStackFrameInfo;
 
     Activity *spawnReply();
