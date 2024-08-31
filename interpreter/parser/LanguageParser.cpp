@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -579,7 +579,7 @@ void LanguageParser::liveGeneral(MarkReason reason)
  * Generate a method object from a source collection.
  *
  * @param sourceContext
- *               An optional source context used to add additional visibilty to
+ *               An optional source context used to add additional visibility to
  *               dynamically generated methods.
  *
  * @return A method object represented by the leading code block
@@ -613,7 +613,7 @@ MethodClass *LanguageParser::generateMethod(PackageClass *sourceContext)
  * Generate a routine object from a source collection.
  *
  * @param sourceContext
- *               An optional source context used to add additional visibilty to
+ *               An optional source context used to add additional visibility to
  *               dynamically generated methods.
  *
  * @return A routine object represented by the leading code
@@ -693,7 +693,7 @@ RexxCode *LanguageParser::translateInterpret(PackageClass *sourceContext, String
     // context is visible during the install processing.
     package->inheritPackageContext(sourceContext);
 
-    //. the package ends up with neither a init section or a main executable.
+    // the package ends up with neither an init section or a main executable.
     // we just return the main code section
     // return the main executable.
     return mainSection;
@@ -1504,7 +1504,7 @@ RexxCode *LanguageParser::translateBlock()
                     second = popDo();
                 }
 
-                // Now do the apprpriate closure action based on the instruction type.
+                // Now do the appropriate closure action based on the instruction type.
                 if (type == KEYWORD_SELECT || type == KEYWORD_SELECT_CASE)
                 {
                     ((RexxInstructionSelect *)second)->matchEnd((RexxInstructionEnd *)instruction, this);
@@ -1678,8 +1678,8 @@ void LanguageParser::resolveCalls()
 
 
 /**
- * Translate a expression of REXX code on a directive (already
- * have an active clause, not not translating a block
+ * Translate an expression of REXX code on a directive (already
+ * have an active clause, not translating a block
  * yet)
  *
  * @param token  The left paren delimiter for the expression. Required for error reporting.
@@ -1779,7 +1779,7 @@ void LanguageParser::resolveDependencies()
             currentClass->addDependencies(classDependencies);
         }
 
-        // get a array for handling the ordering
+        // get an array for handling the ordering
         ArrayClass *classOrder = new_array(classCount);
         ProtectedObject p2(classOrder);
 
@@ -1921,7 +1921,7 @@ void LanguageParser::flushControl(RexxInstruction *instruction)
             }
             // we need a new end marker
             second = endIfNew((RexxInstructionIf *)second);
-            // we add this clause behine the new one, and also add this
+            // we add this clause behind the new one, and also add this
             // to the control stack as a pending instruction
             addClause(second);
             pushDo(second);
@@ -1959,8 +1959,7 @@ bool LanguageParser::isExposed(RexxString *varName)
     {
         return exposedVariables->hasIndex(varName);
     }
-    // had a USE ARG instruction specified?  Variable is exposed
-
+    // did we have a USE LOCAL instruction specified?  Variable is exposed
     else if (localVariables != OREF_NULL)
     {
         return !localVariables->hasIndex(varName);
@@ -2031,14 +2030,10 @@ RexxVariableBase *LanguageParser::addSimpleVariable(RexxString *varname)
         // and add this to the table.
         variables->put(retriever, varname);
     }
-    // Small optimization here.  In order for a variable to be added to the
-    // guard variable list, it must have been exposed already.  That means
-    // the variable will already be in this table, so we don't need to
-    // perform the capturing test then.
-    else
-    {
-        captureGuardVariable(varname, retriever);
-    }
+    // we need to always perform the capturing test because we allow e. g.
+    // USE LOCAL; GUARD ON/OFF WHEN v > 0
+    captureGuardVariable(varname, retriever);
+
     // return the variable accesser, either a new one or one pulled from the cache.
     return retriever;
 }
@@ -2072,15 +2067,12 @@ RexxStemVariable *LanguageParser::addStem(RexxString *stemName)
         }
         variables->put(retriever, stemName);
     }
-    // Small optimization here.  In order for a variable to be added to the
-    // guard variable list, it must have been exposed already.  That means
-    // the variable will already be in this table, so we don't need to
-    // perform the capturing test then.
-    else
-    {
-        captureGuardVariable(stemName, retriever);
-    }
-    return retriever;                    /* return variable accesser          */
+    // we need to always perform the capturing test because we allow e. g.
+    // USE LOCAL; GUARD ON/OFF WHEN v > 0
+    captureGuardVariable(stemName, retriever);
+
+    // return variable accesser
+    return retriever;
 }
 
 
@@ -2176,7 +2168,7 @@ RexxCompoundVariable *LanguageParser::addCompound(RexxString *name)
     // variables table for this.
     variables->put(retriever, name);
 
-    // NOTE: compound variables do get get added to the guard list.
+    // NOTE: compound variables do get added to the guard list.
     return retriever;
 }
 
@@ -2210,7 +2202,6 @@ void LanguageParser::autoExpose()
     localVariables->put(GlobalNames::RC, GlobalNames::RC);
     localVariables->put(GlobalNames::RESULT, GlobalNames::RESULT);
     localVariables->put(GlobalNames::SIGL, GlobalNames::SIGL);
-
 }
 
 
@@ -2222,7 +2213,6 @@ void LanguageParser::autoExpose()
  */
 void LanguageParser::localVariable(RexxString *name )
 {
-
     localVariables->put(name, name);
 }
 
@@ -2526,7 +2516,7 @@ void LanguageParser::addClause(RexxInstruction *instruction)
 
 /**
  * Add a label to our global table.  Note, in Rexx it is
- * not an error to have duplicate labels, but ony the
+ * not an error to have duplicate labels, but only the
  * first can be used as a target.  We do not overwrite
  * a given name if it is already in the table.
  *
@@ -2605,7 +2595,7 @@ ArrayClass *LanguageParser::getGuard()
  */
 RexxInternalObject *LanguageParser::parseConstantExpression()
 {
-    // everthing keys off of the first token.
+    // everything keys off of the first token.
     RexxToken *token = nextReal();
     // just a literal token?
     if (token->isLiteral())              /* literal string expression?        */
@@ -3287,7 +3277,7 @@ RexxInternalObject *LanguageParser::parseCollectionMessage(RexxToken *token, Rex
     ProtectedObject p(target);
 
     // get the arguments.  Like with builtin function calls, we just ignore any
-    // prior terminator context and rely on the fact that the brackes must match.
+    // prior terminator context and rely on the fact that the brackets must match.
     size_t argCount = parseArgList(token, (TERM_SQRIGHT));
 
     // create the message item.
@@ -3334,7 +3324,7 @@ RexxToken  *LanguageParser::getToken(int terminators, RexxErrorCodes errorcode)
  *
  * @param target The target object term for the message send.
  * @param doubleTilde
- *               Indicates whether this is the "~" or "~~" form of operatior.
+ *               Indicates whether this is the "~" or "~~" form of operation.
  * @param terminators
  *               Expression terminators.
  *
@@ -3632,7 +3622,7 @@ RexxInternalObject* LanguageParser::parseMessageSubterm(int terminators)
                 return new RexxUnaryOperator(token->subtype(), term);
                 break;
             }
-                // not a aperator in the normal sense, but > or as a prefix creates
+                // not an operator in the normal sense, but > or as a prefix creates
                 // a variable reference.
             case OPERATOR_LESSTHAN:
             case OPERATOR_GREATERTHAN:
@@ -3761,7 +3751,7 @@ RexxInternalObject* LanguageParser::parseSubTerm(int terminators)
             {
                 syntaxError(Error_Invalid_expression_general, token);
             }
-            // this had better been terminated by a righ paren.
+            // this had better been terminated by a right paren.
             if (!nextToken()->isRightParen())
             {
                 syntaxErrorAt(Error_Unmatched_parenthesis_paren, token);
