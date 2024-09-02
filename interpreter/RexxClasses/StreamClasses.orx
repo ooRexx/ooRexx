@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -724,14 +724,16 @@ return position
   end
 
 -- returns the extension, everything after the last dot in the name.
+-- if the name has only one dot that is its first character, name is
+-- not condsidered to have an extension
 ::METHOD extension
   use strict arg
   path = self~qualifiedPath
 
   name = path~substr(path~lastPos(self~separator) + 1)
   -- we search the name portion of the path for the last dot
-  dot = name~lastPos(".")
-  if dot == 0 then
+  dot = self~name~lastPos(".")
+  if dot <= 1 then
       return ""
   else
       return name~substr(dot + 1)
