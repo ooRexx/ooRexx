@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -417,7 +417,7 @@ void MemoryObject::createImage(const char *imageTarget)
 // to handing being passed a variable-sized argument list.
 // 5)  The target method can be defined as virtual, but it is called directory using
 // the function pointer and not the object virtual function table.  To get virtual function
-// dynamices, create a stub method to act as a bridge between the Rexx method call and
+// dynamics, create a stub method to act as a bridge between the Rexx method call and
 // the virtual method call.
 // 6)  These methods are stored in the rexx.img file and they need to reestablish
 // their method pointers at startup time.  This is done via a table in CPPCode that
@@ -560,7 +560,7 @@ CompleteClassDefinition(Object);
 CompleteClassDefinition(Class);
 
 
-// Now we can set up the rest of the defintions and complete them normally.
+// Now we can set up the rest of the definitions and complete them normally.
 
 
     /***************************************************************************/
@@ -780,6 +780,10 @@ StartClassDefinition(Queue);
         AddMethod("Pull", QueueClass::pullRexx, 0);
         AddMethod("Queue", QueueClass::queueRexx, 1);
         AddMethod("Put", QueueClass::putRexx, 2);
+        AddMethod("[]=", QueueClass::putRexx, 2);
+
+        AddMethod("delete", QueueClass::deleteRexx, 1);
+        AddMethod("remove", QueueClass::deleteRexx, 1);
         // the queue size is always the number of items, so remap that call
         // to the array items method.
         AddMethod("Size", ArrayClass::itemsRexx, 0);

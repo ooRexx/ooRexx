@@ -725,7 +725,7 @@ return position
 
 -- returns the extension, everything after the last dot in the name.
 -- if the name has only one dot that is its first character, name is
--- not condsidered to have an extension
+-- not considered to have an extension
 ::METHOD extension
   use strict arg
   path = self~qualifiedPath

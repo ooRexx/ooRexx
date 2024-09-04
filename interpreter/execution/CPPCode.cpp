@@ -980,6 +980,7 @@ PCPPM CPPCode::exportedMethods[] =
     CPPM(QueueClass::pullRexx),
     CPPM(QueueClass::peek),
     CPPM(QueueClass::putRexx),
+    CPPM(QueueClass::deleteRexx),
 
     CPPM(QueueClass::newRexx),
     CPPM(QueueClass::ofRexx),

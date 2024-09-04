@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -222,6 +222,29 @@ RexxObject *QueueClass::putRexx(RexxObject *value, RexxObject *index)
 RexxInternalObject *QueueClass::remove(size_t index)
 {
     return deleteItem(index);
+}
+
+
+/**
+ * Delete an element from the given index location, shifting the
+ * item indexes as required.
+ *
+ * @param index  The target index.  This can be a single number or an array
+ *               containing a single number.
+ *
+ * @return The object that has been deleted.  Returns .nil if the
+ *         target index does not exist.
+ */
+RexxObject *QueueClass::deleteRexx(RexxObject *index)
+{
+    requiredArgument(index, ARG_ONE);
+
+    size_t position;                     // array position
+    // validate the index
+    validateIndex(&index, 1, ARG_ONE, IndexAccess, position);
+
+    // do the actual delete
+    return resultOrNil(deleteItem(position));
 }
 
 
