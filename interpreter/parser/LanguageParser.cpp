@@ -3662,7 +3662,7 @@ RexxInternalObject* LanguageParser::parseMessageSubterm(int terminators)
             }
             else
             {
-                term = parseMessage(term, token->isType(TOKEN_DTILDE), terminators);
+                term = parseMessage(term, token->isType(TOKEN_DTILDE), TERM_EOC);
             }
             popTerm();
             pushTerm(term);

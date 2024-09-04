@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -528,7 +528,7 @@ typedef enum
 #define   TERM_CONTROL (TERM_KEYWORD | TERM_TO | TERM_BY | TERM_FOR | TERM_WHILE)
                                        // terminate on DO conditionals
 #define   TERM_COND    (TERM_KEYWORD | TERM_WHILE)
-                                       // termantors for an OVER condition
+                                       // terminators for an OVER condition
 #define   TERM_OVER    (TERM_KEYWORD | TERM_FOR | TERM_WHILE)
                                        // terminate on a THEN keyword
 #define   TERM_IF      (TERM_KEYWORD | TERM_THEN)
