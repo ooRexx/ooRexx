@@ -3772,8 +3772,8 @@ special character (such as a parenthesis).
     <Severity>Warning</Severity>
     <SymbolicName>Error_Unexpected_label</SymbolicName>
     <Text>Unexpected label.</Text>
-    <Explanation><para>A label was used in the expression being evaluated for an INTERPRET instruction or in an expression entered during interactive debugging.</para></Explanation>
-    <UserAction><para>Remove the label from the interpreted data.</para></UserAction>
+    <Explanation><para>A label was used inside an IF, DO/LOOP, or SELECT construction, or in the expression being evaluated for an INTERPRET instruction, or in an expression entered during interactive debugging.</para></Explanation>
+    <UserAction><para>Remove the label.</para></UserAction>
     <Subcodes>
       <SubMessage>
         <Code>47</Code>
@@ -3783,6 +3783,33 @@ special character (such as a parenthesis).
         <Severity>Warning</Severity>
         <SymbolicName>Error_Unexpected_label_interpret</SymbolicName>
         <Text>INTERPRET data must not contain labels; found <q><Sub position="1" name="label"/></q>.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>47</Code>
+        <Subcode>002</Subcode>
+        <MessageNumber>321</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Unexpected_label_do</SymbolicName>
+        <Text>Labels are not allowed within a DO/LOOP construct; found <q><Sub position="1" name="label"/></q>.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>47</Code>
+        <Subcode>003</Subcode>
+        <MessageNumber>322</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Unexpected_label_if</SymbolicName>
+        <Text>Labels are not allowed within an IF construct; found <q><Sub position="1" name="label"/></q>.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>47</Code>
+        <Subcode>004</Subcode>
+        <MessageNumber>323</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Unexpected_label_select</SymbolicName>
+        <Text>Labels are not allowed within a SELECT construct; found <q><Sub position="1" name="label"/></q>.</Text>
       </SubMessage>
     </Subcodes>
   </Message>

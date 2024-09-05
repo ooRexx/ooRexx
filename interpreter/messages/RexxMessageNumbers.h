@@ -261,6 +261,9 @@
 #define Error_Invalid_leave_iteratevar_msg                           318
 #define Error_Environment_name_name_msg                              319
 #define Error_Name_too_long_name_msg                                 320
+#define Error_Unexpected_label_do_msg                                321
+#define Error_Unexpected_label_if_msg                                322
+#define Error_Unexpected_label_select_msg                            323
 #define Error_Invalid_variable_assign_msg                            324
 #define Error_Invalid_variable_number_msg                            325
 #define Error_Invalid_variable_period_msg                            326

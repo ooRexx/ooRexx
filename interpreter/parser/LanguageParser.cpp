@@ -1213,6 +1213,22 @@ RexxCode *LanguageParser::translateBlock()
             {
                 break;
             }
+
+            // labels are not allowed within DO/LOOP/IF/SELECT groups
+            InstructionKeyword type = topDo()->getType();
+            if (topDo()->isControl() || // any KEYWORD_LOOP_*
+                type == KEYWORD_IFTHEN || type == KEYWORD_ELSE ||
+                type == KEYWORD_WHENTHEN || type == KEYWORD_OTHERWISE)
+            {
+                // it's a bit of a pain to get to our label name
+                previousToken();
+                previousToken();
+                RexxToken *token = nextToken();
+                syntaxError(
+                    type == KEYWORD_IFTHEN || type == KEYWORD_ELSE ? Error_Unexpected_label_if :
+                    (type == KEYWORD_WHENTHEN || type == KEYWORD_OTHERWISE ? Error_Unexpected_label_select :
+                    Error_Unexpected_label_do), token);
+            }
             // append the label and try again
             addClause(instruction);
             nextClause();
@@ -1249,7 +1265,7 @@ RexxCode *LanguageParser::translateBlock()
         // if this is not an ELSE, we might have a pending THEN to finish.
         if (type != KEYWORD_ELSE)
         {
-            // get the type at the type of the stack.
+            // get the type at the top of the stack.
             InstructionKeyword controltype = topDoType();
             // we might need to pop off multiple pending thens while end of an IF or WHEN
             while (controltype == KEYWORD_ENDTHEN || controltype == KEYWORD_ENDWHEN)
@@ -1464,7 +1480,7 @@ RexxCode *LanguageParser::translateBlock()
                 break;
             }
 
-                // An END instruction.  This could the the closure for a DO, LOOP, or SELECT.
+                // An END instruction.  This could be the closure for a DO, LOOP, or SELECT.
                 // its matchup should be on the top of the control stack.
             case  KEYWORD_END:
             {

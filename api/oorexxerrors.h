@@ -443,6 +443,9 @@
 #define Rexx_Error_Variable_reference_use                                 46902
 #define Rexx_Error_Unexpected_label                                       47000
 #define Rexx_Error_Unexpected_label_interpret                             47001
+#define Rexx_Error_Unexpected_label_do                                    47002
+#define Rexx_Error_Unexpected_label_if                                    47003
+#define Rexx_Error_Unexpected_label_select                                47004
 #define Rexx_Error_System_service                                         48000
 #define Rexx_Error_System_service_service                                 48001
 #define Rexx_Error_System_service_user_defined                            48900

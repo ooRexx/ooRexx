@@ -2695,13 +2695,31 @@ special character (such as a parenthesis).
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
-<para>A label was used in the expression being evaluated for an INTERPRET instruction or in an expression entered during interactive debugging.</para>
+<para>A label was used inside an IF, DO/LOOP, or SELECT construction, or in the expression being evaluated for an INTERPRET instruction, or in an expression entered during interactive debugging.</para>
 <para>The associated subcodes are: </para>
 <variablelist>
 <varlistentry>
 <term>001</term>
 <listitem>
 <para>INTERPRET data must not contain labels; found "<emphasis role="italic">label</emphasis>".</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>002</term>
+<listitem>
+<para>Labels are not allowed within a DO/LOOP construct; found "<emphasis role="italic">label</emphasis>".</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>003</term>
+<listitem>
+<para>Labels are not allowed within an IF construct; found "<emphasis role="italic">label</emphasis>".</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>004</term>
+<listitem>
+<para>Labels are not allowed within a SELECT construct; found "<emphasis role="italic">label</emphasis>".</para>
 </listitem>
 </varlistentry>
 </variablelist>
