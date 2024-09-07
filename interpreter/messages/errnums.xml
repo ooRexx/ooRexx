@@ -136,22 +136,22 @@
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
-<para>At least one WHEN construct (and possibly an OTHERWISE clause)
+<para>At least one WHEN clause (and possibly an OTHERWISE clause)
 is expected within a SELECT instruction.  This message is issued if any
-other instruction is found or there is no WHEN construct before the
+other instruction is found or there is no WHEN clause before the
 OTHERWISE or all WHEN expressions are false and an OTHERWISE is not
 present. A common cause of this error is if you forget the DO and END
 around the list of instructions following a WHEN. For example:</para>
 <programlisting>
-WRONG                  RIGHT
+WRONG                   RIGHT
 
-Select                 Select
-When a=c then          When a=c then DO
-Say 'A equals C'       Say 'A equals C'
-exit                   exit
-Otherwise nop            end
-end                    Otherwise nop
-end
+Select                  Select
+  When a=c then           When a=c then DO
+    Say 'A equals C'        Say 'A equals C'
+    exit                    exit
+  Otherwise nop           end
+end                      Otherwise nop
+                        end
 </programlisting>
 <para>The associated subcodes are: </para>
 <variablelist>
@@ -183,16 +183,16 @@ end
 <para>A THEN or an ELSE clause was found that does not match a
 corresponding IF or WHEN clause. This often occurs because of a
 missing END or DO...END in the THEN part of a complex IF...THEN...ELSE
-construction. For example:</para>
+block. For example:</para>
 <programlisting>
-WRONG                     RIGHT
+WRONG                   RIGHT
 
-if a = b then do          if a = b then do
-  say "equals"              say "equals"
-  exit                      exit
-else                      end
-  say "not equals"        else
-                            say "not equals"
+if a = b then do        if a = b then do
+  say "equals"            say "equals"
+  exit                    exit
+else                    end
+  say "not equals"      else
+                          say "not equals"
 </programlisting>
 <para>The associated subcodes are: </para>
 <variablelist>
@@ -215,7 +215,7 @@ else                      end
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
-<para>A WHEN or OTHERWISE was found outside of a SELECT construction.  You might have accidentally enclosed the instruction in a DO...END construction by leaving out an END, or you might have tried to branch to it with a SIGNAL instruction (which does not work because the SELECT is then ended).</para>
+<para>A WHEN or OTHERWISE was found outside of a SELECT block.  You might have accidentally enclosed the instruction in a DO...END block by leaving out an END, or you might have tried to branch to it with a SIGNAL instruction (which does not work because the SELECT is then ended).</para>
 <para>The associated subcodes are: </para>
 <variablelist>
 <varlistentry>
@@ -237,7 +237,7 @@ else                      end
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
-<para>More ENDs were found in your program than DO, LOOP, or SELECT instructions, or the ENDs did not match the DO, LOOP, or SELECT instructions. This message also occurs if you try to transfer control into the middle of a loop using SIGNAL. In this case, the language processor does not expect the END because it did not process the previous DO instruction. Remember also that SIGNAL deactivates any current loops, so it cannot transfer control from one place inside a loop to another.</para>
+<para>More ENDs were found in your program than DO, LOOP, or SELECT instructions, or the ENDs did not match the DO, LOOP, or SELECT instructions.</para>
 <para>Another cause for this message is placing an END immediately after a THEN or ELSE subkeyword or specifying a name on the END keyword that does not match the name following DO or LOOP. Putting the name of the control variable on ENDs that close repetitive loops can also help locate this kind of error.</para>
 <para>The associated subcodes are: </para>
 <variablelist>
@@ -292,11 +292,9 @@ else                      end
 </para>
 <para>Your program exceeds the nesting level limit for control structures (for example, DO...END and IF...THEN...ELSE). This could be because of a looping INTERPRET instruction, such as:</para>
 <programlisting>
-    
-      line='INTERPRET line'
-      INTERPRET line
-    
-    </programlisting>
+line = 'INTERPRET line'
+INTERPRET line
+</programlisting>
 <para>These lines loop until they exceed the nesting level limit and the language processor issues this message. Similarly, a recursive subroutine or internal function that does not end correctly can loop until it causes this message.</para>
 <para>The associated subcodes are: </para>
 <variablelist>
@@ -391,20 +389,18 @@ else                      end
 </para>
 <para>Hexadecimal strings must not have leading or trailing whitespace characters and whitespace can only be embedded at byte boundaries.  Only the digits 0-9 and the letters a-f and A-F are allowed.  The following are valid hexadecimal strings: </para>
 <programlisting>
-    
-        '13'x
-        'A3C2 1c34'x
-        '1de8'x
-    
-    </programlisting>
-<para>Binary strings can have whitespace only at the boundaries of groups of four binary digits.  Only the digits 0 and 1 are allowed.  These are valid binary strings: </para>
+'13'x
+'A3C2 1c34'x
+'1de8'x
+</programlisting>
+<para>Binary strings must not have leading or trailing whitespace characters and whitespace can only be embedded at the boundaries of groups of four binary digits.
+    Only the digits 0 and 1 are allowed.
+    These are valid binary strings:</para>
 <programlisting>
-    
-        '1011'b
-        '110 1101'b
-        '101101 11010011'b
-    
-    </programlisting>
+'1011'b
+'110 1101'b
+'101101 11010011'b
+</programlisting>
 <para>You might have mistyped one of the digits, for example, typing a letter O instead of the number 0. Or you might have used the one-character symbol X or B (the name of the variable X or B, respectively) after a literal string when the string is not intended as a hexadecimal or binary specification. In this case, use the explicit concatenation operator (||) to concatenate the string to the value of the symbol.</para>
 <para>The associated subcodes are: </para>
 <variablelist>
@@ -511,9 +507,9 @@ else                      end
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
-<para>A symbol or string was expected after the CALL or SIGNAL keywords
-but none was found. You might have omitted the string or symbol or inserted a
-special character (such as a parenthesis).
+<para>A symbol or string was expected while parsing a keyword instruction,
+    a directive, or a term, but none was found. You might have omitted the string or symbol
+    or inserted a special character.
     </para>
 <para>The associated subcodes are: </para>
 <variablelist>
@@ -711,7 +707,8 @@ special character (such as a parenthesis).
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
-<para>A symbol is expected after CALL ON, CALL OFF, END, ITERATE, LEAVE, NUMERIC, PARSE, SIGNAL ON, or SIGNAL OFF. Also, a list of symbols or variable references is expected after DROP, EXPOSE, and PROCEDURE EXPOSE. Either there was no symbol when one was required or the language processor found another token.</para>
+<para>A symbol was expected while parsing a keyword instruction, a directive, or a term.
+    Either there was no symbol when one was required or the language processor found another token.</para>
 <para>The associated subcodes are: </para>
 <variablelist>
 <varlistentry>
@@ -926,7 +923,7 @@ special character (such as a parenthesis).
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
-<para>A clause such as SELECT or NOP is followed by a token other than a comment.</para>
+<para>A keyword instruction or a directive is followed by a token other than a comment.</para>
 <para>The associated subcodes are: </para>
 <variablelist>
 <varlistentry>
@@ -1104,7 +1101,9 @@ special character (such as a parenthesis).
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
-<para>An unexpected token was found at his position of an instruction where a particular subkeyword was expected. For example, in a NUMERIC instruction, the second token must be DIGITS, FUZZ, or FORM.</para>
+<para>An unexpected token was found while parsing a keyword
+    instruction or a directive. For example, in a NUMERIC instruction, the
+    second token must be DIGITS, FUZZ, or FORM.</para>
 <para>The associated subcodes are: </para>
 <variablelist>
 <varlistentry>
@@ -1361,7 +1360,8 @@ special character (such as a parenthesis).
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
-<para>An expression was found that did not evaluate to a whole number or is greater than the limit (the default is 999,999,999 for 32-bit system
+<para>An expression was found that did not evaluate to a whole number
+    or is greater than the limit (the default is 999,999,999 for 32-bit systems
     and 999,999,999,999,999,999 for 64-bit systems):
     <itemizedlist>
     <listitem>
@@ -1524,7 +1524,9 @@ special character (such as a parenthesis).
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
-<para>A LEAVE or ITERATE instruction was found at an incorrect position.  Either no loop was active, or the name specified on the instruction did not match the control variable of any active loop. Note that internal routine calls and the INTERPRET instruction protect loops by making them inactive. Therefore, for example, a LEAVE instruction in a subroutine cannot affect a DO loop in the calling routine. You probably tried to use the SIGNAL instruction to transfer control within or into a loop. Because a SIGNAL instruction ends all active loops, any ITERATE or LEAVE instruction causes this message.</para>
+<para>A LEAVE or ITERATE instruction was found at an incorrect position.
+    Either no loop was active, or the name specified on the instruction did not match the control variable of any active loop.
+    </para>
 <para>The associated subcodes are: </para>
 <variablelist>
 <varlistentry>
@@ -1603,7 +1605,7 @@ special character (such as a parenthesis).
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
-<para>A variable was found whose name begins with a numeric digit or a period.  You cannot assign a value to such a variable because you could then redefine numeric constants.</para>
+<para>A variable was found whose name begins with a numeric digit or a period.</para>
 <para>The associated subcodes are: </para>
 <variablelist>
 <varlistentry>
@@ -1691,7 +1693,7 @@ special character (such as a parenthesis).
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
-<para>An expression was found in an IF, WHEN, WHILE, or UNTIL phrase that did not result in a 0 or 1. Any value operated on by a logical operator must result in a 0 or 1. For example, the phrase "If result then exit rc" fails if result has a value other than 0 or 1.</para>
+<para>An expression was found e. g. in an IF, WHEN, WHILE, or UNTIL phrase that did not result in a 0 or 1. Any value operated on by a logical operator must result in a 0 or 1. For example, the clause "If result then exit rc" fails if result has a value other than 0 or 1.</para>
 <para>The associated subcodes are: </para>
 <variablelist>
 <varlistentry>
@@ -2025,7 +2027,7 @@ special character (such as a parenthesis).
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
-<para>A matched parenthesis or bracket was found within an expression. There are more left parentheses than right parentheses or more left brackets than right brackets. To include a single parenthesis in a command, enclose it in quotation marks.</para>
+<para>An unmatched parenthesis or bracket was found within an expression. There are more left parentheses than right parentheses or more left brackets than right brackets. To include a single parenthesis in a command, enclose it in quotation marks.</para>
 <para>The associated subcodes are: </para>
 <variablelist>
 <varlistentry>
@@ -2056,12 +2058,12 @@ special character (such as a parenthesis).
 </para>
 <para>Either a comma was found outside a function invocation, or there are too many right parentheses or right square brackets in an expression. To include a comma in a character expression, enclose it in quotation marks.  For example, write the instruction: </para>
 <programlisting>
-       Say Enter A, B, or C
-    </programlisting>
+Say Enter A, B, or C
+</programlisting>
 <para>as follows:</para>
 <programlisting>
-       Say 'Enter A, B, or C'
-    </programlisting>
+Say 'Enter A, B, or C'
+</programlisting>
 <para>The associated subcodes are: </para>
 <variablelist>
 <varlistentry>
@@ -2695,7 +2697,7 @@ special character (such as a parenthesis).
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
-<para>A label was used inside an IF, DO/LOOP, or SELECT construction, or in the expression being evaluated for an INTERPRET instruction, or in an expression entered during interactive debugging.</para>
+<para>A label was used inside an IF, DO/LOOP, or SELECT block, or in the expression being evaluated for an INTERPRET instruction, or in an expression entered during interactive debugging.</para>
 <para>The associated subcodes are: </para>
 <variablelist>
 <varlistentry>
@@ -2707,19 +2709,19 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>002</term>
 <listitem>
-<para>Labels are not allowed within a DO/LOOP construct; found "<emphasis role="italic">label</emphasis>".</para>
+<para>Labels are not allowed within a DO/LOOP block; found "<emphasis role="italic">label</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>003</term>
 <listitem>
-<para>Labels are not allowed within an IF construct; found "<emphasis role="italic">label</emphasis>".</para>
+<para>Labels are not allowed within an IF block; found "<emphasis role="italic">label</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>004</term>
 <listitem>
-<para>Labels are not allowed within a SELECT construct; found "<emphasis role="italic">label</emphasis>".</para>
+<para>Labels are not allowed within a SELECT block; found "<emphasis role="italic">label</emphasis>".</para>
 </listitem>
 </varlistentry>
 </variablelist>

@@ -25,12 +25,7 @@
 <emphasis role="bold">Explanation:</emphasis>
 </para>
 <para>The queue name contains an invalid character.
-        Only the following characters can appear in queue names:  </para>
-<programlisting>
-        
-           'A' .. 'Z', '0' .. '9', '.', '!', '?', '_'
-        
-        </programlisting>
+        Only alphanumeric characters and the characters <literal>. ! ? _</literal> can appear in queue names.</para>
 </section>
 <section id="ERR123">
 <title>Error 123 - The queue access mode is not correct.</title>

@@ -219,25 +219,25 @@ optional for the subcodes.
     <SymbolicName>Error_When_expected</SymbolicName>
     <Text>WHEN or OTHERWISE expected.</Text>
     <Explanation>
-    <para>At least one WHEN construct (and possibly an OTHERWISE clause)
+    <para>At least one WHEN clause (and possibly an OTHERWISE clause)
 is expected within a SELECT instruction.  This message is issued if any
-other instruction is found or there is no WHEN construct before the
+other instruction is found or there is no WHEN clause before the
 OTHERWISE or all WHEN expressions are false and an OTHERWISE is not
 present. A common cause of this error is if you forget the DO and END
 around the list of instructions following a WHEN. For example:</para>
 <programlisting>
-WRONG                  RIGHT
+WRONG                   RIGHT
 
-Select                 Select
-When a=c then          When a=c then DO
-Say 'A equals C'       Say 'A equals C'
-exit                   exit
-Otherwise nop            end
-end                    Otherwise nop
-end
+Select                  Select
+  When a=c then           When a=c then DO
+    Say 'A equals C'        Say 'A equals C'
+    exit                    exit
+  Otherwise nop           end
+end                      Otherwise nop
+                        end
 </programlisting>
     </Explanation>
-    <UserAction><para>Look for any instruction other than WHEN (or for any missing WHEN construct before the OTHERWISE) in the SELECT construct.</para></UserAction>
+    <UserAction><para>Look for any instruction other than WHEN (or for any missing WHEN clause before the OTHERWISE) in the SELECT block.</para></UserAction>
     <Subcodes>
       <SubMessage>
         <Code>7</Code>
@@ -280,19 +280,19 @@ end
     <para>A THEN or an ELSE clause was found that does not match a
 corresponding IF or WHEN clause. This often occurs because of a
 missing END or DO...END in the THEN part of a complex IF...THEN...ELSE
-construction. For example:</para>
+block. For example:</para>
 <programlisting>
-WRONG                     RIGHT
+WRONG                   RIGHT
 
-if a = b then do          if a = b then do
-  say "equals"              say "equals"
-  exit                      exit
-else                      end
-  say "not equals"        else
-                            say "not equals"
+if a = b then do        if a = b then do
+  say "equals"            say "equals"
+  exit                    exit
+else                    end
+  say "not equals"      else
+                          say "not equals"
 </programlisting>
     </Explanation>
-    <UserAction><para>Look for a missing END or DO...END in the THEN part of a complex IF...THEN...ELSE construction.</para></UserAction>
+    <UserAction><para>Look for a missing END or DO...END in the THEN part of a complex IF...THEN...ELSE block.</para></UserAction>
     <Subcodes>
       <SubMessage>
         <Code>8</Code>
@@ -322,7 +322,7 @@ else                      end
     <Severity>Warning</Severity>
     <SymbolicName>Error_Unexpected_when</SymbolicName>
     <Text>Unexpected WHEN or OTHERWISE.</Text>
-    <Explanation><para>A WHEN or OTHERWISE was found outside of a SELECT construction.  You might have accidentally enclosed the instruction in a DO...END construction by leaving out an END, or you might have tried to branch to it with a SIGNAL instruction (which does not work because the SELECT is then ended).</para></Explanation>
+    <Explanation><para>A WHEN or OTHERWISE was found outside of a SELECT block.  You might have accidentally enclosed the instruction in a DO...END block by leaving out an END, or you might have tried to branch to it with a SIGNAL instruction (which does not work because the SELECT is then ended).</para></Explanation>
     <Subcodes>
       <SubMessage>
         <Code>9</Code>
@@ -352,7 +352,7 @@ else                      end
     <Severity>Warning</Severity>
     <SymbolicName>Error_Unexpected_end</SymbolicName>
     <Text>Unexpected or unmatched END.</Text>
-    <Explanation><para>More ENDs were found in your program than DO, LOOP, or SELECT instructions, or the ENDs did not match the DO, LOOP, or SELECT instructions. This message also occurs if you try to transfer control into the middle of a loop using SIGNAL. In this case, the language processor does not expect the END because it did not process the previous DO instruction. Remember also that SIGNAL deactivates any current loops, so it cannot transfer control from one place inside a loop to another.</para>
+    <Explanation><para>More ENDs were found in your program than DO, LOOP, or SELECT instructions, or the ENDs did not match the DO, LOOP, or SELECT instructions.</para>
     <para>Another cause for this message is placing an END immediately after a THEN or ELSE subkeyword or specifying a name on the END keyword that does not match the name following DO or LOOP. Putting the name of the control variable on ENDs that close repetitive loops can also help locate this kind of error.</para></Explanation>
     <Subcodes>
       <SubMessage>
@@ -429,12 +429,10 @@ else                      end
     <SymbolicName>Error_Control_stack</SymbolicName>
     <Text>Control stack full.</Text>
     <Explanation><para>Your program exceeds the nesting level limit for control structures (for example, DO...END and IF...THEN...ELSE). This could be because of a looping INTERPRET instruction, such as:</para>
-    <programlisting>
-    <![CDATA[
-      line='INTERPRET line'
-      INTERPRET line
-    ]]>
-    </programlisting>
+<programlisting>
+line = 'INTERPRET line'
+INTERPRET line
+</programlisting>
     <para>These lines loop until they exceed the nesting level limit and the language processor issues this message. Similarly, a recursive subroutine or internal function that does not end correctly can loop until it causes this message.</para></Explanation>
     <Subcodes>
       <SubMessage>
@@ -562,21 +560,19 @@ else                      end
     <SymbolicName>Error_Invalid_hex</SymbolicName>
     <Text>Invalid hexadecimal or binary string.</Text>
     <Explanation><para>Hexadecimal strings must not have leading or trailing whitespace characters and whitespace can only be embedded at byte boundaries.  Only the digits 0-9 and the letters a-f and A-F are allowed.  The following are valid hexadecimal strings: </para>
-    <programlisting>
-    <![CDATA[
-        '13'x
-        'A3C2 1c34'x
-        '1de8'x
-    ]]>
-    </programlisting>
-    <para>Binary strings can have whitespace only at the boundaries of groups of four binary digits.  Only the digits 0 and 1 are allowed.  These are valid binary strings: </para>
-    <programlisting>
-    <![CDATA[
-        '1011'b
-        '110 1101'b
-        '101101 11010011'b
-    ]]>
-    </programlisting>
+<programlisting>
+'13'x
+'A3C2 1c34'x
+'1de8'x
+</programlisting>
+    <para>Binary strings must not have leading or trailing whitespace characters and whitespace can only be embedded at the boundaries of groups of four binary digits.
+    Only the digits 0 and 1 are allowed.
+    These are valid binary strings:</para>
+<programlisting>
+'1011'b
+'110 1101'b
+'101101 11010011'b
+</programlisting>
     <para>You might have mistyped one of the digits, for example, typing a letter O instead of the number 0. Or you might have used the one-character symbol X or B (the name of the variable X or B, respectively) after a literal string when the string is not intended as a hexadecimal or binary specification. In this case, use the explicit concatenation operator (||) to concatenate the string to the value of the symbol.</para></Explanation>
     <UserAction><para>Use the explicit concatenation operator || in situations where X or B is intended to represent a variable.</para></UserAction>
     <Subcodes>
@@ -725,9 +721,9 @@ else                      end
     <Severity>Warning</Severity>
     <SymbolicName>Error_Symbol_or_string</SymbolicName>
     <Text>String or symbol expected.</Text>
-    <Explanation><para>A symbol or string was expected after the CALL or SIGNAL keywords
-but none was found. You might have omitted the string or symbol or inserted a
-special character (such as a parenthesis).
+    <Explanation><para>A symbol or string was expected while parsing a keyword instruction,
+    a directive, or a term, but none was found. You might have omitted the string or symbol
+    or inserted a special character.
     </para></Explanation>
     <Subcodes>
       <SubMessage>
@@ -1019,7 +1015,8 @@ special character (such as a parenthesis).
     <Severity>Warning</Severity>
     <SymbolicName>Error_Symbol_expected</SymbolicName>
     <Text>Symbol expected.</Text>
-    <Explanation><para>A symbol is expected after CALL ON, CALL OFF, END, ITERATE, LEAVE, NUMERIC, PARSE, SIGNAL ON, or SIGNAL OFF. Also, a list of symbols or variable references is expected after DROP, EXPOSE, and PROCEDURE EXPOSE. Either there was no symbol when one was required or the language processor found another token.</para></Explanation>
+    <Explanation><para>A symbol was expected while parsing a keyword instruction, a directive, or a term.
+    Either there was no symbol when one was required or the language processor found another token.</para></Explanation>
     <Subcodes>
       <SubMessage>
         <Code>20</Code>
@@ -1337,7 +1334,7 @@ special character (such as a parenthesis).
     <Severity>Warning</Severity>
     <SymbolicName>Error_Invalid_data</SymbolicName>
     <Text>Invalid data on end of clause.</Text>
-    <Explanation><para>A clause such as SELECT or NOP is followed by a token other than a comment.</para></Explanation>
+    <Explanation><para>A keyword instruction or a directive is followed by a token other than a comment.</para></Explanation>
     <Subcodes>
       <SubMessage>
         <Code>21</Code>
@@ -1579,7 +1576,9 @@ special character (such as a parenthesis).
     <Severity>Warning</Severity>
     <SymbolicName>Error_Invalid_subkeyword</SymbolicName>
     <Text>Invalid subkeyword found.</Text>
-    <Explanation><para>An unexpected token was found at his position of an instruction where a particular subkeyword was expected. For example, in a NUMERIC instruction, the second token must be DIGITS, FUZZ, or FORM.</para></Explanation>
+    <Explanation><para>An unexpected token was found while parsing a keyword
+    instruction or a directive. For example, in a NUMERIC instruction, the
+    second token must be DIGITS, FUZZ, or FORM.</para></Explanation>
     <Subcodes>
       <SubMessage>
         <Code>25</Code>
@@ -1960,7 +1959,8 @@ special character (such as a parenthesis).
     <Severity>Warning</Severity>
     <SymbolicName>Error_Invalid_whole_number</SymbolicName>
     <Text>Invalid whole number.</Text>
-    <Explanation><para>An expression was found that did not evaluate to a whole number or is greater than the limit (the default is 999,999,999 for 32-bit system
+    <Explanation><para>An expression was found that did not evaluate to a whole number
+    or is greater than the limit (the default is 999,999,999 for 32-bit systems
     and 999,999,999,999,999,999 for 64-bit systems):
     <itemizedlist>
     <listitem><para>The positional patterns in parsing templates (including variable positional patterns)</para></listitem>
@@ -2174,7 +2174,9 @@ special character (such as a parenthesis).
     <Severity>Warning</Severity>
     <SymbolicName>Error_Invalid_leave</SymbolicName>
     <Text>Invalid LEAVE or ITERATE.</Text>
-    <Explanation><para>A LEAVE or ITERATE instruction was found at an incorrect position.  Either no loop was active, or the name specified on the instruction did not match the control variable of any active loop. Note that internal routine calls and the INTERPRET instruction protect loops by making them inactive. Therefore, for example, a LEAVE instruction in a subroutine cannot affect a DO loop in the calling routine. You probably tried to use the SIGNAL instruction to transfer control within or into a loop. Because a SIGNAL instruction ends all active loops, any ITERATE or LEAVE instruction causes this message.</para></Explanation>
+    <Explanation><para>A LEAVE or ITERATE instruction was found at an incorrect position.
+    Either no loop was active, or the name specified on the instruction did not match the control variable of any active loop.
+    </para></Explanation>
     <Subcodes>
       <SubMessage>
         <Code>28</Code>
@@ -2282,7 +2284,7 @@ special character (such as a parenthesis).
     <Severity>Warning</Severity>
     <SymbolicName>Error_Invalid_variable</SymbolicName>
     <Text>Name starts with number or <q>.</q>.</Text>
-    <Explanation><para>A variable was found whose name begins with a numeric digit or a period.  You cannot assign a value to such a variable because you could then redefine numeric constants.</para></Explanation>
+    <Explanation><para>A variable was found whose name begins with a numeric digit or a period.</para></Explanation>
     <Subcodes>
       <SubMessage>
         <Code>31</Code>
@@ -2406,7 +2408,7 @@ special character (such as a parenthesis).
     <Severity>Warning</Severity>
     <SymbolicName>Error_Logical_value</SymbolicName>
     <Text>Logical value not 0 or 1.</Text>
-    <Explanation><para>An expression was found in an IF, WHEN, WHILE, or UNTIL phrase that did not result in a 0 or 1. Any value operated on by a logical operator must result in a 0 or 1. For example, the phrase "If result then exit rc" fails if result has a value other than 0 or 1.</para></Explanation>
+    <Explanation><para>An expression was found e. g. in an IF, WHEN, WHILE, or UNTIL phrase that did not result in a 0 or 1. Any value operated on by a logical operator must result in a 0 or 1. For example, the clause "If result then exit rc" fails if result has a value other than 0 or 1.</para></Explanation>
     <Subcodes>
       <SubMessage>
         <Code>34</Code>
@@ -2880,7 +2882,7 @@ special character (such as a parenthesis).
     <Severity>Warning</Severity>
     <SymbolicName>Error_Unmatched_parenthesis</SymbolicName>
     <Text>Unmatched <q>(</q> or <q>[</q> in expression.</Text>
-    <Explanation><para>A matched parenthesis or bracket was found within an expression. There are more left parentheses than right parentheses or more left brackets than right brackets. To include a single parenthesis in a command, enclose it in quotation marks.</para></Explanation>
+    <Explanation><para>An unmatched parenthesis or bracket was found within an expression. There are more left parentheses than right parentheses or more left brackets than right brackets. To include a single parenthesis in a command, enclose it in quotation marks.</para></Explanation>
     <Subcodes>
       <SubMessage>
         <Code>36</Code>
@@ -2920,13 +2922,13 @@ special character (such as a parenthesis).
     <SymbolicName>Error_Unexpected_comma</SymbolicName>
     <Text>Unexpected <q>,</q>, <q>)</q>, or <q>]</q>.</Text>
     <Explanation><para>Either a comma was found outside a function invocation, or there are too many right parentheses or right square brackets in an expression. To include a comma in a character expression, enclose it in quotation marks.  For example, write the instruction: </para>
-    <programlisting>
-       Say Enter A, B, or C
-    </programlisting>
+<programlisting>
+Say Enter A, B, or C
+</programlisting>
     <para>as follows:</para>
-    <programlisting>
-       Say 'Enter A, B, or C'
-    </programlisting>
+<programlisting>
+Say 'Enter A, B, or C'
+</programlisting>
     </Explanation>
     <Subcodes>
       <SubMessage>
@@ -3772,7 +3774,7 @@ special character (such as a parenthesis).
     <Severity>Warning</Severity>
     <SymbolicName>Error_Unexpected_label</SymbolicName>
     <Text>Unexpected label.</Text>
-    <Explanation><para>A label was used inside an IF, DO/LOOP, or SELECT construction, or in the expression being evaluated for an INTERPRET instruction, or in an expression entered during interactive debugging.</para></Explanation>
+    <Explanation><para>A label was used inside an IF, DO/LOOP, or SELECT block, or in the expression being evaluated for an INTERPRET instruction, or in an expression entered during interactive debugging.</para></Explanation>
     <UserAction><para>Remove the label.</para></UserAction>
     <Subcodes>
       <SubMessage>
@@ -3791,7 +3793,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Unexpected_label_do</SymbolicName>
-        <Text>Labels are not allowed within a DO/LOOP construct; found <q><Sub position="1" name="label"/></q>.</Text>
+        <Text>Labels are not allowed within a DO/LOOP block; found <q><Sub position="1" name="label"/></q>.</Text>
       </SubMessage>
       <SubMessage>
         <Code>47</Code>
@@ -3800,7 +3802,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Unexpected_label_if</SymbolicName>
-        <Text>Labels are not allowed within an IF construct; found <q><Sub position="1" name="label"/></q>.</Text>
+        <Text>Labels are not allowed within an IF block; found <q><Sub position="1" name="label"/></q>.</Text>
       </SubMessage>
       <SubMessage>
         <Code>47</Code>
@@ -3809,7 +3811,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Unexpected_label_select</SymbolicName>
-        <Text>Labels are not allowed within a SELECT construct; found <q><Sub position="1" name="label"/></q>.</Text>
+        <Text>Labels are not allowed within a SELECT block; found <q><Sub position="1" name="label"/></q>.</Text>
       </SubMessage>
     </Subcodes>
   </Message>
@@ -6676,12 +6678,7 @@ special character (such as a parenthesis).
         <SymbolicName>Error_RXQUE_name</SymbolicName>
         <Text>The name %1 is not a valid queue name.</Text>
         <Explanation><para>The queue name contains an invalid character.
-        Only the following characters can appear in queue names:  </para>
-        <programlisting>
-        <![CDATA[
-           'A' .. 'Z', '0' .. '9', '.', '!', '?', '_'
-        ]]>
-        </programlisting>
+        Only alphanumeric characters and the characters <literal>. ! ? _</literal> can appear in queue names.</para>
         </Explanation>
         <UserAction><para>Change the queue name and retry the command.</para></UserAction>
       </SubMessage>
