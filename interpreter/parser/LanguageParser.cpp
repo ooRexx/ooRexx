@@ -1216,17 +1216,18 @@ RexxCode *LanguageParser::translateBlock()
 
             // labels are not allowed within DO/LOOP/IF/SELECT groups
             InstructionKeyword type = topDo()->getType();
-            if (topDo()->isControl() || // any KEYWORD_LOOP_*
-                type == KEYWORD_IFTHEN || type == KEYWORD_ELSE ||
-                type == KEYWORD_WHENTHEN || type == KEYWORD_OTHERWISE)
+            bool withinIf = type == KEYWORD_IFTHEN || type == KEYWORD_ENDTHEN || type == KEYWORD_ELSE;
+            bool withinSelect = type == KEYWORD_SELECT || type == KEYWORD_SELECT_CASE ||
+                                type == KEYWORD_WHENTHEN || type == KEYWORD_ENDWHEN || type == KEYWORD_OTHERWISE;
+            if (topDo()->isControl() /* any KEYWORD_LOOP_* type */ || withinIf || withinSelect)
             {
                 // it's a bit of a pain to get to our label name
                 previousToken();
                 previousToken();
                 RexxToken *token = nextToken();
                 syntaxError(
-                    type == KEYWORD_IFTHEN || type == KEYWORD_ELSE ? Error_Unexpected_label_if :
-                    (type == KEYWORD_WHENTHEN || type == KEYWORD_OTHERWISE ? Error_Unexpected_label_select :
+                    withinIf ? Error_Unexpected_label_if :
+                    (withinSelect ? Error_Unexpected_label_select :
                     Error_Unexpected_label_do), token);
             }
             // append the label and try again
