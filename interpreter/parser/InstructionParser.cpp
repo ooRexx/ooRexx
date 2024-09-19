@@ -684,10 +684,10 @@ CommandIOConfiguration* LanguageParser::parseAddressWith()
     // and check options until we reach the end of the clause
     while (!token->isEndOfClause())
     {
-        // all options are symbol names,
+        // all options are symbol names
         if (!token->isSymbol())
         {
-            syntaxError(Error_Invalid_subkeyword_address_with_option, token);
+            syntaxError(Error_Symbol_expected_address_with);
         }
 
         // map the keyword name to a symbolic identifier.

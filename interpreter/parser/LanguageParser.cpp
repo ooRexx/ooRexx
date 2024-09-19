@@ -1216,15 +1216,22 @@ RexxCode *LanguageParser::translateBlock()
 
             // labels are not allowed within DO/LOOP/IF/SELECT groups
             InstructionKeyword type = topDo()->getType();
-            bool withinIf = type == KEYWORD_IFTHEN || type == KEYWORD_ENDTHEN || type == KEYWORD_ELSE;
+            // We are
+            // - inside a DO, if top isControl, i. e. KEYWORD_LOOP_* or _DO_*
+            // - inside a SELECT if top is KEYWORD_SELECT / SELECT_CASE / WHENTHEN / ENDWHEN / OTHERWISE
+            // - inside an IF if top is IFTHEN or KEYWORD_ELSE
+            //   If ENDTHEN is at the top this is somewhat special.  In this case
+            //   this label here may be preceding an ELSE (so we are inside the IF)
+            //   or something else (meaning we're just outside the IF block).
+            //   We handle this in the KEYWORD_ELSE path below.
+            bool withinIf = type == KEYWORD_IFTHEN || type == KEYWORD_ELSE;
             bool withinSelect = type == KEYWORD_SELECT || type == KEYWORD_SELECT_CASE ||
                                 type == KEYWORD_WHENTHEN || type == KEYWORD_ENDWHEN || type == KEYWORD_OTHERWISE;
-            if (topDo()->isControl() /* any KEYWORD_LOOP_* type */ || withinIf || withinSelect)
+            if (topDo()->isControl() || withinIf || withinSelect)
             {
-                // it's a bit of a pain to get to our label name
-                previousToken();
-                previousToken();
-                RexxToken *token = nextToken();
+                // get our label name
+                resetPosition(1); // firstToken() won't do ..
+                RexxToken *token = nextReal();
                 syntaxError(
                     withinIf ? Error_Unexpected_label_if :
                     (withinSelect ? Error_Unexpected_label_select :
@@ -1410,6 +1417,14 @@ RexxCode *LanguageParser::translateBlock()
                 if (!second->isType(KEYWORD_ENDTHEN))
                 {
                     syntaxError(Error_Unexpected_then_else);
+                }
+
+                // no label is allowed immediately before the ELSE keyword
+                if (lastInstruction->isType(KEYWORD_LABEL))
+                {
+                    // unfortunately the label name isn't readily available
+                    // probably a rare error .. just use "ELSE" as message insert
+                    syntaxError(Error_Unexpected_label_if, new_string("ELSE"));
                 }
 
                 // ok, add the ELSE to the instruction list, pop the
@@ -4130,7 +4145,7 @@ void LanguageParser::error(RexxErrorCodes errorcode, RexxObject *value )
  *
  * @param errorcode The error number to issue.
  * @param value1    The first substitution object.
- * @param value2    The second substitution objec.t
+ * @param value2    The second substitution object.
  */
 void LanguageParser::error(RexxErrorCodes errorcode, RexxObject *value1, RexxObject *value2 )
 {
@@ -4143,8 +4158,8 @@ void LanguageParser::error(RexxErrorCodes errorcode, RexxObject *value1, RexxObj
  *
  * @param errorcode The error number to issue.
  * @param value1    The first substitution object.
- * @param value2    The second substitution objec.t
- * @param value3    The third substitution objec.t
+ * @param value2    The second substitution object.
+ * @param value3    The third substitution object.
  */
 void LanguageParser::error(RexxErrorCodes errorcode, RexxObject *value1, RexxObject *value2, RexxObject *value3 )
 {
