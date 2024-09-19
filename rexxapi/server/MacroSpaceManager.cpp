@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -270,7 +270,7 @@ void ServerMacroSpaceManager::nextDescriptor(ServiceMessage &message)
     {
         message.parameter1 = item->imageSize;
         message.parameter2 = item->searchPosition;
-        strcpy(message.nameArg, item->name);
+        Utilities::strncpy(message.nameArg, item->name, ServiceMessage::NAMESIZE);
         // this is an end indication
         message.setResult(MACRO_RETURNED);
     }
@@ -295,7 +295,7 @@ void ServerMacroSpaceManager::nextImage(ServiceMessage &message)
     {
         message.parameter1 = item->imageSize;
         message.parameter2 = item->searchPosition;
-        strcpy(message.nameArg, item->name);
+        Utilities::strncpy(message.nameArg, item->name, ServiceMessage::NAMESIZE);
 
         // get the macro data
         message.setMessageData((void *)item->imageBuffer, item->imageSize);

@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -48,7 +48,6 @@
 #include <unistd.h>
 #include <signal.h>
 #include <sys/types.h>
-#include <sys/stat.h>
 #include "SysProcess.hpp"
 
 #ifdef AIX
@@ -106,7 +105,6 @@ void SysLocalAPIManager::startServerProcess()
 
     // housekeeping - chdir to the root subdir and close all open files
     int ignore = chdir("/");
-    umask(0);
     for(int i = 0; i < 1024; i++)
     {
         close(i);

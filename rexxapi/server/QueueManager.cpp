@@ -104,7 +104,7 @@ void DataQueue::clear()
 void DataQueue::add(ServiceMessage &message)
 {
     const char *queueData = (const char *)message.getMessageData();
-    size_t itemLength = (size_t)message.parameter1;
+    size_t itemLength = message.getMessageDataLength();
     size_t order = (size_t)message.parameter2;
     // detach the message data from the message so the controller
     // doesn't free this.

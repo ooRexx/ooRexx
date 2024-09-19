@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -110,7 +110,7 @@ void RegistrationData::getRegistrationData(ServiceRegistrationData &regData)
 {
     if (moduleName != NULL)
     {
-        strcpy(regData.moduleName, moduleName);
+        Utilities::strncpy(regData.moduleName, moduleName, ServiceRegistrationData::MAX_NAME_LENGTH);
     }
     else
     {
@@ -119,7 +119,7 @@ void RegistrationData::getRegistrationData(ServiceRegistrationData &regData)
 
     if (procedureName != NULL)
     {
-        strcpy(regData.procedureName, procedureName);
+        Utilities::strncpy(regData.procedureName, procedureName, ServiceRegistrationData::MAX_NAME_LENGTH);
     }
     else
     {

@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -116,7 +116,6 @@ protected:
 
     bool checkServiceName(const char *serviceName);
 
-    const char *boundServiceName;        // the service name this instance is bound to.
     static const char *userServiceName;  // the standard service name generated for each user.
 };
 #endif

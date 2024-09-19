@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -62,6 +62,7 @@
 #include "oorexxapi.h"
 #include "SysCSStream.hpp"
 #include "ServiceException.hpp"
+#include "Utilities.hpp"
 
 const char *SysServerLocalSocketConnectionManager::userServiceName = NULL;
 
@@ -217,8 +218,8 @@ bool SysSocketConnection::disconnect()
 /**
  * Alternate constructor.
  *
- * @param host   String name of the host.
- * @param port   Target port number.
+ * @param serviceName
+ *               The service name to use for the connection.
  */
 SysLocalSocketConnection::SysLocalSocketConnection(const char *serviceName) : SysSocketConnection()
 {
@@ -229,7 +230,8 @@ SysLocalSocketConnection::SysLocalSocketConnection(const char *serviceName) : Sy
 /**
  * Open a connection to a named local service
  *
- * @param host   The target service name.
+ * @param serviceName
+ *               The service name to use for the connection.
  *
  * @return True on an error, otherwise false.
  */
@@ -253,9 +255,8 @@ bool SysLocalSocketConnection::connect(const char *serviceName)
     // bind the server socket to a service name
     struct sockaddr_un name; // address structure
     name.sun_family = AF_UNIX;
-    strncpy(name.sun_path, serviceName, sizeof (name.sun_path));
-    // make sure this is null terminated
-    name.sun_path[sizeof (name.sun_path) - 1] = '\0';
+    // size of sun_path is just 108 chars on Linux and 104 on macOS/BSD's
+    Utilities::strncpy(name.sun_path, serviceName, sizeof(name.sun_path));
 
     socklen_t size = (offsetof(sockaddr_un, sun_path)
           + strlen (name.sun_path));
@@ -329,7 +330,8 @@ bool SysServerSocketConnectionManager::disconnect()
 /**
  * Make a server connection.
  *
- * @param port   Port to use for the connection.
+ * @param serviceName
+ *               The service name to use for the connection.
  *
  * @return True on an error, otherwise false
  */
@@ -354,9 +356,10 @@ bool SysServerLocalSocketConnectionManager::bind(const char *serviceName)
     // bind the server socket to a service name
     struct sockaddr_un name; // address structure
     name.sun_family = AF_UNIX;
-    strncpy (name.sun_path, serviceName, sizeof (name.sun_path));
-    // make sure this is null terminated
-    name.sun_path[sizeof (name.sun_path) - 1] = '\0';
+    // size of sun_path is just 108 chars on Linux and 104 on macOS/BSD's
+    // e. g. on macOS a service name based on $TMPDIR might become pretty close, like:
+    // /var/folders/mb/6jv9bq496wgckjj40cc5l3_h0000gp/T/.ooRexx-5.1.0-64-username.service
+    Utilities::strncpy(name.sun_path, serviceName, sizeof(name.sun_path));
 
     size_t size = (offsetof(sockaddr_un, sun_path)
           + strlen (name.sun_path));
@@ -367,7 +370,7 @@ bool SysServerLocalSocketConnectionManager::bind(const char *serviceName)
         errcode = CSERROR_CONNX_EXISTS;
         return false;
     }
-    // listen for a client at the port
+    // listen for a client at the service name
     if (listen(c, 20) == -1)
     {
         errcode = CSERROR_INTERNAL;
@@ -462,7 +465,7 @@ const char *SysServerLocalSocketConnectionManager::generateServiceName()
 /**
  * Determine the location of the service name files generated for
  * this user. The preferred location is in the XDG_RUNTIME_DIR, but
- * the fallback is to use /tmp for the file.
+ * the fallback is to use TMPDIR, and if not set, /tmp for the file.
  * We don't create this in the user's home directory, as it is fairly
  * common practice for home directories to be mounted on an NFS, which
  * means the file would be visible cross system.
@@ -473,18 +476,38 @@ const char *SysServerLocalSocketConnectionManager::generateServiceName()
 void SysServerLocalSocketConnectionManager::getServiceLocation(char *path, size_t len)
 {
     // The recommended location is the XDG_RUNTIME_DIR, which will do a lot of
-    // automatic cleanup functions for us.
-    const char *homePath;
-    if ( (homePath = getenv("XDG_RUNTIME_DIR")) == NULL)
+    // automatic cleanup functions for us.  On platforms like CentOS, Fedora,
+    // Linux Mint, OpenSUSE or Ubuntu it points to [/var]/run/user/{uid}.
+    // The fallback, TMPDIR, although being in POSIX.1, seems to be set rarely.
+    // On macOS it provides user file isolation with "PrivateTmp", pointing to
+    // something like /var/folders/mb/6jv9bq496wgckjj40cc5l3_h0000gp/T/
+    const char *servicePath;
+    struct stat st;
+    const char *env[3] = {"XDG_RUNTIME_DIR", "TMPDIR", NULL};
+    int e;
+    for (e = 0; env[e] != NULL; e++)
     {
-        homePath = "/tmp";
+        // we use a path name only if it is less than 80 chars (sockaddr_un's
+        // sun_path which is used to connect() and bind() has just ~100 chars)
+        // and is an existing directory.
+        if ((servicePath = getenv(env[e])) != NULL &&
+            strlen(servicePath) < 80 &&     // must fit sun_path
+            stat(servicePath, &st) == 0 &&  // must exist
+            S_ISDIR(st.st_mode))            // must be a directory
+        {
+            break;
+        }
+    }
+    if (env[e] == NULL)
+    {
+        servicePath = "/tmp";
     }
 
     // Get the current user's name.  In the unlikely event that this fails,
     // use the user's uid.
-    char uid_buffer[20];
+    char uid_buffer[21];     // will fit signed or unsigned uid_t
     char *name;
-    uid_t uid = getuid();    // getuid() is always successful
+    uid_t uid = geteuid();   // geteuid() is always successful
     passwd *pw = getpwuid(uid);
     if (pw == NULL)
     {
@@ -496,7 +519,7 @@ void SysServerLocalSocketConnectionManager::getServiceLocation(char *path, size_
         name = pw->pw_name;
     }
 
-    snprintf(path, len, "%s/.ooRexx-%d.%d.%d-%s-%s", homePath, ORX_VER, ORX_REL, ORX_MOD,
+    snprintf(path, len, "%s/.ooRexx-%d.%d.%d-%s-%s", servicePath, ORX_VER, ORX_REL, ORX_MOD,
     #ifdef __REXX64__
             "64",
     #else

@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -53,7 +53,7 @@ public:
 
     virtual bool isStoppable();
     void cleanupProcessResources(ServiceMessage &message);
-    bool isUser(ServiceMessage &message) { return strcmp(message.userid, userid) == 0; }
+    bool isUser(ServiceMessage &message) { return strncmp(message.userid, userid, sizeof(userid)) == 0; }
     void dispatch(ServiceMessage &message);
 
     ServerQueueManager queueManager;  // the queue manager instance

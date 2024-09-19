@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -128,7 +128,7 @@ void MacroSpaceFile::nextMacro(char *name, ManagedRxstring &image, size_t &order
     MacroSpaceDescriptor desc;
 
     read(&desc, sizeof(desc));
-    strcpy(name, desc.name);
+    Utilities::strncpy(name, desc.name, MacroSpaceDescriptor::MACRONAMESIZE);
     order = desc.position;
     setFilePosition(imageBase);
     imageBase += desc.imageSize;
@@ -156,7 +156,7 @@ void MacroSpaceFile::nextMacro(NameTable names, char *name, ManagedRxstring &ima
     // we only read the image data in if this is in the requested list
     if (names.inTable(desc.name))
     {
-        strcpy(name, desc.name);
+        Utilities::strncpy(name, desc.name, MacroSpaceDescriptor::MACRONAMESIZE);
         order = desc.position;
         setFilePosition(imageBase);
         imageBase += desc.imageSize;
@@ -454,7 +454,7 @@ RexxReturnCode LocalMacroSpaceManager::saveMacroSpace(const char *target, const 
 
     for (i = 0; i < count; i++)
     {
-        strcpy(message.nameArg, names[i]);
+        Utilities::strncpy(message.nameArg, names[i], MacroSpaceDescriptor::MACRONAMESIZE);
         // request the next one.
         message.send();
         // if not there, time to bail out
@@ -469,7 +469,7 @@ RexxReturnCode LocalMacroSpaceManager::saveMacroSpace(const char *target, const 
 
     for (i = 0; i < count; i++)
     {
-        strcpy(message.nameArg, names[i]);
+        Utilities::strncpy(message.nameArg, names[i], MacroSpaceDescriptor::MACRONAMESIZE);
         // request the next one.  This will throw an exception if it doesn't exist.
         message.send();
         // if not there, time to bail out

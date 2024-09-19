@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -190,4 +190,37 @@ const char *Utilities::strnchr(const char *data, size_t n, char ch)
         data++;
     }
     return NULL;
+}
+
+
+/**
+ * A strncpy() implementation that will always null-terminate.
+ *
+ * @param dst    The destination pointer.
+ * @param src    The source pointer.
+ * @param len    The destination buffer length.
+ *
+ * @return false when no truncation has occured, true otherwise.
+ */
+bool Utilities::strncpy(char *dest, const char *src, size_t len)
+{
+    // ::strncpy() is dangerous as it doesn't NUL-terminate dest when truncating,
+    // and inefficient as it always writes len bytes to dest, filling up with
+    // NUL characters when not truncating.  Alternatives like strlcpy() in libbsd
+    // or strncpy_s() aren't readily available, so we implement our own a safe
+    // version here.
+    char *end = (char *)memchr(src, '\0', len);
+    if (end != NULL)
+    {
+        // we found a terminating NUL character
+        memcpy(dest, src, end - src + 1);
+        return false; // success
+    }
+    else
+    {
+        // no NUL char found
+        memcpy(dest, src, len - 1);
+        dest[len - 1] = '\0';
+        return true; // truncated
+    }
 }

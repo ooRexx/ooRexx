@@ -44,6 +44,7 @@
 #include <stdio.h>
 #include <unistd.h>              // lockf()
 #include <sys/types.h>
+#include <sys/stat.h>            // umask()
 #include <fcntl.h>
 #include <signal.h>
 #include <pwd.h>
@@ -72,14 +73,14 @@ void Stop(int signo)
  * Acquire a lock on a special file to ensure we are the only running
  * rxapi process for this user.
  *
- * @return The file descriptor the the lock for or -1 for any failure obtaining
+ * @return The file descriptor for the lock file or -1 for any failure obtaining
  *         the lock.
  */
 int acquireLock (const char *lockFileName)
 {
     int lockFd;
 
-    if ((lockFd = open(lockFileName, O_CREAT | O_RDWR, 0666))  < 0)
+    if ((lockFd = open(lockFileName, O_CREAT | O_RDWR, 0600))  < 0)
     {
         return -1;
     }
@@ -122,19 +123,35 @@ void releaseLock (const char *lockFileName, int lockFd)
  */
 int main(int argc, char *argv[])
 {
+    bool dryrun = false; // handy (undocumented) test option
     if (argc > 1)
     {
-        printf("rxapi: no args allowed\n");
+        dryrun = strcmp(argv[1], "--dryrun") == 0;
+        printf(dryrun ? "rxapi: dryrun\n" : "rxapi: no args allowed\n");
+    }
+
+    // neither our lock file nor our socket should give access to group or world
+    umask(077);
+
+    // capture SIGTERM (kill -15) and gracefully terminate when received
+    struct sigaction sa;
+    sigemptyset(&sa.sa_mask);
+    sigaddset(&sa.sa_mask, SIGTERM);
+    sa.sa_flags = SA_RESTART;
+    sa.sa_handler = Stop;
+    if (sigaction(SIGTERM, &sa, NULL) == -1)
+    {
+        printf("rxapi: sigaction(SIGTERM) failed with errno %d %s\n", errno, strerror(errno));
     }
 
     // a buffer for generating the name
     char lockFileName[PATH_MAX + 100];
 
     // the location of the lock file
-    char pipePath[PATH_MAX];
+    char servicePath[PATH_MAX];
     // determine the best place to put this
-    SysServerLocalSocketConnectionManager::getServiceLocation(pipePath, sizeof(pipePath));
-    snprintf(lockFileName, sizeof(lockFileName), "%s.lock", pipePath);
+    SysServerLocalSocketConnectionManager::getServiceLocation(servicePath, sizeof(servicePath));
+    snprintf(lockFileName, sizeof(lockFileName), "%s.lock", servicePath);
     printf("rxapi: lockfile path is %s\n", lockFileName);
 
     // see if we can get the lock file before proceeding. This is one
@@ -147,28 +164,11 @@ int main(int argc, char *argv[])
     }
     printf("rxapi: lockfile lock acquired\n");
 
-    struct sigaction sa;
-
-    // handle kill -15
-    (void) sigemptyset(&sa.sa_mask);
-    (void) sigaddset(&sa.sa_mask, SIGTERM);
-    sa.sa_flags = SA_RESTART;
-    sa.sa_handler = Stop;
-    if (sigaction(SIGTERM, &sa, NULL) == -1)
-    {
-        printf("rxapi: sigaction(SIGTERM) failed; exiting\n");
-        exit(1);
-    }
-
-    // turn off SIGPIPE signals in case the other end of the
-    // pipe terminates on us.
-    signal(SIGPIPE, SIG_IGN);
-
     try
     {
         // create a connection object that will be the server target
         SysServerLocalSocketConnectionManager *c = new SysServerLocalSocketConnectionManager();
-        // try to create the named pipe used for this server. If this fails, we
+        // try to create the Unix socket used for this server. If this fails, we
         // likely have an instance of the daemon already running, so just fail quietly.
         const char *service = SysServerLocalSocketConnectionManager::generateServiceName();
         printf("rxapi: service path is %s\n", service);
@@ -180,7 +180,10 @@ int main(int argc, char *argv[])
         }
         apiServer.initServer(c);              // start up the server
         printf("rxapi: service successfully started; listening\n");
-        apiServer.listenForConnections();     // go into the message loop
+        if (!dryrun)
+        {
+            apiServer.listenForConnections(); // go into the message loop
+        }
     }
     catch (ServiceException *e)
     {

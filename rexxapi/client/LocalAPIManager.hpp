@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -75,7 +75,7 @@ public:
     void shutdownConnections();
 
     inline SessionID getSession() { return session; }
-    inline void getUserID(char *buffer) { strcpy(buffer, userid); }
+    inline void getUserID(char *buffer) { Utilities::strncpy(buffer, userid, MAX_USERID_LENGTH); }
     void connectToAPIServer();
     void establishServerConnection();
     RexxReturnCode processServiceException(ServerManager t, ServiceException *e);

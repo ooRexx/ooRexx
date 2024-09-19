@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -43,6 +43,7 @@
 #include "ServiceException.hpp"
 #include "CSStream.hpp"
 #include "SysProcess.hpp"
+#include "Utilities.hpp"
 
 typedef enum
 {
@@ -64,10 +65,6 @@ inline char *dupString(const char *oldString)
     strcpy(newString, oldString);
     return newString;
 }
-
-// this port is assigned by IANA for the use of ooRexx, so
-// in theory, we're safe to use this.
-#define REXX_API_PORT 10010
 
 // a session identifier
 typedef uintptr_t SessionID;
@@ -208,8 +205,8 @@ class ServiceRegistrationData
 public:
     inline ServiceRegistrationData(const char *module, const char *proc, bool drop, const char *userPointer)
     {
-        strncpy(moduleName, module, MAX_NAME_LENGTH);
-        strncpy(procedureName, proc, MAX_NAME_LENGTH);
+        Utilities::strncpy(moduleName, module, MAX_NAME_LENGTH);
+        Utilities::strncpy(procedureName, proc, MAX_NAME_LENGTH);
         dropAuthority = !drop ? DROP_ANY : OWNER_ONLY;
         setUserData(userPointer);
         entryPoint = 0;
@@ -219,7 +216,7 @@ public:
     {
         if (module != NULL)
         {
-            strncpy(moduleName, module, MAX_NAME_LENGTH);
+            Utilities::strncpy(moduleName, module, MAX_NAME_LENGTH);
         }
         else
         {
@@ -301,7 +298,7 @@ public:
     {
         result = SERVER_ERROR;
         errorCode = error;
-        strncpy(nameArg, message, NAMESIZE);
+        Utilities::strncpy(nameArg, message, NAMESIZE);
         freeMessageData();   // make sure we don't send back any attached data
     }
 
@@ -309,7 +306,7 @@ public:
     {
         result = SERVER_ERROR;
         errorCode = e->getErrorCode();
-        strncpy(nameArg, e->getMessage(), NAMESIZE);
+        Utilities::strncpy(nameArg, e->getMessage(), NAMESIZE);
         freeMessageData();   // make sure we don't send back any attached data
     }
 
