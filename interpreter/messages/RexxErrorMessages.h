@@ -407,7 +407,7 @@ ERROR_MESSAGE Message_table[] = {      /* table of major and minor errors   */
     MESSAGE(Error_Incorrect_call_write_to_readonly, "Cannot write to a read-only property or typelib element.")
     MESSAGE(Error_Incorrect_call_signature, "Invalid native function signature specification.")
     MESSAGE(Error_Incorrect_call_nostem, "Argument &1 must have a stem object or stem name value; found \"&2\".")
-    MESSAGE(Error_Incorrect_call_bad_option, "&1 argument &2 must be one of \"&3\"; found \"&4\".")
+    MESSAGE(Error_Incorrect_call_bad_option, "&1 argument &2 must be one of &3; found \"&4\".")
     MESSAGE(Error_Incorrect_call_relative, "Argument &1 (\"&2\") must be greater than argument &3 (\"&4\").")
     MESSAGE(Error_Incorrect_call_stem_size, "Stem argument does not have a valid count for element 0.")
     MESSAGE(Error_Incorrect_call_stem_range, "The operation is outside the size of the stem array (\"&1\").")

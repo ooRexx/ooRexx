@@ -2416,7 +2416,7 @@ Say 'Enter A, B, or C'
 <term>920</term>
 <listitem>
 <para>
-<emphasis role="italic">function_name</emphasis> argument <emphasis role="italic">name</emphasis> must be one of "<emphasis role="italic">option</emphasis>"; found "<emphasis role="italic">value</emphasis>".</para>
+<emphasis role="italic">function_name</emphasis> argument <emphasis role="italic">name</emphasis> must be one of <emphasis role="italic">option</emphasis>; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>

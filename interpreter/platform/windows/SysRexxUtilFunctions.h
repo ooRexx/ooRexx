@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -80,8 +80,8 @@
     INTERNAL_ROUTINE(SysWinEncryptFile,           SysWinEncryptFile)
     INTERNAL_ROUTINE(SysWinDecryptFile,           SysWinDecryptFile)
     INTERNAL_ROUTINE(SysGetErrorText,             SysGetErrorText)
-    INTERNAL_ROUTINE(SysFromUniCode,              SysFromUniCode)
-    INTERNAL_ROUTINE(SysToUniCode,                SysToUniCode)
+    INTERNAL_ROUTINE(SysFromUnicode,              SysFromUnicode)
+    INTERNAL_ROUTINE(SysToUnicode,                SysToUnicode)
     INTERNAL_ROUTINE(SysWinGetPrinters,           SysWinGetPrinters)
     INTERNAL_ROUTINE(SysWinGetDefaultPrinter,     SysWinGetDefaultPrinter)
     INTERNAL_ROUTINE(SysWinSetDefaultPrinter,     SysWinSetDefaultPrinter)

@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2023 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -112,8 +112,6 @@
 *                                                                     *
 **********************************************************************/
 
-/* Include files */
-
 #include "oorexxapi.h"
 #include <memory.h>
 #include <fcntl.h>
@@ -123,6 +121,7 @@
 #include <stdio.h>
 #include <conio.h>
 #include <limits.h>
+#include <algorithm> // min()
 #include <shlwapi.h>
 #include <versionhelpers.h>
 #include "SysFileSystem.hpp"
@@ -1358,7 +1357,8 @@ RexxRoutine0(RexxStringObject, SysWinVer)
 *                                                                        *
 * Note: The ReadConsoleOutputCharacter API is no longer recommended      *
 *************************************************************************/
-RexxRoutine3(RexxStringObject, SysTextScreenRead, int, row, int, col, OPTIONAL_int, len)
+RexxRoutine3(RexxStringObject, SysTextScreenRead,
+             int, row, int, col, OPTIONAL_uint32_t, len)
 {
     HANDLE h;                            // stdout handle
     CONSOLE_SCREEN_BUFFER_INFO csbiInfo; // screen buffer size
@@ -1366,38 +1366,113 @@ RexxRoutine3(RexxStringObject, SysTextScreenRead, int, row, int, col, OPTIONAL_i
     COORD start;                         // start coordinates
     DWORD chars;                         // actual chars read
 
-    if (row < 0 || col < 0 || argumentExists(3) && len < 0 ||
-        (h = GetStdHandle(STD_OUTPUT_HANDLE)) == INVALID_HANDLE_VALUE)
+    // get a handle to our console and the screen buffer size
+    h = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (h == INVALID_HANDLE_VALUE ||
+        GetConsoleScreenBufferInfo(h, &csbiInfo) == 0)
     {
         context->InvalidRoutine();
         return NULLOBJECT;
     }
 
-    // get screen buffer size if len argument is not given
-    if (argumentOmitted(3))
+    // check row and column ranges
+    if (row < 0 || row >= csbiInfo.dwSize.Y)
     {
-        if (GetConsoleScreenBufferInfo(h, &csbiInfo) == 0)
-        {
-            context->InvalidRoutine();
-            return NULLOBJECT;
-        }
-        len = csbiInfo.dwSize.Y * csbiInfo.dwSize.X;
+        // 88.907 The &1 argument must be in the range &2 to &3; found "&4"
+        context->RaiseException(Rexx_Error_Invalid_argument_range,
+          context->ArrayOfFour(context->String("row"),
+          context->WholeNumber(0), context->WholeNumber(csbiInfo.dwSize.Y - 1),
+          context->WholeNumber(row)));
+        return NULLOBJECT;
+    }
+    if (col < 0 || col >= csbiInfo.dwSize.X)
+    {
+        // 88.907 The &1 argument must be in the range &2 to &3; found "&4"
+        context->RaiseException(Rexx_Error_Invalid_argument_range,
+          context->ArrayOfFour(context->String("col"),
+          context->WholeNumber(0), context->WholeNumber(csbiInfo.dwSize.X - 1),
+          context->WholeNumber(col)));
+        return NULLOBJECT;
     }
 
-    if (len >= 0 && (buffer = (char *)malloc(len)) == NULL)
+    // if not specified, set len to the maximum length
+    if (argumentOmitted(3))
+    {
+        len = csbiInfo.dwSize.Y * csbiInfo.dwSize.X;
+    }
+    else if (len < 1)
+    {
+        return context->NullString();
+    }
+    // fix len for the given row/col start to be in range 1 .. max
+    len = std::min(len, (uint32_t)csbiInfo.dwSize.Y * csbiInfo.dwSize.X - (row * csbiInfo.dwSize.X + col));
+
+    // allocate our screen read character buffer
+    buffer = (char *)malloc(len);
+    if (buffer == NULL)
     {
         outOfMemoryException(context);
     }
 
     start.X = (short)col;
     start.Y = (short)row;
-    if (ReadConsoleOutputCharacter(h, buffer, len, start, &chars) == 0)
+    if (ReadConsoleOutputCharacter(h, buffer, (DWORD)len, start, &chars) == 0)
+    {
+        context->InvalidRoutine(); // console read failed
+        return NULLOBJECT;
+    }
+
+    // seems undocumented, but if "ANSI" ReadConsoleOutputCharacterA()
+    // encounters a Unicode character while reading the screen, it
+    // returns success, but with chars set to 0.
+    if (chars > 0)
+    {
+        // OK if chars > 0 or len = 0 requested or we're reading outside the buffer
+        return context->NewString(buffer, chars);
+    }
+
+    // Ok, let's retry with the "Wide" ReadConsoleOutputCharacterW(),
+    // then convert the -W result back to ANSI (which could be UTF-8).
+    // first, we need a bigger Wide string buffer
+    if (!buffer.realloc(len * 2))
+    {
+        outOfMemoryException(context);
+    }
+    // next, try to read the screen again, this time with the -W suffix
+    if (ReadConsoleOutputCharacterW(h, (LPWSTR)(void *)buffer, len, start, &chars) == 0)
     {
         context->InvalidRoutine();
         return NULLOBJECT;
     }
+    // did we still get zero chars?  W-to-A conversion won't work, so
+    // just return a NULLSTRING
+    if (chars == 0)
+    {
+        return context->NullString();
+    }
+    // the W-to-A conversion is a bit of a pain: first determine the
+    // required conversion output buffer size
+    int required;
+    AutoFree output;
 
-    return context->NewString(buffer, chars);
+    required = WideCharToMultiByte(CP_ACP, 0, (LPCWCH)(void *)buffer, chars, NULL, 0, NULL, NULL);
+    if (required == 0)
+    {
+        context->InvalidRoutine();
+        return NULLOBJECT;
+    }
+    output = (char *)malloc(required);
+    if (output == NULL)
+    {
+        outOfMemoryException(context);
+    }
+    // now finally we do the actual W-to-A conversion
+    if (WideCharToMultiByte(CP_ACP, 0, (LPCWCH)(void *)buffer, chars, output, required, NULL, NULL) == 0)
+    {
+        context->InvalidRoutine();
+        return NULLOBJECT;
+    }
+    return context->NewString(output, required);
 }
 
 /*************************************************************************
@@ -2612,454 +2687,322 @@ RexxRoutine2(RexxObjectPtr, SysGetFileDateTime, CSTRING, name, OPTIONAL_CSTRING,
 
 
 /**
- * Check if the dwFlags arguement to WideCharToMultiByte() can be used by the
- * specified code page.  See MSDN documentation for WideCharToMultiByte() for
- * clarification.  This is used by SysFromUnicode()
+ * Evaluate a code page argument.  The argument may be a whole number or
+ * any of the CP_* symbolic code pages that Windows provides or our own
+ * symbolic code page CONSOLE (the currently set console code page).
  *
- * @param cp  Code page to check.
+ * This is used by the SysTo/FromUnicode() functions.
  *
- * @return Return true if dwFlags can be non-zero, return false if dwFlags must
- *         be zero.
+ * @param context   The current call context.
+ * @param cpName    A String that is either a symbolic code page name or a number.
+ * @param inOrOut   'I' indicating input, or 'O' indicating output code page.
+ * @param function  The calling function (e. g. "SysFromUnicode") used as
+ *                  error message insert.
+ *
+ * @return  Returns the code page number, or raises exception.
  */
-static bool canUseWideCharFlags(UINT cp)
+static UINT evaluateCodePage(RexxCallContext *context, char *cpName, char inOrOut, char *function)
 {
-    if (cp == CP_SYMBOL || cp == CP_UTF7 || cp == CP_UTF8)
+    const UINT CONSOLE = 999000000; // unique, but different from any code page number
+    char* cpNames[] = { "OEMCP",  "ACP",  "UTF8", "CONSOLE",  "THREAD_ACP",  "MACCP",  "SYMBOL",  "UTF7", NULL };
+    UINT cpCodes[] = {CP_OEMCP, CP_ACP, CP_UTF8,   CONSOLE, CP_THREAD_ACP, CP_MACCP, CP_SYMBOL, CP_UTF7,  NULL };
+    UINT cpCode = CP_OEMCP;
+
+    if (cpName != NULL)
     {
-        return false;
+        int i;
+        for (i = 0; cpNames[i] != NULL; i++)
+        {
+            if (_stricmp(cpName, cpNames[i]) == 0)
+            {
+                cpCode = cpCodes[i];
+                break;
+            }
+        }
+        if (cpNames[i] == NULL)
+        {
+            // No match for any of the symbolic names ... this may be a
+            // numeric code page.  Try to convert to UINT.
+            long l;
+            char *stop;
+            l = strtol(cpName, &stop, 10);
+            // no left-over characters, not negative, no null string
+            if (stop[0] == '\0' && l >= 0 && l <= 999999999 && cpName[0] != '\0')
+            {
+                cpCode = l;
+            }
+            else
+            {
+                invalidOptionException(context, function, "codepage",
+                  "ACP, CONSOLE, MACCP, OEMCP, SYMBOL, THREAD_ACP, UTF7, UTF8, or a non-negative whole number",
+                  cpName);
+            }
+        }
+        else if (cpCode == CONSOLE)
+        {
+            // For a given Windows installation GetOEMCP() returns a fixed code
+            // page number which is the initial default for the console, but
+            // the CHCP and the MODE command can change this to any arbitrary
+            // actual console code page.  It seems there is no way to request
+            // this *current* console code page.  This is why we here define
+            // our own symbolic code page name CONSOLE which returns
+            // GetConsoleCP() or GetConsoleOutputCP().
+            cpCode = inOrOut == 'I' ? GetConsoleCP() : GetConsoleOutputCP();
+        }
     }
-    if (50220 <= cp && cp <= 50222)
-    {
-        return false;
-    }
-    if (cp == 50225 || cp == 50227 || cp == 50229 || cp == 52936 || cp == 54936)
-    {
-        return false;
-    }
-    if (57002 <= cp && cp <= 57011)
-    {
-        return false;
-    }
-    return true;
+    return cpCode;
 }
 
-/*************************************************************************
-* Function:  SysFromUnicode                                              *
-*            Converts a UNICODE string to an ASCII string                *
-*                                                                        *
-* Syntax:    result = SysFromUniCode(string,CodePage,MappingFlags,       *
-*                                    DefaultChar, outstem.)              *
-*                                                                        *
-* Params:    string       - unicode string to be converted               *
-*            Codepage     - target codepage                              *
-*            MappingFlags - Mapping flags                                *
-*            DefaultChar  - default for unmappable chars                 *
-*             outstem.    - stem containg the result                     *
-*              .!USEDDEFAULTCHAR - 1: character used as default          *
-*              .!TEXT     - converted text                               *
-*                                                                        *
-*                                                                        *
-* Return:    0 - successfull completetion                                *
-*            error code from WideCharToMultiByte                         *
-
-  The following are the OEM code-page identifiers.
-
-    437  MS-DOS United States
-    708  Arabic (ASMO 708)
-    709  Arabic (ASMO 449+, BCON V4)
-    710  Arabic (Transparent Arabic)
-    720  Arabic (Transparent ASMO)
-    737  Greek (formerly 437G)
-    775  Baltic
-    850  MS-DOS Multilingual (Latin I)
-    852  MS-DOS Slavic (Latin II)
-    855  IBM Cyrillic (primarily Russian)
-    857  IBM Turkish
-    860  MS-DOS Portuguese
-    861  MS-DOS Icelandic
-    862  Hebrew
-    863  MS-DOS Canadian-French
-    864  Arabic
-    865  MS-DOS Nordic
-    866  MS-DOS Russian (former USSR)
-    869  IBM Modern Greek
-    874  Thai
-    932  Japan
-    936  Chinese (PRC, Singapore)
-    949  Korean
-    950  Chinese (Taiwan; Hong Kong SAR, PRC)
-    1361 Korean (Johab)
-
-  The following are the ANSI code-page identifiers.
-
-    874  Thai
-    932  Japan
-    936  Chinese (PRC, Singapore)
-    949  Korean
-    950  Chinese (Taiwan; Hong Kong SAR, PRC)
-    1200 Unicode (BMP of ISO 10646)
-    1250 Windows 3.1 Eastern European
-    1251 Windows 3.1 Cyrillic
-    1252 Windows 3.1 Latin 1 (US, Western Europe)
-    1253 Windows 3.1 Greek
-    1254 Windows 3.1 Turkish
-    1255 Hebrew
-    1256 Arabic
-    1257 Baltic
-
-  COMPOSITECHECK :
-    Convert composite characters to precomposed characters.
-
-  DISCARDNS :
-    Discard nonspacing characters during conversion.
-
-  SEPCHARS :
-    Generate separate characters during conversion. This is the default conversion behavior.
-
-  DEFAULTCHAR :
-    Replace exceptions with the default character during conversion.
-
-*************************************************************************/
-
-RexxRoutine5(int, SysFromUniCode, RexxStringObject, sourceString, OPTIONAL_CSTRING, codePageOpt,
-             OPTIONAL_CSTRING, mappingFlags, OPTIONAL_CSTRING, defaultChar, RexxStemObject, stem)
+/**
+ * Parse and combine a flag argument.
+ * This is used by the SysTo/FromUnicode() functions.
+ *
+ * @param _string   A string whose words are flag names.
+ * @param names     An array of flag name strings.
+ * @param values    An array of bit values to combine.
+ * @param combined  The returned combined value.
+ *
+ * @return  Returns NULL upon success, else a pointer to the invalid option.
+ */
+static char *combineFlags(CSTRING _string, char* names[], DWORD values[], DWORD &combined)
 {
-    const char *source = context->StringData(sourceString);
-    size_t sourceLength = context->StringLength(sourceString);
+    // we need a copy of our string because strtok_s() modifies it
+    char *string = _string == NULL ? NULL : strdup(_string);
+    char delimiters[] = " \t"; // Rexx allows word delimiters blank or tab
+    char *token, *next;
 
-    UINT  codePage;
-    /* evaluate codepage          */
-    if (codePageOpt == NULL)
+    combined = 0;
+    token = strtok_s(string, delimiters, &next);
+    while (token != NULL)
     {
-        codePage = GetOEMCP();
+        int i;
+        for (i = 0; names[i] != NULL; i++)
+        {
+            if (_stricmp(token, names[i]) == 0)
+            {
+                combined |= values[i];
+                token = strtok_s(NULL, delimiters, &next);
+                break;
+            }
+        }
+        if (names[i] == NULL)
+        {
+            return token;
+        }
+    }
+    return token; // should be always NULL
+}
+
+
+/** SysFromUnicode()
+ *  Converts a UTF-16 string to a character string in the specified code page.
+ *
+ *  Interface to the WideCharToMultiByte() API on Windows.
+ *  https://learn.microsoft.com/en-us/windows/win32/api/stringapiset/nf-stringapiset-widechartomultibyte
+ *
+ *  @param  sourceString  The UTF-16 string to be converted.
+ *  @param  codePage      An optional code page to be converted to, which can
+ *                        be either a number or a symbolic code page name like
+ *                        OEMCP.  If omitted, defaults to OEMCP.
+ *  @param  mappingFlags  Optional string of mapping flag names.
+ *  @param  defaultChar   Optional default character for unmappable characters.
+ *                        If omitted, codepage-dependent default is typically "?".
+ *  @param  stem          A stem variable.  Upon successful return these tails
+ *                        are set:
+ *                        !USEDDEFAULTCHAR  A boolean indicating that the conversion
+ *                                          found one or more characters in sourceString
+ *                                          that cannot be represented in the specified
+ *                                          code page.
+ *                        !TEXT             The string converted to the code page.
+ *
+ *  @return  Returns 0 upon success, or a Windows error code from WideCharToMultiByte()
+ *
+ *  @remarks As older code used mapping flag names ERR_INVALID instead of ERR_INVALID_CHARS
+ *           and NO_BEST_FIT instead of NO_BEST_FIT_CHARS, we keep these for now as
+ *           undocumented aliases.
+ */
+RexxRoutine5(int, SysFromUnicode, RexxStringObject, sourceString,
+             OPTIONAL_CSTRING, codePage, OPTIONAL_CSTRING, mappingFlags,
+             OPTIONAL_RexxStringObject, defaultChar, RexxStemObject, stem)
+{
+    // Argument one: sourceString, a UTF-16 string
+    size_t sourceBytes =  context->StringLength(sourceString);
+    // sourceString length must fit a Windows int and have even length (UTF-16)
+    if (sourceBytes > INT_MAX || sourceBytes % 2 == 1)
+    {
+        return 87; // The parameter is incorrect
+    }
+    LPCWCH source = (LPCWCH)context->StringData(sourceString);
+    int sourceLength = (int)sourceBytes / 2; // length in UTF-16 units
+
+    // Argument two: codePage
+    UINT cp = evaluateCodePage(context, (char *)codePage, 'O', "SysFromUnicode");
+
+    // Argument three: mappingFlags
+    DWORD flags = 0;
+    if (mappingFlags != NULL && mappingFlags[0] != '\0')
+    {
+        char* names[] =  {  "ERR_INVALID_CHARS",  "NO_BEST_FIT_CHARS",  "COMPOSITECHECK",  "DEFAULTCHAR",  "DISCARDNS",  "SEPCHARS",   "ERR_INVALID",        "NO_BEST_FIT",      NULL};
+        DWORD values[] = {WC_ERR_INVALID_CHARS, WC_NO_BEST_FIT_CHARS, WC_COMPOSITECHECK, WC_DEFAULTCHAR, WC_DISCARDNS, WC_SEPCHARS,  WC_ERR_INVALID_CHARS, WC_NO_BEST_FIT_CHARS, NULL};
+
+        char *invalid = combineFlags(mappingFlags, names, values, flags);
+        if (invalid != NULL)
+        {
+            invalidOptionException(context, "SysFromUnicode", "mappingflags",
+              "COMPOSITECHECK, DEFAULTCHAR, DISCARDNS, SEPCHARS, ERR_INVALID_CHARS, or NO_BEST_FIT_CHARS",
+              invalid);
+        }
+    }
+
+    // Argument four: defaultChar, an optional null string or single character
+    // Can be set independently of any COMPOSITECHECK DEFAULTCHAR flags.
+    LPCCH defaultCh;
+    size_t defaultLength = defaultChar == NULL ? 0 : context->StringLength(defaultChar);
+    if (defaultLength == 0)
+    {
+        // When omitted or null string, code page default character is typically '?'
+        defaultCh = NULL;
     }
     else
     {
-        if (_stricmp(codePageOpt, "THREAD_ACP") == 0)
+        // must be a single character
+        if (defaultLength == 1)
         {
-            codePage = CP_THREAD_ACP;
-        }
-        else if (_stricmp(codePageOpt, "ACP") == 0)
-        {
-            codePage = CP_ACP;
-        }
-        else if (_stricmp(codePageOpt, "MACCP") == 0)
-        {
-            codePage = CP_MACCP;
-        }
-        else if (_stricmp(codePageOpt, "OEMCP") == 0)
-        {
-            codePage = CP_OEMCP;
-        }
-        else if (_stricmp(codePageOpt, "SYMBOL") == 0)
-        {
-            codePage = CP_SYMBOL;
-        }
-        else if (_stricmp(codePageOpt, "UTF7") == 0)
-        {
-            codePage = CP_UTF7;
-        }
-        else if (_stricmp(codePageOpt, "UTF8") == 0)
-        {
-            codePage = CP_UTF8;
+            defaultCh = context->StringData(defaultChar);
         }
         else
         {
-            codePage = atoi(codePageOpt);
+            context->ThrowException(Rexx_Error_Incorrect_call_pad,
+              context->ArrayOfThree(
+              context->String("SysFromUnicode"),
+              context->String("defaultchar"),
+              defaultChar));
         }
     }
 
-    DWORD dwFlags = 0;
-    /* evaluate the mapping flags */
-    if (mappingFlags != NULL && *mappingFlags != '\0')
+    // WideCharToMultiByte can't handle a null string, but we allow this
+    if (sourceLength == 0)
     {
-        /* The WC_SEPCHARS, WC_DISCARDNS, and WC_DEFAULTCHAR flags must also
-         * specify the WC_COMPOSITECHECK flag.  So, we add that for the user if
-         * they skipped it. Those 4 flags are only available for code pages <
-         * 50000, excluding 42 (CP_SYMBOL).  See the remarks section in the MSDN
-         * docs for clarification.
-         */
-        if (codePage < 50000 && codePage != CP_SYMBOL)
-        {
-            if (StrStrI(mappingFlags, "COMPOSITECHECK") != NULL)
-            {
-                dwFlags |= WC_COMPOSITECHECK;
-            }
-            if (StrStrI(mappingFlags, "SEPCHARS") != NULL)
-            {
-                dwFlags |= WC_SEPCHARS | WC_COMPOSITECHECK;
-            }
-            if (StrStrI(mappingFlags, "DISCARDNS") != NULL)
-            {
-                dwFlags |= WC_DISCARDNS | WC_COMPOSITECHECK;
-            }
-            if (StrStrI(mappingFlags, "DEFAULTCHAR") != NULL)
-            {
-                dwFlags |= WC_DEFAULTCHAR | WC_COMPOSITECHECK;
-            }
-        }
-
-        if (StrStrI(mappingFlags, "NO_BEST_FIT") != NULL)
-        {
-            dwFlags |= WC_NO_BEST_FIT_CHARS;
-        }
-
-        if (StrStrI(mappingFlags, "ERR_INVALID") != NULL)
-        {
-            if (codePage == CP_UTF8)
-            {
-                dwFlags |= WC_ERR_INVALID_CHARS;
-            }
-        }
-        else if (dwFlags == 0 && !(codePage < 50000 && codePage != CP_SYMBOL))
-        {
-            context->InvalidRoutine();
-            return 0;
-        }
+        context->SetStemElement(stem, "!TEXT", context->NullString());
+        context->SetStemElement(stem, "!USEDDEFAULTCHAR", context->False());
+        return 0;
     }
 
-    /* evaluate default charcter  */
-    const char  *strDefaultChar = NULL;
-    BOOL  bUsedDefaultChar = FALSE;
-    BOOL  *pUsedDefaultChar = &bUsedDefaultChar;
-
-    if (defaultChar != NULL && (dwFlags & WC_DEFAULTCHAR) == WC_DEFAULTCHAR)
-    {
-        strDefaultChar = defaultChar;
-    }
-    else
-    {
-        /* use our own default character rather than relying on the windows default */
-        strDefaultChar = "?";
-    }
-
-    /* There are a number of invalid combinations of arguments to
-     *  WideCharToMultiByte(), see the MSDN docs. Eliminate them here.
-     */
-    if (codePage == CP_UTF8 && dwFlags == WC_ERR_INVALID_CHARS)
-    {
-        strDefaultChar = NULL;
-        pUsedDefaultChar = NULL;
-    }
-    else if (!canUseWideCharFlags(codePage))
-    {
-        dwFlags = 0;
-        strDefaultChar = NULL;
-        pUsedDefaultChar = NULL;
-    }
-
-    /* Allocate space for the string, to allow double zero byte termination */
-    AutoFree strptr = (char *)malloc(sourceLength + 4);
-    if (strptr == NULL)
-    {
-        outOfMemoryException(context);
-    }
-
-    memcpy(strptr, source, sourceLength);
-
-    /* Query the number of bytes required to store the Dest string */
-    int iBytesNeeded = WideCharToMultiByte(codePage,
-                                           dwFlags,
-                                           (LPWSTR)(char *)strptr,
-                                           (int)(sourceLength / 2),
-                                           NULL,
-                                           0,
-                                           NULL,
-                                           NULL);
-
-    if (iBytesNeeded == 0)
+    // Get the number of bytes required for the destination string
+    int bytes = WideCharToMultiByte(cp, flags, source, sourceLength,
+                  NULL, 0, defaultCh, NULL);
+    if (bytes == 0) // WideCharToMultiByte failed
     {
         return GetLastError();
     }
 
-    // hard error, stop
-    AutoFree str = (char *)malloc(iBytesNeeded + 4);
-    if (str == NULL)
+    AutoFree destination = (char *)malloc(bytes);
+    if (destination == NULL)
     {
         outOfMemoryException(context);
     }
 
-    /* Do the conversion */
-    int iBytesDestination = WideCharToMultiByte(codePage,           // codepage
-                                                dwFlags,                // conversion flags
-                                                (LPWSTR)(char *)strptr, // source string
-                                                (int)(sourceLength / 2),  // source string length
-                                                str,                    // target string
-                                                (int)iBytesNeeded,      // size of target buffer
-                                                strDefaultChar,
-                                                pUsedDefaultChar);
-
-    if (iBytesDestination == 0) // call to function fails
+    // Convert source to destination
+    BOOL defaultChUsed = FALSE;
+    bytes = WideCharToMultiByte(cp, flags, source, sourceLength,
+              destination, bytes, defaultCh, &defaultChUsed);
+    if (bytes == 0) // WideCharToMultiByte failed
     {
-        return GetLastError();    // return error from function call
+        return GetLastError();
     }
 
-    // set whether the default character was used in the output stem
-    if (bUsedDefaultChar)
-    {
-        context->SetStemElement(stem, "!USEDDEFAULTCHAR", context->True());
-    }
-    else
-    {
-        context->SetStemElement(stem, "!USEDDEFAULTCHAR", context->False());
-    }
+    // set the indicator and the converted string
+    context->SetStemElement(stem, "!USEDDEFAULTCHAR", defaultChUsed ? context->True() : context->False());
+    context->SetStemElement(stem, "!TEXT", context->String(destination, bytes));
 
-    context->SetStemElement(stem, "!TEXT", context->String(str, iBytesNeeded));
     return 0;
 }
 
-/*
-* Syntax:    result = SysToUniCode(string,CodePage,MappingFlags,outstem.)
-*/
-/*************************************************************************
-* Function:  SysToUnicode                                                *
-*            Converts an ASCII to UNICODE                                *
-*                                                                        *
-* Syntax:    result = SysToUniCode(string,CodePage,MappingFlags,outstem.)*
-*                                                                        *
-* Params:    string       - ascii string to be converted                 *
-*            Codepage     - target codepage                              *
-*            MappingFlags - Mapping flags                                *
-*             outstem.    - stem containg the result                     *
-*              .!TEXT     - converted text                               *
-*                                                                        *
-* Return:    0 - successfull completetion                                *
-*            error code from WideCharToMultiByteToWideChars              *
 
-  For available codepages see function SysFromUniCode.
-
-  Additional parameters for codepages:
-
-    ACP        ANSI code page
-    MACCP      Macintosh code page
-    OEMCP      OEM code page
-    SYMBOL     Windows 2000: Symbol code page (42)
-    THREAD_ACP Windows 2000: The current thread's ANSI code page
-    UTF7       Windows NT 4.0 and Windows 2000: Translate using UTF-7
-    UTF8       Windows NT 4.0 and Windows 2000: Translate using UTF-8.
-               When this is set, dwFlags must be zero.
-
-    PRECOMPOSED       Always use precomposed characters-that is, characters
-                      in which a base character and a nonspacing character
-                      have a single character value.
-                      This is the default translation option.
-                      Cannot be used with MB_COMPOSITE.
-    COMPOSITE         Always use composite characters that is,
-                      characters in which a base character and a nonspacing
-                      character have different character values.
-                      Cannot be used with MB_PRECOMPOSED.
-    ERR_INVALID_CHARS If the function encounters an invalid input character,
-                      it fails and GetLastError returns
-                      ERROR_NO_UNICODE_TRANSLATION.
-    USEGLYPHCHARS     Use glyph characters instead of control characters.
-
-
-
-*************************************************************************/
-RexxRoutine4(int, SysToUniCode, RexxStringObject, source, OPTIONAL_CSTRING, codePageOpt,
+/** SysToUnicode()
+ *  Converts a character string in the specified code page to a Windows UTF-16 string.
+ *
+ *  Interface to the MultiByteToWideChar() API on Windows.
+ *  https://learn.microsoft.com/en-us/windows/win32/api/stringapiset/nf-stringapiset-multibytetowidechar
+ *
+ *  @param  sourceString  The character string to be converted.
+ *  @param  codePage      An optional code page to be converted to, which can
+ *                        be either a number or a symbolic code page name like
+ *                        OEMCP.  If omitted, defaults to OEMCP.
+ *  @param  mappingFlags  Optional string of mapping flag names.
+ *  @param  stem          A stem variable.  Upon successful return this tail is set:
+ *                        !TEXT             The converted wide UTF-16 string.
+ *
+ *  @return  Returns 0 upon success, or a Windows error code from MultiByteToWideChar().
+ *
+ *  @remarks As older code used mapping flag name ERR_INVALID instead of ERR_INVALID_CHARS
+ *           we keep this for now as an undocumented alias.
+ */
+RexxRoutine4(int, SysToUnicode, RexxStringObject, sourceString, OPTIONAL_CSTRING, codePage,
              OPTIONAL_CSTRING, mappingFlags, RexxStemObject, stem)
 {
-    // evaluate codepage
-    UINT   codePage;
-    if (codePageOpt == NULL)
+    // Argument one: sourceString
+    size_t sourceBytes =  context->StringLength(sourceString);
+    // sourceString length must fit a Windows int
+    if (sourceBytes > INT_MAX)
     {
-        codePage = GetOEMCP();
+        return 87; // The parameter is incorrect
     }
-    else
+    const char *source = context->StringData(sourceString);
+    int sourceLength = (int)sourceBytes;
+
+    // Argument two: codePage
+    UINT cp = evaluateCodePage(context, (char *)codePage, 'I', "SysToUnicode");
+
+    // Argument three: mappingFlags
+    DWORD flags = 0;
+    if (mappingFlags != NULL && mappingFlags[0] != '\0')
     {
-        if (_stricmp(codePageOpt, "THREAD_ACP") == 0)
+        char* names[] =  {  "COMPOSITE",  "ERR_INVALID_CHARS",  "ERR_INVALID",        "PRECOMPOSED",  "USEGLYPHCHARS", NULL};
+        DWORD values[] = {MB_COMPOSITE, MB_ERR_INVALID_CHARS, MB_ERR_INVALID_CHARS, MB_PRECOMPOSED, MB_USEGLYPHCHARS,  NULL};
+
+        char *invalid = combineFlags(mappingFlags, names, values, flags);
+        if (invalid != NULL)
         {
-            codePage = CP_THREAD_ACP;
-        }
-        else if (_stricmp(codePageOpt, "ACP") == 0)
-        {
-            codePage = CP_ACP;
-        }
-        else if (_stricmp(codePageOpt, "MACCP") == 0)
-        {
-            codePage = CP_MACCP;
-        }
-        else if (_stricmp(codePageOpt, "OEMCP") == 0)
-        {
-            codePage = CP_OEMCP;
-        }
-        else if (_stricmp(codePageOpt, "SYMBOL") == 0)
-        {
-            codePage = CP_SYMBOL;
-        }
-        else if (_stricmp(codePageOpt, "UTF7") == 0)
-        {
-            codePage = CP_UTF7;
-        }
-        else if (_stricmp(codePageOpt, "UTF8") == 0)
-        {
-            codePage = CP_UTF8;
-        }
-        else
-        {
-            codePage = atoi(codePageOpt);
+            invalidOptionException(context, "SysToUnicode", "mappingflags",
+              "COMPOSITE, ERR_INVALID_CHARS, PRECOMPOSED, or USEGLYPHCHARS",
+              invalid);
         }
     }
 
-    DWORD  dwFlags = 0;
-    // evaluate the mapping flags
-    if (mappingFlags != NULL)
+    // MultiByteToWideChar can't handle a null string, but we allow this
+    if (sourceLength == 0)
     {
-        if (mystrstr(mappingFlags, "PRECOMPOSED"))
-        {
-            dwFlags |= MB_PRECOMPOSED;
-        }
-        if (mystrstr(mappingFlags, "COMPOSITE"))
-        {
-            dwFlags  |= MB_COMPOSITE;
-        }
-        if (mystrstr(mappingFlags, "ERR_INVALID"))
-        {
-            dwFlags |= MB_ERR_INVALID_CHARS;
-        }
-        if (mystrstr(mappingFlags, "USEGLYPHCHARS"))
-        {
-            dwFlags |= MB_USEGLYPHCHARS;
-        }
-        if (dwFlags == 0)
-        {
-            context->InvalidRoutine();
-            return 0;
-        }
+        context->SetStemElement(stem, "!TEXT", context->NullString());
+        return 0;
     }
 
-    /* Query the number of bytes required to store the Dest string */
-    ULONG ulWCharsNeeded = MultiByteToWideChar(codePage, dwFlags,
-                                               context->StringData(source), (int)context->StringLength(source), NULL, NULL);
-
-    if (ulWCharsNeeded == 0)
+    // Get the number of wide chars required for the destination string
+    int chars = MultiByteToWideChar(cp, flags, source, sourceLength, NULL, 0);
+    if (chars == 0) // MultiByteToWideChar failed
     {
         return GetLastError();
     }
 
-    ULONG ulDataLen = (ulWCharsNeeded)*2;
-
-    AutoFree lpwstr = (char *)malloc(ulDataLen + 4);
-
-    // hard error, stop
-    if (lpwstr == NULL)
+    AutoFree destination = (char *)malloc(chars * 2); // UTF-16 chars
+    if (destination == NULL)
     {
         outOfMemoryException(context);
     }
 
-
-    /* Do the conversion */
-    ulWCharsNeeded = MultiByteToWideChar(codePage,  dwFlags,
-                                         context->StringData(source), (int)context->StringLength(source),
-                                         (LPWSTR)(char *)lpwstr, ulWCharsNeeded);
-
-    if (ulWCharsNeeded == 0) // call to function fails
+    // Convert source to destination
+    chars = MultiByteToWideChar(cp, flags, source, sourceLength, (LPWSTR)(char *)destination, chars);
+    if (chars == 0)
     {
-        return GetLastError();
+        return GetLastError(); // MultiByteToWideChar failed
     }
 
-    context->SetStemElement(stem, "!TEXT", context->String((const char *)lpwstr, ulDataLen));
+    // set the converted string
+    context->SetStemElement(stem, "!TEXT", context->String(destination, chars * 2));
+
     return 0;
 }
+
 
 /*************************************************************************
 * Function:  SysWinGetPrinters                                           *

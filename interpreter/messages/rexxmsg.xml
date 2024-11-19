@@ -2333,7 +2333,6 @@ INTERPRET line
     <SymbolicName>Error_Expression_result</SymbolicName>
     <Text>Invalid expression result.</Text>
     <Explanation><para>The result of an expression was found not to be valid in the context in which it was used.</para></Explanation>
-    <UserAction><para>Check for an illegal FUZZ or DIGITS value in a NUMERIC instruction. FUZZ must not become larger than DIGITS.</para></UserAction>
     <Subcodes>
       <SubMessage>
         <Code>33</Code>
@@ -3401,7 +3400,7 @@ Say 'Enter A, B, or C'
         <Component>Rexx</Component>
         <Severity>Error</Severity>
         <SymbolicName>Error_Incorrect_call_bad_option</SymbolicName>
-        <Text><Sub position="1" name="function_name"/> argument <Sub position="2" name="name"/> must be one of <q><Sub position="3" name="option"/></q>; found <q><Sub position="4" name="value"/></q>.</Text>
+        <Text><Sub position="1" name="function_name"/> argument <Sub position="2" name="name"/> must be one of <Sub position="3" name="option"/>; found <q><Sub position="4" name="value"/></q>.</Text>
       </SubMessage>
       <SubMessage>
         <Code>40</Code>
