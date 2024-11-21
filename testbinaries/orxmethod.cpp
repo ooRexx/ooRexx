@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2008-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2008-2024 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -825,6 +825,14 @@ RexxMethod1(RexxObjectPtr,             // Return type
             double,         arg1)      // Argument
 {
     return context->DoubleToObject(arg1);
+}
+
+RexxMethod2(RexxObjectPtr,
+            TestDoubleToObjectWithPrecision,
+            double,         number,
+            size_t,         precision)
+{
+    return context->DoubleToObjectWithPrecision(number, precision);
 }
 
 RexxMethod1(RexxObjectPtr,             // Return type
@@ -2375,6 +2383,88 @@ RexxMethod1(RexxObjectPtr,                  // Return type
     return context->VariableReferenceValue((RexxVariableReferenceObject)o);
 }
 
+
+// test SetGuard APIs - preliminary stuff
+RexxMethod1(RexxObjectPtr,
+            TestSetGuard,
+            ARGLIST, args)
+{
+//printf("TestSetGuard: items %zd\n", context->ArrayItems(args));
+    for (size_t i = 1; i <= context->ArrayItems(args); i++)
+    {
+        // must be a String, no error checking
+        RexxObjectPtr item = context->ArrayAt(args, i);
+        if (item == NULLOBJECT)
+            continue;
+        RexxStringObject command = (RexxStringObject)context->SendMessage0(item, "string");
+        command = context->StringUpper(command);
+        char *cmd = (char *)context->StringData(command);
+        if (strcmp(cmd, "GUARD ON") == 0)
+        {
+//printf("TestSetGuard: %zd. SetGuardOn()\n", i);
+            context->SetGuardOn();
+        }
+        else if (strcmp(cmd, "GUARD OFF") == 0)
+        {
+//printf("TestSetGuard: %zd. SetGuardOff()\n", i);
+            context->SetGuardOff();
+        }
+        else if (strchr(cmd, '=') != NULL)
+        {
+            char *value = strchr(cmd, '=');
+            *value++ = '\0';
+//printf("TestSetGuard: %zd. SetObjectVariable(%s, %s)\n", i, cmd, value);
+            context->SetObjectVariable(cmd, context->NewStringFromAsciiz(value));
+        }
+//      else printf("TestSetGuard: invalid command %s\n", cmd);
+    }
+    return NULLOBJECT;
+}
+
+// void RexxEntry SetGuardOn(RexxMethodContext *c)
+// to facilitate testing we need to also set an object variable
+RexxMethod2(RexxObjectPtr,
+            TestSetGuardOn,
+            CSTRING, name,
+            RexxObjectPtr, value)
+{
+    context->SetGuardOn();
+    context->SetObjectVariable(name, value);
+    return NULLOBJECT;
+}
+
+// void RexxEntry SetGuardOff(RexxMethodContext *c)
+// to facilitate testing we need to also set an object variable
+RexxMethod2(RexxObjectPtr,
+            TestSetGuardOff,
+            CSTRING, name,
+            RexxObjectPtr, value)
+{
+    context->SetGuardOn();
+    context->SetGuardOff();
+    context->SetObjectVariable(name, value);
+    return NULLOBJECT;
+}
+
+// RexxObjectPtr RexxEntry SetGuardOnWhenUpdated(RexxMethodContext *c, CSTRING n)
+RexxMethod1(RexxObjectPtr,
+            TestSetGuardOnWhenUpdated,
+            CSTRING, n)
+{
+    return context->SetGuardOnWhenUpdated(n);
+}
+
+// RexxObjectPtr RexxEntry SetGuardOffWhenUpdated(RexxMethodContext *c, CSTRING n)
+RexxMethod1(RexxObjectPtr,
+            TestSetGuardOffWhenUpdated,
+            CSTRING, n)
+{
+    return context->SetGuardOffWhenUpdated(n);
+}
+
+
+
+
 RexxMethodEntry orxtest_methods[] = {
     REXX_METHOD(TestIsBuffer,          TestIsBuffer),
     REXX_METHOD(TestBufferInit,        TestBufferInit),
@@ -2463,6 +2553,7 @@ RexxMethodEntry orxtest_methods[] = {
     REXX_METHOD(TestLogicalToObject,         TestLogicalToObject),
     REXX_METHOD(TestLogicalToObjectAlt,      TestLogicalToObjectAlt),
     REXX_METHOD(TestDoubleToObject,          TestDoubleToObject),
+    REXX_METHOD(TestDoubleToObjectWithPrecision, TestDoubleToObjectWithPrecision),
     REXX_METHOD(TestDoubleToObjectAlt,       TestDoubleToObjectAlt),
     REXX_METHOD(TestObjectToValue,           TestObjectToValue),
     REXX_METHOD(TestOptionalIntArg,            TestOptionalIntArg),
@@ -2621,6 +2712,11 @@ RexxMethodEntry orxtest_methods[] = {
     REXX_METHOD(TestThrowException2,         TestThrowException2),
     REXX_METHOD(TestThrowException,          TestThrowException),
     REXX_METHOD(TestThrowCondition,          TestThrowCondition),
+    REXX_METHOD(TestSetGuard,                TestSetGuard),
+    REXX_METHOD(TestSetGuardOn,              TestSetGuardOn),
+    REXX_METHOD(TestSetGuardOff,             TestSetGuardOff),
+    REXX_METHOD(TestSetGuardOnWhenUpdated,   TestSetGuardOnWhenUpdated),
+    REXX_METHOD(TestSetGuardOffWhenUpdated,  TestSetGuardOffWhenUpdated),
     REXX_LAST_METHOD()
 };
 
