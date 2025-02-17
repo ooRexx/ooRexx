@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2025 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -868,7 +868,7 @@ StackFrameClass *LanguageParser::createStackFrame()
     RexxString *traceback = package->traceBack(OREF_NULL, clauseLocation, 0, true);
     ProtectedObject p(traceback);
     return new StackFrameClass(StackFrameClass::FRAME_COMPILE, package->programName, OREF_NULL,
-        OREF_NULL, OREF_NULL, traceback, clauseLocation.getLineNumber());
+        OREF_NULL, OREF_NULL, traceback, clauseLocation.getLineNumber(), 0);
 }
 
 

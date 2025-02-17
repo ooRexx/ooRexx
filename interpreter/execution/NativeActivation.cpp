@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2025 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -3626,7 +3626,7 @@ StackFrameClass *NativeActivation::createStackFrame()
 
         RexxString *message = activity->buildMessage(Message_Translations_compiled_routine_invocation, info);
         p = message;
-        return new StackFrameClass(StackFrameClass::FRAME_ROUTINE, getMessageName(), (BaseExecutable *)getExecutableObject(), NULL, getArguments(), message, SIZE_MAX);
+        return new StackFrameClass(StackFrameClass::FRAME_ROUTINE, getMessageName(), (BaseExecutable *)getExecutableObject(), NULL, getArguments(), message, SIZE_MAX, 0);
     }
     else
     {
@@ -3635,7 +3635,7 @@ StackFrameClass *NativeActivation::createStackFrame()
 
         RexxString *message = activity->buildMessage(Message_Translations_compiled_method_invocation, info);
         p = message;
-        return new StackFrameClass(StackFrameClass::FRAME_METHOD, getMessageName(), (BaseExecutable *)getExecutableObject(), receiver, getArguments(), message, SIZE_MAX);
+        return new StackFrameClass(StackFrameClass::FRAME_METHOD, getMessageName(), (BaseExecutable *)getExecutableObject(), receiver, getArguments(), message, SIZE_MAX, 0);
     }
 }
 

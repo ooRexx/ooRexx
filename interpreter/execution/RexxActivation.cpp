@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2025 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -5017,7 +5017,7 @@ StackFrameClass *RexxActivation::createStackFrame()
     // arguments.
     RexxString *traceback = getTraceBack();
 
-    return new StackFrameClass(type, getMessageName(), getExecutableObject(), target, arguments, traceback, getContextLineNumber());
+    return new StackFrameClass(type, getMessageName(), getExecutableObject(), target, arguments, traceback, getContextLineNumber(), getIdntfr());
 }
 
 /**
@@ -5263,6 +5263,7 @@ StringTable * RexxActivation::getStackFrameAsStringTable(StackFrameClass * stack
         tmpStringTable -> put(stackFrame->sendMessage(GlobalNames::ARGUMENTS , result), GlobalNames::ARGUMENTS );
 
         // strings
+        tmpStringTable -> put(stackFrame->sendMessage(GlobalNames::INVOCATION, result), GlobalNames::INVOCATION);
         tmpStringTable -> put(stackFrame->sendMessage(GlobalNames::LINE      , result), GlobalNames::LINE      );
         tmpStringTable -> put(stackFrame->sendMessage(GlobalNames::NAME      , result), GlobalNames::NAME      );
         tmpStringTable -> put(stackFrame->sendMessage(GlobalNames::TRACELINE , result), GlobalNames::TRACELINE );

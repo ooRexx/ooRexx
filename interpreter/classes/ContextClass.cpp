@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2025 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -262,6 +262,43 @@ RexxObject *RexxContext::getLine()
 {
     checkValid();
     return activation->getContextLine();
+}
+
+
+/**
+ * Return the context invocation id.
+ *
+ * @return The invocation id of the context.
+ */
+RexxObject *RexxContext::getInvocation()
+{
+    checkValid();
+    return new_integer(activation -> getIdntfr());
+}
+
+
+/**
+ * Return the context thread id.
+ *
+ * @return The thread id of the context.
+ */
+RexxObject *RexxContext::getThread()
+{
+    checkValid();
+    return new_integer(activation -> getActivity() -> getIdntfr());
+}
+
+
+
+/**
+ * Return the context interpreter id.
+ *
+ * @return The interpreter id of the context.
+ */
+RexxObject *RexxContext::getInterpreter()
+{
+    checkValid();
+    return new_integer(activation -> getActivity() -> getInstance() -> getIdntfr());
 }
 
 
