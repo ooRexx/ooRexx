@@ -89,8 +89,9 @@ void *StackFrameClass::operator new(size_t size)
  * @param t      A tracing line.
  * @param l      The frame line position (MAX_SIZE indicates no line available).
  * @param i      The invocation id.
+ * @param c      The context object.
  */
-StackFrameClass::StackFrameClass(const char *ty, RexxString *n, BaseExecutable *e, RexxObject *tg, ArrayClass *a, RexxString *t, size_t l, uint32_t i)
+StackFrameClass::StackFrameClass(const char *ty, RexxString *n, BaseExecutable *e, RexxObject *tg, ArrayClass *a, RexxString *t, size_t l, uint32_t i, RexxObject *c)
 {
     type = ty;
     name = n;
@@ -106,6 +107,7 @@ StackFrameClass::StackFrameClass(const char *ty, RexxString *n, BaseExecutable *
     traceLine = t;
     line = l;
     invocation = i;     // supplied by RexxActivation
+    context = c;        // supplied by RexxActivation
 }
 
 
@@ -138,6 +140,7 @@ void StackFrameClass::live(size_t liveMark)
     memory_mark(arguments);
     memory_mark(target);
     memory_mark(objectVariables);
+    memory_mark(context);
 }
 
 void StackFrameClass::liveGeneral(MarkReason reason)
@@ -151,6 +154,7 @@ void StackFrameClass::liveGeneral(MarkReason reason)
     memory_mark_general(arguments);
     memory_mark_general(target);
     memory_mark_general(objectVariables);
+    memory_mark_general(context);
 }
 
 void StackFrameClass::flatten(Envelope *envelope)
@@ -166,6 +170,7 @@ void StackFrameClass::flatten(Envelope *envelope)
     newThis->arguments = OREF_NULL;
     newThis->target = OREF_NULL;
     newThis->objectVariables = OREF_NULL;
+    newThis->context = OREF_NULL;
 
     cleanUpFlatten
 }
@@ -305,6 +310,16 @@ RexxObject *StackFrameClass::getTarget()
 RexxString *StackFrameClass::stringValue()
 {
     return getTraceLine();
+}
+
+ /**
+ * Return the context object.
+ *
+ * @return The current context object.
+ */
+RexxObject *StackFrameClass::getContext()
+{
+    return resultOrNil(context);
 }
 
 /**

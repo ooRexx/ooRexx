@@ -5017,7 +5017,7 @@ StackFrameClass *RexxActivation::createStackFrame()
     // arguments.
     RexxString *traceback = getTraceBack();
 
-    return new StackFrameClass(type, getMessageName(), getExecutableObject(), target, arguments, traceback, getContextLineNumber(), getIdntfr());
+    return new StackFrameClass(type, getMessageName(), getExecutableObject(), target, arguments, traceback, getContextLineNumber(), getIdntfr(), getContextObject());
 }
 
 /**

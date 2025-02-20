@@ -868,7 +868,7 @@ StackFrameClass *LanguageParser::createStackFrame()
     RexxString *traceback = package->traceBack(OREF_NULL, clauseLocation, 0, true);
     ProtectedObject p(traceback);
     return new StackFrameClass(StackFrameClass::FRAME_COMPILE, package->programName, OREF_NULL,
-        OREF_NULL, OREF_NULL, traceback, clauseLocation.getLineNumber(), 0);
+        OREF_NULL, OREF_NULL, traceback, clauseLocation.getLineNumber(), 0, OREF_NULL);
 }
 
 

@@ -3624,18 +3624,24 @@ StackFrameClass *NativeActivation::createStackFrame()
         ArrayClass *info = new_array(getMessageName());
         ProtectedObject p(info);
 
+        RexxObject *context = (activation ? activation->getContextObject() : OREF_NULL);
+        ProtectedObject p2(context);
+
         RexxString *message = activity->buildMessage(Message_Translations_compiled_routine_invocation, info);
         p = message;
-        return new StackFrameClass(StackFrameClass::FRAME_ROUTINE, getMessageName(), (BaseExecutable *)getExecutableObject(), NULL, getArguments(), message, SIZE_MAX, 0);
+        return new StackFrameClass(StackFrameClass::FRAME_ROUTINE, getMessageName(), (BaseExecutable *)getExecutableObject(), NULL, getArguments(), message, SIZE_MAX, 0, context);
     }
     else
     {
         ArrayClass *info = new_array(getMessageName(), ((MethodClass *)executable)->getScopeName());
         ProtectedObject p(info);
 
+        RexxObject *context = (activation ? activation->getContextObject() : OREF_NULL);
+        ProtectedObject p2(context);
+
         RexxString *message = activity->buildMessage(Message_Translations_compiled_method_invocation, info);
         p = message;
-        return new StackFrameClass(StackFrameClass::FRAME_METHOD, getMessageName(), (BaseExecutable *)getExecutableObject(), receiver, getArguments(), message, SIZE_MAX, 0);
+        return new StackFrameClass(StackFrameClass::FRAME_METHOD, getMessageName(), (BaseExecutable *)getExecutableObject(), receiver, getArguments(), message, SIZE_MAX, 0, context);
     }
 }
 

@@ -108,6 +108,7 @@ class RexxActivationFrame : public ActivationFrame
     BaseExecutable *executable() override;
     StackFrameClass *createStackFrame() override;
     PackageClass *getPackage() override;
+    RexxObject *getContextObject();
 
  protected:
 

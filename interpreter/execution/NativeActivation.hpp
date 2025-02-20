@@ -100,6 +100,7 @@ class NativeActivation : public ActivationBase
     RexxActivation *findRexxContext() override;
     RexxObject *getReceiver() override;
     PackageClass *getPackage() override { return getPackageObject(); }
+    RexxObject *getContextObject() { return getContextObject(); }
     SecurityManager *getSecurityManager() override;
     const NumericSettings *getNumericSettings() override;
 

@@ -54,7 +54,7 @@ class StackFrameClass : public RexxObject
 public:
     void *operator new(size_t);
 
-    StackFrameClass(const char *type, RexxString *name, BaseExecutable *p, RexxObject *target, ArrayClass *arguments, RexxString *t, size_t l, uint32_t invocation);
+    StackFrameClass(const char *type, RexxString *name, BaseExecutable *p, RexxObject *target, ArrayClass *arguments, RexxString *t, size_t l, uint32_t invocation, RexxObject *context);
     inline StackFrameClass(RESTORETYPE restoreType) { ; };
 
     void live(size_t) override;
@@ -73,6 +73,7 @@ public:
     ArrayClass  *getArguments();
     PackageClass *getPackageObject();
     RexxObject *getInvocation();
+    RexxObject *getContext();
     RexxString *makeString() override;
     RexxString *stringValue() override;
 
@@ -96,6 +97,7 @@ protected:
     size_t          line;           // the frame line position (MAX_SIZE indicates no line available)
     RexxString *traceLine;          // a tracing line
     uint32_t    invocation;         // invocation/activation id
+    RexxObject *context;            // the context object
 
 };
 

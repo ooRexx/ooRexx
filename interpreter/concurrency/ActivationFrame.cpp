@@ -62,6 +62,11 @@ PackageClass *RexxActivationFrame::getPackage()
     return activation->getEffectivePackageObject();
 }
 
+RexxObject *RexxActivationFrame::getContextObject()
+{
+    return activation->getContextObject();
+}
+
 RexxString *NativeActivationFrame::messageName()
 {
     return activation->getMessageName();
@@ -99,7 +104,7 @@ StackFrameClass *InternalActivationFrame::createStackFrame()
 
     RexxString *message = activity->buildMessage(Message_Translations_compiled_method_invocation, info);
     p = message;
-    return new StackFrameClass(StackFrameClass::FRAME_METHOD, name, frameMethod, target, new_array(count, argPtr), message, SIZE_MAX, 0);
+    return new StackFrameClass(StackFrameClass::FRAME_METHOD, name, frameMethod, target, new_array(count, argPtr), message, SIZE_MAX, 0, OREF_NULL);
 }
 
 PackageClass *InternalActivationFrame::getPackage()

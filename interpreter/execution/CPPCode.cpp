@@ -1269,6 +1269,7 @@ PCPPM CPPCode::exportedMethods[] =
     CPPM(StackFrameClass::getExecutable),
     CPPM(StackFrameClass::getLine),
     CPPM(StackFrameClass::getInvocation),
+    CPPM(StackFrameClass::getContext),
     CPPM(StackFrameClass::getTraceLine),
     CPPM(StackFrameClass::getType),
     CPPM(StackFrameClass::getTarget),

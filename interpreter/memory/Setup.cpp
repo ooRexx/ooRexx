@@ -1705,6 +1705,7 @@ StartClassDefinition(StackFrame)
         AddMethod("Executable", StackFrameClass::getExecutable, 0);
         AddMethod("Line", StackFrameClass::getLine, 0);
         AddMethod("Invocation", StackFrameClass::getInvocation, 0);
+        AddMethod("Context", StackFrameClass::getContext, 0);
         AddMethod("Target", StackFrameClass::getTarget, 0);
         AddMethod("TraceLine", StackFrameClass::getTraceLine, 0);
         AddMethod("Type", StackFrameClass::getType, 0);
