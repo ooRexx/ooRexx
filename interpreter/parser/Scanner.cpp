@@ -46,6 +46,7 @@
 #include "ArrayClass.hpp"
 #include "LanguageParser.hpp"
 #include "GlobalNames.hpp"
+#include "Unicode/utf8proc/utf8proc.h"
 
 #include <stdio.h>
 #include <ctype.h>
@@ -1162,17 +1163,48 @@ RexxToken *LanguageParser::sourceNextToken(RexxToken *previous )
                     // invalid character of some type
                     default:
                     {
-                        char   badchar[4];                    // working buffers for the errors
-                        char   hexbadchar[4];
+                        // The default byte encoding is 1 byte.
+                        // UTF-8 is 1..4 bytes.
+                        char   badchar[4 + 1];                    // working buffers for the errors
+                        char   hexbadchar[4*2 + 1];
 
-                        // mark current position n in clause */
-                        clause->setEnd(lineNumber, lineOffset);
-                        // update the error information
-                        clauseLocation = clause->getLocation();
                         snprintf(badchar, sizeof(badchar), "%c", inch);
                         snprintf(hexbadchar, sizeof(hexbadchar), "%2.2X", inch);
+
+                        // Example:
+                        // current == "say a ¬= 1"
+                        // currentLength == 11
+                        // inch == '\xC2'
+                        // lineOffset == 7 (inch position + 1)
+                        // s  a  y     a     ¬    =     1
+                        // 73 61 79 20 61 20 C2AC 3D 20 31
+                        // 0  1  2  3  4  5  6 7  8  9  10
+                        const unsigned char *bytes = (const unsigned char *)current + lineOffset - 1; // inch == bytes[0]
+                        size_t remainingBytesCount = currentLength - lineOffset + 1;
+                        utf8proc_int32_t codepoint;
+                        utf8proc_ssize_t bytesCount = utf8proc_iterate(bytes, remainingBytesCount, &codepoint);
+                        if (bytesCount >= 1 && bytesCount <= 4)
+                        {
+                            // Valid UTF-8 byte sequence consisting of 1 to 4 bytes
+                            snprintf(badchar, bytesCount + 1, "%s", bytes);
+                            int offset = 0;
+                            for (int i = 0; i < bytesCount; i++)
+                            {
+                                offset += snprintf(hexbadchar + offset, sizeof(hexbadchar) - offset, "%2.2X", bytes[i]);
+                            }
+                        }
+
+                        // mark current position n in clause */
+                        size_t clauseEnd = lineOffset;
+                        if (bytesCount >= 2) clauseEnd += bytesCount - 1;
+                        clause->setEnd(lineNumber, clauseEnd);
+                        // update the error information
+                        clauseLocation = clause->getLocation();
+
                         // report the error with the invalid character displayed normally and in hex.
-                        syntaxError(Error_Invalid_character_char, new_string(badchar), new_string(hexbadchar));
+                        Protected<RexxString> badcharString = new_string(badchar);
+                        Protected<RexxString> hexbadcharString = new_string(hexbadchar);
+                        syntaxError(Error_Invalid_character_char, badcharString, hexbadcharString);
                         break;
                     }
                 }
