@@ -146,11 +146,11 @@ int main(int argc, char **argv) {
         } else {                         /* convert into an argument string   */
             if (program_name == NULL) {     /* no name yet?                   */
                 program_name = argv[i];     /* program is first non-option    */
-            } else if ( real_argument )  {  /* part of the argument string    */
-                argix = i;              /* remember the index of the first arg*/
+                argix = i + 1;          /* remember the index of the first arg*/
+                break;    /* end parsing after program_name has been resolved */
+            } else if ( !(real_argument) )  {  /* not part of the arguments   */
                 break;
             }
-            real_argument = true;
         }
     }
 
