@@ -533,6 +533,15 @@ bool InterpreterInstance::terminate()
         // do system specific termination of an instance
         sysInstance.terminate();
 
+        // Unlink from the interpreter's instance list while we still hold kernel
+        // access. That list is a Rexx object the collector walks, so it must not
+        // be touched by a thread without kernel access: the resource lock this
+        // takes does not exclude the collector, which runs under the kernel lock.
+        // Taking the resource lock while holding kernel access is the permitted
+        // order. This has to follow collectAndUninit() above, which asks
+        // Interpreter::lastInstance() whether we are the last one.
+        Interpreter::terminateInterpreterInstance(this);
+
         // ok, deactivate this again...this will return the activity because the terminating
         // flag is on. Don't nudge the dispatch queue yet
         current->exitCurrentThread(false);
@@ -540,6 +549,9 @@ bool InterpreterInstance::terminate()
     // do the release in a catch block to ensure we really release this
     catch (NativeActivation *)
     {
+        // same as above, while we still have kernel access
+        Interpreter::terminateInterpreterInstance(this);
+
         // ok, deactivate this again...this will return the activity because the terminating
         // flag is on. Don't nudge the dispatch queue yet
         current->exitCurrentThread(false);
@@ -575,8 +587,8 @@ bool InterpreterInstance::terminate()
         ActivityManager::dispatchNext(lock);
     }
 
-    // tell the main interpreter controller we're gone.
-    Interpreter::terminateInterpreterInstance(this);
+    // NOTE: the interpreter controller was told we are gone above, while this
+    // thread still held kernel access.
     return true;
 }
 
