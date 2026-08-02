@@ -58,7 +58,8 @@ class FileNameBuffer
      {
          if (buffer != NULL)
          {
-             delete buffer;
+             // must be delete[], the buffer is allocated with new char[]
+             delete[] buffer;
              buffer = NULL;
          }
      }

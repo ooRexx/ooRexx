@@ -111,7 +111,8 @@ void FileNameBuffer::ensureCapacity(size_t c)
         // copy old data over and release the old buffer
         memcpy(newBuffer, buffer, bufferSize);
         bufferSize = newSize;
-        delete buffer;
+        // must be delete[], the buffer is allocated with new char[]
+        delete[] buffer;
         buffer = newBuffer;
     }
 }
