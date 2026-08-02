@@ -40,6 +40,7 @@
 
 #include "Activity.hpp"
 #include "ActivationSettings.hpp"
+#include "ActivityList.hpp"
 #include <deque>
 #include <atomic>
 #include "GlobalNames.hpp"
@@ -358,7 +359,24 @@ protected:
     static const uint64_t timeSliceLength = 24;            // how long we'll run before checking for a control yield.
 
     static QueueClass       *availableActivities;     // table of available activities
-    static QueueClass       *allActivities;           // table of all activities
+    // NOT a Rexx object: see ActivityList.hpp. activityEnded() maintains this
+    // after runThread() has released kernel access, so it must not be walked by
+    // the collector.
+    // Every touch of this list needs the resource lock, with no
+    // exceptions. Kernel access is NOT a substitute: it excludes the collector,
+    // but not a thread holding only the resource lock, and Interpreter::
+    // haltAllActivities() and traceAllActivities() are exactly that -- reachable
+    // from a signal handler and from the RexxHaltInstance API on any thread.
+    // Unlike the QueueClass this replaced, whose backing store was a Rexx object
+    // and so stayed live for a stale reader, a vector reallocation hands the old
+    // buffer straight back to operator delete.
+    //
+    // A function-local static that is never destroyed. As a namespace-scope
+    // object its destructor would be registered with __cxa_atexit, and its order
+    // relative to _rexx_fini() -- an ELF destructor -- is unspecified, so a
+    // thread reaching activityEnded() or returnRootActivity() during shutdown
+    // could search and erase freed storage. Same reasoning as the locks above.
+    static ActivityList &allActivities();             // table of all activities
     static bool              processTerminating;      // shutdown processing started
     static size_t            interpreterInstances;    // number of times an interpreter has been created.
 

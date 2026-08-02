@@ -782,6 +782,13 @@ void MemoryObject::buildVirtualFunctionTable()
    objectPtr = ::new (objectLoc) DoBlock(RESTOREIMAGE);
    virtualFunctionTable[T_DoBlock] = getVftPointer(objectLoc);
    
+   // InterpreterInstance is the largest thing placed in objectBuffer, and it now
+   // has a member with a non-trivial default constructor (ActivityList), so the
+   // RESTOREIMAGE constructor writes into the middle of the buffer rather than
+   // just the vtable pointer at offset 0. The buffer is a fixed size with no
+   // check of its own; this is the check.
+   static_assert(sizeof(InterpreterInstance) <= sizeof(objectBuffer),
+                 "objectBuffer is too small for InterpreterInstance");
    objectPtr = ::new (objectLoc) InterpreterInstance(RESTOREIMAGE);
    virtualFunctionTable[T_InterpreterInstance] = getVftPointer(objectLoc);
    

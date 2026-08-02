@@ -58,8 +58,15 @@ std::atomic<bool> ActivityManager::sentinel(false);
 // available activities we can reuse
 QueueClass *ActivityManager::availableActivities = OREF_NULL;
 
-// table of all activities
-QueueClass *ActivityManager::allActivities = OREF_NULL;
+/**
+ * The table of all activities. Deliberately allocated and never destroyed: see
+ * the declaration for why a static destructor would be a hazard here.
+ */
+ActivityList &ActivityManager::allActivities()
+{
+    static ActivityList *theList = new ActivityList();
+    return *theList;
+}
 
 /**
  * The dispatch queue and the lock that guards it, reachable only via
@@ -113,7 +120,15 @@ size_t ActivityManager::interpreterInstances = 0;
 void ActivityManager::init()
 {
     availableActivities = new_queue();
-    allActivities = new_queue();
+    // Defensive only. init() runs once per process, from memoryObject.initialize()
+    // via startInterpreter(), whose body is guarded by !isActive(), and active is
+    // never cleared -- so no activity exists yet and this list is always already
+    // empty. It must NOT be re-entered with a populated list: clearing one would
+    // unroot live activities, which is as fatal as keeping stale pointers.
+    {
+        ResourceSection lock;
+        allActivities().clear();
+    }
     currentActivity = OREF_NULL;
 }
 
@@ -126,7 +141,18 @@ void ActivityManager::init()
 void ActivityManager::live(size_t liveMark)
 {
     memory_mark(availableActivities);
-    memory_mark(allActivities);
+    // the list is not a Rexx object, but its contents are, and this is what keeps
+    // the activities alive. We already hold kernel access here, so taking the
+    // resource lock the maintaining paths hold is the permitted order.
+    {
+        ResourceSection lock;
+        std::vector<Activity *> &acts = allActivities().contents();
+        for (size_t i = 0; i < acts.size(); i++)
+        {
+            RexxInternalObject *entry = acts[i];
+            memory_mark(entry);
+        }
+    }
 }
 
 /**
@@ -142,7 +168,17 @@ void ActivityManager::liveGeneral(MarkReason reason)
     if (reason != SAVINGIMAGE)
     {
         memory_mark_general(availableActivities);
-        memory_mark_general(allActivities);
+        {
+            ResourceSection lock;
+            std::vector<Activity *> &acts = allActivities().contents();
+            for (size_t i = 0; i < acts.size(); i++)
+            {
+                // markGeneral can update the reference, so write it back
+                RexxInternalObject *entry = acts[i];
+                memory_mark_general(entry);
+                acts[i] = (Activity *)entry;
+            }
+        }
     }
 }
 
@@ -526,7 +562,7 @@ Activity* ActivityManager::createNewActivity()
         activity = new Activity(p, true);
         lock.reacquire();
         // add this to our table of all activities
-        allActivities->append(activity);
+        allActivities().append(activity);
     }
     else
     {
@@ -554,7 +590,7 @@ Activity *ActivityManager::createCurrentActivity()
     // we need the resource lock while doing this.
     ResourceSection lock;
     // add this to the activity table and return
-    allActivities->append(activity);
+    allActivities().append(activity);
     return activity;
 }
 
@@ -617,7 +653,7 @@ bool ActivityManager::poolActivity(Activity *activity)
         activity->cleanupActivityResources();
 
         // remove this from the activity list
-        allActivities->removeItem(activity);
+        allActivities().removeItem(activity);
         return false;
     }
     else
@@ -704,9 +740,9 @@ Activity *ActivityManager::findActivity(thread_id_t threadId)
     // NB:  New activities are pushed on to the end, so it's prudent to search
     // from the list end toward the front of the list.  Also, this ensures we
     // will find the toplevel activity nested on a given thread first.
-    for (size_t listIndex = allActivities->lastIndex(); listIndex > 0; listIndex--)
+    for (size_t listIndex = allActivities().lastIndex(); listIndex > 0; listIndex--)
     {
-        Activity *activity = (Activity *)allActivities->get(listIndex);
+        Activity *activity = (Activity *)allActivities().get(listIndex);
         // this should never happen, but we never return suspended threads
         if (activity->isThread(threadId) && !activity->isSuspended())
         {
@@ -815,7 +851,7 @@ void ActivityManager::returnActivity(Activity *activityObject)
     {
         ResourceSection lock;
         // remove this from the activte list
-        allActivities->removeItem(activityObject);
+        allActivities().removeItem(activityObject);
         // if we ended up pushing an old activity down when we attached this
         // thread, then we need to restore the old thread to active state.
         Activity *oldActivity = activityObject->getNestedActivity();
@@ -857,13 +893,13 @@ void ActivityManager::activityEnded(Activity *activityObject)
     {
         ResourceSection lock;       // this is a critical section
         // and also remove from the global list
-        allActivities->removeItem(activityObject);
+        allActivities().removeItem(activityObject);
         // cleanup any system resources this activity might own
         activityObject->cleanupActivityResources();
 
         // did we just release the last activity during a shutdown?  The shutdown
         // can now complete.
-        if (processTerminating && allActivities->isEmpty())
+        if (processTerminating && allActivities().isEmpty())
         {
             // notify any waiters that we're clear
             postTermination();
@@ -924,7 +960,7 @@ void ActivityManager::returnRootActivity(Activity *activity)
     ResourceSection lock;                // need the control block locks
     // remove this from the activity list so it will never get
     // picked up again.
-    allActivities->removeItem(activity);
+    allActivities().removeItem(activity);
 }
 
 

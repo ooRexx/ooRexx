@@ -43,6 +43,7 @@
 #ifndef Included_InterpreterInstance_hpp
 #define Included_InterpreterInstance_hpp
 
+#include "ActivityList.hpp"
 #include "RexxCore.h"
 #include "ExitHandler.hpp"
 #include "ActivationApiContexts.hpp"
@@ -140,7 +141,17 @@ protected:
 
     Activity            *rootActivity;       // the initial activity
     SecurityManager     *securityManager;    // the security manager for our instance
-    QueueClass          *allActivities;      // all activities associated with this instance
+    // NOT a Rexx object: see ActivityList.hpp. The paths that maintain this
+    // cannot all hold kernel access, so it must not be walked by the collector.
+    // Every touch of this list needs the resource lock, with no
+    // exceptions. Kernel access is NOT a substitute: it excludes the collector,
+    // but not a thread holding only the resource lock, and Interpreter::
+    // haltAllActivities() and traceAllActivities() are exactly that -- reachable
+    // from a signal handler and from the RexxHaltInstance API on any thread.
+    // Unlike the QueueClass this replaced, whose backing store was a Rexx object
+    // and so stayed live for a stale reader, a vector reallocation hands the old
+    // buffer straight back to operator delete.
+    ActivityList         allActivities;      // all activities associated with this instance
     RexxString          *defaultEnvironment; // the default address environment
     RexxString          *searchPath;         // additional Rexx search path
     ArrayClass          *searchExtensions;   // extensions to search on for external calls
