@@ -480,50 +480,65 @@ bool SysFileSystem::searchPath(const char *name, const char *path, FileNameBuffe
         return checkCurrentFile(name, resolvedName);
     }
 
-    // get an end pointer
-    const char *pathEnd = path + strlen(path);
-
-    const char *p = path;
-    const char *q = strchr(p, ':');
-    // for each directory in searchpath
-    for (; p < pathEnd; p = q + 1, q = strchr(p, ':'))
+    // callers pass paths that came from getenv(), which returns NULL when the
+    // variable is not set
+    if (path == NULL)
     {
-        // it's possible we've hit the end, in which case, point the delimiter marker past the end of the
-        // string
-        if (q == NULL)
-        {
-            q = pathEnd;
-        }
-        size_t subLength = q - p;
-        if (subLength == 0)
-        {
-            // case "::" in path
-            continue;
-        }
+        resolvedName = "";
+        return false;
+    }
 
-        resolvedName.set(p, subLength);
-        if (!resolvedName.endsWith('/'))
-        {
-            resolvedName += '/';
-        }
-        resolvedName += name;
+    // For each directory in the search path.
+    //
+    // The scan advances only after the current entry has been dealt with. It
+    // used to advance and search in a single step, in the increment of a for
+    // loop, which meant that on the last entry it moved p past the delimiter
+    // and then called strchr() from there before the loop condition got a
+    // chance to stop it. On that entry the delimiter marker was the terminating
+    // NUL, so the search started one byte beyond the end of the string and read
+    // memory the string does not own.
+    //
+    // Most allocators let that pass unnoticed. OpenBSD's does not, and the test
+    // suite died there with a SIGSEGV inside strchr called from this function.
+    for (const char *p = path; *p != '\0'; )
+    {
+        const char *q = strchr(p, ':');
+        size_t subLength = (q == NULL) ? strlen(p) : (size_t)(q - p);
 
-        // take care of any special conditions in the name structure
-        // a failure here means an invalid name of some sort
-        if (canonicalizeName(resolvedName))
+        // skip empty entries, the "::" in a path case
+        if (subLength != 0)
         {
-            struct stat64 dummy;
-            if (stat64(resolvedName, &dummy) == 0)   /* If file is found,     */
+            resolvedName.set(p, subLength);
+            if (!resolvedName.endsWith('/'))
             {
-                // this needs to be a regular file
-                if (S_ISREG(dummy.st_mode))
+                resolvedName += '/';
+            }
+            resolvedName += name;
+
+            // take care of any special conditions in the name structure
+            // a failure here means an invalid name of some sort
+            if (canonicalizeName(resolvedName))
+            {
+                struct stat64 dummy;
+                if (stat64(resolvedName, &dummy) == 0)   /* If file is found,     */
                 {
-                    return true;
+                    // this needs to be a regular file
+                    if (S_ISREG(dummy.st_mode))
+                    {
+                        return true;
+                    }
+                    resolvedName = "";
+                    return false;
                 }
-                resolvedName = "";
-                return false;
             }
         }
+
+        // the last entry has no delimiter after it
+        if (q == NULL)
+        {
+            break;
+        }
+        p = q + 1;
     }
     resolvedName = "";
     return false;
