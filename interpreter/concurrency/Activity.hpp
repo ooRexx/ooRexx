@@ -237,12 +237,19 @@ class Activity : public RexxInternalObject
     void nestAttach();
     void returnAttach();
     inline bool isNestedAttach() { return attachCount > 1 || (attachCount == 1 && !newThreadAttached); }
-    inline void activate() { nestedCount++; }
-    inline void deactivate() { nestedCount--; }
-    inline bool isActive() { return nestedCount > 0; }
-    inline bool isInactive() { return nestedCount == 0; }
-    inline size_t getActivationLevel() { return nestedCount; }
-    inline void restoreActivationLevel(size_t l) { nestedCount = l; }
+    // nestedCount is written by the thread running this activity and read by
+    // other threads: InterpreterInstance::removeInactiveActivities() asks
+    // isActive() about activities it does not own. Relaxed ordering is enough,
+    // since this only reports whether the activity is busy; the kernel lock
+    // provides the actual ordering. Note that a caller acting on the answer is
+    // racing with the owner by nature -- making the field atomic removes the
+    // undefined behaviour, not that inherent race.
+    inline void activate() { nestedCount.fetch_add(1, std::memory_order_relaxed); }
+    inline void deactivate() { nestedCount.fetch_sub(1, std::memory_order_relaxed); }
+    inline bool isActive() { return nestedCount.load(std::memory_order_relaxed) > 0; }
+    inline bool isInactive() { return nestedCount.load(std::memory_order_relaxed) == 0; }
+    inline size_t getActivationLevel() { return nestedCount.load(std::memory_order_relaxed); }
+    inline void restoreActivationLevel(size_t l) { nestedCount.store(l, std::memory_order_relaxed); }
     inline bool isSuspended() { return suspended; }
     inline void clearWaitingForDispatch() { waitingForDispatch = false; }
     inline void setWaitingForDispatch() { waitingForDispatch = true; }
@@ -411,7 +418,7 @@ class Activity : public RexxInternalObject
     // hold no lock in common.  Relaxed ordering is enough, since this only
     // requests a yield -- the kernel lock provides the actual ordering.
     std::atomic<bool> yieldRequested;
-    size_t   nestedCount;               // extent of the nesting
+    std::atomic<size_t> nestedCount;    // extent of the nesting, read by other threads
     size_t   attachCount;               // extent of nested attaches
     bool     newThreadAttached;         // Indicates this thread was a "side door" attach.
     char    *stackLimit;                // pointer to base to the C stack location that will trigger a control stack error
