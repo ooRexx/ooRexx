@@ -61,9 +61,36 @@ QueueClass *ActivityManager::availableActivities = OREF_NULL;
 // table of all activities
 QueueClass *ActivityManager::allActivities = OREF_NULL;
 
-// the dispatch queue and the lock that guards it. Reachable only via DispatchSection.
-SysMutex WaitingActivityQueue::dispatchLock;
-std::deque<Activity *> WaitingActivityQueue::queue;
+/**
+ * The dispatch queue and the lock that guards it, reachable only via
+ * DispatchSection.  See the note on the declaration for why this is a
+ * function-local static rather than a namespace-scope object.
+ */
+WaitingActivityQueue::Data &WaitingActivityQueue::instance()
+{
+    static Data theData;
+    return theData;
+}
+
+
+/**
+ * The global kernel lock.  Function-local static, as above.
+ */
+SysMutex &ActivityManager::kernelLock()
+{
+    static SysMutex theLock;
+    return theLock;
+}
+
+
+/**
+ * The process termination semaphore.  Function-local static, as above.
+ */
+SysSemaphore &ActivityManager::terminationLock()
+{
+    static SysSemaphore theSem;
+    return theSem;
+}
 
 std::atomic<size_t> ActivityManager::waitingAttaches(0);                // count of waiting external attaches
 
@@ -78,12 +105,6 @@ bool ActivityManager::processTerminating = false;
 
 // number of active interpreter instances in this process
 size_t ActivityManager::interpreterInstances = 0;
-
-// global lock for the interpreter
-SysMutex ActivityManager::kernelSemaphore;
-
-// the termination complete semaphore
-SysSemaphore ActivityManager::terminationSem;
 
 
 /**
@@ -742,12 +763,12 @@ void ActivityManager::releaseAccess(bool dispatch)
  */
 void ActivityManager::createLocks()
 {
-    kernelSemaphore.create();
+    kernelLock().create();
     // the lock guarding the dispatch queue
     WaitingActivityQueue::createLock();
     // this needs to be created and set
-    terminationSem.create();
-    terminationSem.reset();
+    terminationLock().create();
+    terminationLock().reset();
 }
 
 
@@ -757,8 +778,8 @@ void ActivityManager::createLocks()
 void ActivityManager::closeLocks()
 {
     WaitingActivityQueue::closeLock();
-    kernelSemaphore.close();
-    terminationSem.close();
+    kernelLock().close();
+    terminationLock().close();
 }
 
 
@@ -776,7 +797,7 @@ bool ActivityManager::lockKernelImmediate()
     // dispatch queue
     if (!hasWaiters())
     {
-        return kernelSemaphore.requestImmediate();
+        return kernelLock().requestImmediate();
     }
     return false;
 }

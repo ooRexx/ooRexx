@@ -78,18 +78,31 @@ class WaitingActivityQueue
 
 public:
     // this is a critical-time lock, which involves special processing on Windows.
-    static inline void createLock() { dispatchLock.create(true); }
-    static inline void closeLock() { dispatchLock.close(); }
+    static inline void createLock() { instance().dispatchLock.create(true); }
+    static inline void closeLock() { instance().dispatchLock.close(); }
 
 protected:
-    static inline bool lock() { return dispatchLock.request(); }
-    static inline void unlock() { dispatchLock.release(); }
-
     // IMPORTANT NOTE: To avoid deadlocks, never request the kernel lock while holding
     // the dispatch lock. It is permissible to request the dispatch lock while holding
     // the kernel lock, but this ordering must be strictly observed.
-    static SysMutex dispatchLock;                // guards the queue below
-    static std::deque<Activity *> queue;         // the activities awaiting dispatch
+    struct Data
+    {
+        SysMutex dispatchLock;                   // guards the queue below
+        std::deque<Activity *> queue;            // the activities awaiting dispatch
+    };
+
+    // These live in a function-local static, initialized on first use.  A
+    // namespace-scope object is constructed in link order relative to the
+    // _rexx_init() ELF constructor that calls createLock(), and if it runs
+    // afterwards the SysMutex constructor resets the created flag, leaving
+    // request() returning false and this section guarding nothing for the whole
+    // life of the process.  That is not hypothetical: it is what the dispatch
+    // lock did while it was declared in Interpreter.cpp.  See
+    // Interpreter::resourceLock() and bug #2078 for the measurement.
+    static Data &instance();
+
+    static inline bool lock() { return instance().dispatchLock.request(); }
+    static inline void unlock() { instance().dispatchLock.release(); }
 };
 
 
@@ -143,7 +156,7 @@ public:
     // during shutdown), then the queue cannot be touched safely at all, so these
     // do nothing rather than race on the container.
 
-    inline bool isEmpty() { return !locked || WaitingActivityQueue::queue.empty(); }
+    inline bool isEmpty() { return !locked || WaitingActivityQueue::instance().queue.empty(); }
 
     /**
      * Add an activity to the end of the dispatch queue.
@@ -154,7 +167,7 @@ public:
     {
         if (locked)
         {
-            WaitingActivityQueue::queue.push_back(activity);
+            WaitingActivityQueue::instance().queue.push_back(activity);
         }
     }
 
@@ -169,8 +182,8 @@ public:
         {
             return OREF_NULL;
         }
-        Activity *activity = WaitingActivityQueue::queue.front();
-        WaitingActivityQueue::queue.pop_front();
+        Activity *activity = WaitingActivityQueue::instance().queue.front();
+        WaitingActivityQueue::instance().queue.pop_front();
         return activity;
     }
 
@@ -181,7 +194,7 @@ public:
      */
     inline Activity *peekFirst()
     {
-        return isEmpty() ? OREF_NULL : WaitingActivityQueue::queue.front();
+        return isEmpty() ? OREF_NULL : WaitingActivityQueue::instance().queue.front();
     }
 
     /**
@@ -196,7 +209,7 @@ public:
             return;
         }
 
-        std::deque<Activity *> &queue = WaitingActivityQueue::queue;
+        std::deque<Activity *> &queue = WaitingActivityQueue::instance().queue;
         for (std::deque<Activity *>::iterator it = queue.begin(); it != queue.end(); ++it)
         {
             if (*it == activity)
@@ -239,7 +252,7 @@ public:
 
     inline static void lockKernel()
     {
-        kernelSemaphore.request();
+        kernelLock().request();
         // keep track of the last time this was granted.
         lastLockTime = SysThread::getMillisecondTicks();
     }
@@ -252,7 +265,7 @@ public:
         currentActivity = OREF_NULL;
         sentinel = true;
         // now release the semaphore
-        kernelSemaphore.release();
+        kernelLock().release();
     }
 
     static void releaseAccess(bool dispatch = false);
@@ -330,12 +343,12 @@ public:
 
     static inline void postTermination()
     {
-        terminationSem.post();              /* let anyone who cares know we're done*/
+        terminationLock().post();              /* let anyone who cares know we're done*/
     }
 
     static inline void waitForTermination()
     {
-        terminationSem.wait();              // wait until this is posted
+        terminationLock().wait();              // wait until this is posted
     }
 
 protected:
@@ -352,8 +365,9 @@ protected:
      // IMPORTANT NOTE: To avoid deadlocks, never request the kernel lock while holding the resourceLock,
      // otherwise deadlocks are possible. It is permissible to request the resource lock while holding the
      // kernel lock, but this ordering must be strictly observed.
-    static SysMutex          kernelSemaphore;         // global kernel semaphore lock
-    static SysSemaphore      terminationSem;          // used to signal that everything has shutdown
+    // function-local statics, for the reason given on WaitingActivityQueue::instance()
+    static SysMutex &kernelLock();                    // global kernel semaphore lock
+    static SysSemaphore &terminationLock();           // used to signal that everything has shutdown
     // NOTE: was "volatile bool".  volatile does NOT order surrounding non-volatile
     // accesses and emits no fence, so the barrier the comments below claim never
     // existed.  ThreadSanitizer reports this as the single most-raced object in the
