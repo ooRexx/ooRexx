@@ -59,7 +59,7 @@ void SystemInterpreter::processStartup()
 void SystemInterpreter::processShutdown()
 {
     // now do the platform independent shutdown
-    Interpreter::processStartup();
+    Interpreter::processShutdown();
 }
 
 void signalHandler(int sig)
