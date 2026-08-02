@@ -55,6 +55,164 @@ class RexxCode;
 class RoutineClass;
 class NativeActivation;
 class QueueClass;
+class DispatchSection;
+
+
+/**
+ * The queue of activities that are waiting to be given kernel access,
+ * bundled together with the lock that protects it.
+ *
+ * The container is private and can only be reached through a DispatchSection,
+ * which is the object that holds the lock, so there is no way to touch the
+ * queue without holding the lock.  This used to be a bare static member of
+ * ActivityManager, with every access relying on the caller having taken the
+ * lock by convention.  At least one caller did not (see bug #2072), and
+ * ThreadSanitizer reported this queue as the most-raced object in the
+ * interpreter.
+ */
+class WaitingActivityQueue
+{
+    // the section object is the one holding the lock, so it is the only thing
+    // allowed to reach the container.
+    friend class DispatchSection;
+
+public:
+    // this is a critical-time lock, which involves special processing on Windows.
+    static inline void createLock() { dispatchLock.create(true); }
+    static inline void closeLock() { dispatchLock.close(); }
+
+protected:
+    static inline bool lock() { return dispatchLock.request(); }
+    static inline void unlock() { dispatchLock.release(); }
+
+    // IMPORTANT NOTE: To avoid deadlocks, never request the kernel lock while holding
+    // the dispatch lock. It is permissible to request the dispatch lock while holding
+    // the kernel lock, but this ordering must be strictly observed.
+    static SysMutex dispatchLock;                // guards the queue below
+    static std::deque<Activity *> queue;         // the activities awaiting dispatch
+};
+
+
+/**
+ * Block control for access to the dispatch queue.  Holding one of these is
+ * the only way to reach the queue itself.
+ */
+class DispatchSection
+{
+public:
+    inline DispatchSection()
+    {
+        // if the acquire fails we must NOT unlock in the destructor. An unbalanced
+        // unlock on a recursive mutex decrements the count and can drop a lock an
+        // outer scope still believes it holds, destroying mutual exclusion for
+        // everyone. See bug #2071.
+        locked = WaitingActivityQueue::lock();
+    }
+
+    inline ~DispatchSection()
+    {
+        release();
+    }
+
+    // a copy would release the lock twice
+    DispatchSection(const DispatchSection &) = delete;
+    DispatchSection &operator=(const DispatchSection &) = delete;
+
+    inline void release()
+    {
+        if (locked)
+        {
+            locked = false;
+            WaitingActivityQueue::unlock();
+        }
+    }
+
+    inline void reacquire()
+    {
+        if (!locked)
+        {
+            locked = WaitingActivityQueue::lock();
+        }
+    }
+
+    inline bool isLocked() { return locked; }
+
+    // The queue operations. These are only reachable from a section object, so the
+    // lock is held whenever the container is touched.  If the lock could not be
+    // obtained (the locks have not been created yet, or have already been closed
+    // during shutdown), then the queue cannot be touched safely at all, so these
+    // do nothing rather than race on the container.
+
+    inline bool isEmpty() { return !locked || WaitingActivityQueue::queue.empty(); }
+
+    /**
+     * Add an activity to the end of the dispatch queue.
+     *
+     * @param activity The activity to queue up.
+     */
+    inline void add(Activity *activity)
+    {
+        if (locked)
+        {
+            WaitingActivityQueue::queue.push_back(activity);
+        }
+    }
+
+    /**
+     * Remove and return the activity at the front of the queue.
+     *
+     * @return The first queued activity, or OREF_NULL if the queue is empty.
+     */
+    inline Activity *removeFirst()
+    {
+        if (isEmpty())
+        {
+            return OREF_NULL;
+        }
+        Activity *activity = WaitingActivityQueue::queue.front();
+        WaitingActivityQueue::queue.pop_front();
+        return activity;
+    }
+
+    /**
+     * Return the activity at the front of the queue without removing it.
+     *
+     * @return The first queued activity, or OREF_NULL if the queue is empty.
+     */
+    inline Activity *peekFirst()
+    {
+        return isEmpty() ? OREF_NULL : WaitingActivityQueue::queue.front();
+    }
+
+    /**
+     * Remove a specific activity from anywhere in the queue.
+     *
+     * @param activity The activity to remove.  Not being queued is not an error.
+     */
+    inline void remove(Activity *activity)
+    {
+        if (!locked)
+        {
+            return;
+        }
+
+        std::deque<Activity *> &queue = WaitingActivityQueue::queue;
+        for (std::deque<Activity *>::iterator it = queue.begin(); it != queue.end(); ++it)
+        {
+            if (*it == activity)
+            {
+                queue.erase(it);
+                return;
+            }
+        }
+        // ignore this if not found.
+    }
+
+private:
+
+    bool locked;           // true if we actually hold the lock
+};
+
 
 class ActivityManager
 {
@@ -64,7 +222,8 @@ public:
 
     static void addWaitingActivity(Activity *a, bool release);
     static void addWaitingApiActivity(Activity *a);
-    static bool dispatchNext();
+    // the caller must be holding the dispatch lock, which the section argument proves.
+    static bool dispatchNext(DispatchSection &lock);
     static inline bool hasWaiters() { return waitingAccess != 0 || waitingAttaches != 0; }
     static inline bool hasApiWaiters() { return waitingApiAccess != 0; }
 
@@ -157,7 +316,6 @@ public:
     static RexxObject *getLocalEnvironment(RexxString *name);
     static DirectoryClass *getLocal();
     static void suspendDispatch(Activity *activity);
-    static void removeWaitingActivity(Activity *waitingAct);
     static void returnWaitingActivity(Activity *waitingAct);
     static void handleNestedActivity(Activity *newActivity, Activity *oldActivity);
 
@@ -202,8 +360,9 @@ protected:
     // interpreter (94 races in one targeted run).  std::atomic gives the intended
     // sequentially-consistent ordering.  See bug #2074.
     static std::atomic<bool> sentinel;                // used to ensure proper ordering of updates
-    static std::deque<Activity *>waitingActivities;   // queue of waiting activities
-    static std::atomic<size_t> waitingAttaches;                    // the count of attaches waiting for access
+    // NOTE: the queue of waiting activities now lives in WaitingActivityQueue above,
+    // where it is reachable only while holding the lock that protects it.
+    static std::atomic<size_t> waitingAttaches;                  // the count of attaches waiting for access
     static std::atomic<size_t> waitingAccess;                      // the count of activities waiting for access
     static std::atomic<size_t> waitingApiAccess;                   // the count of activities waiting for access for API callbacks.
     static uint64_t          lastLockTime;            // the last time we granted the kernel lock.

@@ -564,9 +564,16 @@ bool InterpreterInstance::terminate()
 
     // If a new activity was created release the kernel lock again with dispatch nudge; otherwise just nudge the dispatch queue
     if (activityCreated)
-      ActivityManager::releaseAccess(); 
+    {
+        ActivityManager::releaseAccess();
+    }
     else
-      ActivityManager::dispatchNext();  
+    {
+        // nudging the queue requires the dispatch lock. This used to be done without
+        // it, which is an unguarded access to the dispatch queue.  See bug #2072.
+        DispatchSection lock;
+        ActivityManager::dispatchNext(lock);
+    }
 
     // tell the main interpreter controller we're gone.
     Interpreter::terminateInterpreterInstance(this);

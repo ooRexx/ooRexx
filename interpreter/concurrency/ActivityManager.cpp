@@ -61,7 +61,9 @@ QueueClass *ActivityManager::availableActivities = OREF_NULL;
 // table of all activities
 QueueClass *ActivityManager::allActivities = OREF_NULL;
 
-std::deque<Activity *>ActivityManager::waitingActivities;   // queue of waiting activities
+// the dispatch queue and the lock that guards it. Reachable only via DispatchSection.
+SysMutex WaitingActivityQueue::dispatchLock;
+std::deque<Activity *> WaitingActivityQueue::queue;
 
 std::atomic<size_t> ActivityManager::waitingAttaches(0);                // count of waiting external attaches
 
@@ -163,7 +165,7 @@ void ActivityManager::addWaitingActivity(Activity *waitingAct, bool release )
         inWaitQueue = true;
 
         // add to the end
-        waitingActivities.push_back(waitingAct);
+        lock.add(waitingAct);
     }
     // if there is a current activity, then wait until dispatched.
     else if (currentActivity != OREF_NULL)
@@ -172,7 +174,7 @@ void ActivityManager::addWaitingActivity(Activity *waitingAct, bool release )
         inWaitQueue = true;
 
         // add to the end
-        waitingActivities.push_back(waitingAct);
+        lock.add(waitingAct);
     }
 
     // we're going to wait until posted, so make sure the run semaphore is cleared
@@ -225,19 +227,9 @@ void ActivityManager::addWaitingActivity(Activity *waitingAct, bool release )
     // ok, we have the kernel lock and the resource lock. If we did not have a timeout while
     // waiting for dispatch, then we should still be in the queue and we need to remove our entry.
     // if we were posted, then the posting thread already removed our entry.
-    if (timedOut && !waitingActivities.empty())
+    if (timedOut)
     {
-        // search for the activity position and remove it.
-        for (std::deque<Activity *>::iterator it = waitingActivities.begin(); it != waitingActivities.end(); ++it)
-        {
-            // if this is found, remove it from the queue
-            if (*it == waitingAct)
-            {
-                waitingActivities.erase(it);
-                break;
-            }
-        }
-        // ignore this if not found.
+        lock.remove(waitingAct);
     }
 
     // the setting of the sentinel variables acts as a memory barrier to
@@ -290,7 +282,7 @@ void ActivityManager::addWaitingApiActivity(Activity *waitingAct)
 
     // now that we have the kernel lock, dispatch another waiter
     // to make sure the pipeline is always active.
-    dispatchNext();
+    dispatchNext(lock);
 
     // the setting of the sentinel variables acts as a memory barrier to
     // ensure that the assignment of currentActivitiy occurs precisely at this point.
@@ -301,23 +293,25 @@ void ActivityManager::addWaitingApiActivity(Activity *waitingAct)
 
 /**
  * Find an activity in the queue that is waiting for run permission
- * and free it up for execution. Elements in the waitingActivities
+ * and free it up for execution. Elements in the dispatch
  * queue can be in different places in the dispatch process and we
  * don't want to get things held up because an activity might not
  * be able to obtain the lock immediately.
  *
+ * @param lock   The dispatch section held by the caller.  Passing this proves
+ *               the queue lock is held for the duration of the scan.
+ *
  * @return true if an item was dispatched, false if nothing was dispatched.
  */
-bool ActivityManager::dispatchNext()
+bool ActivityManager::dispatchNext(DispatchSection &lock)
 {
     // run the dispatch queue looking for a non-posted activity and
     // remove any that have already been posted.
-    while (!waitingActivities.empty())
+    while (!lock.isEmpty())
     {
         // look for the first activity that has not had its semaphore posted yet and post it.
-        Activity *activity = waitingActivities.front();
         // we're going to remove this in either case, so pop it off now.
-        waitingActivities.pop_front();
+        Activity *activity = lock.removeFirst();
 
         // if this has not been posted yet, post now and return.
         // there are some situations where a NULL ends up in the queue, so
@@ -735,7 +729,7 @@ void ActivityManager::releaseAccess(bool dispatch)
     // forward in the request process.
     if (dispatch)
     {
-        dispatchNext();
+        dispatchNext(lock);
     }
 
     // now release the kernel lock
@@ -749,6 +743,8 @@ void ActivityManager::releaseAccess(bool dispatch)
 void ActivityManager::createLocks()
 {
     kernelSemaphore.create();
+    // the lock guarding the dispatch queue
+    WaitingActivityQueue::createLock();
     // this needs to be created and set
     terminationSem.create();
     terminationSem.reset();
@@ -760,6 +756,7 @@ void ActivityManager::createLocks()
  */
 void ActivityManager::closeLocks()
 {
+    WaitingActivityQueue::closeLock();
     kernelSemaphore.close();
     terminationSem.close();
 }
@@ -1024,67 +1021,30 @@ void ActivityManager::suspendDispatch(Activity *activity)
         waitingApiAccess--;
     }
 
-    if (!waitingActivities.empty())
+    // if this activity is at the front of the queue, then we need to remove
+    // this and dispatch the new front element.
+    if (lock.peekFirst() == activity)
     {
-
-        // if this activity is at the front of the queue, then we need to remove
-        // this and dispatch the new front element.
-        if (waitingActivities.front() == activity)
-        {
-            // We can generally only get here if the activity is waiting on either the
-            // run semaphore or the kernel semaphore already. This will not wake up again
-            // until the current activity stack unwinds to the semaphore call, so
-            // we remove this from the queue so it doesn't keep getting dispatched and
-            // them poke the next activity in line if there is one. This will get
-            // returned to the queue once the re-entry is complete.
-            waitingActivities.pop_front();
-            // If we have another activity in the queue, dispatch it now.
-            dispatchNext();
-        }
-        // we're in line behind some other activity, so just remove this one
-        // from the queue. We don't need to repost anything at this point.
-        else
-        {
-            removeWaitingActivity(activity);
-        }
+        // We can generally only get here if the activity is waiting on either the
+        // run semaphore or the kernel semaphore already. This will not wake up again
+        // until the current activity stack unwinds to the semaphore call, so
+        // we remove this from the queue so it doesn't keep getting dispatched and
+        // them poke the next activity in line if there is one. This will get
+        // returned to the queue once the re-entry is complete.
+        lock.removeFirst();
+        // If we have another activity in the queue, dispatch it now.
+        dispatchNext(lock);
     }
-}
-
-
-/**
- * In certain situations (mostly confined to Windows),
- * we can re-enter the interpreter on a thread that is
- * currently on the dispatch queue. If that activity gets
- * dispatched, then everything blocks because the
- * activity never wakes up until the nested thread returns.
- * In that situation, we need to ensure that the original
- * waiting activity is removed from the dispatch queue
- * until it is the top activity on the stack.
- *
- * @param waitingAct The activity to remove from the queue.
- */
-void ActivityManager::removeWaitingActivity(Activity *waitingAct)
-{
-    // NOTE: The caller must be holding the dispatch lock
-
-    // iterators don't work if the collection is empty, so
-    // this can occur if the run semaphore has already been posted.
-    if (waitingActivities.empty())
+    // we're in line behind some other activity, so just remove this one
+    // from the queue. We don't need to repost anything at this point.
+    // In certain situations (mostly confined to Windows), we can re-enter the
+    // interpreter on a thread that is currently on the dispatch queue. If that
+    // activity gets dispatched, then everything blocks because the activity never
+    // wakes up until the nested thread returns.  Not being queued is not an error.
+    else
     {
-        return;
+        lock.remove(activity);
     }
-
-    // search for the activity position and remove it.
-    for (std::deque<Activity *>::iterator it = waitingActivities.begin(); it != waitingActivities.end(); ++it)
-    {
-        // if this is found, remove it from the queue
-        if (*it == waitingAct)
-        {
-            waitingActivities.erase(it);
-            return;
-        }
-    }
-    // ignore this if not found.
 }
 
 

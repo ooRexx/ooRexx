@@ -74,18 +74,14 @@ public:
 
     static inline bool getResourceLock() { return resourceLock.request(); }
     static inline void releaseResourceLock() { resourceLock.release(); }
-    static inline bool getDispatchLock() { return dispatchLock.request(); }
-    static inline void releaseDispatchLock() { dispatchLock.release(); }
     static inline void createLocks()
     {
-        // these are critical-time locks, which involves special processing on Windows
+        // this is a critical-time lock, which involves special processing on Windows
         resourceLock.create(true);
-        dispatchLock.create(true);
     }
 
     static inline void closeLocks()
     {
-        dispatchLock.close();
         resourceLock.close();
     }
 
@@ -138,7 +134,8 @@ protected:
     // otherwise deadlocks are possible. It is permissible to request the resource lock while holding the
     // kernel lock, but this ordering must be strictly observed.
     static SysMutex  resourceLock;   // use to lock resources accessed outside of kernel global lock
-    static SysMutex  dispatchLock;   // use to lock when manipulating the activity dispatch queue
+    // NOTE: the lock for the activity dispatch queue is owned by WaitingActivityQueue,
+    // which is the only thing that can reach the queue it protects.
     static int    initializations;   // indicates whether we're terminated or not
     static QueueClass *interpreterInstances;  // the set of interpreter instances
     static bool   active;            // indicates whether the interpreter is initialized
@@ -195,48 +192,8 @@ private:
 };
 
 
-/**
- * Block control for access to the dispatch queue.
- */
-class DispatchSection
-{
-public:
-    inline DispatchSection()
-    {
-        // see the note in ResourceSection -- never unlock what we do not hold.
-        terminated = !Interpreter::getDispatchLock();
-    }
-
-    inline ~DispatchSection()
-    {
-        if (!terminated)
-        {
-            Interpreter::releaseDispatchLock();
-        }
-    }
-
-    inline void release()
-    {
-        if (!terminated)
-        {
-            Interpreter::releaseDispatchLock();
-            terminated = true;
-        }
-    }
-
-
-    inline void reacquire()
-    {
-        if (terminated)
-        {
-            terminated = !Interpreter::getDispatchLock();
-        }
-    }
-
-private:
-
-    bool terminated;       // we can release these as needed
-};
+// NOTE: DispatchSection is declared in ActivityManager.hpp, next to the dispatch
+// queue it guards.
 
 
 class InstanceBlock
