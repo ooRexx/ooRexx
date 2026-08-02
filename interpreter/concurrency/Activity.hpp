@@ -185,6 +185,9 @@ class Activity : public RexxInternalObject
     bool        setTrace(bool);
     inline void yieldControl() { releaseAccess(); requestAccess(); }
     void        yield();
+    // read on the interpreter's hot path, so keep this a relaxed load
+    inline bool isYieldRequested() { return yieldRequested.load(std::memory_order_relaxed); }
+    inline void clearYieldRequest() { yieldRequested.store(false, std::memory_order_relaxed); }
     void        releaseAccess(bool dispatch = true);
     void        requestApiAccess();
     void        requestAccess();
@@ -402,6 +405,12 @@ class Activity : public RexxInternalObject
     // atomic: read by hasRunPermission() from other threads while the owner
     // clears/sets it -- TSan flags this, and it is the exact crash site.  bug #2074
     std::atomic<bool> dispatchPosted;   // we have been given permission to run
+    // Set by a thread that wants this activity to give up control at its next
+    // instruction boundary.  This must be atomic: it is written by the thread
+    // requesting access and read by the thread running Rexx code, and those two
+    // hold no lock in common.  Relaxed ordering is enough, since this only
+    // requests a yield -- the kernel lock provides the actual ordering.
+    std::atomic<bool> yieldRequested;
     size_t   nestedCount;               // extent of the nesting
     size_t   attachCount;               // extent of nested attaches
     bool     newThreadAttached;         // Indicates this thread was a "side door" attach.

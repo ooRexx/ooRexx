@@ -2131,13 +2131,15 @@ void Activity::relinquish()
  */
 void Activity::yield()
 {
-    // get the current rexx frame and request that it yield control
-    RexxActivation *activation = currentRexxFrame;
-    // if we're in the context of Rexx code, request that it yield control
-    if (activation != NULL)
-    {
-        activation->yield();
-    }
+    // Just flag the request.  This is called from a thread other than the one
+    // running this activity, so it must NOT follow currentRexxFrame: the owning
+    // thread rewrites that pointer in updateFrameMarkers() as it pushes and pops
+    // activations, and it is not synchronised with us. Reading it here could hand
+    // back a frame that has already been popped, and writing into that frame
+    // writes into storage the collector may have handed to another object.
+    // The Activity itself is stable, so the request goes here instead, and the
+    // run loop picks it up at the next instruction boundary.
+    yieldRequested.store(true, std::memory_order_relaxed);
 }
 
 

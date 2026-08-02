@@ -253,7 +253,6 @@ class RexxActivation : public ActivationBase
    bool              halt(RexxString *);
    void              externalTraceOn();
    void              externalTraceOff();
-   void              yield();
    void              propagateExit(RexxObject *);
    void              setDefaultAddress(RexxString *);
    bool              internalMethod();

@@ -616,8 +616,23 @@ RexxObject* RexxActivation::run(RexxObject *_receiver, RexxString *name, RexxObj
                 if (++instructionCount > yieldInstructions)
                 {
                     instructionCount = 0;   // reset the instruction counter even if we didn't yield.
-                    // and have the activity manager decide if we need to give up control
-                    ActivityManager::relinquishIfNeeded(activity);
+                    // Another thread may have asked us to give up control. Note that
+                    // the flag is only tested here, once every yieldInstructions, and
+                    // not on every instruction: reading it in the loop condition costs
+                    // about 2% of dispatch, and arriving here is already frequent
+                    // enough that the extra latency is a few microseconds.
+                    if (activity->isYieldRequested())
+                    {
+                        activity->clearYieldRequest();
+                        // an explicit request, so give up control rather than waiting
+                        // for the time slice to expire
+                        ActivityManager::relinquish(activity);
+                    }
+                    else
+                    {
+                        // no request, so let the activity manager decide
+                        ActivityManager::relinquishIfNeeded(activity);
+                    }
                 }
                 // set the current instruction and prefetch the next one.  Control
                 // instructions may change next on us.
@@ -4151,16 +4166,6 @@ bool RexxActivation::halt(RexxString *description )
         // we're not in a good position to process this
         return false;
     }
-}
-
-
-/**
- * Flip ON the externally activated TRACE bit.
- */
-void RexxActivation::yield()
-{
-    // max the instruction counter so that we will check immediately.
-    instructionCount = yieldInstructions;
 }
 
 
