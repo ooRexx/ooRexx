@@ -44,6 +44,7 @@
 #ifndef Included_Activity
 #define Included_Activity
 
+#include <atomic>
 #include "ListClass.hpp"
 #include "InternalStack.hpp"
 #include "ActivationStack.hpp"
@@ -398,7 +399,9 @@ class Activity : public RexxInternalObject
     bool     waitingForApiAccess;       // This activity is waiting for access for an API callback
     bool     waitingForDispatch;        // This activity is in the dispatch queue waiting to be dispatched.
     bool     waitingOnSemaphore;        // activity is blocked while waiting for any semaphore
-    bool     dispatchPosted;            // we have been given permission to run
+    // atomic: read by hasRunPermission() from other threads while the owner
+    // clears/sets it -- TSan flags this, and it is the exact crash site.  bug #2074
+    std::atomic<bool> dispatchPosted;   // we have been given permission to run
     size_t   nestedCount;               // extent of the nesting
     size_t   attachCount;               // extent of nested attaches
     bool     newThreadAttached;         // Indicates this thread was a "side door" attach.

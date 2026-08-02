@@ -171,7 +171,7 @@ void LibraryPackage::unload()
         // go run the dispatcher call
         LibraryUnloaderDispatcher dispatcher(package->unloader);
 
-        ActivityManager::currentActivity->run(dispatcher);
+        ActivityManager::currentActivity.load()->run(dispatcher);
     }
     // the internal packages don't get unloaded because
     // we'll be reusing the definition
@@ -242,7 +242,7 @@ void LibraryPackage::loadPackage()
         // go run the dispatcher call
         LibraryLoaderDispatcher dispatcher(package->loader);
 
-        ActivityManager::currentActivity->run(dispatcher);
+        ActivityManager::currentActivity.load()->run(dispatcher);
     }
 }
 

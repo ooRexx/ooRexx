@@ -609,7 +609,7 @@ void RexxObject::copyObjectVariables(RexxObject *newObj)
 MethodClass *RexxObject::checkPrivate(MethodClass *method, RexxErrorCodes &error)
 {
     // get the calling activation context
-    ActivationBase *activation = ActivityManager::currentActivity->getTopStackFrame();
+    ActivationBase *activation = ActivityManager::currentActivity.load()->getTopStackFrame();
     if (activation != OREF_NULL)
     {
         // if the sending and receiving object are the same, this is allowed.
@@ -659,7 +659,7 @@ MethodClass *RexxObject::checkPrivate(MethodClass *method, RexxErrorCodes &error
 MethodClass *RexxObject::checkPackage(MethodClass *method, RexxErrorCodes &error )
 {
     // get the calling activation context
-    ActivationBase *activation = ActivityManager::currentActivity->getTopStackFrame();
+    ActivationBase *activation = ActivityManager::currentActivity.load()->getTopStackFrame();
 
     // likely a topLevel call via SendMessage() API which is contextless.
     if (activation == OREF_NULL)
@@ -697,7 +697,7 @@ MethodClass *RexxObject::checkPackage(MethodClass *method, RexxErrorCodes &error
 void RexxObject::checkRestrictedMethod(const char *methodName)
 {
     // get the calling activation context
-    ActivationBase *activation = ActivityManager::currentActivity->getTopStackFrame();
+    ActivationBase *activation = ActivityManager::currentActivity.load()->getTopStackFrame();
     if (activation != OREF_NULL)
     {
         // Unlike private methods, this is only allowed from the instance, or from
@@ -866,7 +866,7 @@ RexxObject *RexxObject::sendMessage(RexxString *message, RexxObject *argument1, 
 RexxObject *RexxObject::messageSend(RexxString *msgname, RexxObject **arguments, size_t  count, ProtectedObject &result)
 {
     // check for a control stack condition
-    ActivityManager::currentActivity->checkStackSpace();
+    ActivityManager::currentActivity.load()->checkStackSpace();
     // see if we have a method defined
     MethodClass *method_save = behaviour->methodLookup(msgname);
 
@@ -923,7 +923,7 @@ RexxObject *RexxObject::messageSend(RexxString *msgname, RexxObject **arguments,
     validateScopeOverride(startscope);
 
     // perform a stack space check
-    ActivityManager::currentActivity->checkStackSpace();
+    ActivityManager::currentActivity.load()->checkStackSpace();
 
     // do the lookup using the starting scope
     MethodClass *method_save = superMethod(msgname, startscope);
@@ -977,7 +977,7 @@ void RexxObject::processProtectedMethod(RexxString *messageName, MethodClass *ta
     RexxObject  **arguments, size_t count, ProtectedObject &result)
 {
     // get the current security manager
-    SecurityManager *manager = ActivityManager::currentActivity->getEffectiveSecurityManager();
+    SecurityManager *manager = ActivityManager::currentActivity.load()->getEffectiveSecurityManager();
     // the security manager can provide a new result
     if (manager->checkProtectedMethod(this, messageName, count, arguments, result))
     {
@@ -1244,7 +1244,7 @@ RexxString *RexxInternalObject::requestString()
             // get the ultimate, really needs to return a string string value for raising the condition.
             string_value = stringValue();
             // and raise nostring.  If not trapped, this returns here and we return the final string value as a result.
-            ActivityManager::currentActivity->raiseCondition(GlobalNames::NOSTRING, OREF_NULL, string_value, (RexxObject *)this, OREF_NULL);
+            ActivityManager::currentActivity.load()->raiseCondition(GlobalNames::NOSTRING, OREF_NULL, string_value, (RexxObject *)this, OREF_NULL);
         }
         return string_value;
     }
@@ -1284,7 +1284,7 @@ RexxString *RexxInternalObject::requestString()
             // force this to be a real string value.
             string_value = ((RexxObject *)string_value)->primitiveMakeString();
             // raise a NOSTRING condition
-            ActivityManager::currentActivity->raiseCondition(GlobalNames::NOSTRING, OREF_NULL, (RexxString *)string_value, (RexxObject *)this, OREF_NULL);
+            ActivityManager::currentActivity.load()->raiseCondition(GlobalNames::NOSTRING, OREF_NULL, (RexxString *)string_value, (RexxObject *)this, OREF_NULL);
         }
         // we finally have a string value of some sort.
         return (RexxString *)string_value;

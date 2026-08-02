@@ -474,7 +474,7 @@ MethodClass *MethodClass::newMethodObject(RexxString *pgmname, RexxObject *sourc
     PackageClass *sourceContext = OREF_NULL;
 
     // see if we have an active context and use the current source as the basis for the lookup
-    RexxActivation *currentContext = ActivityManager::currentActivity->getCurrentRexxFrame();
+    RexxActivation *currentContext = ActivityManager::currentActivity.load()->getCurrentRexxFrame();
     if (currentContext != OREF_NULL)
     {
         sourceContext = currentContext->getPackage();

@@ -123,7 +123,7 @@ RexxObject* MutexSemaphoreClass::close()
     if (nestCount > 0)
     {
         // tell the current activity this is no longer needed
-        ActivityManager::currentActivity->removeMutex(this);
+        ActivityManager::currentActivity.load()->removeMutex(this);
     }
     nestCount = 0;
     return OREF_NULL;
@@ -143,7 +143,7 @@ void MutexSemaphoreClass::handleNesting()
     if (nestCount == 1)
     {
         // tell the current activity to register this mutex
-        ActivityManager::currentActivity->addMutex(this);
+        ActivityManager::currentActivity.load()->addMutex(this);
     }
 }
 
@@ -243,7 +243,7 @@ RexxObject* MutexSemaphoreClass::release()
         if (nestCount == 0)
         {
             // tell the current activity this is no longer needed
-            ActivityManager::currentActivity->removeMutex(this);
+            ActivityManager::currentActivity.load()->removeMutex(this);
         }
     }
     return booleanObject(released);

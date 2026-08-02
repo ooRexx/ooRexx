@@ -262,7 +262,7 @@ RexxObject *MessageClass::wait()
         waitingActivities->append(ActivityManager::currentActivity);
         // and wait for the wake up call. We are handling this like
         // it is a guard wait, which has its own semaphore rules.
-        ActivityManager::currentActivity->waitReserve(this);
+        ActivityManager::currentActivity.load()->waitReserve(this);
     }
 
     // always return no result value
@@ -285,7 +285,7 @@ RexxObject *MessageClass::result()
     // condition here.
     if (raiseError())
     {
-        ActivityManager::currentActivity->reraiseException(condition);
+        ActivityManager::currentActivity.load()->reraiseException(condition);
     }
     // since this is requested via a method that will give an error if used
     // in an expression, return .nil if there is no return value.
@@ -645,7 +645,7 @@ MessageClass *MessageClass::reply()
 void MessageClass::sendNotification()
 {
     // we're no longer interested in any errors that occur.
-    ActivityManager::currentActivity->getTopStackFrame()->setObjNotify(OREF_NULL);
+    ActivityManager::currentActivity.load()->getTopStackFrame()->setObjNotify(OREF_NULL);
     // if we have waiting activities, iterate over them and tell their activities to wake up
     if (waitingActivities != OREF_NULL)
     {

@@ -1783,9 +1783,9 @@ EndClassDefinition(StackFrame);
             // CoreClasses contains additional classes written in Rexx and enhances some of the
             // base classes with methods written in Rexx.
             RexxString *symb = getGlobalName(BASEIMAGELOAD);
-            RexxString *programName = ActivityManager::currentActivity->resolveProgramName(symb, OREF_NULL, OREF_NULL, RESOLVE_DEFAULT);
+            RexxString *programName = ActivityManager::currentActivity.load()->resolveProgramName(symb, OREF_NULL, OREF_NULL, RESOLVE_DEFAULT);
             // create a new stack frame to run under
-            ActivityManager::currentActivity->createNewActivationStack();
+            ActivityManager::currentActivity.load()->createNewActivationStack();
             try
             {
                     // create an executable object for this.
@@ -1799,7 +1799,7 @@ EndClassDefinition(StackFrame);
             }
             catch (ActivityException)
             {
-                    ActivityManager::currentActivity->error();          /* do error cleanup                  */
+                    ActivityManager::currentActivity.load()->error();          /* do error cleanup                  */
                     Interpreter::logicError("Error building kernel image.  Image not saved.");
             }
 

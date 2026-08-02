@@ -159,7 +159,7 @@ void RexxInstructionCall::resolve(StringTable *labels)
 void RexxInstructionCall::execute(RexxActivation *context, ExpressionStack *stack)
 {
     // perform a stack space check here.
-    ActivityManager::currentActivity->checkStackSpace();
+    ActivityManager::currentActivity.load()->checkStackSpace();
     context->traceInstruction(this);
 
     // evaluate the arguments first
@@ -286,7 +286,7 @@ void RexxInstructionDynamicCall::flatten(Envelope *envelope)
 void RexxInstructionDynamicCall::execute(RexxActivation *context, ExpressionStack *stack)
 {
     // perform a stack space check here.
-    ActivityManager::currentActivity->checkStackSpace();
+    ActivityManager::currentActivity.load()->checkStackSpace();
     context->traceInstruction(this);
 
     // NB:  This leaves this on the stack...that's fine, because
@@ -429,7 +429,7 @@ void RexxInstructionQualifiedCall::flatten(Envelope *envelope)
 void RexxInstructionQualifiedCall::execute(RexxActivation *context, ExpressionStack *stack)
 {
     // perform a stack space check here.
-    ActivityManager::currentActivity->checkStackSpace();
+    ActivityManager::currentActivity.load()->checkStackSpace();
     context->traceInstruction(this);
 
     // evaluate the arguments first

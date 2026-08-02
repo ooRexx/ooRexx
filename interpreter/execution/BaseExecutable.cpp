@@ -253,7 +253,7 @@ void BaseExecutable::processNewExecutableArgs(RexxObject **&init_args, size_t &a
         // using the calling source context, so get the package from the top activation if
         // there is one.
         // see if we have an active context and use the current source as the basis for the lookup
-        RexxActivation *currentContext = ActivityManager::currentActivity->getCurrentRexxFrame();
+        RexxActivation *currentContext = ActivityManager::currentActivity.load()->getCurrentRexxFrame();
         if (currentContext != OREF_NULL)
         {
             sourceContext = currentContext->getPackage();
@@ -296,7 +296,7 @@ void BaseExecutable::processNewExecutableArgs(RexxObject **&init_args, size_t &a
             // using the calling source context, so get the package from the top activation if
             // there is one.
             // see if we have an active context and use the current source as the basis for the lookup
-            RexxActivation *currentContext = ActivityManager::currentActivity->getCurrentRexxFrame();
+            RexxActivation *currentContext = ActivityManager::currentActivity.load()->getCurrentRexxFrame();
             if (currentContext != OREF_NULL)
             {
                 sourceContext = currentContext->getPackage();
@@ -328,7 +328,7 @@ void BaseExecutable::processNewFileExecutableArgs(RexxString *&filename,
         // using the calling source context, so get the package from the top activation if
         // there is one.
         // see if we have an active context and use the current source as the basis for the lookup
-        RexxActivation *currentContext = ActivityManager::currentActivity->getCurrentRexxFrame();
+        RexxActivation *currentContext = ActivityManager::currentActivity.load()->getCurrentRexxFrame();
         if (currentContext != OREF_NULL)
         {
             sourceContext = currentContext->getPackage();
@@ -361,7 +361,7 @@ void BaseExecutable::processNewFileExecutableArgs(RexxString *&filename,
         // using the calling source context, so get the package from the top activation if
         // there is one.
         // see if we have an active context and use the current source as the basis for the lookup
-        RexxActivation *currentContext = ActivityManager::currentActivity->getCurrentRexxFrame();
+        RexxActivation *currentContext = ActivityManager::currentActivity.load()->getCurrentRexxFrame();
         if (currentContext != OREF_NULL)
         {
             sourceContext = currentContext->getPackage();

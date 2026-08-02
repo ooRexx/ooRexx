@@ -41,6 +41,7 @@
 #include "Activity.hpp"
 #include "ActivationSettings.hpp"
 #include <deque>
+#include <atomic>
 #include "GlobalNames.hpp"
 #include "SystemInterpreter.hpp"
 
@@ -166,7 +167,8 @@ public:
         return getLocal();
     }
 
-    static Activity * volatile currentActivity;   // the currently active thread
+    // was "Activity * volatile" -- volatile provides no ordering; see bug #2074
+    static std::atomic<Activity *> currentActivity;   // the currently active thread
 
     static inline void postTermination()
     {
@@ -194,123 +196,128 @@ protected:
      // kernel lock, but this ordering must be strictly observed.
     static SysMutex          kernelSemaphore;         // global kernel semaphore lock
     static SysSemaphore      terminationSem;          // used to signal that everything has shutdown
-    static volatile bool sentinel;                    // used to ensure proper ordering of updates
+    // NOTE: was "volatile bool".  volatile does NOT order surrounding non-volatile
+    // accesses and emits no fence, so the barrier the comments below claim never
+    // existed.  ThreadSanitizer reports this as the single most-raced object in the
+    // interpreter (94 races in one targeted run).  std::atomic gives the intended
+    // sequentially-consistent ordering.  See bug #2074.
+    static std::atomic<bool> sentinel;                // used to ensure proper ordering of updates
     static std::deque<Activity *>waitingActivities;   // queue of waiting activities
-    static size_t waitingAttaches;                    // the count of attaches waiting for access
-    static size_t waitingAccess;                      // the count of activities waiting for access
-    static size_t waitingApiAccess;                   // the count of activities waiting for access for API callbacks.
+    static std::atomic<size_t> waitingAttaches;                    // the count of attaches waiting for access
+    static std::atomic<size_t> waitingAccess;                      // the count of activities waiting for access
+    static std::atomic<size_t> waitingApiAccess;                   // the count of activities waiting for access for API callbacks.
     static uint64_t          lastLockTime;            // the last time we granted the kernel lock.
 };
 
 
 // various exception/condition reporting routines
-inline void reportCondition(RexxString *condition, RexxObject *description) { ActivityManager::currentActivity->raiseCondition(condition, OREF_NULL, description, OREF_NULL, OREF_NULL); }
+inline void reportCondition(RexxString *condition, RexxObject *description) { ActivityManager::currentActivity.load()->raiseCondition(condition, OREF_NULL, description, OREF_NULL, OREF_NULL); }
 inline void reportNovalue(RexxString *description) { reportCondition(GlobalNames::NOVALUE, description); }
 inline void reportNostring(RexxString *description) { reportCondition(GlobalNames::NOSTRING, description); }
 
 inline void reportException(RexxErrorCodes error)
 {
-    ActivityManager::currentActivity->reportAnException(error);
+    ActivityManager::currentActivity.load()->reportAnException(error);
 }
 
 inline void reportException(RexxErrorCodes error, ArrayClass *args)
 {
-    ActivityManager::currentActivity->raiseException(error, OREF_NULL, args, OREF_NULL);
+    ActivityManager::currentActivity.load()->raiseException(error, OREF_NULL, args, OREF_NULL);
 }
 
 inline void reportException(RexxErrorCodes error, RexxObject *a1)
 {
-    ActivityManager::currentActivity->reportAnException(error, a1);
+    ActivityManager::currentActivity.load()->reportAnException(error, a1);
 }
 
 inline void reportException(RexxErrorCodes error, wholenumber_t a1)
 {
-    ActivityManager::currentActivity->reportAnException(error, a1);
+    ActivityManager::currentActivity.load()->reportAnException(error, a1);
 }
 
 inline void reportException(RexxErrorCodes error, wholenumber_t a1, wholenumber_t a2)
 {
-    ActivityManager::currentActivity->reportAnException(error, a1, a2);
+    ActivityManager::currentActivity.load()->reportAnException(error, a1, a2);
 }
 
 inline void reportException(RexxErrorCodes error, wholenumber_t a1, RexxObject *a2)
 {
-    ActivityManager::currentActivity->reportAnException(error, a1, a2);
+    ActivityManager::currentActivity.load()->reportAnException(error, a1, a2);
 }
 
 inline void reportException(RexxErrorCodes error, RexxObject *a1, wholenumber_t a2)
 {
-    ActivityManager::currentActivity->reportAnException(error, a1, a2);
+    ActivityManager::currentActivity.load()->reportAnException(error, a1, a2);
 }
 
 inline void reportException(RexxErrorCodes error, const char *a1, RexxObject *a2)
 {
-    ActivityManager::currentActivity->reportAnException(error, a1, a2);
+    ActivityManager::currentActivity.load()->reportAnException(error, a1, a2);
 }
 
 inline void reportException(RexxErrorCodes error, RexxObject *a1, const char *a2)
 {
-    ActivityManager::currentActivity->reportAnException(error, a1, a2);
+    ActivityManager::currentActivity.load()->reportAnException(error, a1, a2);
 }
 
 inline void reportException(RexxErrorCodes error, const char *a1)
 {
-    ActivityManager::currentActivity->reportAnException(error, a1);
+    ActivityManager::currentActivity.load()->reportAnException(error, a1);
 }
 
 inline void reportException(RexxErrorCodes error, const char *a1, const char *a2)
 {
-    ActivityManager::currentActivity->reportAnException(error, a1, a2);
+    ActivityManager::currentActivity.load()->reportAnException(error, a1, a2);
 }
 
 inline void reportException(RexxErrorCodes error, const char *a1, wholenumber_t a2)
 {
-    ActivityManager::currentActivity->reportAnException(error, a1, a2);
+    ActivityManager::currentActivity.load()->reportAnException(error, a1, a2);
 }
 
 inline void reportException(RexxErrorCodes error, const char *a1, wholenumber_t a2, RexxObject *a3)
 {
-    ActivityManager::currentActivity->reportAnException(error, a1, a2, a3);
+    ActivityManager::currentActivity.load()->reportAnException(error, a1, a2, a3);
 }
 
 inline void reportException(RexxErrorCodes error, const char *a1, RexxObject *a2, wholenumber_t a3)
 {
-    ActivityManager::currentActivity->reportAnException(error, a1, a2, a3);
+    ActivityManager::currentActivity.load()->reportAnException(error, a1, a2, a3);
 }
 
 inline void reportException(RexxErrorCodes error, RexxObject *a1, RexxObject *a2)
 {
-    ActivityManager::currentActivity->reportAnException(error, a1, a2);
+    ActivityManager::currentActivity.load()->reportAnException(error, a1, a2);
 }
 
 inline void reportException(RexxErrorCodes error, RexxObject *a1, RexxObject *a2, RexxObject *a3)
 {
-    ActivityManager::currentActivity->reportAnException(error, a1, a2, a3);
+    ActivityManager::currentActivity.load()->reportAnException(error, a1, a2, a3);
 }
 
 inline void reportException(RexxErrorCodes error, RexxObject *a1, RexxObject *a2, RexxObject *a3, RexxObject *a4)
 {
-    ActivityManager::currentActivity->reportAnException(error, a1, a2, a3, a4);
+    ActivityManager::currentActivity.load()->reportAnException(error, a1, a2, a3, a4);
 }
 
 inline void reportException(RexxErrorCodes error, const char *a1, RexxObject *a2, const char *a3, RexxObject *a4)
 {
-    ActivityManager::currentActivity->reportAnException(error, a1, a2, a3, a4);
+    ActivityManager::currentActivity.load()->reportAnException(error, a1, a2, a3, a4);
 }
 
 inline void reportException(RexxErrorCodes error, const char *a1, RexxObject *a2, RexxObject *a3, RexxObject *a4)
 {
-    ActivityManager::currentActivity->reportAnException(error, new_string(a1), a2, a3, a4);
+    ActivityManager::currentActivity.load()->reportAnException(error, new_string(a1), a2, a3, a4);
 }
 
 inline void reportException(RexxErrorCodes error, const char *a1, RexxObject *a2, RexxObject *a3)
 {
-    ActivityManager::currentActivity->reportAnException(error, new_string(a1), a2, a3);
+    ActivityManager::currentActivity.load()->reportAnException(error, new_string(a1), a2, a3);
 }
 
 inline void reportNomethod(RexxErrorCodes error, RexxString *message, RexxObject *receiver)
 {
-    if (!ActivityManager::currentActivity->raiseCondition(GlobalNames::NOMETHOD, OREF_NULL, message, receiver, OREF_NULL))
+    if (!ActivityManager::currentActivity.load()->raiseCondition(GlobalNames::NOMETHOD, OREF_NULL, message, receiver, OREF_NULL))
     {
         reportException(error, receiver, message);
     }
@@ -324,7 +331,7 @@ inline void reportNomethod(RexxErrorCodes error, RexxString *message, RexxObject
  */
 inline RexxString *lastMessageName()
 {
-  return ActivityManager::currentActivity->getLastMessageName();
+  return ActivityManager::currentActivity.load()->getLastMessageName();
 }
 
 

@@ -578,7 +578,7 @@ RexxString *PackageClass::traceBack(RexxActivation *activation, SourceLocation &
         // the package name in the message
         if (isInternalCode())
         {
-            line = ActivityManager::currentActivity->buildMessage(Message_Translations_internal_code, new_array((size_t)0));
+            line = ActivityManager::currentActivity.load()->buildMessage(Message_Translations_internal_code, new_array((size_t)0));
         }
 
         // if we have an activation (and we should, since the only time we won't would be for a
@@ -593,14 +593,14 @@ RexxString *PackageClass::traceBack(RexxActivation *activation, SourceLocation &
         // the actual package.
         else if (isInternalCode())
         {
-            line = ActivityManager::currentActivity->buildMessage(Message_Translations_internal_code, new_array((size_t)0));
+            line = ActivityManager::currentActivity.load()->buildMessage(Message_Translations_internal_code, new_array((size_t)0));
         }
         else
         {
             // generic package message.
             ArrayClass *args = new_array(programName);
             ProtectedObject p(args);
-            line = ActivityManager::currentActivity->buildMessage(Message_Translations_no_source_available, args);
+            line = ActivityManager::currentActivity.load()->buildMessage(Message_Translations_no_source_available, args);
         }
     }
 

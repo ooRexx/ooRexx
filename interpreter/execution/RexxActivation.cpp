@@ -1415,9 +1415,9 @@ void RexxActivation::exitFrom(RexxObject *resultObj)
             // terminate this level
             activation->termination();
             // pop from the activity stack
-            ActivityManager::currentActivity->popStackFrame(false);
+            ActivityManager::currentActivity.load()->popStackFrame(false);
             //. go to the next level
-            activation = ActivityManager::currentActivity->getCurrentRexxFrame();
+            activation = ActivityManager::currentActivity.load()->getCurrentRexxFrame();
         }
         while (!activation->isTopLevel());
 
@@ -1828,12 +1828,12 @@ void RexxActivation::raise(RexxString *condition, RexxObject *rc, RexxString *de
             ProtectedObject p(this);
             termination();
             activity->popStackFrame(false);
-            ActivityManager::currentActivity->reraiseException(conditionobj);
+            ActivityManager::currentActivity.load()->reraiseException(conditionobj);
         }
         else
         {
             // raise the error now at this level.
-            ActivityManager::currentActivity->raiseException((RexxErrorCodes)((RexxInteger *)rc)->getValue(), description, (ArrayClass *)additional, resultObj);
+            ActivityManager::currentActivity.load()->raiseException((RexxErrorCodes)((RexxInteger *)rc)->getValue(), description, (ArrayClass *)additional, resultObj);
         }
     }
     else
@@ -2750,7 +2750,7 @@ ActivationBase* RexxActivation::senderActivation(RexxString *conditionName)
 void RexxActivation::interpret(RexxString *codestring)
 {
     // check the stack space to see if we have room.
-    ActivityManager::currentActivity->checkStackSpace();
+    ActivityManager::currentActivity.load()->checkStackSpace();
     // translate the code as if it was located here.
     RexxCode *newCode = code->interpret(codestring, current->getLineNumber());
     // create a new activation to run this code

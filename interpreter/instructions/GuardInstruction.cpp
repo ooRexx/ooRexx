@@ -176,7 +176,7 @@ void RexxInstructionGuard::execute(RexxActivation *context, ExpressionStack *sta
                 // now perform the guard wait
                 context->guardWait();
                 // reset our activity guard semaphore.
-                ActivityManager::currentActivity->guardSet();
+                ActivityManager::currentActivity.load()->guardSet();
                 // try the expression again
                 result = expression->evaluate(context, stack);
                 context->traceKeywordResult(GlobalNames::WHEN, result);

@@ -50,10 +50,10 @@
 #include "GlobalProtectedObject.hpp"
 
 // The currently active activity.
-Activity *volatile ActivityManager::currentActivity = OREF_NULL;
+std::atomic<Activity *> ActivityManager::currentActivity(OREF_NULL);
 
 // this is a volatile variable used to ensure instruction ordering
-volatile bool ActivityManager::sentinel = false;
+std::atomic<bool> ActivityManager::sentinel(false);
 
 // available activities we can reuse
 QueueClass *ActivityManager::availableActivities = OREF_NULL;
@@ -63,11 +63,11 @@ QueueClass *ActivityManager::allActivities = OREF_NULL;
 
 std::deque<Activity *>ActivityManager::waitingActivities;   // queue of waiting activities
 
-size_t ActivityManager::waitingAttaches = 0;                // count of waiting external attaches
+std::atomic<size_t> ActivityManager::waitingAttaches(0);                // count of waiting external attaches
 
-size_t ActivityManager::waitingAccess = 0;                  // count of activities currently awaiting access
+std::atomic<size_t> ActivityManager::waitingAccess(0);                  // count of activities currently awaiting access
 
-size_t ActivityManager::waitingApiAccess = 0;               // count of activities currently awaiting API access
+std::atomic<size_t> ActivityManager::waitingApiAccess(0);               // count of activities currently awaiting API access
 
 uint64_t ActivityManager::lastLockTime = 0;                 // the last time we granted the kernel lock.
 
@@ -1126,7 +1126,7 @@ RexxObject *ActivityManager::getLocalEnvironment(RexxString *name)
     {
         return TheNilObject;
     }
-    return currentActivity->getLocalEnvironment(name);
+    return currentActivity.load()->getLocalEnvironment(name);
 }
 
 
@@ -1141,7 +1141,7 @@ DirectoryClass *ActivityManager::getLocal()
     {
         return OREF_NULL;
     }
-    return currentActivity->getLocal();
+    return currentActivity.load()->getLocal();
 }
 
 

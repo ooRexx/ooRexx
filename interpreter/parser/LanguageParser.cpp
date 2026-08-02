@@ -3618,7 +3618,7 @@ RexxInternalObject* LanguageParser::parseMessageSubterm(int terminators)
 {
     // with very complex instructions, it is possible to recurse quite deeply here.
     // so give a look at the stack space on each call so we can terminate "nicely"
-    ActivityManager::currentActivity->checkStackSpace();
+    ActivityManager::currentActivity.load()->checkStackSpace();
     // get the first token.  If we've hit a terminator here, this could be
     // the real end of the expression.  The caller context will figure out
     // how to handle that.
@@ -3758,7 +3758,7 @@ RexxInternalObject* LanguageParser::parseSubTerm(int terminators)
 {
     // with very complex instructions, it is possible to recurse quite deeply here.
     // so give a look at the stack space on each call so we can terminate "nicely"
-    ActivityManager::currentActivity->checkStackSpace();
+    ActivityManager::currentActivity.load()->checkStackSpace();
 
     // get the first token and make sure we really have something here.
     // The caller knows how to deal with a missing term.
@@ -4068,7 +4068,7 @@ ArrayClass  *LanguageParser::words(RexxString *string)
  */
 void LanguageParser::error(RexxErrorCodes errorcode)
 {
-    ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, OREF_NULL, OREF_NULL);
+    ActivityManager::currentActivity.load()->raiseException(errorcode, OREF_NULL, OREF_NULL, OREF_NULL);
 }
 
 
@@ -4085,7 +4085,7 @@ void LanguageParser::error(RexxErrorCodes errorcode, const SourceLocation &locat
     // set the error location.  This location is picked up from the
     // parse context stack frame we set up before we started
     clauseLocation = location;
-    ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, subs, OREF_NULL);
+    ActivityManager::currentActivity.load()->raiseException(errorcode, OREF_NULL, subs, OREF_NULL);
 }
 
 
@@ -4100,7 +4100,7 @@ void LanguageParser::error(RexxErrorCodes errorcode, const SourceLocation &locat
  */
 void LanguageParser::errorLine(RexxErrorCodes errorcode, RexxInstruction *instruction)
 {
-    ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, new_array(new_integer(instruction->getLineNumber())), OREF_NULL);
+    ActivityManager::currentActivity.load()->raiseException(errorcode, OREF_NULL, new_array(new_integer(instruction->getLineNumber())), OREF_NULL);
 }
 
 
@@ -4115,7 +4115,7 @@ void LanguageParser::errorPosition(RexxErrorCodes errorcode, RexxToken *token )
 {
     SourceLocation tokenLocation = token->getLocation();
 
-    ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, new_array(new_integer(tokenLocation.getOffset() + 1), new_integer(tokenLocation.getLineNumber())), OREF_NULL);
+    ActivityManager::currentActivity.load()->raiseException(errorcode, OREF_NULL, new_array(new_integer(tokenLocation.getOffset() + 1), new_integer(tokenLocation.getLineNumber())), OREF_NULL);
 }
 
 
@@ -4128,7 +4128,7 @@ void LanguageParser::errorPosition(RexxErrorCodes errorcode, RexxToken *token )
  */
 void LanguageParser::errorToken(RexxErrorCodes errorcode, RexxToken *token )
 {
-    ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, new_array(token->displayValue()), OREF_NULL);
+    ActivityManager::currentActivity.load()->raiseException(errorcode, OREF_NULL, new_array(token->displayValue()), OREF_NULL);
 }
 
 
@@ -4140,7 +4140,7 @@ void LanguageParser::errorToken(RexxErrorCodes errorcode, RexxToken *token )
  */
 void LanguageParser::error(RexxErrorCodes errorcode, RexxObject *value )
 {
-    ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, new_array(value), OREF_NULL);
+    ActivityManager::currentActivity.load()->raiseException(errorcode, OREF_NULL, new_array(value), OREF_NULL);
 }
 
 
@@ -4153,7 +4153,7 @@ void LanguageParser::error(RexxErrorCodes errorcode, RexxObject *value )
  */
 void LanguageParser::error(RexxErrorCodes errorcode, RexxObject *value1, RexxObject *value2 )
 {
-    ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, new_array(value1, value2), OREF_NULL);
+    ActivityManager::currentActivity.load()->raiseException(errorcode, OREF_NULL, new_array(value1, value2), OREF_NULL);
 }
 
 
@@ -4167,7 +4167,7 @@ void LanguageParser::error(RexxErrorCodes errorcode, RexxObject *value1, RexxObj
  */
 void LanguageParser::error(RexxErrorCodes errorcode, RexxObject *value1, RexxObject *value2, RexxObject *value3 )
 {
-    ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, new_array(value1, value2, value3), OREF_NULL);
+    ActivityManager::currentActivity.load()->raiseException(errorcode, OREF_NULL, new_array(value1, value2, value3), OREF_NULL);
 }
 
 
