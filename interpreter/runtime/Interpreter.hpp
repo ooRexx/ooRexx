@@ -72,17 +72,17 @@ public:
     static void processStartup();
     static void processShutdown();
 
-    static inline bool getResourceLock() { return resourceLock.request(); }
-    static inline void releaseResourceLock() { resourceLock.release(); }
+    static inline bool getResourceLock() { return resourceLock().request(); }
+    static inline void releaseResourceLock() { resourceLock().release(); }
     static inline void createLocks()
     {
         // this is a critical-time lock, which involves special processing on Windows
-        resourceLock.create(true);
+        resourceLock().create(true);
     }
 
     static inline void closeLocks()
     {
-        resourceLock.close();
+        resourceLock().close();
     }
 
     static int createInstance(RexxInstance *&instance, RexxThreadContext *&threadContext, RexxOption *options);
@@ -133,7 +133,9 @@ protected:
     // IMPORTANT NOTE: To avoid deadlocks, never request the kernel lock while holding the resourceLock,
     // otherwise deadlocks are possible. It is permissible to request the resource lock while holding the
     // kernel lock, but this ordering must be strictly observed.
-    static SysMutex  resourceLock;   // use to lock resources accessed outside of kernel global lock
+    // NOTE: this is a function returning a reference to a function-local static, not
+    // a namespace-scope object.  See the definition in Interpreter.cpp for why (bug #2078).
+    static SysMutex &resourceLock();  // use to lock resources accessed outside of kernel global lock
     // NOTE: the lock for the activity dispatch queue is owned by WaitingActivityQueue,
     // which is the only thing that can reach the queue it protects.
     static int    initializations;   // indicates whether we're terminated or not

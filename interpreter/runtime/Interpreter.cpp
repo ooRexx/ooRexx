@@ -59,8 +59,28 @@
 #include <stdio.h>
 
 
-// global resource lock
-SysMutex Interpreter::resourceLock;
+/**
+ * The global resource lock.
+ *
+ * This is deliberately a function-local static rather than a namespace-scope
+ * object.  createLocks() is reached from _rexx_init(), which is an ELF
+ * constructor, and the order of that constructor relative to the dynamic
+ * initializers of other translation units is fixed only by link order.  With a
+ * namespace-scope object this file's initializers ran *after* _rexx_init(), so
+ * the SysMutex default constructor set created back to false immediately after
+ * create() had set it to true.  request() then returned false for the rest of
+ * the process and every ResourceSection silently guarded nothing.
+ *
+ * A function-local static is initialized on first use, so the order cannot
+ * invert.  The first use is on the startup thread, before any activity exists.
+ *
+ * See bug #2078.
+ */
+SysMutex &Interpreter::resourceLock()
+{
+    static SysMutex theLock;
+    return theLock;
+}
 
 QueueClass *Interpreter::interpreterInstances = OREF_NULL;
 
