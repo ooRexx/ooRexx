@@ -52,6 +52,11 @@ else ()
     cmake_minimum_required (VERSION 2.8.12...99.99)
 endif ()
 
+# CMP0069 must be NEW before check_ipo_supported() will run at all: under OLD it
+# only ever adds IPO flags for the Intel compiler on Linux, and the check itself
+# raises a fatal error. See the IPO block further down.
+cmake_policy(SET CMP0069 NEW)
+
 # must come before the project command
 # 10.13.6 High Sierra is the minimum system supported
 if( APPLE AND BUILD_OSX_UNIVERSAL_BINARIES )
@@ -304,6 +309,44 @@ if (CMAKE_VERSION VERSION_LESS "3.1")
   endif ()
 else ()
   set (CMAKE_CXX_STANDARD 11)
+endif ()
+
+# Interprocedural optimization, also known as link time optimization.
+#
+# This was enabled once before, in r13047, and reverted ten days later in r13049
+# because release builds segfaulted on Linux while running the test suite: the
+# reported failure was in Alarm.testGroup, it moved around from run to run, and
+# macOS and Windows were unaffected. A non-deterministic crash that changes
+# location is what latent undefined behaviour looks like once the optimiser is
+# allowed to inline across translation units, so it is worth trying again now
+# that a few such defects have been found and fixed rather than assuming IPO
+# itself is at fault.
+#
+# ORX_ENABLE_IPO exists so that turning this off is a matter of flipping a
+# default rather than deleting the block again. Whoever needs it off next should
+# not have to write a revert.
+option (ORX_ENABLE_IPO "Use interprocedural optimization when the compiler supports it" ON)
+
+if (ORX_ENABLE_IPO)
+  include (CheckIPOSupported)
+  check_ipo_supported (RESULT ipo_supported OUTPUT ipo_output)
+  if (ipo_supported)
+    # A Debug build wants to be debuggable, and cross-module inlining is the
+    # opposite of that.
+    if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+      message (STATUS "IPO is supported but is not used for a Debug build")
+      set (CMAKE_INTERPROCEDURAL_OPTIMIZATION FALSE)
+    else ()
+      message (STATUS "IPO is supported and enabled")
+      set (CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+    endif ()
+  else ()
+    message (STATUS "IPO is not supported by this toolchain: ${ipo_output}")
+    set (CMAKE_INTERPROCEDURAL_OPTIMIZATION FALSE)
+  endif ()
+else ()
+  message (STATUS "IPO disabled by ORX_ENABLE_IPO")
+  set (CMAKE_INTERPROCEDURAL_OPTIMIZATION FALSE)
 endif ()
 
 include_directories(${PROJECT_BINARY_DIR})
