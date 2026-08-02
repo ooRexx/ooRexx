@@ -75,6 +75,89 @@ const char *SysProcess::executableFullPath = NULL;
 // directory of our Rexx shared libraries
 const char *SysProcess::libraryLocation = NULL;
 
+
+#ifdef HAVE_KERN_PROC_ARGV
+/**
+ * Work out where a program was actually started from, given only the name it
+ * was started under. Needed on OpenBSD, which offers neither a procfs nor a
+ * sysctl for the executable path, leaving argv[0] as the only clue.
+ *
+ * argv[0] is a name, not a location. A shell running "rexx prog.rex" passes
+ * just "rexx", so the name has to be resolved the same way execvp() resolved
+ * it when the program was started: used directly if it contains a slash,
+ * looked up along PATH otherwise.
+ *
+ * Only a candidate that exists and is executable is accepted, so a wrong guess
+ * produces no answer rather than a plausible but false path.
+ *
+ * This inherits the limits of argv[0]. A caller that has already changed
+ * directory, or altered PATH, or was handed a deliberately misleading argv[0],
+ * can defeat it. That is why an absolute argv[0] is still preferred over this,
+ * and why the result must always be verified before use.
+ *
+ * @param name         The name the program was invoked under.
+ * @param resolved     Buffer for the resulting path.
+ * @param resolvedSize Size of that buffer.
+ *
+ * @return true if a candidate was found, false otherwise.
+ */
+static bool resolveProgramName(const char *name, char *resolved, size_t resolvedSize)
+{
+    resolved[0] = '\0';
+    if (name == NULL || *name == '\0')
+    {
+        return false;
+    }
+
+    // A name containing a slash is a path already, relative to the current
+    // directory. execvp() does not search PATH for these, so neither do we.
+    if (strchr(name, '/') != NULL)
+    {
+        if (access(name, X_OK) != 0 ||
+            (size_t)snprintf(resolved, resolvedSize, "%s", name) >= resolvedSize)
+        {
+            resolved[0] = '\0';
+            return false;
+        }
+        return true;
+    }
+
+    const char *pathList = getenv("PATH");
+    if (pathList == NULL)
+    {
+        return false;
+    }
+
+    // Walk PATH taking the first entry that yields an executable, which is the
+    // one the kernel would have run.
+    while (true)
+    {
+        const char *separator = strchr(pathList, ':');
+        size_t length = (separator == NULL) ? strlen(pathList) : (size_t)(separator - pathList);
+
+        // An empty entry means the current directory, the same convention
+        // execvp() follows.
+        int written = (length == 0)
+            ? snprintf(resolved, resolvedSize, "./%s", name)
+            : snprintf(resolved, resolvedSize, "%.*s/%s", (int)length, pathList, name);
+
+        if (written > 0 && (size_t)written < resolvedSize && access(resolved, X_OK) == 0)
+        {
+            return true;
+        }
+
+        if (separator == NULL)
+        {
+            break;
+        }
+        pathList = separator + 1;
+    }
+
+    resolved[0] = '\0';
+    return false;
+}
+#endif
+
 /**
  * Get the current user name information.
  *
@@ -155,10 +238,24 @@ const char* SysProcess::getExecutableFullPath()
     {
         if (sysctl(mib, 4, argv, &len, NULL, 0) != -1 && len > 0)
         {
-            // to be 100% reliable, only accept an absolute path
+            // An absolute argv[0] is the reliable case and is taken as is.
+            // snprintf rather than strcpy because argv[0] is supplied by
+            // whoever started us and is not bounded by PATH_MAX.
             if (argv[0][0] == '/')
             {
-                strcpy(path, argv[0]);
+                if ((size_t)snprintf(path, sizeof(path), "%s", argv[0]) >= sizeof(path))
+                {
+                    path[0] = '\0';
+                }
+            }
+            else
+            {
+                // Anything else is a name rather than a location, which is the
+                // ordinary case: a shell running "rexx prog.rex" passes just
+                // "rexx". Previously this was given up on, so every ooRexx
+                // started through PATH on OpenBSD had no executable path at
+                // all and .rexxInfo~executable came back as .nil.
+                resolveProgramName(argv[0], path, sizeof(path));
             }
         }
         free(argv);
