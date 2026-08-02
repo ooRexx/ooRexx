@@ -72,9 +72,9 @@ public:
     static void processStartup();
     static void processShutdown();
 
-    static inline void getResourceLock() { resourceLock.request(); }
+    static inline bool getResourceLock() { return resourceLock.request(); }
     static inline void releaseResourceLock() { resourceLock.release(); }
-    static inline void getDispatchLock() { dispatchLock.request(); }
+    static inline bool getDispatchLock() { return dispatchLock.request(); }
     static inline void releaseDispatchLock() { dispatchLock.release(); }
     static inline void createLocks()
     {
@@ -156,8 +156,11 @@ class ResourceSection
 public:
     inline ResourceSection()
     {
-        Interpreter::getResourceLock();
-        terminated = false;
+        // if the acquire fails we must NOT unlock in the destructor.  An unbalanced
+        // unlock on a recursive mutex decrements the count and can drop a lock an
+        // outer scope still believes it holds, destroying mutual exclusion for
+        // everyone.  See bug #2071.
+        terminated = !Interpreter::getResourceLock();
     }
 
     inline ~ResourceSection()
@@ -182,8 +185,7 @@ public:
     {
         if (terminated)
         {
-            Interpreter::getResourceLock();
-            terminated = false;
+            terminated = !Interpreter::getResourceLock();
         }
     }
 
@@ -201,8 +203,8 @@ class DispatchSection
 public:
     inline DispatchSection()
     {
-        Interpreter::getDispatchLock();
-        terminated = false;
+        // see the note in ResourceSection -- never unlock what we do not hold.
+        terminated = !Interpreter::getDispatchLock();
     }
 
     inline ~DispatchSection()
@@ -227,8 +229,7 @@ public:
     {
         if (terminated)
         {
-            Interpreter::getDispatchLock();
-            terminated = false;
+            terminated = !Interpreter::getDispatchLock();
         }
     }
 
