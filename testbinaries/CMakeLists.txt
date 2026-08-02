@@ -101,3 +101,19 @@ target_include_directories(rexxinstance PUBLIC
 # Extra link library definitions
 target_link_libraries(rexxinstance orxexits rexx rexxapi)
 
+# Creates and terminates interpreter instances from several threads at once.
+# Not driven by the test framework: it has to run as its own process, because
+# what it exercises is process-wide interpreter startup. See the file header.
+add_executable(provoke_locks
+   ${PROJECT_SOURCE_DIR}/provoke_locks.cpp)
+# Include file definition
+target_include_directories(provoke_locks PUBLIC
+            ${build_api_dir}
+            ${build_api_platform_dir})
+# Extra link library definitions
+find_package(Threads REQUIRED)
+target_link_libraries(provoke_locks rexx rexxapi ${CMAKE_THREAD_LIBS_INIT})
+# the Rexx program it drives has to sit next to the executable
+configure_file(${PROJECT_SOURCE_DIR}/provoke_locks.rex
+               ${CMAKE_BINARY_DIR}/bin/provoke_locks.rex COPYONLY)
+
