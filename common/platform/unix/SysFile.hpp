@@ -72,9 +72,13 @@ class SysFile
 public:
     SysFile();
 
-    static const int stdinHandle;
-    static const int stdoutHandle;
-    static const int stderrHandle;
+    // NOTE: initialised in-class rather than defined in SysFile.cpp.  This file
+    // is compiled into both librexx and librexxapi, so an out-of-line definition
+    // emits the same symbol in each and violates the ODR (AddressSanitizer flags
+    // it).  In-class constants are compile-time values and emit no symbol.
+    static constexpr int stdinHandle = 0;
+    static constexpr int stdoutHandle = 1;
+    static constexpr int stderrHandle = 2;
 
     enum
     {

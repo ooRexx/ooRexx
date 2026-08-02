@@ -73,10 +73,9 @@
 
 #include "SysFile.hpp"
 
-// This is all the static stuff
-const int SysFile::stdinHandle = 0;
-const int SysFile::stdoutHandle = 1;
-const int SysFile::stderrHandle = 2;
+// NOTE: stdinHandle/stdoutHandle/stderrHandle are now initialised in-class in
+// SysFile.hpp.  Defining them here emitted one copy per shared library that
+// compiles this file (librexx and librexxapi), which is an ODR violation.
 
 /**
  * Default constructor for a SysFile object.
