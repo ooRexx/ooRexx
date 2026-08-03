@@ -54,8 +54,12 @@ endif ()
 
 # CMP0069 must be NEW before check_ipo_supported() will run at all: under OLD it
 # only ever adds IPO flags for the Intel compiler on Linux, and the check itself
-# raises a fatal error. See the IPO block further down.
-cmake_policy(SET CMP0069 NEW)
+# raises a fatal error. See the IPO block further down. The policy and the
+# CheckIPOSupported module both arrived in CMake 3.9, so guard for older CMake
+# (e.g. 3.5 on Ubuntu 16.04), which does not know the policy and errors on it.
+if (POLICY CMP0069)
+  cmake_policy(SET CMP0069 NEW)
+endif ()
 
 # must come before the project command
 # 10.13.6 High Sierra is the minimum system supported
@@ -327,7 +331,7 @@ endif ()
 # not have to write a revert.
 option (ORX_ENABLE_IPO "Use interprocedural optimization when the compiler supports it" ON)
 
-if (ORX_ENABLE_IPO)
+if (ORX_ENABLE_IPO AND NOT CMAKE_VERSION VERSION_LESS "3.9")
   include (CheckIPOSupported)
   check_ipo_supported (RESULT ipo_supported OUTPUT ipo_output)
   if (ipo_supported)
@@ -344,6 +348,11 @@ if (ORX_ENABLE_IPO)
     message (STATUS "IPO is not supported by this toolchain: ${ipo_output}")
     set (CMAKE_INTERPROCEDURAL_OPTIMIZATION FALSE)
   endif ()
+elseif (ORX_ENABLE_IPO)
+  # CheckIPOSupported and policy CMP0069 both require CMake 3.9. Older CMake
+  # (e.g. 3.5 on Ubuntu 16.04) cannot detect or enable IPO, so build without it.
+  message (STATUS "IPO requested but requires CMake 3.9 or later; this is ${CMAKE_VERSION}, building without IPO")
+  set (CMAKE_INTERPROCEDURAL_OPTIMIZATION FALSE)
 else ()
   message (STATUS "IPO disabled by ORX_ENABLE_IPO")
   set (CMAKE_INTERPROCEDURAL_OPTIMIZATION FALSE)
