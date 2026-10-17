@@ -1429,7 +1429,7 @@ RexxObject *RexxInteger::strictLessOrEqual(RexxObject *other)
  */
 RexxObject *RexxInteger::notOp()
 {
-    return booleanObject(truthValue(Error_Logical_value_method));
+    return booleanObject(!truthValue(Error_Logical_value_method));
 }
 
 
