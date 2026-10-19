@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2026 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -46,6 +46,7 @@
 #include "ContextApi.hpp"
 #include "InterpreterInstance.hpp"
 #include "Interpreter.hpp"
+#include "Activity.hpp"
 
 BEGIN_EXTERN_C()
 
@@ -90,13 +91,50 @@ void RexxEntry AddCommandEnvironment(RexxInstance *c, const char *name, REXXPFN 
 {
     InstanceApiContext context(c);
 
+    HandlerType::Enum handlerType;
     if (type == DIRECT_COMMAND_ENVIRONMENT)
     {
-        context.instance->addCommandHandler(name, handler, HandlerType::DIRECT);
+        handlerType = HandlerType::DIRECT;
     }
     else if (type == REDIRECTING_COMMAND_ENVIRONMENT)
     {
-        context.instance->addCommandHandler(name, handler, HandlerType::REDIRECTING);
+        handlerType = HandlerType::REDIRECTING;
+    }
+    else
+    {
+        return;
+    }
+
+    // The handler table is a Rexx object, and adding to it creates objects, so
+    // this needs the interpreter lock: it is usually called from native code,
+    // which runs without the lock while other threads may be running Rexx code.
+    // A thread of this instance reenters its activity (as the thread context
+    // functions do); any other thread is attached for the duration of the call.
+    Activity *activity = context.instance->findActivity();
+    if (activity != OREF_NULL)
+    {
+        activity->enterCurrentThread();
+        try
+        {
+            context.instance->addCommandHandler(name, handler, handlerType);
+        }
+        catch (NativeActivation *)
+        {
+        }
+        activity->exitCurrentThread();
+    }
+    else
+    {
+        bool created = false;
+        activity = context.instance->attachThread(created);   // holds the lock
+        try
+        {
+            context.instance->addCommandHandler(name, handler, handlerType);
+        }
+        catch (NativeActivation *)
+        {
+        }
+        context.instance->detachThread(activity);
     }
 }
 
