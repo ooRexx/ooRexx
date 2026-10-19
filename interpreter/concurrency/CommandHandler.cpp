@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2026 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -66,22 +66,26 @@ void *CommandHandler::operator new(size_t size)
 
 
 /**
- * Resolve a classic-style exit handler to the actual target
- * entry point address and invocation style.
+ * Look up a classic subcommand handler registered (RexxRegisterSubcom...)
+ * under a name.  The lookup goes to the RexxAPI with the kernel lock
+ * released, so it fills a local variable: an object written to meanwhile
+ * (as this used to write into a new CommandHandler that nothing anchored
+ * yet) may be collected by another thread, and the write then lands in
+ * whatever reuses its memory.
  *
- * @param name   The registered exit name.
+ * @param handlerName
+ *               The registered subcommand handler name.
+ *
+ * @return The entry point, or NULL if no handler is registered under it.
  */
-void CommandHandler::resolve(const char *handlerName)
+REXXPFN CommandHandler::resolveRegisteredName(const char *handlerName)
 {
+    REXXPFN entry = NULL;
     {
         UnsafeBlock releaser;
-        RexxResolveSubcom(handlerName, &entryPoint);
+        RexxResolveSubcom(handlerName, &entry);
     }
-    // only resolved if we got something back
-    if (entryPoint != NULL)
-    {
-        type = HandlerType::REGISTERED_NAME;
-    }
+    return entry;
 }
 
 

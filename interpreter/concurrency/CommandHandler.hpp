@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2026 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -71,10 +71,9 @@ public:
 
     inline CommandHandler(RESTORETYPE restoreType) { ; };
     inline CommandHandler(REXXPFN e, HandlerType::Enum t) : entryPoint(e), type(t) { ; }
-    inline CommandHandler(const char *n) : entryPoint(NULL) { type = HandlerType::UNRESOLVED; resolve(n); }
 
     void call(Activity *activity, RexxActivation *activation, RexxString *address, RexxString *command, ProtectedObject &rc, ProtectedObject &condition, CommandIOContext *io);
-    void resolve(const char *name);
+    static REXXPFN resolveRegisteredName(const char *name);
     inline bool isResolved() { return type != HandlerType::UNRESOLVED; }
 
 protected:

@@ -926,12 +926,14 @@ void InterpreterInstance::addCommandHandler(const char *name, REXXPFN entryPoint
  */
 void InterpreterInstance::addCommandHandler(const char *name, const char *registeredName)
 {
-    RexxString *handlerName = new_upper_string(name);
-    CommandHandler *handler = new CommandHandler(registeredName);
+    // look this up first: the lookup releases the kernel lock, so nothing
+    // we create may wait across it unanchored
+    REXXPFN entry = CommandHandler::resolveRegisteredName(registeredName);
     // it's possible we were give a bogus name, so validate this first
-    if (handler->isResolved())
+    if (entry != NULL)
     {
-        commandHandlers->put(handler, handlerName);
+        Protected<RexxString> handlerName = new_upper_string(name);
+        commandHandlers->put(new CommandHandler(entry, HandlerType::REGISTERED_NAME), handlerName);
     }
 }
 
@@ -946,16 +948,25 @@ void InterpreterInstance::addCommandHandler(const char *name, const char *regist
 CommandHandler *InterpreterInstance::resolveCommandHandler(RexxString *name)
 {
     // all names in the cache are in upper case
-    RexxString *upperName = name->upper();
+    Protected<RexxString> upperName = name->upper();
     CommandHandler *handler = (CommandHandler *)commandHandlers->get(upperName);
     if (handler == OREF_NULL)
     {
-        handler = new CommandHandler(name->getStringData());
-        if (!handler->isResolved())
+        // a classic subcommand handler registered under this name?  The
+        // lookup releases the kernel lock: another thread may add this
+        // environment meanwhile, so look in the table again before adding
+        // one of our own (which would replace it).
+        REXXPFN entry = CommandHandler::resolveRegisteredName(name->getStringData());
+        handler = (CommandHandler *)commandHandlers->get(upperName);
+        if (handler == OREF_NULL)
         {
-            return OREF_NULL;   // can't find this
+            if (entry == NULL)
+            {
+                return OREF_NULL;   // can't find this
+            }
+            handler = new CommandHandler(entry, HandlerType::REGISTERED_NAME);
+            commandHandlers->put(handler, upperName);
         }
-        commandHandlers->put(handler, upperName);
     }
     return handler;
 }
