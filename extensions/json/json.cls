@@ -89,6 +89,8 @@
     </pre>
 */
 
+::requires "logicalwrapper.cls"   -- the LogicalWrapper base class (JsonBoolean and YamlBoolean)
+
 ::class "JSON" public
 
 /** Returns the .JsonBoolean proxy for <code>.true</code>, which ensures a proper JSON encoding.
@@ -283,6 +285,11 @@
         end
         when rexxObject~isNil then do
             buffer~append('null')
+        end
+        when rexxObject~isA(.LogicalWrapper) then do
+            -- any logical value that knows it is one (.JsonBoolean, a bridge's, ...)
+            if rexxObject~value then buffer~append('true')
+            else buffer~append('false')
         end
         when rexxObject~hasMethod('makejson') then do
             -- object can render itself as a JSON string; handles .JsonBoolean as well
@@ -777,120 +784,22 @@ return
 /*  JsonBoolean                                                              */
 /* ========================================================================= */
 
-/** An ooRexx class to represent a JSON boolean (logical) value. It inherits from
-    the ooRexx mixinclass <code>Comparable</code> and therefore implements its abstract
-    method <code>compareTo</code>.
-    To get access to the <code>JsonBoolean</code> <code>true</code> and <code>false</code>
-    sentinels it is advised to use the JSON class attributes
-    <code>true</code> and <code>false</code>.
+/** An ooRexx class to represent a JSON boolean (logical) value. It is a subclass
+    of the class <code>LogicalWrapper</code> (<code>logicalwrapper.cls</code>), which provides the two instances
+    (<code>.JsonBoolean~true</code> and <code>.JsonBoolean~false</code>), their
+    behaviour as the Rexx logical values <code>1</code> and <code>0</code>, and
+    the comparison methods. To get access to the <code>JsonBoolean</code>
+    <code>true</code> and <code>false</code> sentinels it is advised to use the
+    JSON class attributes <code>true</code> and <code>false</code>.
 */
-::class "JSONBoolean" public inherit comparable
-
-/** Class getter attribute method that refers to the proxy object that represents the value <code>.true</code>.
-*/
-::attribute true  get class  unguarded -- true proxy, class getter method
-
-/** Class getter attribute method that refers to the proxy object that represents the value <code>.false</code>.
-*/
-::attribute false get class  unguarded -- false proxy, class getter method
-
-
-/** Make sure that only the JsonBoolean class can create instances.
-*/
-::method new class private
-  forward class (super)
-
-/** Finalizes the class initialization by creating the two proxy class attribute values <code>true</code>
-*   and <code>false</code>.
-*/
-::method    activate  class   -- initialization of class object complete, we now can use everything
-  expose true false
-  true =self~new(.true)       -- create and store true proxy value
-  false=self~new(.false)      -- create and store false proxy value
-
-/** Constructor that saves argument in its attribute 'value'.
-* @param value mandatory Rexx string representing the logical value
-*/
-::method init           -- make constructor method inaccessible to other classes, own metaclass is allowed to access directly
-  expose value
-  use strict arg value  -- assign boolean value
-
-/** Returns the Rexx logical value (0 or 1) stored in this JsonBoolean.
-* @return the logical value
-*/
-::method value unguarded
-  expose value
-  return value
-
-/** Forwards message to the string value of the JsonBoolean.
-*/
-::method unknown unguarded
-  expose value          -- the string value of this JsonBoolean
-  use arg msg, args
-  forward to (value) message (msg) arguments (args)  -- maybe a method of the string value, forward it
-
-
-/** Equal comparison method, needs to be overridden otherwise .Object's method gets run instead.
-* @param other the other object representing a Boolean/logical value
-* @return <code>.true</code>, if this object and <code>other</code> can be regarded to be equal, <code>.false</code> else
-*/
-::method "=" unguarded           -- equal method
-  expose value
-  use strict arg other  -- other must be a Boolean value
-  return value~compareTo(other)=0
-
-/** Unequal comparison method.
-* @param other the other object representing a Boolean/logical value
-* @return <code>.true</code>, if this object and <code>other</code> cannot be regarded to be equal, <code>.false</code> else
-*/
-::method "\=" unguarded          -- unequal method
-  expose value
-  use strict arg other  -- other must be a Boolean value
-  return value~compareTo(other)\=0
-
-/** Unequal comparison method, forwarding to method <code>&quot;\=&quot;</code>.
-*/
-::method "<>" unguarded          -- synonym for "\="
-  forward message ("\=")
-
-/** Unequal comparison method, forwarding to method <code>&quot;\=&quot;</code>.
-*/
-::method "><" unguarded          -- synonym for "\="
-  forward message ("\=")
-
-/** Implements the abstract method inherited from the mixinclass <code>Comparable</code>.
-*/
-::method compareTo unguarded  -- implementation for .orderable class: must return -1 if other greater, 0 if same, 1 otherwise
-  expose value
-  use strict arg other  -- other must be a Boolean value
-
-  if other~isA(.JsonBoolean) then  -- get Rexx string representing logical value
-     otherValue=other~value
-  else
-     otherValue=other~request("string") -- request the string value
-
-  if otherValue=.nil then
-     raise syntax 88.900 array ("Argument ""other"" ["other"] has no 'MAKESTRING' method")
-
-  if value < otherValue then return -1    -- self smaller than other
-  if value = otherValue then return  0    -- self equal to other
-  return                             1    -- self greater than other
-
-/** Renders the object as a Rexx string representing its logical value.
-* @return a Rexx string representing its logical value, either &quot;<code>0</code>&quot; or
-*         &quot;<code>1</code>&quot;
-*/
-::method makeString unguarded -- allow instances of this class to be a plug in replacement for Rexx logical values
-  expose value
-  return value
+::class "JSONBoolean" public subclass LogicalWrapper
 
 /** Renders the object as a JSON string representing its logical value.
 * @return a string representing its logical value JSON encoded, either &quot;<code>false</code>&quot;
 *         or &quot;<code>true</code>&quot;
 */
-::method makeJSON unguarded   -- creates the string "true" or "false", depending on the attribute "value"
-  expose value
-  if value=.true then return "true"
+::method makeJSON unguarded   -- creates the string "true" or "false", depending on the logical value
+  if self~value then return "true"
   return "false"
 
 
@@ -974,8 +883,8 @@ return
     return
   end
 
-  /* Boolean — check before string because JsonBoolean has makeString */
-  if obj~isA(.JsonBoolean) then do
+  /* LogicalWrapper — check before string because a LogicalWrapper has makeString */
+  if obj~isA(.LogicalWrapper) then do
     if obj~value then mb~append(pad, '<boolean>true</boolean>', "0A"x)
     else              mb~append(pad, '<boolean>false</boolean>', "0A"x)
     return
