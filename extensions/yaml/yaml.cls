@@ -128,6 +128,8 @@
  *
  *  @see Yaml
  */
+::requires "logicalwrapper.cls"   -- the LogicalWrapper base class (JsonBoolean and YamlBoolean)
+
 ::class YamlError public
 
 /** The human-readable error description. */
@@ -166,139 +168,24 @@
 /*  YamlBoolean                                                               */
 /*============================================================================*/
 
-/** Sentinel class for YAML boolean values, following the same pattern as
- *  <code>JsonBoolean</code> in <code>json.cls</code>.  Two singleton instances
- *  (<code>.YamlBoolean~true</code> and <code>.YamlBoolean~false</code>) are
- *  created at class activation time.  They behave transparently as
- *  <code>1</code> and <code>0</code> via <code>makeString</code> and the
- *  <code>unknown</code> method, but can be detected with
- *  <code>isA(.YamlBoolean)</code> for type-aware serialisation.
- *
- *  <p>To obtain the singleton instances use the class getter attributes:
- *  <pre>
- *    .YamlBoolean~true
- *    .YamlBoolean~false
- *  </pre>
+/** Sentinel class for YAML boolean values, a subclass of the class
+ *  <code>LogicalWrapper</code> (<code>logicalwrapper.cls</code>), which provides the two instances
+ *  (<code>.YamlBoolean~true</code> and <code>.YamlBoolean~false</code>), their
+ *  behaviour as <code>1</code> and <code>0</code>, and the comparison methods.
+ *  They can be detected with <code>isA(.YamlBoolean)</code> for type-aware
+ *  serialisation.
  *
  *  @see Yaml
  *  @see YamlEmitter
  */
-::class YamlBoolean public inherit comparable
-
-/** Class getter attribute that returns the singleton representing
- *  <code>.true</code>.
- *
- *  @return the YamlBoolean proxy for <code>.true</code>
- */
-::attribute true  get class unguarded
-
-/** Class getter attribute that returns the singleton representing
- *  <code>.false</code>.
- *
- *  @return the YamlBoolean proxy for <code>.false</code>
- */
-::attribute false get class unguarded
-
-/** Private constructor &mdash; only the class itself can create instances. */
-::method new class private
-  forward class (super)
-
-/** Finalises class initialisation by creating the two singleton class
- *  attribute values <code>true</code> and <code>false</code>.
- */
-::method activate class
-  expose true false
-  true  = self~new(.true)
-  false = self~new(.false)
-
-/** Constructor that stores the logical value.
- *
- *  @param value a Rexx logical value (<code>0</code> or <code>1</code>)
- */
-::method init
-  expose value
-  use strict arg value
-
-/** Forwards any unrecognised message to the underlying string value,
- *  so that YamlBoolean can be used transparently wherever a Rexx logical
- *  value is expected.
- */
-::method unknown unguarded
-  expose value
-  use arg messageName, arguments
-  forward to (value) message (messageName) arguments (arguments)
-
-/** Equal comparison operator.
- *
- *  @param other the other object representing a boolean/logical value
- *  @return <code>.true</code> if this object and <code>other</code> are
- *          equal, <code>.false</code> otherwise
- */
-::method "=" unguarded
-  use strict arg other
-  return self~compareTo(other) = 0
-
-/** Unequal comparison operator.
- *
- *  @param other the other object representing a boolean/logical value
- *  @return <code>.true</code> if this object and <code>other</code> are
- *          not equal, <code>.false</code> otherwise
- */
-::method "\=" unguarded
-  use strict arg other
-  return self~compareTo(other) \= 0
-
-/** Synonym for <code>"\="</code>. */
-::method "<>" unguarded
-  forward message ("\=")
-
-/** Synonym for <code>"\="</code>. */
-::method "><" unguarded
-  forward message ("\=")
-
-/** Implements the abstract method inherited from the mixinclass
- *  <code>Comparable</code>.
- *
- *  @param other the other object representing a boolean/logical value
- *  @return <code>-1</code> if this value is less than <code>other</code>,
- *          <code>0</code> if equal, <code>1</code> if greater
- */
-::method compareTo unguarded
-  expose value
-  use strict arg other
-  if other~isA(.YamlBoolean) then
-    otherValue = other~value
-  else
-    otherValue = other~request("string")
-  if otherValue == .nil then
-    raise syntax 88.900 array ("Argument 'other' ["other"] has no STRING method")
-  if value < otherValue then return -1
-  if value = otherValue then return  0
-  return 1
-
-/** Returns the underlying Rexx logical value.
- *
- *  @return <code>1</code> for true, <code>0</code> for false
- */
-::method value unguarded
-  expose value
-  return value
-
-/** Renders this object as a Rexx string representing its logical value.
- *
- *  @return <code>"1"</code> or <code>"0"</code>
- */
-::method makeString unguarded
-  expose value
-  return value
+::class "YamlBoolean" public subclass LogicalWrapper
 
 /** Renders this object as a YAML string representing its logical value.
  *
  *  @return <code>"true"</code> or <code>"false"</code>
  */
 ::method makeYAML unguarded
-  expose value
-  if value then return "true"
+  if self~value then return "true"
   return "false"
 
 /*============================================================================*/
@@ -4033,7 +3920,7 @@
      where the indentation ends and content begins. */
   indentIndicator = ""
   if value == .nil then return "null"
-  if value~isA(.YamlBoolean) then return value~makeYAML
+  if value~isA(.LogicalWrapper) then return .YamlBoolean~of(value)~makeYAML
   if \value~isA(.string) then return value~string
   select case value
     when "" then return '""'
@@ -4631,7 +4518,7 @@
 ::method scalarType private
   use strict arg value
   if value == .nil then return "null"
-  if value~isA(.YamlBoolean) then return "bool"
+  if value~isA(.LogicalWrapper) then return "bool"
   if \value~isA(.string) then return "str"
   if value == "" then return "str"
   /* Check numeric types */
