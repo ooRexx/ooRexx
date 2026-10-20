@@ -546,6 +546,7 @@ set (build_extensions_dir extensions)
 set (build_extensions_platform_dir ${build_extensions_dir}/${ORX_PLATFORM_DIR})
 set (build_extensions_rxftp_dir ${build_extensions_dir}/rxftp)
 set (build_extensions_csvstream_dir ${build_extensions_dir}/csvStream)
+set (build_extensions_logicalwrapper_dir ${build_extensions_dir}/logicalwrapper)
 set (build_extensions_json_dir ${build_extensions_dir}/json)
 set (build_extensions_yaml_dir ${build_extensions_dir}/yaml)
 set (build_extensions_dateparser_dir ${build_extensions_dir}/dateparser)
@@ -1709,6 +1710,7 @@ endif ()
 copy_build_file(rxregexp.cls     ${build_extensions_rxregexp_dir})
 copy_build_file(rxftp.cls        ${build_extensions_rxftp_dir})
 copy_build_file(csvStream.cls    ${build_extensions_csvstream_dir})
+copy_build_file(logicalwrapper.cls ${build_extensions_logicalwrapper_dir})
 copy_build_file(json.cls         ${build_extensions_json_dir})
 copy_build_file(json.dtd         ${build_extensions_json_dir})
 copy_build_file(json.xsd         ${build_extensions_json_dir})
@@ -1770,6 +1772,7 @@ add_custom_target(class_files ALL DEPENDS
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rxregexp.cls
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rxftp.cls
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/csvStream.cls
+    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/logicalwrapper.cls
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/json.cls
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/json.dtd
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/json.xsd
@@ -1796,6 +1799,7 @@ install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rxregexp.cls COMPONENT Core DEST
 install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rxftp.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR})
 
 install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/csvStream.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR})
+install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/logicalwrapper.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR})
 install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/json.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR})
 install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/json.dtd COMPONENT Core DESTINATION ${INSTALL_CLS_DIR})
 install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/json.xsd COMPONENT Core DESTINATION ${INSTALL_CLS_DIR})
