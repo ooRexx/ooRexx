@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2008-2022 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2008-2026 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -560,6 +560,17 @@ RexxObjectPtr RexxEntry rHandler(RexxExitContext *context,
 }
 
 
+// test DIRECT command handler for TestAddCommandEnvironment "condition"
+// raises the condition named by the command (e.g. "USER FOO") with RC 7
+RexxObjectPtr RexxEntry cHandler(RexxExitContext *context,
+                                 RexxStringObject address,
+                                 RexxStringObject command)
+{
+    context->RaiseCondition(context->CString(command), command, NULLOBJECT, context->WholeNumberToObject(7));
+    return context->WholeNumberToObject(7);
+}
+
+
 // test command handler for the I/O redirection APIs
 RexxObjectPtr RexxEntry ioHandler(RexxExitContext *context, RexxStringObject address, RexxStringObject command, RexxIORedirectorContext *ioContext)
 {
@@ -746,7 +757,7 @@ RexxObjectPtr RexxEntry ioHandler(RexxExitContext *context, RexxStringObject add
 }
 
 
-// install 'ioHandler', 'rHandler', or 'dHandler'
+// install 'ioHandler', 'rHandler', 'cHandler', or 'dHandler'
 RexxRoutine2(RexxObjectPtr,
              TestAddCommandEnvironment,
              CSTRING, name,
@@ -762,6 +773,10 @@ RexxRoutine2(RexxObjectPtr,
         {
             context->AddCommandEnvironment(name, (REXXPFN)rHandler, REDIRECTING_COMMAND_ENVIRONMENT);
         }
+    }
+    else if (type[0] == 'c' || type[0] == 'C')
+    {   // direct command handler that raises the condition named by the command
+        context->AddCommandEnvironment(name, (REXXPFN)cHandler, DIRECT_COMMAND_ENVIRONMENT);
     }
     else
     {   // direct command handler

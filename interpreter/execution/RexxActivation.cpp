@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2025 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2026 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -4391,6 +4391,7 @@ void RexxActivation::command(RexxString *address, RexxString *commandString, Com
     DirectoryClass *conditionObj = (DirectoryClass *)(RexxObject *)condition;
 
     bool failureCondition = false;    // don't have a failure condition yet
+    bool errorCondition = false;      // nor an error condition
 
     ReturnStatus returnStatus = RETURN_STATUS_NORMAL;
     // did a handler raise a condition?  We need to pull the rc value from the
@@ -4431,6 +4432,7 @@ void RexxActivation::command(RexxString *address, RexxString *commandString, Com
         {
             // unconditionally update the RC value
             conditionObj->put(temp, GlobalNames::RC);
+            errorCondition = true;
             // set the appropriate return status
             returnStatus = RETURN_STATUS_ERROR;
         }
@@ -4487,8 +4489,9 @@ void RexxActivation::command(RexxString *address, RexxString *commandString, Com
                    (RexxString *)conditionObj->get(GlobalNames::DESCRIPTION),
                    (RexxString *)conditionObj->get(GlobalNames::RC));
             }
-            // next we check for an ::OPTIONS ERROR SYNTAX override
-            if (!failureCondition && isErrorSyntaxEnabled())
+            // next we check for an ::OPTIONS ERROR SYNTAX override (a handler
+            // can raise any condition; this applies to ERROR only)
+            if (errorCondition && isErrorSyntaxEnabled())
             {
                 // just raise a SYNTAX exception
                 reportException(Error_Execution_error_syntax,
