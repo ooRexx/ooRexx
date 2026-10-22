@@ -1171,7 +1171,12 @@ RexxRoutine7(int, SysStemSort, RexxObjectPtr, stemArgument, OPTIONAL_CSTRING, or
     // the sorting is done in the interpreter
     if (!RexxStemSort(stem, tailExtension, sortOrder, sortType, first, last, firstCol, lastCol))
     {
-        context->InvalidRoutine();
+        // the sort's own error (an invalid stem.0...) is raised on return; only
+        // without one, a generic error
+        if (!context->CheckCondition())
+        {
+            context->InvalidRoutine();
+        }
     }
 
     return 0;

@@ -3567,8 +3567,27 @@ int NativeActivation::stemSort(StemClass *stem, const char *tailExtension, int o
         tail = new_upper_string(tailExtension);
     }
 
-    // go perform the sort operation.
-    return stem->sort(tail, order, type, (size_t)start, (size_t)end, (size_t)firstcol, (size_t)lastcol);
+    // The sort reports its errors (an invalid stem.0, a missing element...) as
+    // SYNTAX errors.  This is a classic API, called without an ApiContext, and
+    // an earlier context API call has turned error trapping off on exit
+    // (ApiContext::~ApiContext), so turn it on for the sort: the error is then
+    // held here, as for any API call, and raised in the caller when the native
+    // code returns.  Untrapped, it would unwind this activation while the
+    // native code is still running on it.
+    bool wasTrapping = trapErrors;
+    trapErrors = true;
+    try
+    {
+        // go perform the sort operation.
+        bool sorted = stem->sort(tail, order, type, (size_t)start, (size_t)end, (size_t)firstcol, (size_t)lastcol);
+        trapErrors = wasTrapping;
+        return sorted;
+    }
+    catch (NativeActivation *)
+    {
+        trapErrors = wasTrapping;
+        return false;
+    }
 }
 
 
