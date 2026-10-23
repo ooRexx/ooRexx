@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2026 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -265,7 +265,8 @@ RexxDirectoryObject RexxEntry GetGlobalEnvironment(RexxThreadContext *c)
 
 logical_t RexxEntry IsInstanceOf(RexxThreadContext *c, RexxObjectPtr o, RexxClassObject cl)
 {
-    ApiContext context(c, false);      // this can safely be a non-blocking call.
+    // not a non-blocking call: a number may allocate its string value here
+    ApiContext context(c);
     try
     {
         return ((RexxObject *)o)->isInstanceOf((RexxClass *)cl);
@@ -555,7 +556,8 @@ RexxRoutineObject RexxEntry NewRoutine(RexxThreadContext *c, CSTRING n, CSTRING 
 
 logical_t RexxEntry IsRoutine(RexxThreadContext * c, RexxObjectPtr o)
 {
-    ApiContext context(c, false);       // this can be safely executed without blocking
+    // not a non-blocking call: a number may allocate its string value here
+    ApiContext context(c);
     try
     {
         // convert the name to a string instance, and check the environments.
@@ -570,7 +572,8 @@ logical_t RexxEntry IsRoutine(RexxThreadContext * c, RexxObjectPtr o)
 
 logical_t RexxEntry IsMethod(RexxThreadContext * c, RexxObjectPtr o)
 {
-    ApiContext context(c, false);       // this can be safely executed without blocking
+    // not a non-blocking call: a number may allocate its string value here
+    ApiContext context(c);
     try
     {
         // convert the name to a string instance, and check the environments.
