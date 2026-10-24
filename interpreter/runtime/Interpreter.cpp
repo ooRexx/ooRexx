@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2025 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2026 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -657,6 +657,8 @@ RexxString *Interpreter::getCurrentQueue()
 void Interpreter::logicError (const char *desc)
 {
     printf("Logic error: %s\n",desc);
+    // the process ends right below: make sure the message is not left in a buffer
+    fflush(stdout);
 
     // allow debugging
 #ifdef WIN32
