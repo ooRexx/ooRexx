@@ -474,7 +474,8 @@ typedef struct
 
 #define INSTANCE_INTERFACE_VERSION_4_0_0 100
 #define INSTANCE_INTERFACE_VERSION_5_0_0 101
-#define INSTANCE_INTERFACE_VERSION 101
+#define INSTANCE_INTERFACE_VERSION_5_3_0 102
+#define INSTANCE_INTERFACE_VERSION 102
 
 #define DIRECT_COMMAND_ENVIRONMENT 1
 #define REDIRECTING_COMMAND_ENVIRONMENT 2
@@ -490,6 +491,8 @@ typedef struct
     void        (RexxEntry *Halt)(RexxInstance *);
     void        (RexxEntry *SetTrace)(RexxInstance *, logical_t);
     void        (RexxEntry *AddCommandEnvironment)(RexxInstance *, const char *, REXXPFN, int);
+    // added in INSTANCE_INTERFACE_VERSION_5_3_0
+    logical_t   (RexxEntry *StackCommandEnvironment)(RexxInstance *, const char *, REXXPFN, int);
 } RexxInstanceInterface;
 
 #define THREAD_INTERFACE_VERSION_4_0_0 100
@@ -818,6 +821,10 @@ struct RexxInstance_
     {
         functions->AddCommandEnvironment(this, n, h, t);
     }
+    logical_t StackCommandEnvironment(const char *n, REXXPFN h, int t)
+    {
+        return functions->StackCommandEnvironment(this, n, h, t);
+    }
 #endif
 };
 
@@ -845,6 +852,11 @@ struct RexxThreadContext_
      void AddCommandEnvironment(const char *n, REXXPFN h, int t)
      {
          instance->AddCommandEnvironment(n, h, t);
+     }
+
+     logical_t StackCommandEnvironment(const char *n, REXXPFN h, int t)
+     {
+         return instance->StackCommandEnvironment(n, h, t);
      }
 
      void DetachThread()
@@ -1685,6 +1697,10 @@ struct RexxMethodContext_
      void AddCommandEnvironment(const char *n, REXXPFN h, int t)
      {
          threadContext->AddCommandEnvironment(n, h, t);
+     }
+     logical_t StackCommandEnvironment(const char *n, REXXPFN h, int t)
+     {
+         return threadContext->StackCommandEnvironment(n, h, t);
      }
      RexxObjectPtr RequestGlobalReference(RexxObjectPtr o)
      {
@@ -2538,6 +2554,10 @@ struct RexxCallContext_
      {
          threadContext->AddCommandEnvironment(n, h, t);
      }
+     logical_t StackCommandEnvironment(const char *n, REXXPFN h, int t)
+     {
+         return threadContext->StackCommandEnvironment(n, h, t);
+     }
      RexxObjectPtr RequestGlobalReference(RexxObjectPtr o)
      {
          return threadContext->RequestGlobalReference(o);
@@ -3368,6 +3388,10 @@ struct RexxExitContext_
      void AddCommandEnvironment(const char *n, REXXPFN h, int t)
      {
          threadContext->AddCommandEnvironment(n, h, t);
+     }
+     logical_t StackCommandEnvironment(const char *n, REXXPFN h, int t)
+     {
+         return threadContext->StackCommandEnvironment(n, h, t);
      }
      RexxObjectPtr RequestGlobalReference(RexxObjectPtr o)
      {

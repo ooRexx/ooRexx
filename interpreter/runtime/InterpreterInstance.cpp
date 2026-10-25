@@ -917,6 +917,27 @@ void InterpreterInstance::addCommandHandler(const char *name, REXXPFN entryPoint
 }
 
 /**
+ * Add a native handler on top of the one in use under that name
+ * (StackCommandEnvironment): it covers it, written in Rexx or native, as
+ * .CommandHandler~register covers, and .CommandHandler~deregister uncovers
+ * it again.
+ *
+ * @param name       The name of the address environment this services.
+ * @param entryPoint The entry point address of the handler.
+ * @param type       The category of handler to add.
+ */
+void InterpreterInstance::stackCommandHandler(const char *name, REXXPFN entryPoint, HandlerType::Enum type)
+{
+    Protected<RexxString> handlerName = new_upper_string(name);
+    // resolving first puts a classic subcommand handler not yet used below
+    Protected<CommandHandler> covered = resolveCommandHandler(handlerName);
+    Protected<CommandHandler> entry = new CommandHandler(entryPoint, type);
+    entry->setPrevious(covered);
+    commandHandlers->put(entry, handlerName);
+}
+
+
+/**
  * Add a handler for a registered subcom handler to the
  * address handler list.
  *

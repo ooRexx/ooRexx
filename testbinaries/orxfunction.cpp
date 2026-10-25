@@ -791,6 +791,25 @@ RexxRoutine2(RexxObjectPtr,
     return NULLOBJECT;
 }
 
+// as TestAddCommandEnvironment, with StackCommandEnvironment ('cHandler' or
+// 'dHandler'); returns what StackCommandEnvironment returns.  The type "bad"
+// passes an environment type that is neither direct nor redirecting.
+RexxRoutine2(logical_t,
+             TestStackCommandEnvironment,
+             CSTRING, name,
+             CSTRING, type)
+{
+    if (strcmp(type, "bad") == 0)
+    {
+        return context->StackCommandEnvironment(name, (REXXPFN)dHandler, 0);
+    }
+    if (type[0] == 'c' || type[0] == 'C')
+    {
+        return context->StackCommandEnvironment(name, (REXXPFN)cHandler, DIRECT_COMMAND_ENVIRONMENT);
+    }
+    return context->StackCommandEnvironment(name, (REXXPFN)dHandler, DIRECT_COMMAND_ENVIRONMENT);
+}
+
 RexxRoutine1(int,
             TestRaiseException0,
             size_t, errNo)
@@ -968,6 +987,7 @@ RexxRoutineEntry orxtest_funcs[] = {
     REXX_TYPED_ROUTINE(TestResolveStemVariable, TestResolveStemVariable),
     REXX_TYPED_ROUTINE(TestFindContextClass,  TestFindContextClass),
     REXX_TYPED_ROUTINE(TestAddCommandEnvironment, TestAddCommandEnvironment),
+    REXX_TYPED_ROUTINE(TestStackCommandEnvironment, TestStackCommandEnvironment),
     REXX_TYPED_ROUTINE(TestRaiseException0,         TestRaiseException0),
     REXX_TYPED_ROUTINE(TestRaiseException1,         TestRaiseException1),
     REXX_TYPED_ROUTINE(TestRaiseException2,         TestRaiseException2),

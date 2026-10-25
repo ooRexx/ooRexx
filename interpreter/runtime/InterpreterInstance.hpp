@@ -120,6 +120,7 @@ public:
     inline DirectoryClass *getLocal() { return localEnvironment; }
     void addCommandHandler(const char *name, const char *registeredName);
     void addCommandHandler(const char *name, REXXPFN entryPoint, HandlerType::Enum type);
+    void stackCommandHandler(const char *name, REXXPFN entryPoint, HandlerType::Enum type);
     CommandHandler *resolveCommandHandler(RexxString *name);
     RexxObject *addCommandHandler(RexxString *name, RexxObject *handler);
     RexxObject *removeCommandHandler(RexxString *name);
