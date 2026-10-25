@@ -561,12 +561,18 @@ RexxObjectPtr RexxEntry rHandler(RexxExitContext *context,
 
 
 // test DIRECT command handler for TestAddCommandEnvironment "condition"
-// raises the condition named by the command (e.g. "USER FOO") with RC 7
+// raises the condition named by the command (e.g. "USER FOO") with RC 7 and
+// an additional array with one item, "additional"; the command "NORESULT"
+// raises nothing and answers no result
 RexxObjectPtr RexxEntry cHandler(RexxExitContext *context,
                                  RexxStringObject address,
                                  RexxStringObject command)
 {
-    context->RaiseCondition(context->CString(command), command, NULLOBJECT, context->WholeNumberToObject(7));
+    if (strcmp(context->CString(command), "NORESULT") == 0)
+    {
+        return NULLOBJECT;
+    }
+    context->RaiseCondition(context->CString(command), command, context->ArrayOfOne(context->String("additional")), context->WholeNumberToObject(7));
     return context->WholeNumberToObject(7);
 }
 

@@ -934,12 +934,15 @@ RexxMethod3(RexxObjectPtr, cmdcontext_forward, RexxObjectPtr, target, RexxString
             {
                 result = conditionRC;
             }
+            // the ADDITIONAL of the native condition is kept, as ADDRESS keeps it
+            RexxObject *additional = (RexxObject *)c->get(GlobalNames::ADDITIONAL);
             ArrayClass *pending = new_array((RexxObject *)c->get(GlobalNames::CONDITION), (RexxObject *)result,
-                (RexxObject *)c->get(GlobalNames::DESCRIPTION), TheNilObject);
+                (RexxObject *)c->get(GlobalNames::DESCRIPTION), additional == OREF_NULL ? TheNilObject : additional);
             contextObject->getObjectVariables(contextClass)->set(new_string("PENDING"), pending);
         }
         RexxObject *rc = result;
-        return rc == OREF_NULL ? context->Nil() : ctx.ret(rc);
+        // a handler that answers nothing gives RC 0, as RexxActivation::command
+        return ctx.ret(rc == OREF_NULL ? TheFalseObject : rc);
     }
     catch (NativeActivation *)
     {
