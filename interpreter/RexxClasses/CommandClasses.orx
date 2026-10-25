@@ -1,0 +1,404 @@
+/*----------------------------------------------------------------------------*/
+/*                                                                            */
+/* Copyright (c) 2026 Rexx Language Association. All rights reserved.         */
+/*                                                                            */
+/* This program and the accompanying materials are made available under       */
+/* the terms of the Common Public License v1.0 which accompanies this         */
+/* distribution. A copy is also available at the following address:           */
+/* https://www.oorexx.org/license.html                                        */
+/*                                                                            */
+/* Redistribution and use in source and binary forms, with or                 */
+/* without modification, are permitted provided that the following            */
+/* conditions are met:                                                        */
+/*                                                                            */
+/* Redistributions of source code must retain the above copyright             */
+/* notice, this list of conditions and the following disclaimer.              */
+/* Redistributions in binary form must reproduce the above copyright          */
+/* notice, this list of conditions and the following disclaimer in            */
+/* the documentation and/or other materials provided with the distribution.   */
+/*                                                                            */
+/* Neither the name of Rexx Language Association nor the names                */
+/* of its contributors may be used to endorse or promote products             */
+/* derived from this software without specific prior written permission.      */
+/*                                                                            */
+/* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS        */
+/* "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT          */
+/* LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS          */
+/* FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT   */
+/* OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,      */
+/* SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED   */
+/* TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,        */
+/* OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY     */
+/* OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING    */
+/* NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS         */
+/* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
+/*                                                                            */
+/*----------------------------------------------------------------------------*/
+
+use arg rexxPackage
+
+-- Command environments written in Rexx: .CommandHandler and its context.
+-- Loaded by CoreClasses.orx after StreamClasses.orx, since the context's
+-- streams inherit .InputStream and .OutputStream.
+
+-- add all of the public classes to .environment and to the
+-- REXX package
+publicClasses = .context~package~publicClasses
+
+do name over publicClasses
+   class = publicClasses[name]
+   .environment~put(class, name)
+   rexxPackage~addPublicClass(name, class)
+end
+
+
+/******************************************************************************/
+/* Command environments written in Rexx                                       */
+/*                                                                            */
+/* .CommandHandler~register(name, handler) makes an object whose class        */
+/* inherits .CommandHandler the command environment name of this interpreter  */
+/* instance: every command sent to it (ADDRESS name ...) becomes              */
+/*                                                                            */
+/*     handler~command(command, caller)                                       */
+/*                                                                            */
+/* on the thread that issued it, with no native code in between.  caller is   */
+/* a .CommandContext, valid while that command runs: the ADDRESS ... WITH     */
+/* redirection as streams, the variables of the code that issued the         */
+/* command, and the condition the command raises.  What COMMAND returns is    */
+/* RC.                                                                        */
+/******************************************************************************/
+
+::class 'CommandHandler' public mixinclass Object
+
+-- the handler of ADDRESS name: an object whose class inherits .CommandHandler.
+-- Registrations stack: the new handler covers the one in use (written in
+-- Rexx or native), which deregister uncovers.  Returns the object of the
+-- covered handler, or .nil; its COMMAND method can be used to forward to it.
+::method register class
+  use strict arg name, handler
+  name = name~request("String")
+  if name == .nil | name == "" then
+    raise syntax 93.900 array("register: the environment name must be a non-empty string")
+  if handler == .nil then
+    raise syntax 93.900 array("register: the handler is .nil (to remove a handler, use .CommandHandler~deregister(name))")
+  if \handler~isA(.CommandHandler) then
+    raise syntax 93.900 array("register: the handler's class must inherit .CommandHandler")
+  return self~!register(name, handler)
+
+-- remove the handler in use for ADDRESS name, written in Rexx or native,
+-- uncovering the one it covered; with nothing left the name is an unknown
+-- environment (FAILURE, RC 30).  Returns the object removed.
+::method deregister class
+  use strict arg name
+  name = name~request("String")
+  if name == .nil | name == "" then
+    raise syntax 93.900 array("deregister: the environment name must be a non-empty string")
+  removed = self~!deregister(name)
+  if removed == .nil then
+    raise syntax 93.900 array("deregister: there is no command environment named" name)
+  return removed
+
+-- the command environments known to this instance: name -> the object of
+-- the handler in use (written in Rexx, or a .NativeCommandHandler)
+::method environments class external 'LIBRARY REXX cmdhandler_environments'
+
+-- the object of the handler in use for ADDRESS name, or .nil
+::method handler class external 'LIBRARY REXX cmdhandler_handler'
+
+-- the handlers of ADDRESS name: the one in use, then the ones it covers
+::method handlers class external 'LIBRARY REXX cmdhandler_handlers'
+
+::method !register class private external 'LIBRARY REXX cmdhandler_register'
+::method !deregister class private external 'LIBRARY REXX cmdhandler_deregister'
+
+-- classes that inherit it implement it: use arg command, caller; return RC
+::method command abstract
+
+
+::class 'CommandContext' public
+
+::attribute environment get
+-- the condition asked for with ~raise, or .nil
+::attribute pending get
+
+::method init
+  expose cself environment pending input output error
+  use strict arg cself, environment
+  pending = .nil; input = .nil; output = .nil; error = .nil
+
+::method isRedirected unguarded external 'LIBRARY REXX cmdcontext_isRedirected'
+::method isValid unguarded external 'LIBRARY REXX cmdcontext_isValid'
+::method !check private unguarded external 'LIBRARY REXX cmdcontext_check'
+::method !getVar private unguarded external 'LIBRARY REXX cmdcontext_getVar'
+::method !hasVar private unguarded external 'LIBRARY REXX cmdcontext_hasVar'
+::method !setVar private unguarded external 'LIBRARY REXX cmdcontext_setVar'
+::method !dropVar private unguarded external 'LIBRARY REXX cmdcontext_dropVar'
+::method variables unguarded external 'LIBRARY REXX cmdcontext_variables'
+-- used by .NativeCommandHandler~command
+::method !forward unguarded external 'LIBRARY REXX cmdcontext_forward'
+
+-- WITH INPUT / OUTPUT / ERROR as streams; only with that redirection
+::method input
+  expose cself input
+  if input == .nil then do
+    if \self~isRedirected("Input") then
+      raise syntax 98.900 array("the command was not given WITH INPUT; check isRedirected(""Input"") first")
+    input = .CommandInput~new(cself)
+  end
+  return input
+
+::method output
+  expose cself output
+  if output == .nil then do
+    if \self~isRedirected("Output") then
+      raise syntax 98.900 array("the command was not given WITH OUTPUT; check isRedirected(""Output"") first")
+    output = .CommandOutput~new(cself, "O")
+  end
+  return output
+
+::method error
+  expose cself error
+  if error == .nil then do
+    if \self~isRedirected("Error") then
+      raise syntax 98.900 array("the command was not given WITH ERROR; check isRedirected(""Error"") first")
+    error = .CommandOutput~new(cself, "E")
+  end
+  return error
+
+-- when COMMAND returns: write what charout left
+::method finish
+  expose output error
+  if output \== .nil then output~flush
+  if error \== .nil then error~flush
+
+-- the caller's variables: caller[name], caller[name] = value
+::method "[]"
+  use strict arg name
+  name = self~!varName(name)
+  value = self~!getVar(name)
+  if value \== .nil then return value
+  if self~!hasVar(name) then return value  -- its value is .nil
+  return self~!derivedName(name)          -- no value: its name, as in Rexx
+
+::method "[]="
+  use strict arg value, name
+  self~!setVar(self~!varName(name), value)
+
+-- exact synonyms of [] and []=
+::method getVar
+  use strict arg name
+  return self[name]
+
+::method setVar
+  use strict arg name, value
+  self[name] = value
+
+::method hasVar
+  use strict arg name
+  return self~!hasVar(self~!varName(name))
+
+::method dropVar
+  use strict arg name
+  self~!dropVar(self~!varName(name))
+
+-- the name of a variable with no value, as Rexx gives it: the stem in upper
+-- case and each tail symbol replaced by its value in the caller (constant
+-- symbols, and variables with no value, in upper case): a.i is "A.x y" when
+-- i = "x y"
+::method !derivedName private
+  use strict arg name
+  p = name~pos(".")
+  if p == 0 then return name~upper
+  derived = name~left(p)~upper
+  rest = name~substr(p + 1)
+  do forever
+    p = rest~pos(".")
+    if p == 0 then elem = rest
+    else elem = rest~left(p - 1)
+    if elem == "" then nop
+    else if elem~left(1)~dataType("W") then derived ||= elem~upper
+    else do
+      if self~!hasVar(elem) then derived ||= self~!getVar(elem)~string
+      else derived ||= elem~upper
+    end
+    if p == 0 then leave
+    derived ||= "."
+    rest = rest~substr(p + 1)
+  end
+  return derived
+
+-- a variable name (simple, stem or compound), or a SYNTAX error
+::method !varName private
+  use strict arg name
+  name = name~request("String")
+  if name \== .nil then do
+    first = name~left(1)
+    if name~dataType("V") & first \== "." & \first~dataType("W") then return name
+  end
+  raise syntax 93.900 array("not a Rexx variable name:" name)
+
+-- the condition the command raises when COMMAND returns; only one per
+-- command: a second call is an error
+::method raise
+  expose pending
+  use strict arg condition, rc, description = .nil, additional = .nil
+  self~!check                          -- ended, or another thread: 98.900
+  if pending \== .nil then
+    raise syntax 93.900 array("raise: a condition was already raised for this command")
+  condition = condition~request("String")
+  if condition == .nil then
+    raise syntax 93.900 array("raise: the condition must be a string")
+  parse upper value condition~space with name rest
+  if name == "SYNTAX" then do
+    -- raise("SYNTAX", code [, additional]): the third argument is additional
+    if rest \== "" | arg(4, "E") then
+      raise syntax 93.900 array("raise: SYNTAX takes an error code and an optional array of substitutions")
+    additional = description
+    if \rc~dataType("N") | rc~pos(".") == 0 then
+      raise syntax 93.900 array("raise: the SYNTAX error code must be major.minor, as 98.900; found" rc)
+    parse var rc major "." minor
+    if \major~dataType("W") | \minor~dataType("W") | major < 1 | major > 99 | minor < 1 | minor > 999 then
+      raise syntax 93.900 array("raise: the SYNTAX error code must be major.minor, as 98.900; found" rc)
+    if additional == .nil then additional = .array~new
+    else if \additional~isA(.Array) then additional = .array~of(additional)
+    pending = .array~of("SYNTAX", major * 1000 + minor, .nil, additional)
+    return rc
+  end
+  if name == "USER" then do
+    if rest == "" | rest~words > 1 then
+      raise syntax 93.900 array("raise: USER needs a condition name, as ""USER NAME""")
+    name = name rest
+  end
+  else if rest \== "" | wordpos(name, "ERROR FAILURE HALT LOSTDIGITS NOMETHOD NOSTRING NOTREADY NOVALUE") == 0 then
+    raise syntax 93.900 array("raise: not a condition RAISE accepts:" condition)
+  pending = .array~of(name, rc, description, additional)
+  return rc
+
+::method raiseError
+  use strict arg rc
+  return self~raise("ERROR", rc)
+
+::method raiseFailure
+  use strict arg rc
+  return self~raise("FAILURE", rc)
+
+
+-- WITH INPUT as an .InputStream (one per command; see .CommandContext~input)
+::class 'CommandInput' public inherit InputStream
+
+::method init
+  expose cself buffer more
+  use strict arg cself
+  buffer = ""        -- characters read but not given yet (charin)
+  more = .nil        -- a line read ahead (lines), or .nil
+
+::method !readLine private external 'LIBRARY REXX cmdcontext_lineIn'
+
+-- the next line, read ahead if needed; .nil at the end
+::method !nextLine private
+  expose more
+  if more \== .nil then do
+    line = more; more = .nil
+    return line
+  end
+  return self~!readLine
+
+::method linein
+  expose buffer
+  use strict arg start = .nil, count = 1
+  if arg(1, "E") then raise syntax 93.963      -- no positioning
+  if count == 0 then return ""
+  if count \== 1 then raise syntax 93.963
+  if buffer \== "" then do                      -- the rest of what charin read
+    parse var buffer line (.endOfLine) buffer
+    return line
+  end
+  line = self~!nextLine
+  if line == .nil then raise notready return ""
+  return line
+
+::method lines
+  expose buffer more
+  if buffer \== "" then return 1
+  if more == .nil then more = self~!readLine
+  return more \== .nil
+
+::method charin
+  expose buffer
+  use strict arg start = .nil, count = 1
+  if arg(1, "E") then raise syntax 93.963      -- no positioning
+  do while buffer~length < count
+    line = self~!nextLine
+    if line == .nil then leave
+    buffer ||= line || .endOfLine
+  end
+  chars = buffer~left(min(count, buffer~length))
+  buffer = buffer~substr(chars~length + 1)
+  if chars~length < count then raise notready return (chars)
+  return chars
+
+::method chars
+  expose buffer more
+  if buffer \== "" then return buffer~length
+  if more == .nil then more = self~!readLine
+  if more == .nil then return 0
+  return more~length + .endOfLine~length
+
+
+-- WITH OUTPUT or WITH ERROR as an .OutputStream (see .CommandContext~output)
+::class 'CommandOutput' public inherit OutputStream
+
+::method init
+  expose cself which partial
+  use strict arg cself, which
+  partial = ""       -- charout without a line end yet
+
+::method !write private external 'LIBRARY REXX cmdcontext_write'
+
+::method lineout
+  expose which partial
+  use strict arg line = .nil
+  if arg(1, "O") then do                         -- lineout(): flush, as a close
+    self~flush
+    return 0
+  end
+  self~!write(which, partial || line~string)
+  partial = ""
+  return 0
+
+::method charout
+  expose which partial
+  use strict arg string = "", start = .nil
+  if arg(2, "E") then raise syntax 93.963        -- no positioning
+  partial ||= string~string
+  -- whole lines go out now; the rest waits for lineout or the command's end
+  do while partial~pos(.endOfLine) > 0
+    parse var partial line (.endOfLine) partial
+    self~!write(which, line)
+  end
+  return 0
+
+-- write what charout left (when COMMAND returns)
+::method flush
+  expose which partial
+  if partial \== "" then self~!write(which, partial)
+  partial = ""
+
+::method close
+  self~flush
+
+
+-- a native command environment as an object, made only by the interpreter
+-- (.CommandHandler~handler, ~handlers, ~environments); its COMMAND forwards
+-- the command to it, as the code that issued it, under its own name
+::class 'NativeCommandHandler' public inherit CommandHandler
+-- only the interpreter makes them
+::method new class private
+  forward class (super)
+::method kind external 'LIBRARY REXX cmdnative_kind'
+::method name
+  expose name
+  return name
+::method command unguarded
+  use strict arg command, caller
+  return caller~!forward(self, command)

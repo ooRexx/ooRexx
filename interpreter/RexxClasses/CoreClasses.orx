@@ -121,6 +121,8 @@ end
 
 call 'StreamClasses.orx' rexxPackage
 
+call 'CommandClasses.orx' rexxPackage      -- command environments written in Rexx
+
 call 'PlatformObjects.orx' rexxPackage       -- now load platform-specific builtin classes
 
 exit

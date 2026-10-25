@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2025 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2026 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -3461,8 +3461,11 @@ void Activity::run(ActivityDispatcher &target)
 void Activity::run(CallbackDispatcher &target)
 {
     // create new activation frame using the current Rexx frame (which can be null, but
-    // is not likely to be).
-    NativeActivation *new_activation = ActivityManager::newNativeActivation(this, currentRexxFrame);
+    // is not likely to be).  A command forwarded by a handler written in Rexx
+    // runs as if called from the code that issued it (its variables).
+    RexxActivation *parent = callbackParent != OREF_NULL ? callbackParent : currentRexxFrame;
+    callbackParent = OREF_NULL;
+    NativeActivation *new_activation = ActivityManager::newNativeActivation(this, parent);
     // this becomes the new top activation.  We also turn on the variable pool for
     // this situation.
     pushStackFrame(new_activation);

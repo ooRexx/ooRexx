@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2026 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -302,6 +302,7 @@ class Activity : public RexxInternalObject
            void        waitForKernel();
 
     inline RexxActivation *getCurrentRexxFrame() {return currentRexxFrame;}
+    inline void setCallbackParent(RexxActivation *a) {callbackParent = a;}
     inline ActivationBase *getTopStackFrame() { return topStackFrame; }
     inline size_t getActivationDepth() { return stackFrameDepth; }
     inline const NumericSettings *getNumericSettings () {return numericSettings;}
@@ -392,6 +393,7 @@ class Activity : public RexxInternalObject
     // Rexx context, then the topStackFrame will be the NativeActivation that
     // made the callout and the currentRexxFrame will be the predecessor frame.
     RexxActivation     *currentRexxFrame;
+    RexxActivation     *callbackParent;     // the parent frame for the next callback, if not currentRexxFrame
     ActivationBase     *topStackFrame;  // top-most activation frame (can be either native or Rexx).
     RexxString         *currentExit;    // current executing system exit
     RexxInternalObject *waitingObject;  // object activity is waiting on

@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2026 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -49,6 +49,23 @@ INTERNAL_METHOD(alarm_stopTimer)
 INTERNAL_METHOD(ticker_createTimer)
 INTERNAL_METHOD(ticker_waitTimer)
 INTERNAL_METHOD(ticker_stopTimer)
+INTERNAL_METHOD(cmdhandler_register)
+INTERNAL_METHOD(cmdhandler_deregister)
+INTERNAL_METHOD(cmdhandler_environments)
+INTERNAL_METHOD(cmdcontext_lineIn)
+INTERNAL_METHOD(cmdcontext_write)
+INTERNAL_METHOD(cmdcontext_isRedirected)
+INTERNAL_METHOD(cmdcontext_getVar)
+INTERNAL_METHOD(cmdcontext_hasVar)
+INTERNAL_METHOD(cmdcontext_setVar)
+INTERNAL_METHOD(cmdcontext_dropVar)
+INTERNAL_METHOD(cmdcontext_variables)
+INTERNAL_METHOD(cmdcontext_check)
+INTERNAL_METHOD(cmdcontext_isValid)
+INTERNAL_METHOD(cmdhandler_handler)
+INTERNAL_METHOD(cmdhandler_handlers)
+INTERNAL_METHOD(cmdnative_kind)
+INTERNAL_METHOD(cmdcontext_forward)
 INTERNAL_METHOD(stream_init)
 INTERNAL_METHOD(stream_chars)
 INTERNAL_METHOD(stream_lines)

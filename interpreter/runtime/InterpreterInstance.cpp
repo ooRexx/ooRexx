@@ -939,6 +939,108 @@ void InterpreterInstance::addCommandHandler(const char *name, const char *regist
 
 
 /**
+ * Add a command environment written in Rexx (.CommandHandler~register).
+ * Registrations stack: the new handler covers the one in use under that
+ * name (written in Rexx or native, including a classic subcommand handler
+ * registered through rxapi), and deregister uncovers it.
+ *
+ * @param name    The environment name (not case-sensitive).
+ * @param handler The handler object.
+ *
+ * @return The object of the handler it covers, or OREF_NULL.
+ */
+RexxObject *InterpreterInstance::addCommandHandler(RexxString *name, RexxObject *handler)
+{
+    Protected<RexxString> handlerName = name->upper();
+    // resolving first puts a classic subcommand handler not yet used below
+    Protected<CommandHandler> covered = resolveCommandHandler(handlerName);
+    Protected<CommandHandler> entry = new CommandHandler(handler);
+    entry->setPrevious(covered);
+    commandHandlers->put(entry, handlerName);
+    return covered == OREF_NULL ? OREF_NULL : covered->getRexxObject(handlerName);
+}
+
+
+/**
+ * Remove the command handler in use under a name (.CommandHandler~deregister),
+ * written in Rexx or native, uncovering the one it covered.  When nothing is
+ * left, the name is an unknown environment from then on; for a classic
+ * subcommand handler a marker keeps rxapi from bringing it back in this
+ * instance (rxapi itself is untouched: that is RXSUBCOM DROP's job).
+ *
+ * @param name   The environment name.
+ *
+ * @return The object of the handler removed, or OREF_NULL if there was none.
+ */
+RexxObject *InterpreterInstance::removeCommandHandler(RexxString *name)
+{
+    Protected<RexxString> handlerName = name->upper();
+    Protected<CommandHandler> handler = resolveCommandHandler(handlerName);
+    if (handler == OREF_NULL)
+    {
+        return OREF_NULL;
+    }
+    Protected<RexxObject> removed = handler->getRexxObject(handlerName);
+    CommandHandler *uncovered = handler->getPrevious();
+    if (uncovered != OREF_NULL)
+    {
+        commandHandlers->put(uncovered, handlerName);
+    }
+    else if (handler->isRegisteredName())
+    {
+        commandHandlers->put(new CommandHandler(NULL, HandlerType::UNRESOLVED), handlerName);
+    }
+    else
+    {
+        commandHandlers->remove(handlerName);
+    }
+    return removed;
+}
+
+
+/**
+ * The command environments known to this instance: a StringTable from the
+ * name to the object of the handler in use (written in Rexx, or a
+ * .NativeCommandHandler).
+ *
+ * @return A new StringTable.
+ */
+StringTable *InterpreterInstance::listCommandHandlers()
+{
+    Protected<StringTable> list = new_string_table();
+    for (HashContents::TableIterator iterator = commandHandlers->iterator(); iterator.isAvailable(); iterator.next())
+    {
+        CommandHandler *handler = (CommandHandler *)iterator.value();
+        if (handler->isResolved())
+        {
+            RexxString *handlerName = (RexxString *)iterator.index();
+            list->put(handler->getRexxObject(handlerName), handlerName);
+        }
+    }
+    return list;
+}
+
+
+/**
+ * The handlers stacked under a name, the one in use first.
+ *
+ * @param name   The environment name.
+ *
+ * @return A new Array (empty if there is no such environment).
+ */
+ArrayClass *InterpreterInstance::listCommandHandlerStack(RexxString *name)
+{
+    Protected<RexxString> handlerName = name->upper();
+    Protected<ArrayClass> list = new_array();
+    for (CommandHandler *handler = resolveCommandHandler(handlerName); handler != OREF_NULL; handler = handler->getPrevious())
+    {
+        list->append(handler->getRexxObject(handlerName));
+    }
+    return list;
+}
+
+
+/**
  * Resolve a command handler for invoking a command.
  *
  * @param name   The name of the target address environment.
@@ -950,6 +1052,11 @@ CommandHandler *InterpreterInstance::resolveCommandHandler(RexxString *name)
     // all names in the cache are in upper case
     Protected<RexxString> upperName = name->upper();
     CommandHandler *handler = (CommandHandler *)commandHandlers->get(upperName);
+    // removed in this instance (deregister of a classic subcommand handler)
+    if (handler != OREF_NULL && !handler->isResolved())
+    {
+        return OREF_NULL;
+    }
     if (handler == OREF_NULL)
     {
         // a classic subcommand handler registered under this name?  The
