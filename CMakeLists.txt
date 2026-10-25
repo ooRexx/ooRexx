@@ -1727,6 +1727,7 @@ copy_build_file(socket.cls       ${build_extensions_rxsock_dir})
 copy_build_file(streamsocket.cls ${build_extensions_rxsock_dir})
 copy_build_file(mime.cls         ${build_extensions_rxsock_dir})
 copy_build_file(smtp.cls         ${build_extensions_rxsock_dir})
+copy_samples_file(cmdhandlers.cls   ${build_samples_dir})
 copy_samples_file(complex.cls       ${build_samples_dir})
 copy_samples_file(pipe.cls          ${build_samples_dir})
 copy_samples_file(semcls.cls        ${build_samples_dir})
@@ -1766,6 +1767,7 @@ configure_build_file(stack.rex ${build_samples_dir})
 configure_build_file(synchronousConcurrency.rex ${build_samples_dir})
 configure_build_file(timezone.rex ${build_samples_dir})
 configure_build_file(treeTraversal.rex ${build_samples_dir})
+configure_build_file(usecmdhandlers.rex ${build_samples_dir})
 configure_build_file(usecomp.rex ${build_samples_dir})
 configure_build_file(usepipe.rex ${build_samples_dir})
 configure_build_file(usesingleton.rex ${build_samples_dir})
@@ -1789,6 +1791,7 @@ add_custom_target(class_files ALL DEPENDS
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/mime.cls
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/smtp.cls
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/dateparser.cls
+    ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/cmdhandlers.cls
     ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/complex.cls
     ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/pipe.cls
     ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/semcls.cls
@@ -1858,11 +1861,13 @@ install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/stack.rex COMPONENT Samples D
 install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/synchronousConcurrency.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/timezone.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/treeTraversal.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/usecmdhandlers.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/usecomp.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/usepipe.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/usesingleton.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/usetree.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 
+install(PROGRAMS ${SAMPLES_SOURCE}/cmdhandlers.cls COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 install(PROGRAMS ${SAMPLES_SOURCE}/complex.cls COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 install(PROGRAMS ${SAMPLES_SOURCE}/pipe.cls COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 install(PROGRAMS ${SAMPLES_SOURCE}/semcls.cls COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
