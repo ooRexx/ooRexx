@@ -62,6 +62,9 @@
 - guess.rex                   a guessing game
 - interface.rex               define an interface class in ooRexx
 - ktguard.rex                 concurrent program using START and GUARD
+- ledit.cls                   a command environment in a package: a small line
+                              editor, registered in the package's prolog
+- ledwords.rex                edit macro for ledit.cls: count the words
 - makestring.rex              program that uses makestring method
 - month.rex                   displays days of the month of January
 - native.api                  folder with examples using the C++ native APIs
@@ -92,6 +95,7 @@
 - treeTraversal.rex           build a binary tree and demonstrate traversal
 - usecmdhandlers.rex          program that uses cmdhandlers.cls
 - usecomp.rex                 program that uses complex.cls
+- useledit.rex                program that uses ledit.cls and ledwords.rex
 - usepipe.rex                 program that uses pipe.cls
 - usesingleton.rex            program that uses singleton.cls
 - usetree.rex                 show that a treeDirectory is polymorphic with
