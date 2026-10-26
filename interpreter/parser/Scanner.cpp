@@ -1361,7 +1361,14 @@ RexxToken *LanguageParser::scanSymbol()
                 {
                     state = EXP_EDIGIT;
                 }
-                // we handle the sign situation below.
+                // any other symbol character means this cannot be a
+                // number, and a sign after it ends the symbol.  The sign
+                // itself is not a symbol character, so it never reaches
+                // this switch: we handle the sign situation below.
+                else
+                {
+                    state = EXP_EXCLUDED;
+                }
                 break;
             }
 
