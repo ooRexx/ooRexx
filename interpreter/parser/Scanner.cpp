@@ -1803,8 +1803,6 @@ StringSymbolType LanguageParser::scanSymbol(RexxString *string)
 
     // counter of periods in the name
     size_t compound = 0;
-    // no exponent encountered
-    bool haveExponent = false;
 
     const char *scan = string->getStringData();
 
@@ -1840,11 +1838,14 @@ StringSymbolType LanguageParser::scanSymbol(RexxString *string)
             return STRING_BAD_VARIABLE;
         }
 
-        // we've found a "+" or "-".  The character before
-        // this character must be a 'e' or 'E' and the rest of
-        // the string must only be digits
+        // we've found a "+" or "-".  A sign can only be part of a symbol
+        // when the symbol is a number in exponential notation, so the
+        // character before the sign must be an 'e' or 'E' (which also
+        // rules out a sign at the very start of the string), and the
+        // rest of the string must only be digits
 
-        if (Utilities::toUpper(*(scan - 1)) != 'E')
+        const char *exponent = scan - 1;
+        if (scan == string->getStringData() || Utilities::toUpper(*exponent) != 'E')
         {
             return STRING_BAD_VARIABLE;
         }
@@ -1859,8 +1860,34 @@ StringSymbolType LanguageParser::scanSymbol(RexxString *string)
             }
             scan++;
         }
-        // we've seen an exponent value.
-        haveExponent = true;
+
+        // everything before the 'E' must be a valid mantissa: digits
+        // with at most one period, and at least one digit.  Anything
+        // else (e.g. "A23E+2", ".E+2", "1AE+2", "1E2E+3") is not a
+        // symbol at all (bug #2080)
+        size_t digits = 0;
+        size_t periods = 0;
+        for (const char *mantissa = string->getStringData(); mantissa < exponent; mantissa++)
+        {
+            if (Utilities::isDigit(*mantissa))
+            {
+                digits++;
+            }
+            else if (*mantissa == '.')
+            {
+                periods++;
+            }
+            else
+            {
+                return STRING_BAD_VARIABLE;
+            }
+        }
+        if (digits == 0 || periods > 1)
+        {
+            return STRING_BAD_VARIABLE;
+        }
+        // a valid number in exponential notation
+        return STRING_NUMERIC;
     }
     // we've scanned the entire string and it is "provisionally" valid.
 
@@ -1873,14 +1900,9 @@ StringSymbolType LanguageParser::scanSymbol(RexxString *string)
             return STRING_LITERAL_DOT;
         }
         // more than one period precludes this being a valid
-        // number.  It also negates the validity of an exponent
-        // if we've seen one.
+        // number (a signed exponent has already been dealt with above)
         else if (compound > 1)
         {
-            if (haveExponent)
-            {
-                return STRING_BAD_VARIABLE;
-            }
             // just a literal token
             return STRING_LITERAL;
         }
@@ -1908,15 +1930,11 @@ StringSymbolType LanguageParser::scanSymbol(RexxString *string)
                 return STRING_NUMERIC;
             }
 
-            // found a potential exponent.  If the next character is
-            // "+" or "-", we already validated everything past that point
+            // found a potential exponent.  A signed exponent has already
+            // been dealt with above, so only an unsigned one is possible here
             if (Utilities::toUpper(*scan) == 'E')
             {
                 scan++;
-                if (*scan == '-' || *scan == '+')
-                {
-                    return STRING_NUMERIC;
-                }
 
                 // after the 'E', we expect to find digits
                 while (scan < linend)
