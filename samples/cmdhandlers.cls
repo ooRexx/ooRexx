@@ -174,7 +174,7 @@
   fc = command~left(1)
   lc = command~right(1)
   if fc = '[', lc = ']' then do
-    wrapper = command~strip(L, fc)~strip(T, lc)
+    wrapper = command~substr(2, command~length - 2)
     return 0
   end
   if command~upper = 'SHOWVARS' then do -- show all the caller's vars and values
