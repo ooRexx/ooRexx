@@ -282,6 +282,12 @@ ArrayClass* ArrayClass::allocateNewObject(size_t size, size_t items, size_t maxS
     maxSize = std::max(maxSize, MinimumArraySize);
     // and use at least the size as the max
     maxSize = std::max(maxSize, items);
+    // the Rexx-level paths already check this, but a native API caller
+    // (NewArray) can pass any size, and the byte count below would wrap
+    if (maxSize > MaxFixedArraySize)
+    {
+        reportException(Error_Incorrect_method_array_too_big, MaxFixedArraySize);
+    }
     // add in the max size value.  Note that we subtract one since
     // the first item is contained in the base object allocation.
     bytes += sizeof(RexxInternalObject *) * (maxSize - 1);
