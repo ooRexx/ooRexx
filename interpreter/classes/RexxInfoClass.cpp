@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2025 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2026 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -179,7 +179,7 @@ void RexxInfo::initialize()
     char     buffer[100];                // buffer for building the string
     char     work[20];                   // working buffer for the date
 
-    strcpy(work, __DATE__);              // copy the build date
+    strcpy(work, Interpreter::getBuildDate()); // copy the build date
     char *month = strtok(work, " ");     // now we need to tokenize the different bits
     char *day = strtok(NULL, " ");
     char *year = strtok(NULL, " ");

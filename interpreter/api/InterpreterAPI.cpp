@@ -267,12 +267,13 @@ char *REXXENTRY RexxGetVersionInformation()
     char copy3[] = "\nThis program and the accompanying materials are made available under the terms";
     char copy4[] = "\nof the Common Public License v1.0 which accompanies this distribution or at";
     char copy5[] = "\nhttps://www.oorexx.org/license.html";
-    size_t length = strlen(header) + strlen(ver) + strlen(build) + strlen(__DATE__) +
+    const char *date = Interpreter::getBuildDate();
+    size_t length = strlen(header) + strlen(ver) + strlen(build) + strlen(date) +
         strlen(mode) + strlen(copy1) + strlen(copy2) + strlen(copy3) + strlen(copy4) + strlen(copy5) + 1;
     char *ptr = (char *)SystemInterpreter::allocateResultMemory(length);
     if (ptr != NULL)
     {
-        snprintf(ptr, length, "%s%s%s%s%s%s%s%s%s%s", header, ver, build, __DATE__, mode, copy1, copy2, copy3, copy4, copy5);
+        snprintf(ptr, length, "%s%s%s%s%s%s%s%s%s%s", header, ver, build, date, mode, copy1, copy2, copy3, copy4, copy5);
     }
     return ptr;
 }
