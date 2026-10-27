@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2025 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2026 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -1534,6 +1534,8 @@ void NativeActivation::callRegisteredRoutine(RoutineClass *_routine, RegisteredR
 
     size_t activityLevel = activity->getActivationLevel();
 
+    // set when an error ended the function: dealt with after the catch
+    bool ended = false;
     trapErrors = true;                       // trap errors from here
     try
     {
@@ -1579,6 +1581,14 @@ void NativeActivation::callRegisteredRoutine(RoutineClass *_routine, RegisteredR
         // nesting levels that will make it look like this activity is still in use
         // when in fact we're done with it.
         activity->restoreActivationLevel(activityLevel);
+        // finished below, out of the catch block (see callBack())
+        ended = true;
+    }
+    if (ended)
+    {
+        // an error that ended the function (a RexxCallBack call) is raised
+        // now, in the caller
+        checkConditions();
         activity->popStackFrame(this);   // pop this from the activity
         setHasNoReferences();        // mark this as not having references in case we get marked
         // set the return value and get outta here
@@ -3588,6 +3598,94 @@ int NativeActivation::stemSort(StemClass *stem, const char *tailExtension, int o
         trapErrors = wasTrapping;
         return false;
     }
+}
+
+
+/**
+ * RexxCallBack: call a label of the Rexx program that called this native
+ * code, as an internal function call from the clause that called it.
+ *
+ * @return The RexxCallBack return code.
+ */
+int NativeActivation::callBack(const char *name, size_t argc, PCONSTRXSTRING argv, short *returnCode, PRXSTRING retstr)
+{
+    // as in Regina, the numeric result is 0 unless the call returns one
+    if (returnCode != NULL)
+    {
+        *returnCode = 0;
+    }
+    RexxActivation *caller = findRexxContext();
+    if (caller == OREF_NULL)
+    {
+        return RX_CB_NOTSTARTED;
+    }
+    // labels are not case-sensitive here, as in Regina
+    Protected<RexxString> label = new_upper_string(name);
+    StringTable *labels = caller->getLabels();
+    RexxInstruction *target = labels == OREF_NULL ? OREF_NULL : (RexxInstruction *)labels->get(label);
+    if (target == OREF_NULL)
+    {
+        return RX_CB_BADN;
+    }
+
+    Protected<ArrayClass> args = new_array(argc);
+    for (size_t i = 0; i < argc; i++)
+    {
+        if (argv[i].strptr != NULL)
+        {
+            args->put(new_string(argv[i]), i + 1);
+        }
+    }
+
+    // A SYNTAX error of the call ends the native code, as in Regina (an
+    // event loop waiting for its callbacks would never return): it is held
+    // here, and this activation is thrown through the native code to the
+    // routine call that started it, which raises the error in the caller.
+    // Error trapping must be on for that: this is a classic API, called
+    // without an ApiContext, and an earlier context API call may have turned
+    // it off (see stemSort); untrapped, the error would unwind the caller's
+    // frames while the native code is still running on them.
+    ProtectedObject callResult;
+    bool wasTrapping = trapErrors;
+    trapErrors = true;
+    bool failed = false;
+    try
+    {
+        caller->internalCall(label, target, args->messageArgs(), argc, callResult);
+    }
+    catch (NativeActivation *)
+    {
+        failed = true;
+    }
+    trapErrors = wasTrapping;
+    // thrown again out of the catch block: with MSVC a catch block runs on top
+    // of the frames it caught from, so a throw inside it keeps them all, and
+    // deep recursion through RexxCallBack overflows the stack
+    if (failed)
+    {
+        throw this;
+    }
+
+    RexxObject *value = callResult;
+    if (value == OREF_NULL)
+    {
+        if (retstr != NULL)
+        {
+            retstr->strptr = NULL;
+            retstr->strlength = 0;
+        }
+        return RX_CB_OK;
+    }
+    Protected<RexxString> text = value->requestString();
+    if (returnCode != NULL)
+    {
+        *returnCode = (short)atoi(text->getStringData());
+    }
+    if (retstr != NULL)
+    {
+        text->copyToRxstring(*retstr);
+    }
+    return RX_CB_OK;
 }
 
 

@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2008-2024 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2008-2026 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -38,6 +38,11 @@
 #include <rexx.h>
 #include <string.h>
 #include <stdio.h>
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <pthread.h>
+#endif
 
 
 size_t REXXENTRY MyTestExtFunc(const char *Name, long Argc, CONSTRXSTRING Argv[],
@@ -53,6 +58,120 @@ size_t REXXENTRY MyTestExtFunc(const char *Name, long Argc, CONSTRXSTRING Argv[]
             Retstr->strlength = strlen(Retstr->strptr);
         }
     }
+    return 0;
+}
+
+
+/* TestCallBack(label [, arg]...): RexxCallBack(label, args), answers   */
+/* "<RexxCallBack rc> <short rc> <result>", the result "<none>" if none */
+size_t REXXENTRY TestCallBack(const char *Name, long Argc, CONSTRXSTRING Argv[],
+                              const char *Queuename, PRXSTRING Retstr) {
+    RXSTRING result;
+    short shortRc = -1;
+    char smallBuffer[8];
+    RexxReturnCode rc;
+    size_t length;
+
+    if (Argc < 1) {
+        return 40;
+    }
+    /* a small buffer, so that longer results need a new one */
+    result.strptr = smallBuffer;
+    result.strlength = sizeof(smallBuffer);
+    rc = RexxCallBack(Argv[0].strptr, (size_t)(Argc - 1), Argv + 1, &shortRc, &result);
+    snprintf(Retstr->strptr, 256, "%d %d ", (int)rc, (int)shortRc);
+    length = strlen(Retstr->strptr);
+    if (rc != RX_CB_OK || result.strptr == NULL) {
+        snprintf(Retstr->strptr + length, 256 - length, "<none>");
+        Retstr->strlength = strlen(Retstr->strptr);
+    }
+    else {
+        if (length + result.strlength > 255) {
+            result.strlength = 255 - length;
+        }
+        memcpy(Retstr->strptr + length, result.strptr, result.strlength);
+        Retstr->strlength = length + result.strlength;
+        if (result.strptr != smallBuffer) {
+            RexxFreeMemory(result.strptr);
+        }
+    }
+    return 0;
+}
+
+
+static char lastRcs[32] = "";
+
+/* TestCallBackTwice(label1, label2): two RexxCallBacks, answers both */
+/* return codes, "<rc1> <rc2>"                                         */
+size_t REXXENTRY TestCallBackTwice(const char *Name, long Argc, CONSTRXSTRING Argv[],
+                                   const char *Queuename, PRXSTRING Retstr) {
+    RexxReturnCode rc1, rc2;
+
+    if (Argc != 2) {
+        return 40;
+    }
+    rc1 = RexxCallBack(Argv[0].strptr, 0, NULL, NULL, NULL);
+    rc2 = RexxCallBack(Argv[1].strptr, 0, NULL, NULL, NULL);
+    snprintf(lastRcs, sizeof(lastRcs), "%d %d", (int)rc1, (int)rc2);
+    strcpy(Retstr->strptr, lastRcs);
+    Retstr->strlength = strlen(Retstr->strptr);
+    return 0;
+}
+
+
+/* TestCallBackLast(): what the last TestCallBackTwice answered */
+size_t REXXENTRY TestCallBackLast(const char *Name, long Argc, CONSTRXSTRING Argv[],
+                                  const char *Queuename, PRXSTRING Retstr) {
+    strcpy(Retstr->strptr, lastRcs);
+    Retstr->strlength = strlen(Retstr->strptr);
+    return 0;
+}
+
+
+/* TestCallBackThread(label): RexxCallBack(label) from a new thread that */
+/* runs no Rexx code, answers its return code                           */
+static const char *threadLabel;
+static RexxReturnCode threadRc;
+
+#ifdef _WIN32
+static DWORD WINAPI callBackThread(LPVOID arg) {
+    threadRc = RexxCallBack(threadLabel, 0, NULL, NULL, NULL);
+    return 0;
+}
+#else
+static void *callBackThread(void *arg) {
+    threadRc = RexxCallBack(threadLabel, 0, NULL, NULL, NULL);
+    return NULL;
+}
+#endif
+
+size_t REXXENTRY TestCallBackThread(const char *Name, long Argc, CONSTRXSTRING Argv[],
+                                    const char *Queuename, PRXSTRING Retstr) {
+    if (Argc != 1) {
+        return 40;
+    }
+    threadLabel = Argv[0].strptr;
+    threadRc = -1;
+#ifdef _WIN32
+    {
+        HANDLE thread = CreateThread(NULL, 0, callBackThread, NULL, 0, NULL);
+        if (thread == NULL) {
+            return 40;
+        }
+        WaitForSingleObject(thread, INFINITE);
+        CloseHandle(thread);
+    }
+#else
+    {
+        pthread_t thread;
+        if (pthread_create(&thread, NULL, callBackThread, NULL) != 0) {
+            return 40;
+        }
+        pthread_join(thread, NULL);
+    }
+#endif
+    snprintf(Retstr->strptr, 256, "%d", (int)threadRc);
+    Retstr->strlength = strlen(Retstr->strptr);
     return 0;
 }
 

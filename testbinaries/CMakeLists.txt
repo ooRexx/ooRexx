@@ -1,6 +1,6 @@
 #/*----------------------------------------------------------------------------*/
 #/*                                                                            */
-#/* Copyright (c) 2014-2025 Rexx Language Association. All rights reserved.    */
+#/* Copyright (c) 2014-2026 Rexx Language Association. All rights reserved.    */
 #/*                                                                            */
 #/* This program and the accompanying materials are made available under       */
 #/* the terms of the Common Public License v1.0 which accompanies this         */
@@ -65,6 +65,11 @@ generate_test_library(orxfunction cpp)
 generate_test_library(orxmethod cpp)
 generate_test_library(orxclassic cpp)
 generate_test_library(orxclassic1 c def)
+# TestCallBackThread starts a thread
+if (NOT WIN32)
+   find_package(Threads REQUIRED)
+   target_link_libraries(orxclassic1 Threads::Threads)
+endif ()
 
 
 # this library is linked to other test libraries

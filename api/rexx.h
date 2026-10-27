@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2026 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -408,6 +408,28 @@ typedef RexxReturnCode (REXXENTRY *PFNREXXVARIABLEPOOL)(PSHVBLOCK);
 /*----------------------------------------------------------------------------*/
 /***    External Function Interface                                           */
 /*----------------------------------------------------------------------------*/
+
+/***    RexxCallBack - Call a label of the running Rexx program, as an    */
+/***    internal function, from an external function (as Regina's).        */
+
+RexxReturnCode REXXENTRY RexxCallBack(
+         CONSTANT_STRING,              /* Name of the label          */
+         size_t,                       /* Number of arguments        */
+         PCONSTRXSTRING,               /* Array of arguments         */
+         short *,                      /* Result as a number         */
+         PRXSTRING);                   /* Result                     */
+typedef RexxReturnCode (REXXENTRY *PFNREXXCALLBACK)(CONSTANT_STRING, size_t, PCONSTRXSTRING, short *,
+                                           PRXSTRING);
+#define REXXCALLBACK  RexxCallBack
+
+/***    RexxCallBack return codes (those of Regina) */
+#define RX_CB_OK          0            /* Called                     */
+#define RX_CB_BADP        1            /* Bad parameters             */
+#define RX_CB_NOTSTARTED  2            /* No Rexx program running    */
+                                       /* on this thread             */
+#define RX_CB_TOOMANYP    3            /* Too many parameters        */
+#define RX_CB_BADN        8            /* No such label              */
+
 
 /* This typedef simplifies coding of an External Function.           */
 

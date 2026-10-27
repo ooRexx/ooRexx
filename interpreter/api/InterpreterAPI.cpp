@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2025 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2026 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -411,6 +411,48 @@ RexxReturnCode RexxEntry RexxVariablePool(PSHVBLOCK pshvblock)
     // the variable pool interface handles its own try/catches.
     return context.self->variablePoolInterface(pshvblock);
 }
+
+/**
+ * Call a label of the running Rexx program as an internal function, from
+ * native code running on the program's thread (an external function, in
+ * practice), as Regina's RexxCallBack.
+ *
+ * @param name       The label (not case-sensitive).
+ * @param argc       The number of arguments.
+ * @param argv       The arguments (a NULL strptr is an omitted argument).
+ * @param returnCode Optional: the result as a number (atoi), 0 without one.
+ * @param result     Optional: the result.  The buffer is used if it is large
+ *                   enough, otherwise a new one is allocated with
+ *                   RexxAllocateMemory; NULL strptr if there is no result.
+ *
+ * @return RX_CB_OK, RX_CB_BADP, RX_CB_NOTSTARTED (no Rexx program is running on
+ *         this thread) or RX_CB_BADN (no such label).  An error in the call,
+ *         as an EXIT, does not return: it ends the native code, as in Regina,
+ *         and is raised in the program at the clause that called it.
+ */
+RexxReturnCode RexxEntry RexxCallBack(CONSTANT_STRING name, size_t argc, PCONSTRXSTRING argv, short *returnCode, PRXSTRING result)
+{
+    if (name == NULL || (argc > 0 && argv == NULL))
+    {
+        return RX_CB_BADP;
+    }
+    // unlike the other classic APIs, this never starts an interpreter
+    // instance: it is only meaningful inside a running program
+    Activity *activity = ActivityManager::getActivity();
+    if (activity == OREF_NULL)
+    {
+        return RX_CB_NOTSTARTED;
+    }
+    RexxReturnCode rc = RX_CB_NOTSTARTED;
+    ActivationBase *top = activity->getTopStackFrame();
+    if (isOfClass(NativeActivation, top))
+    {
+        rc = ((NativeActivation *)top)->callBack(name, argc, argv, returnCode, result);
+    }
+    activity->exitCurrentThread();
+    return rc;
+}
+
 
 /**
  * Process a stemsort call for the rexxutil SysStemSort function.

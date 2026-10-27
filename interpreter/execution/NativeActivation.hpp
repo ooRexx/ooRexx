@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2026 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -192,6 +192,7 @@ class NativeActivation : public ActivationBase
     void variablePoolRequest(PSHVBLOCK pshvblock);
     RexxReturnCode copyValue(RexxObject * value, RXSTRING *rxstring, size_t *length);
     RexxReturnCode copyValue(RexxObject * value, CONSTRXSTRING *rxstring, size_t *length);
+    int callBack(const char *name, size_t argc, PCONSTRXSTRING argv, short *returnCode, PRXSTRING result);
     int stemSort(StemClass *stem, const char *tailExtension, int order, int type, wholenumber_t start, wholenumber_t end, wholenumber_t firstcol, wholenumber_t lastcol);
     inline void enableConditionTrap() { trapConditions = true; captureConditions = false; }
     inline void enableConditionCapture() { trapConditions = true; captureConditions = true; }
