@@ -1944,6 +1944,27 @@ RexxMethod2(RexxObjectPtr,
     return info != NULLOBJECT ? (RexxObjectPtr)info : context->Nil();
 }
 
+// send a message and report what this method context sees right after it, as
+// an array: whether a condition is pending, the condition object (.nil if
+// none) and the result (.nil if none); the condition is cleared, so that it is
+// not raised again when this method returns
+RexxMethod3(RexxObjectPtr,
+            TestSendMessageConditionObject,
+            RexxObjectPtr, target,
+            CSTRING, name,
+            RexxArrayObject, args)
+{
+    RexxObjectPtr result = context->SendMessage(target, name, args);
+    logical_t pending = context->CheckCondition();
+    RexxDirectoryObject info = context->GetConditionInfo();
+    context->ClearCondition();
+    RexxArrayObject report = context->NewArray(3);
+    context->ArrayPut(report, context->Logical(pending), 1);
+    context->ArrayPut(report, info != NULLOBJECT ? (RexxObjectPtr)info : context->Nil(), 2);
+    context->ArrayPut(report, result != NULLOBJECT ? result : context->Nil(), 3);
+    return report;
+}
+
 // decode a condition object with DecodeConditionInfo and report it, as an
 // array: the condition name, code, rc, description and additional (.nil when
 // not given), and whether decoding left a condition pending
@@ -2721,6 +2742,7 @@ RexxMethodEntry orxtest_methods[] = {
     REXX_METHOD(TestCallRoutine,             TestCallRoutine),
     REXX_METHOD(TestCallRoutineCondition,    TestCallRoutineCondition),
     REXX_METHOD(TestCallRoutineConditionObject, TestCallRoutineConditionObject),
+    REXX_METHOD(TestSendMessageConditionObject, TestSendMessageConditionObject),
     REXX_METHOD(TestDecodeCondition,         TestDecodeCondition),
     REXX_METHOD(TestCallProgram,             TestCallProgram),
     REXX_METHOD(TestNewMethod,               TestNewMethod),

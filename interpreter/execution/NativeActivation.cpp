@@ -1293,14 +1293,14 @@ void NativeActivation::run(MethodClass *_method, NativeMethod *_code, RexxObject
     // get the entry point address of the target method
     PNATIVEMETHOD methp = _code->getEntry();
 
-    // retrieve the argument signatures and process them
-    uint16_t *types = (*methp)((RexxMethodContext *)&context, NULL);
-    processArguments(argCount, argList, types, arguments, MaxNativeArguments);
-
     size_t activityLevel = activity->getActivationLevel();
     trapErrors = true;                       // we trap errors from here
     try
     {
+        // retrieve the argument signatures and process them here, so that an argument error is
+        // trapped by this activation, which is then removed from the stack like for any other error
+        uint16_t *types = (*methp)((RexxMethodContext *)&context, NULL);
+        processArguments(argCount, argList, types, arguments, MaxNativeArguments);
         activity->releaseAccess();           /* force this to "safe" mode         */
         /* process the method call           */
         (*methp)((RexxMethodContext *)&context, arguments);
@@ -1408,14 +1408,14 @@ void NativeActivation::callNativeRoutine(RoutineClass *_routine, NativeRoutine *
     // get the entry point address of the target method
     PNATIVEROUTINE methp = _code->getEntry();
 
-    // retrieve the argument signatures and process them
-    uint16_t *types = (*methp)((RexxCallContext *)&context, NULL);
-    processArguments(argCount, argList, types, arguments, MaxNativeArguments);
-
     size_t activityLevel = activity->getActivationLevel();
     trapErrors = true;                       // we trap error conditions now
     try
     {
+        // retrieve the argument signatures and process them here, so that an argument error is
+        // trapped by this activation, which is then removed from the stack like for any other error
+        uint16_t *types = (*methp)((RexxCallContext *)&context, NULL);
+        processArguments(argCount, argList, types, arguments, MaxNativeArguments);
         enableVariablepool();                // enable the variable pool interface here
         activity->releaseAccess();           // force this to "safe" mode
                                              // process the method call
