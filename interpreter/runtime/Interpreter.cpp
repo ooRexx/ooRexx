@@ -541,10 +541,34 @@ InstanceBlock::~InstanceBlock()
 void Interpreter::decodeConditionData(DirectoryClass *conditionObj, RexxCondition *condData)
 {
     memset(condData, 0, sizeof(RexxCondition));
-    condData->code = messageNumber((RexxString *)conditionObj->get(GlobalNames::CODE));
-    // just return the major part
-    condData->rc = messageNumber((RexxString *)conditionObj->get(GlobalNames::RC))/1000;
-    condData->conditionName = (RexxStringObject)conditionObj->get(GlobalNames::CONDITION);
+    RexxString *conditionName = (RexxString *)conditionObj->get(GlobalNames::CONDITION);
+    condData->conditionName = (RexxStringObject)conditionName;
+
+    RexxObject *code = (RexxObject *)conditionObj->get(GlobalNames::CODE);
+    RexxObject *rc = (RexxObject *)conditionObj->get(GlobalNames::RC);
+    // only a SYNTAX condition has an error code, and its RC is the error number
+    if (conditionName != OREF_NULL && conditionName->strCompare(GlobalNames::SYNTAX))
+    {
+        if (code != OREF_NULL)
+        {
+            condData->code = messageNumber((RexxString *)code);
+        }
+        if (rc != OREF_NULL)
+        {
+            // just return the major part
+            condData->rc = messageNumber((RexxString *)rc)/1000;
+        }
+    }
+    // ERROR and FAILURE have the return code of a command, which can be any
+    // value; anything that is not a whole number leaves rc as 0
+    else if (rc != OREF_NULL)
+    {
+        wholenumber_t number;
+        if (rc->numberValue(number))
+        {
+            condData->rc = number;
+        }
+    }
 
     RexxObject *temp = (RexxObject *)conditionObj->get(GlobalNames::MESSAGE);
     if (temp != OREF_NULL)
@@ -558,8 +582,12 @@ void Interpreter::decodeConditionData(DirectoryClass *conditionObj, RexxConditio
         condData->errortext = (RexxStringObject)temp;
     }
 
+    // RAISE allows any object as the DESCRIPTION, and as the ADDITIONAL
+    // information of a condition other than SYNTAX: give them only when they
+    // are of the type the structure declares (the condition object has them
+    // as they are)
     temp = (RexxObject *)conditionObj->get(GlobalNames::DESCRIPTION);
-    if (temp != OREF_NULL)
+    if (temp != OREF_NULL && isString(temp))
     {
         condData->description = (RexxStringObject)temp;
     }
@@ -583,7 +611,7 @@ void Interpreter::decodeConditionData(DirectoryClass *conditionObj, RexxConditio
     }
 
     temp = (RexxObject *)conditionObj->get(GlobalNames::ADDITIONAL);
-    if (temp != OREF_NULL)
+    if (temp != OREF_NULL && isArray(temp))
     {
         condData->additional = (RexxArrayObject)temp;
     }

@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2026 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -82,6 +82,8 @@ public:
     virtual void setFuzz(wholenumber_t) {;};
     virtual void setForm(bool) {;}
     virtual bool trap(RexxString *, DirectoryClass *) {return false;};
+    // a condition RAISEd by the activation this one called
+    virtual bool trapRaised(RexxString *c, DirectoryClass *o) { return trap(c, o); }
     virtual bool willTrap(RexxString *) {return false;};
     virtual void setObjNotify(MessageClass *) {;};
     virtual void termination(){;};

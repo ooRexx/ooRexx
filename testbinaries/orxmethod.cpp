@@ -1909,6 +1909,49 @@ RexxMethod2(RexxObjectPtr,
     return context->CallRoutine((RexxRoutineObject)routine, args);
 }
 
+// call a routine and report the condition it left, as an array:
+// result (or .nil), CheckCondition(), and the condition, description and
+// additional of GetConditionInfo() (or .nil); the condition is not cleared
+RexxMethod2(RexxObjectPtr,
+            TestCallRoutineCondition,
+            RexxObjectPtr, routine,
+            RexxArrayObject, args)
+{
+    RexxObjectPtr result = context->CallRoutine((RexxRoutineObject)routine, args);
+    RexxArrayObject report = context->NewArray(5);
+    context->ArrayPut(report, result != NULLOBJECT ? result : context->Nil(), 1);
+    context->ArrayPut(report, context->Logical(context->CheckCondition()), 2);
+    RexxDirectoryObject info = context->GetConditionInfo();
+    const char *items[] = { "CONDITION", "DESCRIPTION", "ADDITIONAL" };
+    for (size_t i = 0; i < 3; i++)
+    {
+        RexxObjectPtr item = info != NULLOBJECT ? context->DirectoryAt(info, items[i]) : NULLOBJECT;
+        context->ArrayPut(report, item != NULLOBJECT ? item : context->Nil(), i + 3);
+    }
+    return report;
+}
+
+// decode a condition object with DecodeConditionInfo and report it, as an
+// array: the condition name, code, rc, description and additional (.nil when
+// not given), and whether decoding left a condition pending
+RexxMethod1(RexxObjectPtr,
+            TestDecodeCondition,
+            RexxObjectPtr, condition)
+{
+    RexxCondition cd;
+    context->DecodeConditionInfo((RexxDirectoryObject)condition, &cd);
+    RexxArrayObject report = context->NewArray(6);
+    context->ArrayPut(report, cd.conditionName != NULLOBJECT ? (RexxObjectPtr)cd.conditionName : context->Nil(), 1);
+    context->ArrayPut(report, context->WholeNumber(cd.code), 2);
+    context->ArrayPut(report, context->WholeNumber(cd.rc), 3);
+    context->ArrayPut(report, cd.description != NULLOBJECT ? (RexxObjectPtr)cd.description : context->Nil(), 4);
+    context->ArrayPut(report, cd.additional != NULLOBJECT ? (RexxObjectPtr)cd.additional : context->Nil(), 5);
+    context->ArrayPut(report, context->Logical(context->CheckCondition()), 6);
+    // a condition left by decoding would otherwise be raised in the caller
+    context->ClearCondition();
+    return report;
+}
+
 RexxMethod2(RexxObjectPtr,
             TestCallProgram,
             CSTRING, name,
@@ -2663,6 +2706,8 @@ RexxMethodEntry orxtest_methods[] = {
     REXX_METHOD(TestGetPackagePublicClasses, TestGetPackagePublicClasses),
     REXX_METHOD(TestGetPackageMethods,       TestGetPackageMethods),
     REXX_METHOD(TestCallRoutine,             TestCallRoutine),
+    REXX_METHOD(TestCallRoutineCondition,    TestCallRoutineCondition),
+    REXX_METHOD(TestDecodeCondition,         TestDecodeCondition),
     REXX_METHOD(TestCallProgram,             TestCallProgram),
     REXX_METHOD(TestNewMethod,               TestNewMethod),
     REXX_METHOD(TestNewRoutine,              TestNewRoutine),

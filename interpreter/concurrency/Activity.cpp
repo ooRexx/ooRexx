@@ -3414,11 +3414,15 @@ void Activity::run(ActivityDispatcher &target)
     // create a new native activation
     NativeActivation *newNActa = ActivityManager::newNativeActivation(this);
     pushStackFrame(newNActa);            /* push it on the activity stack     */
+    // a non-SYNTAX condition RAISEd by the code we run (see
+    // NativeActivation::trapRaised()), for the API caller
+    ProtectedObject calleeCondition;
 
     try
     {
         // go run the target under the new activation
         newNActa->run(target);
+        calleeCondition = newNActa->getCalleeConditionInfo();
     }
     catch (ActivityException)
     {
@@ -3445,6 +3449,10 @@ void Activity::run(ActivityDispatcher &target)
     if (target.conditionData != OREF_NULL)
     {
         getApiContext()->setConditionInfo(target.conditionData);
+    }
+    else if ((RexxObject *)calleeCondition != OREF_NULL && isOfClass(NativeActivation, topStackFrame))
+    {
+        getApiContext()->setCalleeConditionInfo((DirectoryClass *)(RexxObject *)calleeCondition);
     }
     // make sure we clear this from the activity
     clearCurrentCondition();

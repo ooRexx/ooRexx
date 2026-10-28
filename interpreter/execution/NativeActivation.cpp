@@ -1668,7 +1668,9 @@ void NativeActivation::run(ActivityDispatcher &dispatcher)
     // belt and braces...this restores the activity level to whatever
     // level we had when we made the callout.
     activity->restoreActivationLevel(activityLevel);
-    if (conditionObj != OREF_NULL)
+    // a condition RAISEd by the code we ran is not an error of the dispatch
+    // unit: Activity::run() hands it to the API caller (see trapRaised())
+    if (conditionObj != OREF_NULL && !calleeCondition)
     {
         // pass the condition information on to the dispatch unig
         dispatcher.handleError(conditionObj);
@@ -1720,8 +1722,9 @@ void NativeActivation::run(CallbackDispatcher &dispatcher)
     // belt and braces...this restores the activity level to whatever
     // level we had when we made the callout.
     activity->restoreActivationLevel(activityLevel);
-    // make sure we handle the error notifications
-    if (conditionObj != OREF_NULL)
+    // make sure we handle the error notifications (not a condition RAISEd
+    // by Rexx code the callback called: see trapRaised())
+    if (conditionObj != OREF_NULL && !calleeCondition)
     {
         // pass the condition information on to the dispatch unig
         dispatcher.handleError(conditionObj);
@@ -1770,8 +1773,9 @@ void NativeActivation::run(TrappingDispatcher &dispatcher)
     // belt and braces...this restores the activity level to whatever
     // level we had when we made the callout.
     activity->restoreActivationLevel(activityLevel);
-    // make sure we handle the error notifications
-    if (conditionObj != OREF_NULL)
+    // make sure we handle the error notifications (not a condition RAISEd
+    // by Rexx code the callback called: see trapRaised())
+    if (conditionObj != OREF_NULL && !calleeCondition)
     {
         // pass the condition information on to the dispatch unig
         dispatcher.handleError(conditionObj);
@@ -1812,8 +1816,9 @@ void NativeActivation::checkConditions()
                 trapErrors = false;
                 activity->reraiseException(conditionObj);
             }
-            // some other condition (like NOTREADY)
-            else
+            // some other condition (like NOTREADY); one RAISEd by Rexx code
+            // we called stops here, as it would in a Rexx caller
+            else if (!calleeCondition)
             {
                 // find a predecessor Rexx activation
                 ActivationBase *_sender = getPreviousStackFrame();
@@ -2710,6 +2715,51 @@ void NativeActivation::setConditionInfo(DirectoryClass *c)
     conditionObj = c;
     // we also need to retrieve the condition name from the object
     conditionName = (RexxString *)conditionObj->get(GlobalNames::CONDITION);
+    calleeCondition = false;
+}
+
+
+/**
+ * Set the condition information for a non-SYNTAX condition that Rexx
+ * code called from here raised with RAISE (see trapRaised()).  It is
+ * there for CheckCondition() and GetConditionInfo(), but it is not
+ * raised again when this activation returns.
+ *
+ * @param c      The condition object.
+ */
+void NativeActivation::setCalleeConditionInfo(DirectoryClass *c)
+{
+    setConditionInfo(c);
+    calleeCondition = !conditionName->strCompare(GlobalNames::SYNTAX);
+}
+
+
+/**
+ * A non-SYNTAX condition RAISEd by Rexx code this native activation
+ * called through the API (CallRoutine, SendMessage...).  RAISE offers it
+ * to its caller only.  Native code cannot trap it as Rexx code does, so
+ * it is not trapped (RAISE completes as for an untrapped condition), but
+ * it is kept for CheckCondition() and GetConditionInfo(), as a SYNTAX
+ * error is.  As in a Rexx caller, it goes no further: it is not raised
+ * again when this activation returns (RaiseCondition can do that).
+ *
+ * @param condition The condition name.
+ * @param conditionObject
+ *                  The condition object.
+ *
+ * @return true if trapped (only when an API call is raising a condition
+ *         itself, as trap() does), false otherwise.
+ */
+bool NativeActivation::trapRaised(RexxString *condition, DirectoryClass *conditionObject)
+{
+    // a condition raised through the API is handled as before
+    if (trapConditions)
+    {
+        return trap(condition, conditionObject);
+    }
+    setConditionInfo(condition, conditionObject);
+    calleeCondition = true;
+    return false;
 }
 
 

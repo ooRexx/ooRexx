@@ -1859,7 +1859,7 @@ void RexxActivation::raise(RexxString *condition, RexxObject *rc, RexxString *de
         bool trapped = false;
         if (_sender != OREF_NULL)
         {
-            trapped = _sender->trap(condition, conditionobj);
+            trapped = _sender->trapRaised(condition, conditionobj);
         }
 
         // If this was untrapped and either a HALT or a NOMETHOD condition, then we need to raise an error
@@ -2740,6 +2740,8 @@ ActivationBase* RexxActivation::senderActivation(RexxString *conditionName)
 {
     // get the sender from the activity
     ActivationBase *_sender = getPreviousStackFrame();
+    // the first native activation we pass, if any
+    ActivationBase *nativeSender = OREF_NULL;
     // spin down to non-native activation
     while (_sender != OREF_NULL && isOfClass(NativeActivation, _sender))
     {
@@ -2749,7 +2751,19 @@ ActivationBase* RexxActivation::senderActivation(RexxString *conditionName)
         {
             return _sender;
         }
+        if (nativeSender == OREF_NULL)
+        {
+            nativeSender = _sender;
+        }
         _sender = _sender->getPreviousStackFrame();
+    }
+    // no Rexx activation to raise this in (we were called through the API from
+    // native code, as CallRoutine does, with a fresh activation stack): the
+    // native caller keeps the condition for CheckCondition() and
+    // GetConditionInfo() (NativeActivation::trapRaised()) instead of losing it
+    if (_sender == OREF_NULL)
+    {
+        return nativeSender;
     }
     // that is our sender
     return _sender;

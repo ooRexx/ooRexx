@@ -93,6 +93,7 @@ class NativeActivation : public ActivationBase
     void setFuzz(wholenumber_t) override;
     void setForm(bool) override;
     bool trap(RexxString *, DirectoryClass *) override;
+    bool trapRaised(RexxString *, DirectoryClass *) override;
     bool willTrap(RexxString *) override;
     void termination() override { guardOff(); }
     bool isStackBase() override;
@@ -155,10 +156,12 @@ class NativeActivation : public ActivationBase
     void setObjectVariable(const char *name, RexxObject *value);
     void dropObjectVariable(const char *name);
     DirectoryClass *getAllContextVariables();
-    inline void setConditionInfo(RexxString *name, DirectoryClass *info) { conditionName = name; conditionObj = info; }
+    inline void setConditionInfo(RexxString *name, DirectoryClass *info) { conditionName = name; conditionObj = info; calleeCondition = false; }
     void setConditionInfo(DirectoryClass *info);
+    void setCalleeConditionInfo(DirectoryClass *info);
     inline DirectoryClass *getConditionInfo() { return conditionObj; }
-    inline void clearException() { conditionName = OREF_NULL; conditionObj = OREF_NULL; }
+    inline DirectoryClass *getCalleeConditionInfo() { return calleeCondition ? conditionObj : OREF_NULL; }
+    inline void clearException() { conditionName = OREF_NULL; conditionObj = OREF_NULL; calleeCondition = false; }
     void clearCondition();
     void checkConditions();
     bool checkCondition(RexxString *name);
@@ -242,6 +245,7 @@ protected:
     bool            trapErrors;          // we're trapping errors from external callers
     bool            trapConditions;      // trap any raised conditions
     bool            captureConditions;   // but don't propagate trapped conditions via throw.
+    bool            calleeCondition;     // conditionObj was RAISEd by Rexx code we called
     bool            variablePoolEnabled; // Variable pool access flag
                                          // our iterator for the variable pool next function
     VariableDictionary::VariableIterator iterator;
