@@ -1931,6 +1931,19 @@ RexxMethod2(RexxObjectPtr,
     return report;
 }
 
+// call a routine and return the condition object it left (.nil if none),
+// cleared, so that it is not raised again when this method returns
+RexxMethod2(RexxObjectPtr,
+            TestCallRoutineConditionObject,
+            RexxObjectPtr, routine,
+            RexxArrayObject, args)
+{
+    context->CallRoutine((RexxRoutineObject)routine, args);
+    RexxDirectoryObject info = context->GetConditionInfo();
+    context->ClearCondition();
+    return info != NULLOBJECT ? (RexxObjectPtr)info : context->Nil();
+}
+
 // decode a condition object with DecodeConditionInfo and report it, as an
 // array: the condition name, code, rc, description and additional (.nil when
 // not given), and whether decoding left a condition pending
@@ -2707,6 +2720,7 @@ RexxMethodEntry orxtest_methods[] = {
     REXX_METHOD(TestGetPackageMethods,       TestGetPackageMethods),
     REXX_METHOD(TestCallRoutine,             TestCallRoutine),
     REXX_METHOD(TestCallRoutineCondition,    TestCallRoutineCondition),
+    REXX_METHOD(TestCallRoutineConditionObject, TestCallRoutineConditionObject),
     REXX_METHOD(TestDecodeCondition,         TestDecodeCondition),
     REXX_METHOD(TestCallProgram,             TestCallProgram),
     REXX_METHOD(TestNewMethod,               TestNewMethod),

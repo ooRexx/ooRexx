@@ -1790,7 +1790,11 @@ void NativeActivation::run(TrappingDispatcher &dispatcher)
  */
 void NativeActivation::accessCallerContext()
 {
-    activation = (RexxActivation *)getPreviousStackFrame();
+    // the caller is a Rexx activation only when Rexx code called us; a routine
+    // called by native code through CallRoutine has the dispatcher's native
+    // activation before it, and then there is no caller's context
+    ActivationBase *caller = getPreviousStackFrame();
+    activation = isOfClass(Activation, caller) ? (RexxActivation *)caller : OREF_NULL;
 }
 
 
