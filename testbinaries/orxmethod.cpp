@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2008-2024 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2008-2026 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -2113,7 +2113,8 @@ RexxMethod4(int,
             OPTIONAL_RexxArrayObject, add,
             OPTIONAL_RexxObjectPtr, result)
 {
-    context->RaiseCondition(name, (RexxStringObject)desc, add, result);
+    // desc is a C string: it must be passed as a String object
+    context->RaiseCondition(name, desc == NULL ? NULLOBJECT : context->String(desc), add, result);
     // this should still get executed
     context->SetObjectVariable("CONTINUE", context->True());
     return 0;

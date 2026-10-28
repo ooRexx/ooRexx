@@ -1917,6 +1917,11 @@ void RexxEntry RaiseCondition(RexxThreadContext *c, CSTRING n, RexxStringObject 
     try
     {
         Protected<RexxString> name = new_upper_string(n);
+        // a SYNTAX condition needs an error number: RaiseException raises one
+        if (name->strCompare(GlobalNames::SYNTAX))
+        {
+            reportException(Error_Incorrect_method_user_defined, new_string("RaiseCondition cannot raise a SYNTAX condition; use RaiseException"));
+        }
         context.context->enableConditionTrap();
         context.activity->raiseCondition(name, OREF_NULL, (RexxString *)desc, (RexxObject *)add, (RexxObject *)result);
     }

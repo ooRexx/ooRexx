@@ -1818,9 +1818,29 @@ void NativeActivation::checkConditions()
                 // find a predecessor Rexx activation
                 ActivationBase *_sender = getPreviousStackFrame();
                 // raise this in our caller's context.
+                bool trapped = false;
                 if (_sender != OREF_NULL)
                 {
-                    _sender->trap(conditionName, conditionObj);
+                    trapped = _sender->trap(conditionName, conditionObj);
+                }
+                // as with the RAISE instruction, an untrapped HALT or NOMETHOD
+                // condition is an error
+                if (!trapped)
+                {
+                    if (conditionName->strCompare(GlobalNames::HALT))
+                    {
+                        reportException(Error_Program_interrupted_condition, GlobalNames::HALT);
+                    }
+                    else if (conditionName->strCompare(GlobalNames::NOMETHOD))
+                    {
+                        RexxObject *additional = (RexxObject *)conditionObj->get(GlobalNames::ADDITIONAL);
+                        RexxObject *description = (RexxObject *)conditionObj->get(GlobalNames::DESCRIPTION);
+                        if (additional != OREF_NULL && description != OREF_NULL)
+                        {
+                            reportException(Error_No_method_name, additional, description);
+                        }
+                        reportException(Error_No_method_unhandled);
+                    }
                 }
                 // if the trap is not handled, then we return directly.  The return
                 // value (if any) is stored in the condition object
