@@ -119,6 +119,8 @@ class Activity : public RexxInternalObject
     wholenumber_t displayCondition(DirectoryClass *conditionObject);
     bool        raiseCondition(RexxString *, RexxObject *, RexxObject *, RexxObject *, RexxObject *);
     bool        raiseCondition(DirectoryClass *);
+    void        checkConditionSyntaxOptions(RexxString *, RexxObject *, RexxObject *);
+    void        raiseConditionObject(DirectoryClass *);
     bool        checkCondition(RexxString *condition);
     DirectoryClass *createConditionObject(RexxString *, RexxObject *, RexxObject *, RexxObject *, RexxObject *);
     void        raiseException(RexxErrorCodes, RexxString *, ArrayClass *, RexxObject *);

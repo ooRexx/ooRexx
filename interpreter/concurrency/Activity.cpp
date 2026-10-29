@@ -580,23 +580,18 @@ wholenumber_t Activity::errorNumber(DirectoryClass *conditionObject)
 
 
 /**
- * Raise a condition, with potential trapping.
- * Also checks for potential ::OPTIONS condition overrides.
+ * Check for ::OPTIONS condition SYNTAX overrides for a condition
+ * about to be raised.  If the current Rexx frame's package has
+ * the option for this condition, a SYNTAX error is raised instead
+ * and this does not return.
  *
  * @param condition  The condition name.
- * @param rc         The rc value
  * @param description
  *                   The description value.
- * @param additional the exception additional information.
  * @param result     The condition result info.
- *
- * @return true if this was trapped via CALL ON, false for untrapped
- *         conditions.
  */
-bool Activity::raiseCondition(RexxString *condition, RexxObject *rc, RexxObject *description, RexxObject *additional, RexxObject *result)
+void Activity::checkConditionSyntaxOptions(RexxString *condition, RexxObject *description, RexxObject *result)
 {
-    // if we have ::OPTIONS condition SYNTAX set on the package, we
-    // raise a SYNTAX error instead of raising the condition
     RexxActivation *activation = getCurrentRexxFrame();
     if (activation != OREF_NULL)
     {
@@ -621,6 +616,28 @@ bool Activity::raiseCondition(RexxString *condition, RexxObject *rc, RexxObject 
             reportException(Error_Execution_notready_syntax, description);
         }
     }
+}
+
+
+/**
+ * Raise a condition, with potential trapping.
+ * Also checks for potential ::OPTIONS condition overrides.
+ *
+ * @param condition  The condition name.
+ * @param rc         The rc value
+ * @param description
+ *                   The description value.
+ * @param additional the exception additional information.
+ * @param result     The condition result info.
+ *
+ * @return true if this was trapped via CALL ON, false for untrapped
+ *         conditions.
+ */
+bool Activity::raiseCondition(RexxString *condition, RexxObject *rc, RexxObject *description, RexxObject *additional, RexxObject *result)
+{
+    // if we have ::OPTIONS condition SYNTAX set on the package, we
+    // raise a SYNTAX error instead of raising the condition
+    checkConditionSyntaxOptions(condition, description, result);
 
     // check the context first to see if this will be trapped.  Creating
     // the condition object is pretty expensive, so we want to avoid
@@ -705,6 +722,135 @@ bool Activity::raiseCondition(DirectoryClass *conditionObj)
     // true if a trap is pending.
 
     return handled;
+}
+
+
+/**
+ * Convert a SYNTAX error code in "nn.nnn" form to an error number
+ * (the same rules as Interpreter::messageNumber(), but without
+ * raising an error).
+ *
+ * @param code   The error code string.
+ * @param number The error number (major * 1000 + minor).
+ *
+ * @return true if the code is valid, false otherwise.
+ */
+static bool validErrorCode(RexxString *code, wholenumber_t &number)
+{
+    const char *data = code->getStringData();
+    size_t length = code->getLength();
+    const char *decimalPoint = (const char *)memchr(data, '.', length);
+    size_t majorLength = decimalPoint == NULL ? length : decimalPoint - data;
+
+    wholenumber_t primary;
+    if (!new_string(data, majorLength)->numberValue(primary) || primary < 1 || primary >= 100)
+    {
+        return false;
+    }
+
+    wholenumber_t secondary = 0;
+    if (decimalPoint != NULL)
+    {
+        if (!new_string(decimalPoint + 1, length - majorLength - 1)->numberValue(secondary) || secondary < 0 || secondary >= 1000)
+        {
+            return false;
+        }
+    }
+    number = primary * 1000 + secondary;
+    return true;
+}
+
+
+/**
+ * Raise a condition described by an existing condition object,
+ * for the RaiseConditionObject() API.  A copy of the object is
+ * raised, with everything it holds (RC, DESCRIPTION, ADDITIONAL,
+ * RESULT...), as the condition it describes: a SYNTAX error is
+ * raised as an error, any other condition as RaiseCondition()
+ * raises it, after the ::OPTIONS condition SYNTAX checks.
+ *
+ * @param source The condition object.
+ */
+void Activity::raiseConditionObject(DirectoryClass *source)
+{
+    RexxInternalObject *name = source->get(GlobalNames::CONDITION);
+    if (name == OREF_NULL || !isString(name))
+    {
+        reportException(Error_Incorrect_method_user_defined, new_string("the condition object has no CONDITION name"));
+    }
+    Protected<RexxString> condition = ((RexxString *)name)->upper();
+
+    // we raise a copy, so the caller's object is left as it is
+    Protected<DirectoryClass> conditionObj = (DirectoryClass *)source->copy();
+    conditionObj->put(condition, GlobalNames::CONDITION);
+
+    RexxObject *description = (RexxObject *)conditionObj->get(GlobalNames::DESCRIPTION);
+    RexxObject *additional = (RexxObject *)conditionObj->get(GlobalNames::ADDITIONAL);
+    RexxObject *result = (RexxObject *)conditionObj->get(GlobalNames::RESULT);
+    if (description == OREF_NULL)
+    {
+        conditionObj->put(GlobalNames::NULLSTRING, GlobalNames::DESCRIPTION);
+    }
+
+    // a condition object built by hand may not have its location information
+    RexxInternalObject *traceback = conditionObj->get(GlobalNames::TRACEBACK);
+    RexxInternalObject *stackFrames = conditionObj->get(GlobalNames::STACKFRAMES);
+    if (traceback == OREF_NULL || !isOfClass(List, traceback) || stackFrames == OREF_NULL || !isOfClass(List, stackFrames))
+    {
+        generateProgramInformation(conditionObj);
+    }
+
+    if (condition->strCompare(GlobalNames::SYNTAX))
+    {
+        RexxInternalObject *code = conditionObj->get(GlobalNames::CODE);
+        wholenumber_t errcode;
+        if (code == OREF_NULL || !isString(code) || !validErrorCode((RexxString *)code, errcode))
+        {
+            reportException(Error_Incorrect_method_user_defined, new_string("the CODE of a SYNTAX condition object must be a valid error number"));
+        }
+        if (additional == OREF_NULL)
+        {
+            additional = new_array((size_t)0);
+            conditionObj->put(additional, GlobalNames::ADDITIONAL);
+        }
+        else if (!isArray(additional))
+        {
+            reportException(Error_Incorrect_method_user_defined, new_string("the ADDITIONAL of a SYNTAX condition object must be an array"));
+        }
+
+        // RC, ERRORTEXT and MESSAGE follow from CODE and ADDITIONAL, as in
+        // createExceptionObject()
+        wholenumber_t primary = (errcode / 1000) * 1000;
+        RexxString *errortext = Interpreter::getMessageText(primary);
+        if (errortext == OREF_NULL)
+        {
+            reportException(Error_Execution_error_condition, (RexxObject *)code);
+        }
+        conditionObj->put(new_integer(primary / 1000), GlobalNames::RC);
+        conditionObj->put(errortext, GlobalNames::ERRORTEXT);
+        if (primary != errcode)
+        {
+            conditionObj->put(buildMessage(errcode, (ArrayClass *)additional), GlobalNames::MESSAGE);
+        }
+        else
+        {
+            conditionObj->put(TheNilObject, GlobalNames::MESSAGE);
+        }
+        conditionObj->put(TheFalseObject, GlobalNames::PROPAGATED);
+
+        // and raise it as an error raised from native code (see raiseException())
+        if (!raiseCondition(conditionObj))
+        {
+            conditionObj->put(TheTrueObject, GlobalNames::PROPAGATED);
+            raisePropagate(conditionObj);
+        }
+        return;
+    }
+
+    // ::OPTIONS condition SYNTAX applies as for RaiseCondition()
+    checkConditionSyntaxOptions(condition, description, result);
+    conditionObj->put(TheFalseObject, GlobalNames::PROPAGATED);
+    raiseCondition(conditionObj);
 }
 
 

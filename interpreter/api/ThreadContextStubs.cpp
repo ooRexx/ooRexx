@@ -1917,13 +1917,35 @@ void RexxEntry RaiseCondition(RexxThreadContext *c, CSTRING n, RexxStringObject 
     try
     {
         Protected<RexxString> name = new_upper_string(n);
-        // a SYNTAX condition needs an error number: RaiseException raises one
+        // a SYNTAX condition needs an error number: RaiseException or
+        // RaiseConditionObject raise one
         if (name->strCompare(GlobalNames::SYNTAX))
         {
-            reportException(Error_Incorrect_method_user_defined, new_string("RaiseCondition cannot raise a SYNTAX condition; use RaiseException"));
+            reportException(Error_Incorrect_method_user_defined, new_string("RaiseCondition cannot raise a SYNTAX condition; use RaiseException or RaiseConditionObject"));
         }
         context.context->enableConditionTrap();
         context.activity->raiseCondition(name, OREF_NULL, (RexxString *)desc, (RexxObject *)add, (RexxObject *)result);
+    }
+    catch (NativeActivation *)
+    {
+    }
+}
+
+void RexxEntry RaiseConditionObject(RexxThreadContext *c, RexxDirectoryObject d)
+{
+    ApiContext context(c);
+    try
+    {
+        if (d == NULLOBJECT)
+        {
+            reportException(Error_Incorrect_method_null, 1);
+        }
+        if (!isOfClass(Directory, (RexxObject *)d))
+        {
+            reportException(Error_Incorrect_method_noclass, 1, new_string("Directory"));
+        }
+        context.context->enableConditionTrap();
+        context.activity->raiseConditionObject((DirectoryClass *)d);
     }
     catch (NativeActivation *)
     {
@@ -2270,4 +2292,5 @@ RexxThreadInterface Activity::threadContextFunctions =
     IsStringTable,
     SendMessageScoped,
     GetInterpreterInstance,
+    RaiseConditionObject,
 };

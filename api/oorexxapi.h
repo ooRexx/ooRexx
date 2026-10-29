@@ -499,7 +499,8 @@ typedef struct
 #define THREAD_INTERFACE_VERSION_4_1_1 101
 #define THREAD_INTERFACE_VERSION_4_2_0 102
 #define THREAD_INTERFACE_VERSION_5_0_0 103
-#define THREAD_INTERFACE_VERSION 103
+#define THREAD_INTERFACE_VERSION_5_3_0 104
+#define THREAD_INTERFACE_VERSION 104
 
 BEGIN_EXTERN_C()
 
@@ -673,6 +674,8 @@ typedef struct
      logical_t(RexxEntry *IsStringTable)(RexxThreadContext *, RexxObjectPtr);
      RexxObjectPtr(RexxEntry *SendMessageScoped)(RexxThreadContext *, RexxObjectPtr, CSTRING, RexxClassObject, RexxArrayObject);
      RexxInstance *(RexxEntry *GetInterpreterInstance)(RexxThreadContext *);
+     // added in THREAD_INTERFACE_VERSION_5_3_0
+     void             (RexxEntry *RaiseConditionObject)(RexxThreadContext *, RexxDirectoryObject);
 
 } RexxThreadInterface;
 
@@ -1629,6 +1632,10 @@ struct RexxThreadContext_
      {
          functions->RaiseCondition(this, s1, s2, ao, o);
      }
+     void RaiseConditionObject(RexxDirectoryObject d)
+     {
+         functions->RaiseConditionObject(this, d);
+     }
      logical_t CheckCondition()
      {
          return functions->CheckCondition(this);
@@ -2379,6 +2386,10 @@ struct RexxMethodContext_
      void RaiseCondition(CSTRING s1, RexxStringObject s2, RexxObjectPtr ao, RexxObjectPtr o)
      {
          threadContext->RaiseCondition(s1, s2, ao, o);
+     }
+     void RaiseConditionObject(RexxDirectoryObject d)
+     {
+         threadContext->RaiseConditionObject(d);
      }
      logical_t CheckCondition()
      {
@@ -3234,6 +3245,10 @@ struct RexxCallContext_
      {
          threadContext->RaiseCondition(s1, s2, ao, o);
      }
+     void RaiseConditionObject(RexxDirectoryObject d)
+     {
+         threadContext->RaiseConditionObject(d);
+     }
      logical_t CheckCondition()
      {
          return threadContext->CheckCondition();
@@ -4067,6 +4082,10 @@ struct RexxExitContext_
      void RaiseCondition(CSTRING s1, RexxStringObject s2, RexxObjectPtr ao, RexxObjectPtr o)
      {
          threadContext->RaiseCondition(s1, s2, ao, o);
+     }
+     void RaiseConditionObject(RexxDirectoryObject d)
+     {
+         threadContext->RaiseConditionObject(d);
      }
      logical_t CheckCondition()
      {

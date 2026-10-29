@@ -2198,6 +2198,38 @@ RexxMethod4(int,
 }
 
 RexxMethod1(int,
+            TestRaiseConditionObject,
+            OPTIONAL_RexxObjectPtr, condition)
+{
+    context->RaiseConditionObject((RexxDirectoryObject)condition);
+    // this should still get executed
+    context->SetObjectVariable("CONTINUE", context->True());
+    return 0;
+}
+
+// what a bridge does: call Rexx code and raise any condition it raised
+// again in our caller
+RexxMethod2(RexxObjectPtr,
+            TestCallRoutineAndReraise,
+            RexxObjectPtr, routine,
+            OPTIONAL_RexxArrayObject, args)
+{
+    if (args == NULLOBJECT)
+    {
+        args = context->NewArray(0);
+    }
+    RexxObjectPtr result = context->CallRoutine((RexxRoutineObject)routine, args);
+    if (context->CheckCondition())
+    {
+        RexxDirectoryObject condition = context->GetConditionInfo();
+        context->ClearCondition();
+        context->RaiseConditionObject(condition);
+        return NULLOBJECT;
+    }
+    return result;
+}
+
+RexxMethod1(int,
             TestThrowException0,
             size_t, errNo)
 {
@@ -2763,6 +2795,8 @@ RexxMethodEntry orxtest_methods[] = {
     REXX_METHOD(TestRaiseException2,         TestRaiseException2),
     REXX_METHOD(TestRaiseException,          TestRaiseException),
     REXX_METHOD(TestRaiseCondition,          TestRaiseCondition),
+    REXX_METHOD(TestRaiseConditionObject,    TestRaiseConditionObject),
+    REXX_METHOD(TestCallRoutineAndReraise,   TestCallRoutineAndReraise),
     REXX_METHOD(TestInterpreterVersion,      TestInterpreterVersion),
     REXX_METHOD(TestLanguageLevel,           TestLanguageLevel),
     REXX_METHOD(TestNewStringFromAsciiz,     TestNewStringFromAsciiz),
