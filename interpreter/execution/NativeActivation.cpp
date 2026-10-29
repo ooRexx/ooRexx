@@ -2931,6 +2931,12 @@ RexxObject* NativeActivation::getContextStem(RexxString *name)
     {
         return OREF_NULL;
     }
+    // a routine called by native code (through CallRoutine) has no caller's
+    // context, so there is no stem to resolve
+    if (activation == OREF_NULL)
+    {
+        return OREF_NULL;
+    }
     // get the variable value
     return retriever->getValue(activation);
 }
@@ -2961,6 +2967,11 @@ RexxObject* NativeActivation::getContextVariable(const char *name)
         // the value is the retriever
         return (RexxObject *)retriever;
     }
+    // no caller's context (a routine called through CallRoutine): no variables
+    else if (activation == OREF_NULL)
+    {
+        return OREF_NULL;
+    }
     else
     {
         // get the variable value
@@ -2989,6 +3000,12 @@ VariableReference *NativeActivation::getContextVariableReference(const char *nam
     // all next operations must be reset
     resetNext();
 
+    // no caller's context (a routine called through CallRoutine): no variables
+    if (activation == OREF_NULL)
+    {
+        return OREF_NULL;
+    }
+
     // get the reference. This will return NULL for all non-referencable
     // retriever types
     return retriever->getVariableReference(activation);
@@ -3013,6 +3030,12 @@ void NativeActivation::setContextVariable(const char *name, RexxObject *value)
     }
     resetNext();               // all next operations must be reset
 
+    // no caller's context (a routine called through CallRoutine): nothing to set
+    if (activation == OREF_NULL)
+    {
+        return;
+    }
+
     // do the assignment
     retriever->set(activation, value);
 }
@@ -3034,6 +3057,12 @@ void NativeActivation::dropContextVariable(const char *name)
     }
     resetNext();               // all next operations must be reset
 
+    // no caller's context (a routine called through CallRoutine): nothing to drop
+    if (activation == OREF_NULL)
+    {
+        return;
+    }
+
     // perform the drop
     retriever->drop(activation);
 }
@@ -3047,6 +3076,11 @@ void NativeActivation::dropContextVariable(const char *name)
 DirectoryClass *NativeActivation::getAllContextVariables()
 {
     resetNext();               // all next operations must be reset
+    // no caller's context (a routine called through CallRoutine): no variables
+    if (activation == OREF_NULL)
+    {
+        return new_directory();
+    }
     return activation->getAllLocalVariables();
 }
 
@@ -3253,8 +3287,9 @@ PackageClass *NativeActivation::getPackageObject()
  */
 RexxReturnCode NativeActivation::variablePoolInterface(PSHVBLOCK pshvblock)
 {
-    // this is not allowed asynchronously
-    if (!isVariablePoolEnabled())
+    // this is not allowed asynchronously, nor without a caller's context (a
+    // routine called through CallRoutine has none)
+    if (!isVariablePoolEnabled() || activation == OREF_NULL)
     {
         return RXSHV_NOAVL;
     }

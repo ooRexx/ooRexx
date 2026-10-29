@@ -513,6 +513,50 @@ RexxRoutine1(RexxStemObject,
     return value;
 }
 
+// use the services on the caller's variables and report what each one saw, as
+// an array: the value of the caller's variable named by the argument (.nil if
+// none), its value after setting it to "set" (.nil if none), the value after
+// dropping it (.nil if none), the number of variables GetAllContextVariables()
+// returns, whether ResolveStemVariable() of "STEM." found a stem, whether
+// GetContextVariableReference() gave a reference, and the return code of a
+// RexxVariablePool() symbolic fetch of the variable
+RexxRoutine1(RexxObjectPtr,
+            TestCallerVariables,
+            CSTRING, name)
+{
+    RexxArrayObject report = context->NewArray(7);
+    RexxObjectPtr value = context->GetContextVariable(name);
+    context->ArrayPut(report, value != NULLOBJECT ? value : context->Nil(), 1);
+    context->SetContextVariable(name, context->String("set"));
+    value = context->GetContextVariable(name);
+    context->ArrayPut(report, value != NULLOBJECT ? value : context->Nil(), 2);
+    context->DropContextVariable(name);
+    value = context->GetContextVariable(name);
+    context->ArrayPut(report, value != NULLOBJECT ? value : context->Nil(), 3);
+    RexxDirectoryObject all = context->GetAllContextVariables();
+    context->ArrayPut(report, all != NULLOBJECT ? context->SendMessage0(all, "ITEMS") : context->Nil(), 4);
+    context->ArrayPut(report, context->Logical(context->ResolveStemVariable(context->String("STEM.")) != NULLOBJECT), 5);
+    context->ArrayPut(report, context->Logical(context->GetContextVariableReference(name) != NULLOBJECT), 6);
+
+    SHVBLOCK block;
+    block.shvnext = NULL;
+    block.shvname.strptr = name;
+    block.shvname.strlength = strlen(name);
+    block.shvnamelen = block.shvname.strlength;
+    block.shvvalue.strptr = NULL;
+    block.shvvalue.strlength = 0;
+    block.shvvaluelen = 0;
+    block.shvcode = RXSHV_SYFET;
+    block.shvret = 0;
+    RexxReturnCode rc = RexxVariablePool(&block);
+    if (block.shvvalue.strptr != NULL)
+    {
+        RexxFreeMemory(block.shvvalue.strptr);
+    }
+    context->ArrayPut(report, context->WholeNumber(rc), 7);
+    return report;
+}
+
 RexxRoutine1(RexxClassObject,
             TestFindContextClass,
             CSTRING, name)
@@ -985,6 +1029,7 @@ RexxRoutineEntry orxtest_funcs[] = {
     REXX_TYPED_ROUTINE(TestGetContextForm,    TestGetContextForm),
     REXX_TYPED_ROUTINE(TestGetContextDigits,  TestGetContextDigits),
     REXX_TYPED_ROUTINE(TestResolveStemVariable, TestResolveStemVariable),
+    REXX_TYPED_ROUTINE(TestCallerVariables,     TestCallerVariables),
     REXX_TYPED_ROUTINE(TestFindContextClass,  TestFindContextClass),
     REXX_TYPED_ROUTINE(TestAddCommandEnvironment, TestAddCommandEnvironment),
     REXX_TYPED_ROUTINE(TestStackCommandEnvironment, TestStackCommandEnvironment),
