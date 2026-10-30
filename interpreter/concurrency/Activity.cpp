@@ -131,6 +131,7 @@ void Activity::live(size_t liveMark)
     memory_mark(requiresTable);
     memory_mark(waitingObject);
     memory_mark(dispatchMessage);
+    memory_mark(haltRequestDescription);
     memory_mark(heldMutexes);
     memory_mark(spawnerStackFrameInfo);
 
@@ -165,6 +166,7 @@ void Activity::liveGeneral(MarkReason reason)
     memory_mark_general(requiresTable);
     memory_mark_general(waitingObject);
     memory_mark_general(dispatchMessage);
+    memory_mark_general(haltRequestDescription);
     memory_mark_general(heldMutexes);
     memory_mark_general(spawnerStackFrameInfo);
 
@@ -2305,8 +2307,17 @@ bool Activity::halt(RexxString *d)
 
     if (activation != NULL)
     {
-        // please make it stop :-)
-        return activation->halt(d);
+        // please make it stop :-)  Posted to the activity, not to the frame:
+        // the frame may be ending on its own thread meanwhile (this may run on
+        // another thread), and a flag in an ended frame is never seen.
+        if (haltRequest.load(std::memory_order_acquire))
+        {
+            return false;                   // one still pending
+        }
+        haltRequestDescription = d;
+        haltRequestDepth = stackFrameDepth;
+        haltRequest.store(true, std::memory_order_release);
+        return true;
     }
     return true;
 }
@@ -3590,6 +3601,9 @@ void Activity::run(ActivityDispatcher &target)
     memoryObject.checkUninitQueue();
     // unwind to the same stack depth as the start, removing all new entries
     unwindToDepth(startDepth);
+    // a HALT requested of a frame of the code we ran, and never taken, ends with
+    // it: it must not halt the next code run on this activity
+    clearHaltRequest();
     // if a condition occurred, make sure we inject this into the API-level
     // native activation so the caller can check to see if an error occurred.
     if (target.conditionData != OREF_NULL)

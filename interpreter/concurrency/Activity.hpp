@@ -58,6 +58,7 @@
 #include "StringTableClass.hpp"
 #include "InterpreterInstance.hpp"
 #include "RexxErrorCodes.h"
+#include <atomic>
 
 
 
@@ -184,6 +185,24 @@ class Activity : public RexxInternalObject
     void        joinKernelQueue();
     void        relinquish();
     bool        halt(RexxString *);
+    // a HALT requested from any thread, taken at the next clause boundary of
+    // whichever Rexx frame of this activity gets there first
+    // (only by a frame no deeper than the one it was aimed at: a callee pushed
+    // after the request leaves it to its caller, as a HALT posted to a frame did)
+    inline bool haltRequested() { return haltRequest.load(std::memory_order_relaxed) && stackFrameDepth <= haltRequestDepth; }
+    inline bool takeHaltRequest(RexxString *&d)
+    {
+        if (!haltRequested() || !haltRequest.exchange(false, std::memory_order_acquire)) return false;
+        d = haltRequestDescription; haltRequestDescription = OREF_NULL; return true;
+    }
+    inline void clearHaltRequest()
+    {
+        if (haltRequest.load(std::memory_order_acquire) && haltRequestDepth > stackFrameDepth)
+        {
+            haltRequest.store(false, std::memory_order_release);
+            haltRequestDescription = OREF_NULL;
+        }
+    }
     bool        setTrace(bool);
     inline void yieldControl() { releaseAccess(); requestAccess(); }
     void        yield();
@@ -384,6 +403,9 @@ class Activity : public RexxInternalObject
     // is the current size of the stack (which is expanded, if necessary).  The
     // activationStackDepth is the current count of frames in the stack.
     InternalStack *activations;
+    std::atomic<bool> haltRequest{false};       // see takeHaltRequest()
+    RexxString *haltRequestDescription = OREF_NULL;
+    size_t haltRequestDepth = 0;                // the depth of the frame it was aimed at
     size_t   activationStackSize;
     size_t   stackFrameDepth;
 

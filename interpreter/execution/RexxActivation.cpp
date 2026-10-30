@@ -648,7 +648,7 @@ RexxObject* RexxActivation::run(RexxObject *_receiver, RexxString *name, RexxObj
 
                 // do we need to check clauseBoundary stuff?  Go do those
                 // checks.
-                if (clauseBoundary)
+                if (clauseBoundary || activity->haltRequested())
                 {
                     processClauseBoundary();
                 }
@@ -4099,6 +4099,15 @@ void RexxActivation::processClauseBoundary()
         }
     }
 
+    // a HALT requested of the activity
+    {
+        RexxString *d = OREF_NULL;
+        if (activity->takeHaltRequest(d) && !settings.haveHaltCondition())
+        {
+            settings.haltDescription = d;
+            settings.setHaltCondition(true);
+        }
+    }
     // have a halt condition?
     if (settings.haveHaltCondition())
     {
