@@ -621,6 +621,32 @@ RexxObjectPtr RexxEntry cHandler(RexxExitContext *context,
 }
 
 
+// the exit context of the "nested" command handler while it runs (bug #2104)
+static RexxExitContext *nestedExitContext = NULL;
+
+// test DIRECT command handler for TestAddCommandEnvironment "nested" (bug
+// #2104): sends RUN to the .local entry named by the command; while RUN runs,
+// native code uses this handler's exit context (TestNestedSetCallerVariable).
+// Answers the code of the SYNTAX error that SendMessage0 trapped, else 0
+RexxObjectPtr RexxEntry nHandler(RexxExitContext *context,
+                                 RexxStringObject address,
+                                 RexxStringObject command)
+{
+    nestedExitContext = context;
+    RexxObjectPtr target = context->DirectoryAt(context->GetLocalEnvironment(), context->CString(command));
+    context->SendMessage0(target, "RUN");
+    nestedExitContext = NULL;
+    if (context->CheckCondition())
+    {
+        RexxCondition info;
+        context->DecodeConditionInfo(context->GetConditionInfo(), &info);
+        context->ClearCondition();
+        return context->WholeNumberToObject(info.code);
+    }
+    return context->WholeNumberToObject(0);
+}
+
+
 // test command handler for the I/O redirection APIs
 RexxObjectPtr RexxEntry ioHandler(RexxExitContext *context, RexxStringObject address, RexxStringObject command, RexxIORedirectorContext *ioContext)
 {
@@ -807,7 +833,7 @@ RexxObjectPtr RexxEntry ioHandler(RexxExitContext *context, RexxStringObject add
 }
 
 
-// install 'ioHandler', 'rHandler', 'cHandler', or 'dHandler'
+// install 'ioHandler', 'rHandler', 'cHandler', 'nHandler', or 'dHandler'
 RexxRoutine2(RexxObjectPtr,
              TestAddCommandEnvironment,
              CSTRING, name,
@@ -828,11 +854,30 @@ RexxRoutine2(RexxObjectPtr,
     {   // direct command handler that raises the condition named by the command
         context->AddCommandEnvironment(name, (REXXPFN)cHandler, DIRECT_COMMAND_ENVIRONMENT);
     }
+    else if (type[0] == 'n' || type[0] == 'N')
+    {   // direct command handler whose exit context is used again while it runs
+        context->AddCommandEnvironment(name, (REXXPFN)nHandler, DIRECT_COMMAND_ENVIRONMENT);
+    }
     else
     {   // direct command handler
         context->AddCommandEnvironment(name, (REXXPFN)dHandler, DIRECT_COMMAND_ENVIRONMENT);
     }
     return NULLOBJECT;
+}
+
+// sets the variable named by the argument to "set" in the issuer of the
+// command that the "nested" handler is running, through the handler's exit
+// context; returns 0 if no such command is running (bug #2104)
+RexxRoutine1(int,
+             TestNestedSetCallerVariable,
+             CSTRING, name)
+{
+    if (nestedExitContext == NULL)
+    {
+        return 0;
+    }
+    nestedExitContext->SetContextVariable(name, context->String("set"));
+    return 1;
 }
 
 // as TestAddCommandEnvironment, with StackCommandEnvironment ('cHandler' or
@@ -1032,6 +1077,7 @@ RexxRoutineEntry orxtest_funcs[] = {
     REXX_TYPED_ROUTINE(TestCallerVariables,     TestCallerVariables),
     REXX_TYPED_ROUTINE(TestFindContextClass,  TestFindContextClass),
     REXX_TYPED_ROUTINE(TestAddCommandEnvironment, TestAddCommandEnvironment),
+    REXX_TYPED_ROUTINE(TestNestedSetCallerVariable, TestNestedSetCallerVariable),
     REXX_TYPED_ROUTINE(TestStackCommandEnvironment, TestStackCommandEnvironment),
     REXX_TYPED_ROUTINE(TestRaiseException0,         TestRaiseException0),
     REXX_TYPED_ROUTINE(TestRaiseException1,         TestRaiseException1),

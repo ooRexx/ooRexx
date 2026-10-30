@@ -68,6 +68,7 @@ class ApiContext
          clearConditions = false;
          activity = contextToActivity(c);
          context = activity->getApiContext();
+         trapsWereEnabled = context->conditionTrapsEnabled();
          context->enableConditionTraps();
          // go acquire the kernel lock and take care of nesting
          activity->enterCurrentThread();
@@ -97,6 +98,7 @@ class ApiContext
          clearConditions = false;
          activity = contextToActivity(c);
          context = activity->getApiContext();
+         trapsWereEnabled = context->conditionTrapsEnabled();
          context->enableConditionTraps();
      }
 
@@ -112,6 +114,7 @@ class ApiContext
          clearConditions = false;
          activity = contextToActivity(c);
          context = contextToActivation(c);
+         trapsWereEnabled = context->conditionTrapsEnabled();
          context->enableConditionTraps();
          // go acquire the kernel lock and take care of nesting
          activity->enterCurrentThread();
@@ -140,6 +143,7 @@ class ApiContext
          clearConditions = false;
          activity = contextToActivity(c);
          context = activity->getApiContext();
+         trapsWereEnabled = context->conditionTrapsEnabled();
          context->enableConditionTraps();
      }
 
@@ -157,6 +161,7 @@ class ApiContext
          clearConditions = false;
          activity = contextToActivity(c);
          context = contextToActivation(c);
+         trapsWereEnabled = context->conditionTrapsEnabled();
          context->enableConditionTraps();
          // go acquire the kernel lock and take care of nesting
          activity->enterCurrentThread();
@@ -177,6 +182,7 @@ class ApiContext
          releaseLock = true;
          activity = contextToActivity(c);
          context = contextToActivation(c);
+         trapsWereEnabled = context->conditionTrapsEnabled();
          context->enableConditionTraps();
          clearConditions = true;
          activity->enterCurrentThread();
@@ -198,6 +204,7 @@ class ApiContext
          clearConditions = false;
          activity = contextToActivity(c);
          context = contextToActivation(c);
+         trapsWereEnabled = context->conditionTrapsEnabled();
          context->enableConditionTraps();
      }
 
@@ -215,6 +222,7 @@ class ApiContext
          clearConditions = false;
          activity = contextToActivity(c);
          context = contextToActivation(c);
+         trapsWereEnabled = context->conditionTrapsEnabled();
          context->enableConditionTraps();
          // go acquire the kernel lock and take care of nesting
          activity->enterCurrentThread();
@@ -244,6 +252,7 @@ class ApiContext
          clearConditions = false;
          activity = contextToActivity(c);
          context = activity->getApiContext();
+         trapsWereEnabled = context->conditionTrapsEnabled();
          context->enableConditionTraps();
      }
 
@@ -264,7 +273,13 @@ class ApiContext
         // activity
         if (releaseLock)
         {
-            context->disableConditionTraps();
+            // restore the trap state we found: a nested call through the
+            // context of a call that is still running must not turn off
+            // that call's traps
+            if (!trapsWereEnabled)
+            {
+                context->disableConditionTraps();
+            }
             activity->exitCurrentThread();
         }
     }
@@ -293,6 +308,11 @@ class ApiContext
      * Indicates whether conditions should be cleared on return.
      */
     bool clearConditions;
+
+    /**
+     * Whether the context was already trapping conditions when we started.
+     */
+    bool trapsWereEnabled;
 };
 
 

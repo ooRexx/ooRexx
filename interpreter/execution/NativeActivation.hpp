@@ -203,6 +203,7 @@ class NativeActivation : public ActivationBase
     void forwardMessage(RexxObject *to, RexxString *msg, RexxClass *super, ArrayClass *args, ProtectedObject &result);
     void enableConditionTraps() { trapErrors = true; }
     void disableConditionTraps() { trapErrors = false; }
+    bool conditionTrapsEnabled() { return trapErrors; }
     StackFrameClass *createStackFrame();
     void *allocateObjectMemory(size_t size);
     void  freeObjectMemory(void *data);
