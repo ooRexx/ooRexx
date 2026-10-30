@@ -99,7 +99,7 @@ public:
 protected:
 
     static PackageClass *checkRequiresCache(RexxString *name, Protected<PackageClass> &package);
-    static void addToRequiresCache(RexxString *name, PackageClass *package);
+    static void addToRequiresCache(RexxString *name, PackageClass *package, bool weak = true);
 
     enum
     {

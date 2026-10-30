@@ -857,11 +857,14 @@ PackageClass *PackageManager::loadRequires(Activity *activity, RexxString *name,
 
 
 /**
- * Loade a requires file from an in-store source.  NOTE:  This
- * is not cached like the other requires files
+ * Load a requires file from an in-store source.  The package is
+ * cached under its name like the other requires files, so that a
+ * later ::REQUIRES of that name finds it, but strongly: a file
+ * package that is garbage collected can be read again from its
+ * file, this one cannot.
  *
  * @param activity The current activity.
- * @param name     The fully resolved file name.
+ * @param name     The name given to the package.
  * @param result   The return routine object.
  *
  * @return The returned package instance.
@@ -879,8 +882,8 @@ PackageClass *PackageManager::loadRequires(Activity *activity, RexxString *name,
 
     package = LanguageParser::createPackage(name, buffer);
 
-    // cache the package instance
-    addToRequiresCache(name, package);
+    // cache the package instance, keeping it alive
+    addToRequiresCache(name, package, false);
     return package;
 }
 
@@ -897,10 +900,17 @@ PackageClass *PackageManager::checkRequiresCache(RexxString *name, Protected<Pac
     // first check this using the specified name.  Since we need to perform checks in the
     // macro space, it's possible this will be loaded under the simple name.  We'll need to check
     // table again using the fully resolved name afterward.
-    WeakReference *requiresRef = (WeakReference *)loadedRequires->get(name);
-    if (requiresRef != OREF_NULL)
+    RexxInternalObject *entry = loadedRequires->get(name);
+    if (entry != OREF_NULL)
     {
-        package = (PackageClass *)requiresRef->get();
+        // a package loaded from in-store data is held directly (see
+        // addToRequiresCache)
+        if (!isOfClass(WeakReference, entry))
+        {
+            package = (PackageClass *)entry;
+            return package;
+        }
+        package = (PackageClass *)((WeakReference *)entry)->get();
         if (!package.isNull())
         {
             return package;
@@ -917,15 +927,27 @@ PackageClass *PackageManager::checkRequiresCache(RexxString *name, Protected<Pac
  *
  * @param name    The name of the package.
  * @param package The package we're caching
+ * @param weak    true (the default): through a WeakReference, so
+ *                that an unused package can be collected (and
+ *                loaded again from its file when needed); false:
+ *                the package itself, for one that cannot be loaded
+ *                again (from in-store data).
  */
-void PackageManager::addToRequiresCache(RexxString *name, PackageClass *package)
+void PackageManager::addToRequiresCache(RexxString *name, PackageClass *package, bool weak)
 {
     // we place the code in the package table so we have
     // access to it to run the prologue code in other instances
     // We also add this before running the prolog in case another
     // thread tries to load the same thing.
-    WeakReference *ref = new WeakReference(package);
-    loadedRequires->put(ref, name);
+    if (weak)
+    {
+        WeakReference *ref = new WeakReference(package);
+        loadedRequires->put(ref, name);
+    }
+    else
+    {
+        loadedRequires->put(package, name);
+    }
 }
 
 
