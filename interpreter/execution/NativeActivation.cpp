@@ -1852,8 +1852,13 @@ void NativeActivation::checkConditions()
                     }
                 }
                 // if the trap is not handled, then we return directly.  The return
-                // value (if any) is stored in the condition object
-                result = (RexxObject *)conditionObj->get(GlobalNames::RESULT);
+                // value (if any) is stored in the condition object; without one,
+                // the value the native code returned stands
+                RexxObject *conditionResult = (RexxObject *)conditionObj->get(GlobalNames::RESULT);
+                if (conditionResult != OREF_NULL)
+                {
+                    result = conditionResult;
+                }
             }
         }
     }
