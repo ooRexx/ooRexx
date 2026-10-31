@@ -1477,6 +1477,10 @@ RexxString* Activity::messageSubstitution(RexxString *message, ArrayClass  *addi
  */
 void Activity::reraiseException(DirectoryClass *exobj)
 {
+    // keep the condition object anchored while it propagates: the native
+    // activation that held it is popped by raisePropagate() before a Rexx
+    // frame traps it, and a collection in between would take it
+    conditionobj = exobj;
     RexxActivation *activation = getCurrentRexxFrame();
     // have a target activation?  Replace the
     // package information from the original with the current.
