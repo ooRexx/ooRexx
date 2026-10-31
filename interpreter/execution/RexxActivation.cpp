@@ -236,6 +236,7 @@ RexxActivation::RexxActivation(Activity *_activity, RexxActivation *_parent, Rex
     if (context == INTERNALCALL)
     {
         settings.setTrapsCopied(false);
+        settings.setIOConfigCopied(false);
         settings.setReplyIssued(false);
         // invalidate the timestamp...interpret or debug pauses use the old timestamp.
         settings.timeStamp.valid = false;
@@ -1528,8 +1529,10 @@ void RexxActivation::checkTrapTable()
     {
         settings.traps = new_string_table();
     }
-    // have to copy the trap table for an internal routine call?
-    else if (isInternalCall() && !settings.areTrapsCopied())
+    // have to copy the trap table for an internal routine call?  An INTERPRET
+    // shares the settings of the code that runs it, which gets them back when
+    // it ends: it copies for that code, which may share its caller's table
+    else if ((isInternalCall() || isInterpret()) && !settings.areTrapsCopied())
     {
         // copy the table and remember that we've done that
         settings.traps = (StringTable *)settings.traps->copy();
@@ -1655,8 +1658,9 @@ void RexxActivation::checkIOConfigTable()
     {
         settings.ioConfigs = new_string_table();
     }
-    // have to copy the trap table for an internal routine call?
-    else if (isInternalCall() && !settings.isIOConfigCopied())
+    // have to copy the table for an internal routine call?  (and for an
+    // INTERPRET, as in checkTrapTable())
+    else if ((isInternalCall() || isInterpret()) && !settings.isIOConfigCopied())
     {
         // copy the table and remember that we've done that
         settings.ioConfigs = (StringTable *)settings.ioConfigs->copy();
