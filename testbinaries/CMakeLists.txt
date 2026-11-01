@@ -70,6 +70,12 @@ if (NOT WIN32)
    find_package(Threads REQUIRED)
    target_link_libraries(orxclassic1 Threads::Threads)
 endif ()
+# An error in a RexxCallBack call ends TestCallBack by unwinding through it,
+# which needs unwind tables in this C code: 32-bit ARM does not generate
+# them by default, and the process aborts (std::terminate)
+if (CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+   target_compile_options(orxclassic1 PRIVATE -funwind-tables)
+endif ()
 
 
 # this library is linked to other test libraries
