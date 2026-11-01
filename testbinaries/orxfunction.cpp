@@ -1016,6 +1016,14 @@ RexxRoutine1(RexxObjectPtr,
 }
 
 
+RexxRoutine0(int, TestHaltThread)
+{
+    // asks for a halt of the Rexx code that called this routine (bug #2124)
+    context->threadContext->HaltThread();
+    return 0;
+}
+
+
 RexxRoutineEntry orxtest_funcs[] = {
     REXX_TYPED_ROUTINE(TestZeroIntArgs,       TestZeroIntArgs),
     REXX_TYPED_ROUTINE(TestOneIntArg,         TestOneIntArg),
@@ -1089,6 +1097,7 @@ RexxRoutineEntry orxtest_funcs[] = {
     REXX_TYPED_ROUTINE(TestThrowException,          TestThrowException),
     REXX_TYPED_ROUTINE(TestThrowCondition,          TestThrowCondition),
     REXX_TYPED_ROUTINE(TestNestedAttach,            TestNestedAttach),
+    REXX_TYPED_ROUTINE(TestHaltThread,              TestHaltThread),
     REXX_LAST_ROUTINE()
 };
 

@@ -96,6 +96,8 @@ public:
 
     inline void setPreviousStackFrame(ActivationBase *p) { previous = p; }
     inline ActivationBase *getPreviousStackFrame() { return previous; }
+    inline void setStackFrameDepth(size_t d) { stackFrameDepth = d; }
+    inline size_t getStackFrameDepth() { return stackFrameDepth; }
     inline BaseExecutable *getExecutable() { return executable; }
     BaseExecutable *getExecutableObject() { return executable; }
 
@@ -104,6 +106,7 @@ protected:
     ActivationBase *previous;        // previous activation in the chain
     BaseExecutable *executable;      // the executable associated with this activation.
     GuardStatus     objectScope;     // reserve/release state of variables
+    size_t          stackFrameDepth = 0; // its depth on the activity's stack, set when pushed
 
 };
 

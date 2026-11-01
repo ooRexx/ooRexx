@@ -2575,6 +2575,15 @@ RexxMethod1(RexxObjectPtr,
 
 
 
+RexxMethod2(int, TestHaltThreadCommand, RexxStringObject, command, RexxObjectPtr, caller)
+{
+    // a COMMAND method of a .CommandHandler that asks for a halt of the
+    // issuer with HaltThread() and returns RC 5 (bug #2124)
+    context->threadContext->HaltThread();
+    return 5;
+}
+
+
 RexxMethodEntry orxtest_methods[] = {
     REXX_METHOD(TestIsBuffer,          TestIsBuffer),
     REXX_METHOD(TestBufferInit,        TestBufferInit),
@@ -2833,6 +2842,7 @@ RexxMethodEntry orxtest_methods[] = {
     REXX_METHOD(TestSetGuardOff,             TestSetGuardOff),
     REXX_METHOD(TestSetGuardOnWhenUpdated,   TestSetGuardOnWhenUpdated),
     REXX_METHOD(TestSetGuardOffWhenUpdated,  TestSetGuardOffWhenUpdated),
+    REXX_METHOD(TestHaltThreadCommand,       TestHaltThreadCommand),
     REXX_LAST_METHOD()
 };
 

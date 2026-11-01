@@ -1753,6 +1753,7 @@ void Activity::pushStackFrame(ActivationBase *new_activation)
     // push on to the stack and bump the depth
     activations->push(new_activation);
     stackFrameDepth++;
+    new_activation->setStackFrameDepth(stackFrameDepth);
     // update the frame information.
     // if we're not creating a new frame set, link up the new frame with its predecessor
     if (!new_activation->isStackBase())
@@ -1784,6 +1785,7 @@ void Activity::createNewActivationStack()
     // create a new root element on the stack and bump the depth indicator
     activations->push(new_activation);
     stackFrameDepth++;
+    new_activation->setStackFrameDepth(stackFrameDepth);
     // update the frame information.
     updateFrameMarkers();
 }
@@ -2319,7 +2321,12 @@ bool Activity::halt(RexxString *d)
             return false;                   // one still pending
         }
         haltRequestDescription = d;
-        haltRequestDepth = stackFrameDepth;
+        // aimed at the top Rexx frame, as before the request was posted to
+        // the activity: native frames above it (a native function, or a
+        // COMMAND method that calls HaltThread()) do not count, or a Rexx
+        // frame pushed later at their depth (CommandContext~FINISH, the
+        // code behind SAY) would take a halt meant for its caller
+        haltRequestDepth = activation->getStackFrameDepth();
         haltRequest.store(true, std::memory_order_release);
         return true;
     }
