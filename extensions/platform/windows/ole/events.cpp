@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2017 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2026 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -168,6 +168,94 @@ STDMETHODIMP OLEObjectEvent::GetTypeInfoCount(unsigned int *pctinfo)
 }
 
 
+/**
+ * Stores a Rexx value into the storage that a VT_BYREF argument points to
+ * (an event's out parameter), converted to that storage's type. The
+ * argument's own VARIANT is left as it is: it belongs to the event's source,
+ * which reads the storage through it once Invoke returns.
+ *
+ * @return true if the value was stored.
+ */
+static bool storeByRef(RexxThreadContext *context, RexxObjectPtr value, VARIANT *pArg)
+{
+    VARTYPE vt = V_VT(pArg);
+    if ( !(vt & VT_BYREF) || V_BYREF(pArg) == NULL )
+    {
+        return false;
+    }
+    VARTYPE baseVt = vt & ~VT_BYREF;
+
+    VARIANT temp;
+    VariantInit(&temp);
+    if ( !Rexx2Variant(context, value, &temp, baseVt == VT_VARIANT ? VT_EMPTY : baseVt, -1) )
+    {
+        VariantClear(&temp);
+        context->ClearCondition();      // the value could not be converted: leave the parameter
+        return false;
+    }
+    if ( baseVt != VT_VARIANT && V_VT(&temp) != baseVt &&
+         VariantChangeType(&temp, &temp, 0, baseVt) != S_OK )
+    {
+        VariantClear(&temp);
+        return false;
+    }
+
+    void *p = V_BYREF(pArg);
+    switch ( baseVt )
+    {
+        case VT_VARIANT:                // the new VARIANT replaces the old one
+            VariantClear((VARIANT *)p);
+            *(VARIANT *)p = temp;
+            return true;
+        case VT_BSTR:                   // the new string replaces the old one
+            SysFreeString(*(BSTR *)p);
+            *(BSTR *)p = V_BSTR(&temp);
+            return true;
+        case VT_DISPATCH:
+        case VT_UNKNOWN:                // temp's reference goes to the parameter
+            if ( *(IUnknown **)p != NULL )
+            {
+                (*(IUnknown **)p)->Release();
+            }
+            *(IUnknown **)p = V_UNKNOWN(&temp);
+            return true;
+        case VT_I1:
+        case VT_UI1:
+            *(BYTE *)p = V_UI1(&temp);
+            break;
+        case VT_I2:
+        case VT_UI2:
+        case VT_BOOL:
+            *(SHORT *)p = V_I2(&temp);
+            break;
+        case VT_I4:
+        case VT_UI4:
+        case VT_INT:
+        case VT_UINT:
+        case VT_ERROR:
+        case VT_R4:
+            *(LONG *)p = V_I4(&temp);
+            break;
+        case VT_I8:
+        case VT_UI8:
+        case VT_R8:
+        case VT_DATE:
+        case VT_CY:
+            *(LONGLONG *)p = V_I8(&temp);
+            break;
+        case VT_DECIMAL:
+            *(DECIMAL *)p = V_DECIMAL(&temp);
+            ((DECIMAL *)p)->wReserved = 0;      // (temp's vt, in a VARIANT)
+            break;
+        default:
+            VariantClear(&temp);
+            return false;
+    }
+    VariantClear(&temp);
+    return true;
+}
+
+
 STDMETHODIMP OLEObjectEvent::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid,
                                WORD wFlags, DISPPARAMS *pDispParams,
                                VARIANT *pVarResult, EXCEPINFO *pExcepInfo,
@@ -198,28 +286,69 @@ STDMETHODIMP OLEObjectEvent::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid,
         {
             RexxObjectPtr  rxResult;
             RexxArrayObject rxArray;
+            int         cArgs = (int)pDispParams->cArgs;
+            int         cNamed = (int)pDispParams->cNamedArgs;
             int         i;
             int         j;
+            int         pos;
             //fprintf(stderr,"%08x %s\n",dispIdMember,pList->pszFuncName);
 
             // does argument count match? does object have method?
-            if ( (pList->iParmCount == (int) pDispParams->cArgs) && context->HasMethod(self, pList->pszFuncName))
+            if ( (pList->iParmCount == cArgs) && context->HasMethod(self, pList->pszFuncName))
             {
                 char upperBuffer[128];
 
-                rxArray = context->NewArray(pDispParams->cArgs);
-                // convert VARIANTs to Rexx Objects...
-                for ( i = 0; i < (int)pDispParams->cArgs; i++ )
+                // The VARIANT of each parameter, in the event's order. COM
+                // gives the named arguments first (rgdispidNamedArgs: their
+                // positions), then the positional ones, last first.
+                VARIANT **ppArg = (VARIANT **)calloc(cArgs > 0 ? cArgs : 1, sizeof(VARIANT *));
+                if (ppArg == NULL)
                 {
-                    rxResult = Variant2Rexx(context, &pDispParams->rgvarg[i]);
+                    context->DetachThread();
+                    return E_OUTOFMEMORY;
+                }
+                for ( j = 0; j < cNamed && j < cArgs; j++ )
+                {
+                    pos = (int)pDispParams->rgdispidNamedArgs[j];
+                    if ( pos >= 0 && pos < cArgs && ppArg[pos] == NULL )
+                    {
+                        ppArg[pos] = &pDispParams->rgvarg[j];
+                    }
+                }
+                for ( j = cNamed, pos = 0; j < cArgs; j++ )
+                {
+                    while ( pos < cArgs && ppArg[pos] != NULL )
+                    {
+                        pos++;
+                    }
+                    if ( pos == cArgs )
+                    {
+                        break;
+                    }
+                    ppArg[pos++] = &pDispParams->rgvarg[cArgs - 1 - (j - cNamed)];
+                }
+
+                rxArray = context->NewArray(cArgs);
+                // convert VARIANTs to Rexx Objects...
+                for ( i = 0; i < cArgs; i++ )
+                {
+                    if ( ppArg[i] == NULL )     // (a named argument out of range)
+                    {
+                        continue;
+                    }
+                    rxResult = Variant2Rexx(context, ppArg[i]);
 
                     if ( rxResult == NULLOBJECT )
                     {
                         // Variant2Rexx() raised an exception, we could not
                         // convert this arg.  Be sure to detach and then
                         // indicate the error to whoever invoked us.
+                        if ( puArgErr != NULL )
+                        {
+                            *puArgErr = (unsigned int)(ppArg[i] - pDispParams->rgvarg);
+                        }
+                        free(ppArg);
                         context->DetachThread();
-                        *puArgErr = i;
                         return DISP_E_TYPEMISMATCH;
                     }
 
@@ -233,48 +362,50 @@ STDMETHODIMP OLEObjectEvent::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid,
                 // otherwise ignore them
                 if ( !(rxResult == NULL) && !(rxResult == context->Nil()) )
                 {
-                    for (i=j=0;i<(int) pDispParams->cArgs;i++)
+                    // the out parameters, in the event's order
+                    for (i=j=0;i<cArgs;i++)
                     {
-                        if (pList->pusOptFlags[i] & PARAMFLAG_FOUT) j++;
+                        if ((pList->pusOptFlags[i] & PARAMFLAG_FOUT) && ppArg[i] != NULL) j++;
                     }
 
-                        // out parameters exist
-                    if (j>0)
+                    // if there is just a single out parameter, the return
+                    // value goes into it directly
+                    if (j==1)
                     {
-                        // if there is just a single out parameter, the return
-                        // value will go into it directly
-                        if (j==1)
+                        for (i=0; i<cArgs; i++)
                         {
-                            i=0;
-                            while ( (i<(int) pDispParams->cArgs) && !(pList->pusOptFlags[i] & PARAMFLAG_FOUT))
+                            if ((pList->pusOptFlags[i] & PARAMFLAG_FOUT) && ppArg[i] != NULL)
                             {
-                                i++;
+                                storeByRef(context, rxResult, ppArg[i]);
+                                break;
                             }
-                            // put value into out parameter TODO what if there is an exception?
-                            Rexx2Variant(context, rxResult,&pDispParams->rgvarg[i],pDispParams->rgvarg[i].vt,-1);
                         }
-                        else if (context->IsArray(rxResult))
-                        {
-                            RexxArrayObject rxArray = (RexxArrayObject)rxResult;
-                            wholenumber_t k;
+                    }
+                    // several: an Array gives their values, in order
+                    else if (j>1 && context->IsArray(rxResult))
+                    {
+                        RexxArrayObject rxValues = (RexxArrayObject)rxResult;
+                        wholenumber_t k;
 
-                            context->ObjectToWholeNumber(context->SendMessage0(rxArray,"DIMENSION"), &k);
-                            if (k == 1)
+                        context->ObjectToWholeNumber(context->SendMessage0(rxValues,"DIMENSION"), &k);
+                        if (k == 1)
+                        {
+                            k = (wholenumber_t)context->ArraySize(rxValues);
+                            for (i=0, pos=1; i<cArgs && pos<=k; i++)
                             {
-                                k = (int)context->ArraySize(rxArray);
-                                for (i=1,j=0; i <= k && j < (int)pDispParams->cArgs; j++)
+                                if ((pList->pusOptFlags[i] & PARAMFLAG_FOUT) && ppArg[i] != NULL)
                                 {
-                                    if (pList->pusOptFlags[j] & PARAMFLAG_FOUT)
+                                    RexxObjectPtr item = context->ArrayAt(rxValues, pos++);
+                                    if (item != NULLOBJECT && item != context->Nil())   // .nil: leave it
                                     {
-                                        // TODO what if there is an exception?
-                                        Rexx2Variant(context, context->ArrayAt(rxArray, i),&pDispParams->rgvarg[j],pDispParams->rgvarg[j].vt,-1);
-                                        i++;
+                                        storeByRef(context, item, ppArg[i]);
                                     }
                                 }
                             }
                         }
                     }
                 }
+                free(ppArg);
                 hResult = S_OK;
             }
             else
