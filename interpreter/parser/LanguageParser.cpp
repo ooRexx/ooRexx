@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2025 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2026 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -4334,9 +4334,14 @@ RoutineClass *LanguageParser::processInstore(PRXSTRING instore, RexxString * nam
     if (instore[0].strptr == NULL && instore[1].strptr == NULL)
     {
         unsigned short temp;
+        int rc;
+        {
+            UnsafeBlock releaser;   // don't hold the kernel lock while asking rxapi
+            rc = RexxQueryMacro(name->getStringData(), &temp);
+        }
 
         // see if this exists
-        if (!RexxQueryMacro(name->getStringData(), &temp))
+        if (rc == 0)
         {
             return restoreFromMacroSpace(name);
         }
@@ -4389,7 +4394,10 @@ RoutineClass *LanguageParser::restoreFromMacroSpace(RexxString *name)
 
     MAKERXSTRING(buffer, NULL, 0);
     // get the image of function
-    RexxResolveMacroFunction(name->getStringData(), &buffer);
+    {
+        UnsafeBlock releaser;       // don't hold the kernel lock while asking rxapi
+        RexxResolveMacroFunction(name->getStringData(), &buffer);
+    }
     // unflatten the method now
     Protected<RoutineClass> routine = RoutineClass::restore(&buffer, name);
     // release the buffer memory

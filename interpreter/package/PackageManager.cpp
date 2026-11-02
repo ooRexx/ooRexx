@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2020 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2026 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -744,7 +744,11 @@ PackageClass *PackageManager::loadRequires(Activity *activity, RexxString *short
     // we need to look in the macrospace before we try checking for a file-based
     // requires.  The macrospace version uses the original name for all checks.  Once we
     // get to the file-based version, we switch to the full resolved name.
-    bool checkMacroSpace = RexxQueryMacro(shortName->getStringData(), &macroPosition) == 0;
+    bool checkMacroSpace;
+    {
+        UnsafeBlock releaser;   // don't hold the kernel lock while asking rxapi
+        checkMacroSpace = RexxQueryMacro(shortName->getStringData(), &macroPosition) == 0;
+    }
     if (checkMacroSpace && (macroPosition == RXMACRO_SEARCH_BEFORE))
     {
         return getMacroSpaceRequires(activity, shortName, package, securityManager);

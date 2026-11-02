@@ -3010,8 +3010,13 @@ bool RexxActivation::callMacroSpaceFunction(RexxString *target, RexxObject **arg
     // the located macro search position
     unsigned short position;
     const char *macroName = target->getStringData();
+    int rc;
+    {
+        UnsafeBlock releaser;   // don't hold the kernel lock while asking rxapi
+        rc = RexxQueryMacro(macroName, &position);
+    }
     // did we find the one we want at the right time?
-    if (RexxQueryMacro(macroName, &position) == 0)
+    if (rc == 0)
     {
         // this was not found if the search order was different
         if (order != position)
