@@ -3361,8 +3361,9 @@ RexxObject * RexxActivation::internalCallTrap(RexxString *name, RexxInstruction 
     // set the condition object into the context that will handle the call
     newActivation->setConditionObj(conditionObj);
     activity->pushStackFrame(newActivation);
-    // and go run this.
-    return newActivation->run(OREF_NULL, name, (RexxObject **)&conditionObj, 1, target, resultObj);
+    // and go run this, with our receiver, as an internal call does: the
+    // handler is an internal routine of this code (private methods, ...)
+    return newActivation->run(receiver, name, (RexxObject **)&conditionObj, 1, target, resultObj);
 }
 
 
