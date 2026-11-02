@@ -80,6 +80,9 @@ public:
 
     RexxString *getDefaultEnvironment() { return defaultEnvironment; }
     Activity *getRootActivity() { return rootActivity; }
+    // true when no activity other than the root one is left; the root activity
+    // is no longer on the list if its thread detached. Needs the resource lock.
+    inline bool onlyRootLeft() { return allActivities.items() == (rootDetached ? 0 : 1); }
     uint32_t getIdntfr();
 
     InterpreterInstance(ExitHandler *handlers);
@@ -168,6 +171,7 @@ protected:
 
     bool terminating;                        // shutdown indicator
     bool terminated;                         // last thread cleared indicator
+    bool rootDetached;                       // the creating thread called DetachThread()
     SysSemaphore terminationSem;             // used to signal that everything has shutdown
 
     // array of system exits

@@ -128,3 +128,15 @@ target_link_libraries(provoke_locks rexx rexxapi ${CMAKE_THREAD_LIBS_INIT})
 configure_file(${PROJECT_SOURCE_DIR}/provoke_locks.rex
                ${CMAKE_BINARY_DIR}/bin/provoke_locks.rex COPYONLY)
 
+# Terminate() after the creating thread called DetachThread() (bug #2107).
+# Run by ProcessInvocation.testGroup as its own process, with a watchdog,
+# so that a hang fails the test instead of stopping the test suite.
+add_executable(detach_root_terminate
+   ${PROJECT_SOURCE_DIR}/detach_root_terminate.cpp)
+# Include file definition
+target_include_directories(detach_root_terminate PUBLIC
+            ${build_api_dir}
+            ${build_api_platform_dir})
+# Extra link library definitions
+target_link_libraries(detach_root_terminate rexx rexxapi ${CMAKE_THREAD_LIBS_INIT})
+

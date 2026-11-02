@@ -183,6 +183,7 @@ void InterpreterInstance::liveGeneral(MarkReason reason)
 void InterpreterInstance::initialize(Activity *activity, RexxOption *options)
 {
     rootActivity = activity;
+    rootDetached = false;
     searchExtensions = new_array();       // this will be filled in during options processing
     requiresFiles = new_string_table();   // our list of loaded requires packages
     // this gets added to the entire active list. The resource lock is required
@@ -337,12 +338,18 @@ bool InterpreterInstance::detachThread(Activity *activity)
     ResourceSection lock;
 
     allActivities.removeItem(activity);
+    // if this is the thread that created the instance, its activity has now been
+    // returned and cleaned up: terminate() must neither count it nor return it again
+    if (activity == rootActivity)
+    {
+        rootDetached = true;
+    }
     // have the activity manager remove this from the global tables
     // and perform resource cleanup
     ActivityManager::returnActivity(activity);
 
     // Was this the last detach of an thread?  Signal the shutdown event
-    if (allActivities.items() <= 1 && terminating)
+    if (onlyRootLeft() && terminating)
     {
         terminationSem.post();
     }
@@ -406,7 +413,7 @@ bool InterpreterInstance::poolActivity(Activity *activity)
         // is this the last one to finish up?  Generally, the main thread
         // will be waiting for this to terminate.  That is thread 1, we're thread
         // 2.  In reality, this is the test for the last "spawned" thread.
-        if (allActivities.items() <= 1)
+        if (onlyRootLeft())
         {
             terminationSem.post();
         }
@@ -552,7 +559,7 @@ bool InterpreterInstance::terminate()
         // go remove all of the activities that are not doing work for this instance
         removeInactiveActivities();
         // if we just have the single root activity left, then we can shutdown
-        terminated = allActivities.items() == 1;
+        terminated = onlyRootLeft();
     }
 
     // if there are active threads still running, we need to wait until
@@ -610,8 +617,12 @@ bool InterpreterInstance::terminate()
 
     terminationSem.close();
 
-    // make sure the root activity is removed by the ActivityManager;
-    ActivityManager::returnRootActivity(rootActivity);
+    // make sure the root activity is removed by the ActivityManager (unless
+    // DetachThread() already returned it)
+    if (!rootDetached)
+    {
+        ActivityManager::returnRootActivity(rootActivity);
+    }
 
     // just in case there's still a reference held to this, clear out all object reference fields
     rootActivity = OREF_NULL;
