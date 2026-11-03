@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2026 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -46,6 +46,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <fcntl.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -489,11 +490,16 @@ void SysServerLocalSocketConnectionManager::getServiceLocation(char *path, size_
     {
         // we use a path name only if it is less than 80 chars (sockaddr_un's
         // sun_path which is used to connect() and bind() has just ~100 chars)
-        // and is an existing directory.
+        // and is an existing directory where we can create files. That one is
+        // checked for the effective user (AT_EACCESS), whose name the files
+        // carry: a daemon started with sudo may have inherited the
+        // XDG_RUNTIME_DIR of the user who started it, and rxapi cannot create
+        // its lock file there.
         if ((servicePath = getenv(env[e])) != NULL &&
             strlen(servicePath) < 80 &&     // must fit sun_path
             stat(servicePath, &st) == 0 &&  // must exist
-            S_ISDIR(st.st_mode))            // must be a directory
+            S_ISDIR(st.st_mode) &&          // must be a directory
+            faccessat(AT_FDCWD, servicePath, W_OK | X_OK, AT_EACCESS) == 0) // must be writable
         {
             break;
         }

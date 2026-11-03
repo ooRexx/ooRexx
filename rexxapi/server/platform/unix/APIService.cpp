@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2023 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2026 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -73,8 +73,8 @@ void Stop(int signo)
  * Acquire a lock on a special file to ensure we are the only running
  * rxapi process for this user.
  *
- * @return The file descriptor for the lock file or -1 for any failure obtaining
- *         the lock.
+ * @return The file descriptor for the lock file, -1 if another process holds
+ *         the lock, or -2 if the lock file cannot be opened (errno tells why).
  */
 int acquireLock (const char *lockFileName)
 {
@@ -82,7 +82,7 @@ int acquireLock (const char *lockFileName)
 
     if ((lockFd = open(lockFileName, O_CREAT | O_RDWR, 0600))  < 0)
     {
-        return -1;
+        return -2;
     }
 
     // locks for exclusive use if another process has not already locked
@@ -156,8 +156,14 @@ int main(int argc, char *argv[])
 
     // see if we can get the lock file before proceeding. This is one
     // file per user.
-    int fd;
-    if ((fd = acquireLock(lockFileName)) == -1)
+    int fd = acquireLock(lockFileName);
+    if (fd == -2)
+    {
+        int error = errno;
+        printf("rxapi: cannot open lockfile, errno %d %s; exiting\n", error, strerror(error));
+        return error;
+    }
+    if (fd == -1)
     {
         printf("rxapi: lockfile is locked by another rxapi instance; exiting\n");
         return EACCES;
