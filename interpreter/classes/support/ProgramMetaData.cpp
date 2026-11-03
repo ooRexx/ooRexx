@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2026 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -94,6 +94,7 @@ ProgramMetaData::ProgramMetaData(LanguageLevel level, BufferClass *image)
     // this is the language level required to execute this program
     requiredLevel = level;
     memset(&reserved, '\0', sizeof(reserved));
+    memset(&pad, '\0', sizeof(pad));      // written out with the rest of the header
 
     // copy in the image information
     imageSize = image->getDataLength();
@@ -121,6 +122,7 @@ ProgramMetaData::ProgramMetaData(LanguageLevel level, size_t bufferSize)
     // this is the language level required to execute this program
     requiredLevel = level;
     memset(&reserved, '\0', sizeof(reserved));
+    memset(&pad, '\0', sizeof(pad));      // written out with the rest of the header
 
     // copy in the image information
     imageSize = bufferSize;
