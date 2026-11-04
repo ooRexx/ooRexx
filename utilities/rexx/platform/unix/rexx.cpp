@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2012-2025 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2012-2026 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -51,6 +51,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <string>
 
 #include <oorexxapi.h>
 
@@ -59,7 +60,7 @@ int main (int argc, char **argv) {
     int   rc = 0;                        /* actually running program RC       */
     int   argc_base = 2;                 /* the first argument for the program*/
     const char *program_name = NULL;     /* name to run                       */
-    char  arg_buffer[8192] = "";         /* starting argument buffer          */
+    std::string arg_buffer;              // the single argument string, any length
     const char *cp;                      /* option character pointer          */
     CONSTRXSTRING argument;              /* rexxstart argument                */
     size_t argCount = 0;
@@ -140,9 +141,9 @@ int main (int argc, char **argv) {
             if (program_name == NULL) {  /* no name yet?                      */
                 program_name = argv[i];  /* program is first non-option       */
             } else if (real_argument) {
-                if (arg_buffer[0] != '\0') /* not the first one?              */
-                    strcat(arg_buffer, " "); /* add an blank                  */
-                strcat(arg_buffer, argv[i]);  /* add this to the arg string   */
+                if (!arg_buffer.empty()) /* not the first one?                */
+                    arg_buffer += ' ';   /* add an blank                      */
+                arg_buffer += argv[i];   /* add this to the arg string        */
                 ++argCount;
             }
             real_argument = true;
@@ -160,7 +161,7 @@ int main (int argc, char **argv) {
 
     argCount = (argCount==0) ? 0 : 1;    /* is there an argument ?            */
                                          /* make an argument                  */
-    MAKERXSTRING(argument, arg_buffer, strlen(arg_buffer));
+    MAKERXSTRING(argument, arg_buffer.c_str(), arg_buffer.length());
                                          /* run this via RexxStart            */
 
     if (from_string) {
@@ -180,7 +181,7 @@ int main (int argc, char **argv) {
         if (argCount > 0) {
             rxargs = pgmThrdInst->NewArray(1);
             pgmThrdInst->ArrayPut(rxargs,
-                                  pgmThrdInst->NewStringFromAsciiz(arg_buffer), 1);
+                                  pgmThrdInst->NewString(arg_buffer.c_str(), arg_buffer.length()), 1);
         } else {
             rxargs = pgmThrdInst->NewArray(0);
         }
