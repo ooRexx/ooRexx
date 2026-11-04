@@ -1325,6 +1325,14 @@ RexxCode *LanguageParser::translateBlock()
                     // let the select know that another WHEN was added
                     ((RexxInstructionSelect *)second)->addWhen((RexxInstructionIf *)instruction);
                 }
+                // anything else on top means this WHEN has been taken as the
+                // instruction of a THEN (e.g. "when a then" followed by
+                // "when b then ...").  It belongs to no SELECT, so it is an error,
+                // just like an OTHERWISE in the same position.
+                else
+                {
+                    syntaxError(Error_Unexpected_when_when);
+                }
             }
 
                 // processing of an IF instruction, and also a WHEN (from above)
