@@ -324,15 +324,24 @@ RoutineClass *PackageManager::resolveRoutine(RexxString *function, RexxString *p
     const char *libraryName = packageName->getStringData();
     const char *procedureName = procedure->getStringData();
 
+    RexxReturnCode rc;
     {
         UnsafeBlock releaser;   // don't hold the block while making the API call
-        // go register this (unconditionally....at this point, we don't care if this fails)
-        RexxRegisterFunctionDll(functionName, libraryName, procedureName);
+        // go register this (it may already be registered, which is fine)
+        rc = RexxRegisterFunctionDll(functionName, libraryName, procedureName);
     }
 
-
     // resolve a registered entry, if we can and add it to the cache
-    return createRegisteredRoutine(function);
+    func = createRegisteredRoutine(function);
+    // if it cannot be resolved, do not leave behind a registration we just
+    // made: it is global, and RxFuncQuery() would report the function as
+    // available to every later process (bug #2134)
+    if (func == OREF_NULL && rc == RXFUNC_OK)
+    {
+        UnsafeBlock releaser;
+        RexxDeregisterFunction(functionName);
+    }
+    return func;
 }
 
 
