@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2026 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -1568,6 +1568,7 @@ size_t RexxInternalObject::requiredPositive(size_t position, wholenumber_t preci
     // convert and validate the result
     if (!unsignedNumberValue(result, precision) || result == 0)
     {
+        builtinArgumentError(Error_Incorrect_call_positive, position, (RexxObject *)this);
         reportException(Error_Incorrect_method_positive, position, (RexxObject *)this);
     }
     return result;
@@ -1611,6 +1612,7 @@ size_t RexxInternalObject::requiredNonNegative(size_t position, wholenumber_t pr
 
     if (!unsignedNumberValue(result, precision))
     {
+        builtinArgumentError(Error_Incorrect_call_nonnegative, position, (RexxObject *)this);
         reportException(Error_Incorrect_method_nonnegative, position, (RexxObject *)this);
     }
     return result;

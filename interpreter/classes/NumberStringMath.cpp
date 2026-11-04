@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2018 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2026 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -239,7 +239,6 @@ RexxString *NumberString::d2xD2c(RexxObject *length, bool type)
  */
 NumberString *NumberString::maxMin(RexxObject **args, size_t argCount, ArithmeticOperator operation)
 {
-    const char *methodName = operation == OT_MAX ? "MAX" : "MIN";
     // this is the result from comp() that indicates we have
     // a greater comparison.
     wholenumber_t compResult = operation == OT_MAX ? 1 : -1;
@@ -266,7 +265,7 @@ NumberString *NumberString::maxMin(RexxObject **args, size_t argCount, Arithmeti
         RexxObject *nextObject = args[arg];
         if (nextObject == OREF_NULL)
         {
-            reportException(Error_Incorrect_call_noarg, methodName, arg + 1);
+            missingArgument(arg + 1);
         }
 
         // try to get as a numberstring object
@@ -295,6 +294,7 @@ NumberString *NumberString::maxMin(RexxObject **args, size_t argCount, Arithmeti
         // we have an invalid object type...that's an error
         else
         {
+            builtinArgumentError(Error_Incorrect_call_number, arg + 1, args[arg]);
             reportException(Error_Incorrect_method_number, arg + 1, args[arg]);
         }
     }

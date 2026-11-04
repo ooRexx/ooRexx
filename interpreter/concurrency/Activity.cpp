@@ -3889,3 +3889,88 @@ void Activity::checkRequires(RexxString *name)
         reportException(Error_Execution_circular_requires, name);
     }
 }
+
+
+/**
+ * Report a bad argument of a built-in function, when the check was
+ * delegated to the method that implements the function.  Does nothing
+ * (and the caller raises its method error) unless that function is
+ * running and its frame is the top one.
+ *
+ * @param error  The 40.xxx error: one that takes the function name, the
+ *               argument position and, unless value is NULL, the value.
+ * @param methodPosition
+ *               The argument position for the method.
+ * @param value  The bad value (NULL for a missing argument).
+ */
+void Activity::builtinArgumentError(RexxErrorCodes error, size_t methodPosition, RexxObject *value)
+{
+    if (!inBuiltinFunction())
+    {
+        return;
+    }
+    // the function's target is not a method argument: the method's arguments
+    // are the function's, skipping the target
+    wholenumber_t position = methodPosition < builtinTarget ? methodPosition : methodPosition + 1;
+    if (value == OREF_NULL)
+    {
+        reportException(error, builtinName, position);
+    }
+    reportException(error, builtinName, position, value);
+}
+
+
+/**
+ * Report a bad option of a built-in function (40.904), when the check was
+ * delegated to the method that implements it.  Does nothing unless that
+ * function is running and its frame is the top one.
+ *
+ * @param methodPosition
+ *                The argument position for the method.
+ * @param options The valid options.
+ * @param value   The bad option.
+ */
+void Activity::builtinOptionError(size_t methodPosition, const char *options, RexxObject *value)
+{
+    if (!inBuiltinFunction())
+    {
+        return;
+    }
+    wholenumber_t position = methodPosition < builtinTarget ? methodPosition : methodPosition + 1;
+    reportException(Error_Incorrect_call_list, builtinName, new_integer(position), options, value);
+}
+
+
+/**
+ * Report a bad target of a built-in function (ABS("A")), when the check
+ * was delegated to the method that implements it.  Does nothing unless that
+ * function is running and its frame is the top one.
+ *
+ * @param error  The 40.xxx error (function name, position, value).
+ * @param value  The bad value.
+ */
+void Activity::builtinTargetError(RexxErrorCodes error, RexxObject *value)
+{
+    if (!inBuiltinFunction())
+    {
+        return;
+    }
+    reportException(error, builtinName, (wholenumber_t)builtinTarget, value);
+}
+
+
+// the free-standing forms, for the argument helpers (see ActivityManager.hpp)
+void builtinArgumentError(RexxErrorCodes error, size_t methodPosition, RexxObject *value)
+{
+    ActivityManager::currentActivity.load()->builtinArgumentError(error, methodPosition, value);
+}
+
+void builtinOptionError(size_t methodPosition, const char *options, RexxObject *value)
+{
+    ActivityManager::currentActivity.load()->builtinOptionError(methodPosition, options, value);
+}
+
+void builtinTargetError(RexxErrorCodes error, RexxObject *value)
+{
+    ActivityManager::currentActivity.load()->builtinTargetError(error, value);
+}

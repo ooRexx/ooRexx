@@ -155,6 +155,8 @@ BUILTIN(INSERT)
 
     fix_args(INSERT);
 
+    builtinScope.targetIs(2);           // INSERT calls a method of its argument 2
+
     RexxString *newString = required_string(INSERT, new);
     RexxString *target = required_string(INSERT, target);
     RexxInteger *n = optional_integer(INSERT, n);
@@ -195,6 +197,8 @@ BUILTIN(OVERLAY)
 
     fix_args(OVERLAY);
 
+    builtinScope.targetIs(2);           // OVERLAY calls a method of its argument 2
+
     RexxString *newString = required_string(OVERLAY, new);
     RexxString *target = required_string(OVERLAY, target);
     RexxInteger *n = optional_integer(OVERLAY, n);
@@ -216,6 +220,8 @@ BUILTIN(POS)
 
     fix_args(POS);
 
+    builtinScope.targetIs(2);           // POS calls a method of its argument 2
+
     RexxString *needle = required_string(POS, needle);
     RexxString *haystack = required_string(POS, haystack);
     RexxInteger *start = optional_integer(POS, start);
@@ -235,6 +241,8 @@ BUILTIN(LASTPOS)
     const size_t LASTPOS_range =    4;
 
     fix_args(LASTPOS);
+
+    builtinScope.targetIs(2);           // LASTPOS calls a method of its argument 2
 
     RexxString *needle = required_string(LASTPOS, needle);
     RexxString *haystack = required_string(LASTPOS, haystack);
@@ -458,6 +466,8 @@ BUILTIN(WORDPOS)
     const size_t WORDPOS_start =  3;
 
     fix_args(WORDPOS);
+
+    builtinScope.targetIs(2);           // WORDPOS calls a method of its argument 2
 
     RexxString *phrase = required_string(WORDPOS, phrase);
     RexxString *string = required_string(WORDPOS, string);
@@ -2707,6 +2717,8 @@ BUILTIN(CHANGESTR)
 
     fix_args(CHANGESTR);
 
+    builtinScope.targetIs(2);           // CHANGESTR calls a method of its argument 2
+
     RexxString *needle = required_string(CHANGESTR, needle);
     RexxString *haystack = required_string(CHANGESTR, haystack);
     RexxString *newneedle = required_string(CHANGESTR, newneedle);
@@ -2724,6 +2736,8 @@ BUILTIN(COUNTSTR)
     const size_t COUNTSTR_haystack =   2;
 
     fix_args(COUNTSTR);
+
+    builtinScope.targetIs(2);           // COUNTSTR calls a method of its argument 2
 
     RexxString *needle = required_string(COUNTSTR, needle);
     RexxString *haystack = required_string(COUNTSTR, haystack);

@@ -1131,6 +1131,8 @@ RexxObject *StringUtil::dataType(RexxString *string, char option )
             return booleanObject(!(len != 1 || (*scanp != '1' && *scanp != '0')));
 
         default  :
+            // the type is the method's argument 1 (DATATYPE's argument 2)
+            builtinOptionError(1, "ABILMNOSUVWX9", new_string(option));
             reportException(Error_Incorrect_method_option, "ABILMNOSUVWX9", new_string(option));
     }
     return TheFalseObject;

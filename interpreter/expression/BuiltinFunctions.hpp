@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2026 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -49,9 +49,46 @@
 // Individual arguments are retrieved relative to the starting position using
 // the defines set up for each function
 
+/**
+ * Marks a running built-in function, so that the argument checks it
+ * delegates to the methods that implement it report the function's errors
+ * (40.xxx) and not the methods' (93.xxx).  See Activity::inBuiltinFunction().
+ */
+class BuiltinFunctionScope
+{
+ public:
+    inline BuiltinFunctionScope(Activity *a, const char *name) : activity(a),
+        savedName(a->builtinName), savedFrame(a->builtinFrame), savedTarget(a->builtinTarget)
+    {
+        activity->builtinName = name;
+        activity->builtinFrame = activity->activationFrames;
+        activity->builtinTarget = 1;
+    }
+
+    inline ~BuiltinFunctionScope()
+    {
+        activity->builtinName = savedName;
+        activity->builtinFrame = savedFrame;
+        activity->builtinTarget = savedTarget;
+    }
+
+    // the argument that becomes the target of the method (POS(needle, haystack)
+    // calls haystack~pos(needle)); the others are the method's arguments, in order
+    inline void targetIs(size_t position) { activity->builtinTarget = position; }
+
+ protected:
+    Activity *activity;
+    const char *savedName;
+    ActivationFrame *savedFrame;
+    size_t savedTarget;
+};
+
+
 // makes sure that we have our minimum or maximum number of arguments.
-#define fix_args(x) stack->expandArgs(argcount, x##_Min, x##_Max, #x)
-#define check_args(x) stack->expandArgs(argcount, x##_Min, x##_Max, #x)
+// (Every built-in function starts with one of these, which also marks it
+// as running.)
+#define fix_args(x) BuiltinFunctionScope builtinScope(context->getActivity(), #x); stack->expandArgs(argcount, x##_Min, x##_Max, #x)
+#define check_args(x) BuiltinFunctionScope builtinScope(context->getActivity(), #x); stack->expandArgs(argcount, x##_Min, x##_Max, #x)
 
 // get an individual argument from the stack, by name.
 #define get_arg(x,n) (RexxObject *)stack->peek(argcount - x##_##n)

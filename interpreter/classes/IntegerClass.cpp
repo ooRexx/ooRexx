@@ -1599,7 +1599,7 @@ RexxObject *RexxInteger::Max(RexxObject **args, size_t argCount)
     for (size_t arg = 0; arg < argCount; arg++)
     {
         RexxObject *argument = args[arg];
-        requiredArgument(argument, arg);
+        requiredArgument(argument, arg + 1);
 
         // if this is an integer object, we can continue doing this
         if (isInteger(argument))
@@ -1658,7 +1658,7 @@ RexxObject *RexxInteger::Min(RexxObject **args, size_t argCount)
     for (size_t arg = 0; arg < argCount; arg++)
     {
         RexxObject *argument = args[arg];
-        requiredArgument(argument, arg);
+        requiredArgument(argument, arg + 1);
 
         // if this is an integer object, we can continue doing this
         if (isInteger(argument))

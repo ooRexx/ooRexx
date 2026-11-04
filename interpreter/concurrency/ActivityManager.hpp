@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2025 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2026 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -405,6 +405,14 @@ protected:
 inline void reportCondition(RexxString *condition, RexxObject *description) { ActivityManager::currentActivity.load()->raiseCondition(condition, OREF_NULL, description, OREF_NULL, OREF_NULL); }
 inline void reportNovalue(RexxString *description) { reportCondition(GlobalNames::NOVALUE, description); }
 inline void reportNostring(RexxString *description) { reportCondition(GlobalNames::NOSTRING, description); }
+
+// A bad argument checked by a method on behalf of a built-in function:
+// if that function is running and has delegated the check directly, these
+// raise the function's 40.xxx error; otherwise they return, and the caller
+// raises its method error.  See Activity::inBuiltinFunction().
+void builtinArgumentError(RexxErrorCodes error, size_t methodPosition, RexxObject *value);
+void builtinOptionError(size_t methodPosition, const char *options, RexxObject *value);
+void builtinTargetError(RexxErrorCodes error, RexxObject *value);
 
 inline void reportException(RexxErrorCodes error)
 {

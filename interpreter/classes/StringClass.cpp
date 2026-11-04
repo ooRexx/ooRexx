@@ -1059,6 +1059,7 @@ RexxObject *RexxString::power(RexxObject *right_term)
     NumberString *numstr = numberString(); \
     if (numstr == OREF_NULL)              \
     {                                     \
+        builtinTargetError(Error_Incorrect_call_number, this);              \
         reportException(Error_Incorrect_method_string_nonumber, name, this); \
     }                                     \
     return numstr->method;

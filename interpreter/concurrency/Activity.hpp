@@ -93,6 +93,7 @@ class Activity : public RexxInternalObject
 {
   friend class ProtectedBase;
   friend class ActivationFrame;
+  friend class BuiltinFunctionScope;
  public:
 
     typedef enum
@@ -325,6 +326,19 @@ class Activity : public RexxInternalObject
     inline RexxActivation *getCurrentRexxFrame() {return currentRexxFrame;}
     inline void setCallbackParent(RexxActivation *a) {callbackParent = a;}
     inline ActivationBase *getTopStackFrame() { return topStackFrame; }
+
+    // A built-in function that delegates the checking of its arguments to the
+    // method that implements it (LEFT calls RexxString::left) marks itself
+    // with a BuiltinFunctionScope.  The argument helpers then report a bad
+    // argument as the function's error (40.xxx), with the function's name and
+    // argument position, instead of as a method error (93.xxx).  Only while
+    // the function's own frame is the top one: anything reached through a
+    // message send (user code, a STRING method, a stream) runs in a frame of
+    // its own and keeps its method errors.
+    inline bool inBuiltinFunction() { return builtinName != NULL && builtinFrame == activationFrames; }
+    void builtinArgumentError(RexxErrorCodes error, size_t methodPosition, RexxObject *value);
+    void builtinOptionError(size_t methodPosition, const char *options, RexxObject *value);
+    void builtinTargetError(RexxErrorCodes error, RexxObject *value);
     inline size_t getActivationDepth() { return stackFrameDepth; }
     inline const NumericSettings *getNumericSettings () {return numericSettings;}
     inline void        addRunningRequires(RexxString *program) { requiresTable->put(program, program);}
@@ -454,6 +468,9 @@ class Activity : public RexxInternalObject
     ActivationFrame *activationFrames;  // list of stack-based object protectors
     Activity *nestedActivity;           // used to push down activities in threads with more than one instance
     IdentityTable *heldMutexes;         // a list of Mutex objects owned by this activity.
+    const char *builtinName = NULL;     // the built-in function running (see BuiltinFunctionScope)
+    ActivationFrame *builtinFrame = NULL; // the frame it was called from
+    size_t builtinTarget = 1;           // its argument that is the target of the method it calls
 
     // structures containing the various interface vectors
     static RexxThreadInterface threadContextFunctions;
