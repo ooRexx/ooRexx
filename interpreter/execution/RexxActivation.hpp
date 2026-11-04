@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2025 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2026 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -67,6 +67,7 @@ class RequiresDirective;
 class CommandIOConfiguration;
 class CommandIOContext;
 class RoutineClass;
+class TrapHandler;
 
 /**
  * An activation of a section of Rexx code.
@@ -263,6 +264,7 @@ class RexxActivation : public ActivationBase
    RexxObject      * popEnvironment();
    bool              processTraps();
    void              mergeTraps(QueueClass *);
+   bool              isErrorPending(TrapHandler *, DirectoryClass *);
    uint64_t          getRandomSeed(RexxInteger *);
    VariableDictionary *getObjectVariables();
    StringTable     * getLabels();

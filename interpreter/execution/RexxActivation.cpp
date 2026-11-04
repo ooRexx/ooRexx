@@ -864,18 +864,20 @@ bool RexxActivation::processTraps()
     // process each item currently in the queue
     while (i--)
     {
-        // get the next handler off the queue
-        TrapHandler *trapHandler = (TrapHandler *)conditionQueue->pull();
+        // get the next handler and its condition object off the queue
+        ArrayClass *pending = (ArrayClass *)conditionQueue->pull();
+        TrapHandler *trapHandler = (TrapHandler *)pending->get(1);
         // condition in DELAY state?
         if (trapHandler->isDelayed())
         {
             // add to the end of the queue
-            conditionQueue->append(trapHandler);
+            conditionQueue->append(pending);
         }
         else
         {
-            // get the condition object from the current trap handler
-            DirectoryClass *conditionObj = trapHandler->getConditionObject();
+            // the condition object of this occurrence
+            DirectoryClass *conditionObj = (DirectoryClass *)pending->get(2);
+            trapHandler->setConditionObject(conditionObj);
             // see if we have something to assign to the RC variable
             RexxInternalObject *rc = conditionObj->get(GlobalNames::RC);
             if (rc != OREF_NULL)
@@ -2524,12 +2526,22 @@ bool RexxActivation::trap(RexxString *condition, DirectoryClass *exceptionObject
             conditionQueue = new_queue();
         }
 
+        // rexxref (Condition Traps): a CALL ON trap is delayed from the
+        // moment its condition is raised until its handler returns, and a
+        // new ERROR or FAILURE while it is delayed is ignored.  Before the
+        // handler runs, "delayed" means waiting in the queue.
+        if (isErrorPending(trapHandler, exceptionObject))
+        {
+            activity->clearCurrentCondition();
+            return true;
+        }
+
         // add the instruction trap info
         exceptionObject->put(trapHandler->instructionName(), GlobalNames::INSTRUCTION);
-        // set the condition object into the traphandler
-        trapHandler->setConditionObject(exceptionObject);
-        // add the handler to the condition queue
-        conditionQueue->append(trapHandler);
+        // add the handler to the condition queue, with this occurrence's
+        // condition object: the same condition can be raised more than once
+        // before the clause boundary, and each occurrence keeps its own
+        conditionQueue->append(new_array(trapHandler, exceptionObject));
         // clear this from the activity if we're trapping this here
         activity->clearCurrentCondition();
 
@@ -2680,6 +2692,42 @@ RexxObject* RexxActivation::handleNovalueEvent(RexxString *name, RexxObject *def
 
 
 /**
+ * Check whether a new ERROR or FAILURE occurrence has to be ignored because
+ * the CALL ON trap that would handle it already has an occurrence waiting in
+ * this activation's queue (rexxref, Condition Traps: while a trap is
+ * delayed, a new ERROR or FAILURE is ignored; other conditions are queued).
+ *
+ * @param handler   The trap handler of the new occurrence.
+ * @param condition The new occurrence's condition object.
+ *
+ * @return true if the new occurrence is an ERROR or FAILURE for a CALL ON
+ *         handler that is already waiting.
+ */
+bool RexxActivation::isErrorPending(TrapHandler *handler, DirectoryClass *condition)
+{
+    if (conditionQueue == OREF_NULL || handler->isSignal())
+    {
+        return false;
+    }
+    RexxString *name = (RexxString *)condition->get(GlobalNames::CONDITION);
+    if (name == OREF_NULL || !(name->strCompare(GlobalNames::ERRORNAME) || name->strCompare(GlobalNames::FAILURE)))
+    {
+        return false;
+    }
+    size_t count = conditionQueue->items();
+    for (size_t i = 1; i <= count; i++)
+    {
+        ArrayClass *pending = (ArrayClass *)conditionQueue->get(i);
+        if (pending->get(1) == handler)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+
+/**
  * Merge a list of trapped conditions from an interpret into the
  * parent activation's queues.
  *
@@ -2698,10 +2746,15 @@ void RexxActivation::mergeTraps(QueueClass *sourceConditionQueue)
         }
         else
         {
-            // copy all of the items over.
+            // copy all of the items over, except an ERROR or FAILURE whose
+            // handler is already waiting here (see trap())
             while (!sourceConditionQueue->isEmpty())
             {
-                conditionQueue->append(sourceConditionQueue->pull());
+                ArrayClass *pending = (ArrayClass *)sourceConditionQueue->pull();
+                if (!isErrorPending((TrapHandler *)pending->get(1), (DirectoryClass *)pending->get(2)))
+                {
+                    conditionQueue->append(pending);
+                }
             }
         }
     }
