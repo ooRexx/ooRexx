@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2026 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -106,7 +106,7 @@ ThreeStateReturn checkForOverride(RexxThreadContext *, VARIANT *, RexxObjectPtr 
 BOOL isOutParam(RexxThreadContext *, RexxObjectPtr , POLEFUNCINFO, size_t);
 VOID handleVariantClear(RexxMethodContext *, VARIANT *, RexxObjectPtr  );
 __inline BOOL okayToClear(RexxMethodContext *, RexxObjectPtr  );
-static void formatDispatchException(EXCEPINFO *, char *);
+static void formatDispatchException(EXCEPINFO *, char *, size_t);
 void sendOutArgBackToRexx(RexxObjectPtr, VARIANT *);
 bool getClassInfo(IDispatch *, ITypeInfo **);
 bool getConnectionPointContainer(IDispatch *, IConnectionPointContainer **);
@@ -139,10 +139,12 @@ void setCreationCallback(int (__stdcall *f)(CLSID, IUnknown*))
 //******************************************************************************
 
 // function that prints a human readable string for the supplied HRESULT in the supplied buffer
-inline void get_HRESULT_ErrorMessage ( HRESULT hResult, char *szBuffer)
+// (always an array: its size is known here, and the system's text is cut to fit)
+template <size_t N>
+inline void get_HRESULT_ErrorMessage(HRESULT hResult, char (&szBuffer)[N])
 {
     _com_error err(hResult);
-    sprintf(szBuffer, "%8.8x \"%s\"", hResult, err.ErrorMessage());
+    snprintf(szBuffer, N, "%8.8x \"%s\"", hResult, err.ErrorMessage());
 }
 
 
@@ -4117,7 +4119,7 @@ RexxMethod3(RexxObjectPtr, OLEObject_Unknown, OSELF, self, CSTRING, msgName, Rex
                 context->RaiseException0(Rexx_Error_Invalid_Variant);
                 break;
             case DISP_E_EXCEPTION:
-                formatDispatchException(&sExc, szBuffer);
+                formatDispatchException(&sExc, szBuffer, sizeof(szBuffer));
                 context->RaiseException1(Rexx_Error_OLE_Exception, context->NewStringFromAsciiz(szBuffer));
                 break;
             case DISP_E_MEMBERNOTFOUND:
@@ -4464,8 +4466,11 @@ __inline BOOL okayToClear(RexxMethodContext *context, RexxObjectPtr RxObject )
  *
  * @param pInfo   The exception information structure.
  * @param buffer  Buffer in which to return the formatted information.
+ * @param size    The size of the buffer.  The source and description come
+ *                from the server and can be of any length: they are cut to
+ *                fit.
  */
-static void formatDispatchException(EXCEPINFO *pInfo, char *buffer)
+static void formatDispatchException(EXCEPINFO *pInfo, char *buffer, size_t size)
 {
     const char *fmt = "Code: %08x Source: %S Description: %S";
     BSTR bstrUnavail = lpAnsiToUnicode("unavailable", sizeof("unavailable"));
@@ -4487,20 +4492,23 @@ static void formatDispatchException(EXCEPINFO *pInfo, char *buffer)
     {
         CHAR tmpBuf[256];
         get_HRESULT_ErrorMessage(pInfo->scode, tmpBuf);
-        sprintf(errMsg, " (%s)", tmpBuf);
+        snprintf(errMsg, sizeof(errMsg), " (%s)", tmpBuf);
     }
 
-    sprintf(buffer, fmt,
-            pInfo->wCode ? pInfo->wCode : pInfo->scode,
-            pInfo->bstrSource == NULL ? bstrUnavail : pInfo->bstrSource,
-            pInfo->bstrDescription == NULL ? bstrUnavail : pInfo->bstrDescription);
+    snprintf(buffer, size, fmt,
+             pInfo->wCode ? pInfo->wCode : pInfo->scode,
+             pInfo->bstrSource == NULL ? bstrUnavail : pInfo->bstrSource,
+             pInfo->bstrDescription == NULL ? bstrUnavail : pInfo->bstrDescription);
+    buffer[size - 1] = '\0';           // even if a character could not be converted
 
     SysFreeString(pInfo->bstrSource);
     SysFreeString(pInfo->bstrDescription);
     SysFreeString(pInfo->bstrHelpFile);
     ORexxOleFree(bstrUnavail);
 
-    strcat(buffer, errMsg);
+    // the system's text for scode, if it still fits
+    size_t used = strlen(buffer);
+    snprintf(buffer + used, size - used, "%s", errMsg);
 }
 
 //******************************************************************************
