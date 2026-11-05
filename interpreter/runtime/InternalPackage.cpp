@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2026 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -49,6 +49,7 @@
 #include "SysProcess.hpp"
 
 #include <ctype.h>
+#include <math.h>
 
 // FILESPEC function options
 #define FILESPEC_PATH         'P'
@@ -162,6 +163,37 @@ RexxRoutine2(RexxStringObject, sysFilespec, CSTRING, option, CSTRING, name)
 #define  MAX_DURATION  60000
 #define  MIN_DURATION      0
 
+/**
+ * Get one of BEEP's arguments: a whole number in a range.  A value that is
+ * not a whole number gets "must be a whole number"; a whole number outside
+ * the range (however large) gets the range error.
+ *
+ * @return false if an error has been raised.
+ */
+static bool beepArgument(RexxCallContext *context, RexxObjectPtr argument, const char *name,
+    wholenumber_t minimum, wholenumber_t maximum, wholenumber_t &value)
+{
+    double number;
+    if (!context->ObjectToWholeNumber(argument, &value) &&
+        (!context->ObjectToDouble(argument, &number) || number != floor(number)))
+    {
+        context->RaiseException2(Rexx_Error_Invalid_argument_whole, context->NewStringFromAsciiz(name), argument);
+        return false;
+    }
+    if (!context->ObjectToWholeNumber(argument, &value) || value > maximum || value < minimum)
+    {
+        RexxArrayObject subs = context->NewArray(4);
+        context->ArrayAppend(subs, context->NewStringFromAsciiz(name));
+        context->ArrayAppend(subs, context->WholeNumberToObject(minimum));
+        context->ArrayAppend(subs, context->WholeNumberToObject(maximum));
+        context->ArrayAppend(subs, argument);
+        context->RaiseException(Rexx_Error_Invalid_argument_range, subs);
+        return false;
+    }
+    return true;
+}
+
+
 /*********************************************************************/
 /*                                                                   */
 /*   Subroutine Name:   sysBeep                                      */
@@ -171,32 +203,28 @@ RexxRoutine2(RexxStringObject, sysFilespec, CSTRING, option, CSTRING, name)
 /*   Function:          sounds the speaker at frequency Hertz for    */
 /*                      specified duration (in milliseconds)         */
 /*********************************************************************/
-RexxRoutine2(CSTRING, sysBeep, wholenumber_t, Frequency, wholenumber_t, Duration)
+RexxRoutine2(CSTRING, sysBeep, RexxObjectPtr, frequencyArg, OPTIONAL_RexxObjectPtr, durationArg)
 {
-    /* out of range?              */
-    if (Frequency > MAX_FREQUENCY || Frequency < MIN_FREQUENCY)
+    // the arguments are checked here, in order and by name, and not by the
+    // conversion of the native API, whose message for a non-number gives the
+    // range of a wholenumber_t (bug #2009); duration is required, but it is
+    // declared optional so that a bad frequency is reported first
+    wholenumber_t frequency, duration;
+    if (!beepArgument(context, frequencyArg, "frequency", MIN_FREQUENCY, MAX_FREQUENCY, frequency))
     {
-        RexxArrayObject subs = context->NewArray(4);
-        context->ArrayAppend(subs, context->NewStringFromAsciiz("frequency"));
-        context->ArrayAppend(subs, context->WholeNumberToObject(MIN_FREQUENCY));
-        context->ArrayAppend(subs, context->WholeNumberToObject(MAX_FREQUENCY));
-        context->ArrayAppend(subs, context->WholeNumberToObject(Frequency));
-        context->RaiseException(Rexx_Error_Invalid_argument_range, subs);
         return NULL;
     }
-    /* out of range?              */
-    if (Duration > MAX_DURATION || Duration < MIN_DURATION)
+    if (durationArg == NULLOBJECT)
     {
-        RexxArrayObject subs = context->NewArray(4);
-        context->ArrayAppend(subs, context->NewStringFromAsciiz("duration"));
-        context->ArrayAppend(subs, context->WholeNumberToObject(MIN_DURATION));
-        context->ArrayAppend(subs, context->WholeNumberToObject(MAX_DURATION));
-        context->ArrayAppend(subs, context->WholeNumberToObject(Duration));
-        context->RaiseException(Rexx_Error_Invalid_argument_range, subs);
+        context->RaiseException1(Rexx_Error_Invalid_argument_noarg, context->WholeNumberToObject(2));
+        return NULL;
+    }
+    if (!beepArgument(context, durationArg, "duration", MIN_DURATION, MAX_DURATION, duration))
+    {
         return NULL;
     }
 
-    SysProcess::beep((int)Frequency, (int)Duration);
+    SysProcess::beep((int)frequency, (int)duration);
     return "";                           /* always returns a null      */
 }
 
