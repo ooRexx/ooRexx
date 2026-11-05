@@ -45,6 +45,7 @@
 #include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <limits.h>
 #include <dispex.h>
 #include <comdef.h>
 
@@ -3725,7 +3726,7 @@ RexxMethod3(RexxObjectPtr, OLEObject_Unknown, OSELF, self, CSTRING, msgName, Rex
     VARIANT         sResult;
     VARIANT        *pResult;
     EXCEPINFO       sExc;
-    unsigned int    uArgErr;
+    unsigned int    uArgErr = UINT_MAX; // set by Invoke for some errors, never by InvokeEx
     POLEFUNCINFO    pFuncInfo = NULL;
     BOOL            fFound = FALSE;
     VARTYPE         DestVt;
@@ -4129,7 +4130,17 @@ RexxMethod3(RexxObjectPtr, OLEObject_Unknown, OSELF, self, CSTRING, msgName, Rex
                 context->RaiseException0(Rexx_Error_Coercion_Failed_Overflow);
                 break;
             case DISP_E_TYPEMISMATCH:
-                context->RaiseException1(Rexx_Error_Coercion_Failed_Type_Mismatch, context->WholeNumberToObject(uArgErr + 1));
+                // uArgErr indexes rgvarg, where the arguments are in reverse
+                // order (see above: Rexx argument i + 1 is at iArgCount - i - 1,
+                // a property put's value included); InvokeEx does not set it
+                if ( uArgErr < iArgCount )
+                {
+                    context->RaiseException1(Rexx_Error_Coercion_Failed_Type_Mismatch, context->WholeNumberToObject(iArgCount - uArgErr));
+                }
+                else
+                {
+                    context->RaiseException1(Rexx_Error_Coercion_Failed_Type_Mismatch, context->NewStringFromAsciiz("unknown"));
+                }
                 break;
             case DISP_E_PARAMNOTOPTIONAL:
                 context->RaiseException0(Rexx_Error_Parameter_Omitted);
