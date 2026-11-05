@@ -2101,6 +2101,35 @@ bool check_queue(RexxString *name)
 }
 
 
+/**
+ * The position and count arguments of the stream functions (LINEIN's line,
+ * CHARIN's start...) are checked here.  Otherwise the stream object's
+ * methods report them with their own argument positions, as method errors,
+ * and not at all when the stream cannot be opened (bugs #2011, #2014).
+ *
+ * @param function The function name.
+ * @param position The argument position.
+ * @param value    The argument (already a whole number), or OREF_NULL.
+ */
+static void positiveStreamArgument(const char *function, size_t position, RexxObject *value)
+{
+    int64_t n;
+    if (value != OREF_NULL && Numerics::objectToInt64(value, n) && n <= 0)
+    {
+        reportException(Error_Incorrect_call_positive, function, position, value);
+    }
+}
+
+static void nonNegativeStreamArgument(const char *function, size_t position, RexxObject *value)
+{
+    int64_t n;
+    if (value != OREF_NULL && Numerics::objectToInt64(value, n) && n < 0)
+    {
+        reportException(Error_Incorrect_call_nonnegative, function, position, value);
+    }
+}
+
+
 BUILTIN(LINEIN)
 {
     const size_t LINEIN_Min = 0;
@@ -2114,6 +2143,14 @@ BUILTIN(LINEIN)
     RexxString *name = optional_string(LINEIN, name);
     RexxObject *line = optional_big_integer(LINEIN, line);
     RexxObject *count = optional_big_integer(LINEIN, count);
+
+    positiveStreamArgument("LINEIN", LINEIN_line, line);
+    // LINEIN reads one line or none
+    int64_t lines;
+    if (count != OREF_NULL && Numerics::objectToInt64(count, lines) && lines != 0 && lines != 1)
+    {
+        reportException(Error_Incorrect_call_list, "LINEIN", new_integer(LINEIN_count), "0, 1", count);
+    }
 
     // if this is linein request for "QUEUE:, this is really a pull
     // operation.
@@ -2174,6 +2211,9 @@ BUILTIN(CHARIN)
     RexxObject *position = optional_big_integer(CHARIN, start);
     RexxObject *count = optional_big_integer(CHARIN, count);
 
+    positiveStreamArgument("CHARIN", CHARIN_start, position);
+    nonNegativeStreamArgument("CHARIN", CHARIN_count, count);
+
     // queue is not allowed for CHARIN
     if (check_queue(name))
     {
@@ -2215,6 +2255,8 @@ BUILTIN(LINEOUT)
     RexxString *name = optional_string(LINEOUT, name);
     RexxString *string = optional_string(LINEOUT, string);
     RexxObject *line = optional_big_integer(LINEOUT, line);
+
+    positiveStreamArgument("LINEOUT", LINEOUT_line, line);
 
     // lineout is allowed to the queue
     if (check_queue(name))
@@ -2280,6 +2322,8 @@ BUILTIN(CHAROUT)
     RexxString *name = optional_string(CHAROUT, name);
     RexxString *string = optional_string(CHAROUT, string);
     RexxObject *position = optional_big_integer(CHAROUT, start);
+
+    positiveStreamArgument("CHAROUT", CHAROUT_start, position);
 
     // queues are not allowed with charout
     if (check_queue(name))
