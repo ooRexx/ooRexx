@@ -440,6 +440,24 @@ void ArrayClass::checkMultiDimensional(const char *methodName)
 
 
 /**
+ * INSERT and DELETE work only on single-dimensional arrays, so
+ * their index must be a single subscript.  The array's own index
+ * validation would accept more for an array that has no dimensions
+ * yet (.Array~new): INSERT then turned it into a multi-dimensional
+ * array, and DELETE went on without a position.
+ *
+ * @param index The index argument (a number, or an array of subscripts).
+ */
+static void requireSingleSubscript(RexxObject *index)
+{
+    if (index != OREF_NULL && isArray(index) && ((ArrayClass *)index)->items() > 1)
+    {
+        reportException(Error_Incorrect_method_maxsub, IntegerOne);
+    }
+}
+
+
+/**
  * Simple inline method for setting a value in the array.
  *
  * @param value    The value to set.
@@ -754,6 +772,7 @@ size_t ArrayClass::append(RexxInternalObject *value)
 RexxObject* ArrayClass::insertRexx(RexxObject *value, RexxObject *index)
 {
     checkMultiDimensional("INSERT");
+    requireSingleSubscript(index);
 
     size_t position;                     // array position
 
@@ -827,6 +846,7 @@ RexxInternalObject* ArrayClass::deleteRexx(RexxObject *index)
 {
     requiredArgument(index, ARG_ONE);
     checkMultiDimensional("DELETE");
+    requireSingleSubscript(index);
 
     size_t position;                     // array position
 
