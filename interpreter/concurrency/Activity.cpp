@@ -3348,8 +3348,23 @@ void Activity::traceOutput(RexxActivation *activation, RexxString *line, StringT
 
         RexxObject *stream = getLocalEnvironment(GlobalNames::TRACEOUTPUT);
 
-        if (stream != OREF_NULL && stream != TheNilObject)
+        // The .traceoutput target may be traced itself (a TRACE instruction in
+        // its methods, ::OPTIONS TRACE in their package): every line it writes
+        // would produce more trace lines, recursively, until the C stack runs
+        // out (bug #1871).  So trace lines produced while we are sending one
+        // to the target don't go to the target, but straight to the console.
+        if (stream != OREF_NULL && stream != TheNilObject && !sendingTraceOutput)
         {
+            // clears the flag however we leave the block
+            class SendingTraceOutput
+            {
+             public:
+                SendingTraceOutput(bool &f) : flag(f) { flag = true; }
+                ~SendingTraceOutput() { flag = false; }
+             private:
+                bool &flag;
+            } sending(sendingTraceOutput);
+
             // need this in case the .traceoutput or the .error monitor
             // gives us an invalid object with no LINEOUT
             try

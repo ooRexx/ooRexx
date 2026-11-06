@@ -444,6 +444,7 @@ class Activity : public RexxInternalObject
     bool     stackcheck;                // stack space is to be checked (disabled during some error handling)
     bool     exit;                      // activity loop is to exit
     bool     requestingString;          // in error handling currently
+    bool     sendingTraceOutput;        // a trace line is being sent to the .traceoutput target
     bool     suspended;                 // the suspension flag
     bool     interpreterRoot;           // This is the root activity for an interpreter instance
     bool     waitingForApiAccess;       // This activity is waiting for access for an API callback
