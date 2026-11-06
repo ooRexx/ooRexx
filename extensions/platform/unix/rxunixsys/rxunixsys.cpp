@@ -1100,17 +1100,29 @@ RexxRoutine2(RexxObjectPtr,
              CSTRING, fname,
              CSTRING, name)
 {
-    ssize_t sz;
-    char *buf;
-
-    sz = GetXattr(fname, name, NULL, 0);
-    if (sz == -1) {
-        return context->NullString();
+    // the value may change between the size query and the read: retry then
+    for (int tries = 0; tries < 10; tries++)
+    {
+        ssize_t sz = GetXattr(fname, name, NULL, 0);
+        if (sz == -1)
+        {
+            return context->NullString();
+        }
+        char *buf = (char *)alloca(sz + 1);
+        ssize_t got = GetXattr(fname, name, buf, sz);
+        if (got == -1)
+        {
+            if (errno == ERANGE)
+            {
+                continue;     // grew in the meantime
+            }
+            return context->NullString();
+        }
+        // SysSetxattr stores a trailing NUL, but values set by other
+        // programs need not have one: never read past what we got
+        return (RexxObjectPtr)context->NewString(buf, strnlen(buf, got));
     }
-    buf = (char *)alloca(sz);
-    GetXattr(fname, name, buf, sz);
-
-    return (RexxObjectPtr)context->NewStringFromAsciiz(buf);
+    return context->NullString();
 }
 
 
@@ -1127,25 +1139,58 @@ RexxRoutine1(RexxObjectPtr,
              SysListxattr,
              CSTRING, fname)
 {
-    ssize_t sz;
-    char *buf, *name;
+    // the list may change between the size query and the read: retry then
+    for (int tries = 0; tries < 10; tries++)
+    {
+        ssize_t sz = ListXattr(fname, NULL, 0);
+        if (sz == -1)
+        {
+            return context->NullString();
+        }
+        char *buf = (char *)alloca(sz + 1);
+        ssize_t got = ListXattr(fname, buf, sz);
+        if (got == -1)
+        {
+            if (errno == ERANGE)
+            {
+                continue;     // grew in the meantime
+            }
+            return context->NullString();
+        }
 
-    sz = ListXattr(fname, NULL, 0);
-    if (sz == -1) {
-        return context->NullString();
+        RexxArrayObject arr = context->NewArray(1);
+        // The list is normally a sequence of NUL-terminated names.  But on
+        // NetBSD (seen with ffs on NetBSD 11) listxattr() returns the
+        // extattr_list_file() format instead: each name preceded by a length
+        // byte, and no NULs at all.  A NUL-terminated list always ends with a
+        // NUL; a length-prefixed one never does.
+        if (got > 0 && buf[got - 1] != '\0')
+        {
+            ssize_t i = 0;
+            while (i < got)
+            {
+                size_t len = (unsigned char)buf[i++];
+                if (len > (size_t)(got - i))
+                {
+                    len = got - i;     // malformed: keep what is there
+                }
+                context->ArrayAppendString(arr, buf + i, len);
+                i += len;
+            }
+        }
+        else
+        {
+            ssize_t i = 0;
+            while (i < got)
+            {
+                size_t len = strnlen(buf + i, got - i);
+                context->ArrayAppendString(arr, buf + i, len);
+                i += len + 1;
+            }
+        }
+        return (RexxObjectPtr)arr;
     }
-    buf = (char *)alloca(sz);
-    ListXattr(fname, buf, sz);
-
-    // create a Rexx array of the xattr names
-    RexxArrayObject arr = context->NewArray(1);
-    while (sz > 0) {
-        context->ArrayAppendString(arr, buf, strlen(buf));
-        sz -= strlen(buf) + 1;
-        buf += strlen(buf) + 1;
-    }
-
-    return (RexxObjectPtr)arr;
+    return context->NullString();
 }
 
 
