@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2026 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -2444,7 +2444,10 @@ const char *StreamInfo::streamOpen(const char *options)
     }
     /* if write only specified           */
     /*      - try both first             */
-    if (oflag & RX_O_WRONLY)
+    // the access modes are values, not bits (POSIX compares them after
+    // masking with O_ACCMODE): where O_RDWR is O_RDONLY | O_WRONLY, as
+    // under WASI, "oflag & RX_O_WRONLY" would be true for BOTH as well
+    if ((oflag & (RX_O_RDONLY | RX_O_WRONLY | RX_O_RDWR)) == RX_O_WRONLY)
     {
         /* set both flags                    */
         read_write = true;
