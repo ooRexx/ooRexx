@@ -480,8 +480,15 @@ Activity* InterpreterInstance::enterOnCurrentThread(bool &newActivity)
     // indicate this is a nested entry
     activity->activate();
     // from this point forward, we want to be the active activity, so
-    // acquire the kernel lock
-    activity->requestApiAccess();
+    // acquire the kernel lock. A newly created activity already holds it:
+    // attachThread() returns with the lock and the activity set as the
+    // current one. Requesting it again would lock the (recursive) kernel
+    // mutex twice, and a releaseAccess() while it is held, such as an uninit
+    // method waiting for a guard, would then leave it locked (bug #1650).
+    if (!newActivity)
+    {
+        activity->requestApiAccess();
+    }
     // return the activity for use
     return activity;
 }
@@ -645,15 +652,13 @@ bool InterpreterInstance::terminate()
     commandHandlers = OREF_NULL;
     requiresFiles = OREF_NULL;
 
-    // If a new activity was created release the kernel lock again with dispatch nudge; otherwise just nudge the dispatch queue
-    if (activityCreated)
+    // the kernel lock was released by exitCurrentThread() above, also when a
+    // new activity was created for the termination (enterOnCurrentThread()
+    // does not lock it twice any more, bug #1650), so just nudge the dispatch
+    // queue. Nudging the queue requires the dispatch lock. This used to be
+    // done without it, which is an unguarded access to the dispatch queue.
+    // See bug #2072.
     {
-        ActivityManager::releaseAccess();
-    }
-    else
-    {
-        // nudging the queue requires the dispatch lock. This used to be done without
-        // it, which is an unguarded access to the dispatch queue.  See bug #2072.
         DispatchSection lock;
         ActivityManager::dispatchNext(lock);
     }

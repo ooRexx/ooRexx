@@ -50,6 +50,10 @@
 /*  4  it detaches and another thread calls Terminate()                      */
 /*  5  another thread attaches, runs and detaches, then the creating thread  */
 /*     detaches                                                              */
+/*  6  as 4, but an uninit method run by that Terminate() has to wait for    */
+/*     the guard of an object whose guarded method is running on a thread    */
+/*     of another instance (bug #1650: the uninit kept the kernel lock while */
+/*     waiting, and the guard holder could never get it back)                */
 /*                                                                           */
 /* A Terminate() that never returns cannot be told from a slow one, so a     */
 /* watchdog gives up after a fixed wall time and reports a hang. It has to   */
@@ -74,6 +78,109 @@
 #include <thread>
 
 static std::atomic<bool> finished(false);
+
+
+// case 6: an object of another instance, with a guarded method that sleeps
+// and a guarded method that an uninit method of the terminated instance calls
+static const char *holderCode =
+    "::class holder public\n"
+    "::method init\n"
+    "expose marked\n"
+    "marked = 0\n"
+    "::method hold\n"                     // guarded: keeps the guard while it sleeps
+    "call SysSleep 0.5\n"                 // native code, run without the kernel lock
+    "::method mark\n"                     // guarded: waits while hold runs
+    "expose marked\n"
+    "marked = 1\n"
+    "::attribute marked get\n";
+
+static const char *readerCode =
+    "::class reader public\n"
+    "::method init\n"
+    "expose holder\n"
+    "use arg holder\n"
+    "::method uninit\n"
+    "expose holder\n"
+    "holder~mark\n";
+
+
+/**
+ * Case 6. The holder runs on its own thread in its own instance.
+ *
+ * @return true if the uninit method ran and Terminate() returned.
+ */
+static bool uninitWaitsForGuard(RexxInstance *instance, RexxThreadContext *context)
+{
+    std::atomic<RexxObjectPtr> holder(NULLOBJECT);
+    std::atomic<bool> go(false);
+    std::atomic<bool> terminated(false);
+    std::atomic<int> marked(-1);
+    bool ok = true;
+
+    std::thread holderThread([&]
+    {
+        RexxInstance *other = NULL;
+        RexxThreadContext *otherContext = NULL;
+        if (RexxCreateInterpreter(&other, &otherContext, NULL) != 1)
+        {
+            fprintf(stderr, "could not create the holder's instance\n");
+            holder = (RexxObjectPtr)-1;
+            return;
+        }
+        RexxPackageObject package = otherContext->LoadPackageFromData("holder", holderCode, strlen(holderCode));
+        RexxObjectPtr h = otherContext->SendMessage0(otherContext->FindPackageClass(package, "HOLDER"), "NEW");
+        otherContext->RequestGlobalReference(h);
+        holder = h;
+        while (!go)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+        otherContext->SendMessage0(h, "HOLD");
+        while (!terminated)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+        wholenumber_t value = -1;
+        otherContext->ObjectToWholeNumber(otherContext->SendMessage0(h, "MARKED"), &value);
+        marked = (int)value;
+        otherContext->ReleaseGlobalReference(h);
+        other->Terminate();
+    });
+
+    while (holder == NULLOBJECT)
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+    if (holder == (RexxObjectPtr)-1)
+    {
+        holderThread.join();
+        context->DetachThread();
+        instance->Terminate();
+        return false;
+    }
+
+    // an object nobody references, whose uninit method calls holder~mark
+    RexxPackageObject package = context->LoadPackageFromData("reader", readerCode, strlen(readerCode));
+    RexxObjectPtr reader = context->SendMessage1(context->FindPackageClass(package, "READER"), "NEW", holder);
+    context->ReleaseLocalReference(reader);
+    context->DetachThread();
+
+    // start hold, give it time to get the guard, and terminate on a thread
+    // that was never attached to the instance
+    go = true;
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::thread terminator([instance] { instance->Terminate(); });
+    terminator.join();
+    terminated = true;
+    holderThread.join();
+
+    if (marked != 1)
+    {
+        fprintf(stderr, "the uninit method did not run (marked = %d)\n", (int)marked);
+        ok = false;
+    }
+    return ok;
+}
 
 
 /**
@@ -192,6 +299,10 @@ static bool cycle(int which)
             context->DetachThread();
             break;
         }
+
+        case 6:
+            // already terminated
+            return uninitWaitsForGuard(instance, context);
     }
 
     instance->Terminate();
@@ -222,7 +333,7 @@ int main(int argc, char **argv)
 {
     if (argc < 2)
     {
-        fprintf(stderr, "usage: %s <case 0-5> [cycles] [watchdog-seconds]\n", argv[0]);
+        fprintf(stderr, "usage: %s <case 0-6> [cycles] [watchdog-seconds]\n", argv[0]);
         return 2;
     }
 
@@ -230,9 +341,9 @@ int main(int argc, char **argv)
     int cycles = argc > 2 ? atoi(argv[2]) : 5;
     int watchdogSeconds = argc > 3 ? atoi(argv[3]) : 30;
 
-    if (which < 0 || which > 5 || cycles < 1 || watchdogSeconds < 1)
+    if (which < 0 || which > 6 || cycles < 1 || watchdogSeconds < 1)
     {
-        fprintf(stderr, "case must be 0 to 5; cycles and watchdog-seconds must be positive\n");
+        fprintf(stderr, "case must be 0 to 6; cycles and watchdog-seconds must be positive\n");
         return 2;
     }
 
