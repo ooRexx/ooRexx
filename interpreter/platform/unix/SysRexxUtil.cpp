@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2025 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2026 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -876,7 +876,8 @@ RexxRoutine1(RexxObjectPtr, SysCreateMutexSem, OPTIONAL_CSTRING, name)
     {
         return context->String("");
     }
-    if (strlen(name) == 0)
+    // an omitted name (NULL) means an unnamed semaphore, as an empty one does
+    if (name == NULL || strlen(name) == 0)
     {
         /* this is an unnamed semaphore */
         semdata->handle = (sem_t *)malloc(sizeof(sem_t));
