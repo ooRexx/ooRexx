@@ -250,10 +250,21 @@ typedef struct _RexxMethodEntry
 
 #define STANDARD_PACKAGE_HEADER sizeof(RexxPackageEntry), REXX_PACKAGE_API_NO,
 
+// OOREXX_GET_PACKAGE(name) defines RexxGetPackage(), the entry point the
+// interpreter looks for when it loads a library.  A library linked into a
+// program, rather than loaded as a shared library, is compiled with
+// OOREXX_EMBEDDED_PACKAGE defined: then the macro defines nothing (several
+// such libraries in one program would each define RexxGetPackage()), and the
+// program registers the library's package table itself (REGISTER_LIBRARY,
+// RegisterLibrary()).
+#if defined(OOREXX_EMBEDDED_PACKAGE)
+#define OOREXX_GET_PACKAGE(name)
+#else
 #define OOREXX_GET_PACKAGE(name) \
     BEGIN_EXTERN_C()\
     REXXEXPORT RexxPackageEntry *RexxGetPackage(void) { return &name##_package_entry; }\
     END_EXTERN_C()
+#endif
 
 
 typedef void (RexxEntry *RexxPackageLoader)(RexxThreadContext *);
