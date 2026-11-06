@@ -45,6 +45,9 @@
 #ifndef Included_SysFile
 #define Included_SysFile
 
+// see the unix SysFile.hpp; the identity on Windows
+#define HOST_ERRNO(e) (e)
+
 #include "rexxapitypes.h"
 #include <io.h>
 #include <fcntl.h>

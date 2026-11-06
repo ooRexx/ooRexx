@@ -164,6 +164,7 @@
 #include "RexxUtilCommon.hpp"
 #include "Utilities.hpp"
 #include "RexxInternalApis.h"
+#include "SysFile.hpp"                // HOST_ERRNO
 
 #if defined __APPLE__
 #define open64 open
@@ -584,7 +585,7 @@ RexxRoutine2(int, SysMkDir, CSTRING, path, OPTIONAL_int32_t, mode)
     {
         mode = S_IRWXU | S_IRWXG | S_IRWXO;
     }
-    return mkdir(qualifiedName, mode) == 0 ? 0 : errno;
+    return mkdir(qualifiedName, mode) == 0 ? 0 : HOST_ERRNO(errno);
 }
 
 
@@ -1092,7 +1093,7 @@ RexxRoutine1(int, SysCloseMutexSem, uintptr_t, vhandle)
 RexxRoutine2(int, SysSetPriority, OPTIONAL_int32_t, cls, int32_t, prio)
 {
     // priority is the negated prio argument
-    return setpriority(PRIO_PROCESS, 0, -prio) == 0 ? 0 : errno;
+    return setpriority(PRIO_PROCESS, 0, -prio) == 0 ? 0 : HOST_ERRNO(errno);
 }
 
 /**
@@ -1505,7 +1506,7 @@ RexxRoutine1(RexxObjectPtr, SysQueryProcess, OPTIONAL_CSTRING, selector)
     if (iRc)
     {
         char buffer[100];
-        snprintf(buffer, sizeof(buffer), "System error; errno = %d", errno);
+        snprintf(buffer, sizeof(buffer), "System error; errno = %d", HOST_ERRNO(errno));
         return context->NewStringFromAsciiz(buffer);
     }
     if (!strcasecmp(selector, "PTIME")) /* Calculate the used CPU time*/
@@ -1619,7 +1620,7 @@ RexxRoutine1(RexxObjectPtr, SysQueryProcess, OPTIONAL_CSTRING, selector)
 
 RexxRoutine1(RexxStringObject, SysGetErrorText, int32_t, errnum)
 {
-    const char *errmsg = strerror(errnum);
+    const char *errmsg = strerror(HOST_ERRNO_REVERSE(errnum));
     if (errmsg == NULL)
     {
         return context->NullString();

@@ -161,4 +161,15 @@ protected:
     int64_t fileSize;       // current known file size
 };
 
+// An errno value as Rexx programs see it: the RC of CD, the ERROR:n and
+// NOTREADY:n descriptions of streams, the results of SysMkDir, SysFileDelete,
+// SysFileCopy and others.  Every place where an error number from the C
+// library reaches a Rexx program goes through HOST_ERRNO, and every place
+// where a number from a Rexx program goes to the C library (SysGetErrorText)
+// through HOST_ERRNO_REVERSE, so that a port whose C library numbers errors
+// differently from the systems Rexx programs are written for can translate
+// them in one place.  The identity on every platform today.
+#define HOST_ERRNO(e) (e)
+#define HOST_ERRNO_REVERSE(e) (e)
+
 #endif

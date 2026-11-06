@@ -1678,7 +1678,7 @@ RexxRoutine1(int, SysRmDir, CSTRING, path)
 {
     RoutineQualifiedName qualifiedName(context, path);
 
-    return SysFileSystem::deleteDirectory(qualifiedName);
+    return HOST_ERRNO(SysFileSystem::deleteDirectory(qualifiedName));
 }
 
 /*************************************************************************
@@ -1695,7 +1695,7 @@ RexxRoutine1(int, SysFileDelete, CSTRING, path)
 {
     RoutineQualifiedName qualifiedName(context, path);
 
-    return SysFileSystem::deleteFile(qualifiedName);
+    return HOST_ERRNO(SysFileSystem::deleteFile(qualifiedName));
 }
 
 
@@ -1924,7 +1924,7 @@ RexxRoutine1(int, SysSleep, RexxStringObject, delay)
     uint64_t microseconds = (uint64_t)(seconds * 1000000);
 
     // go do the sleep
-    return SysThread::longSleep(microseconds);
+    return HOST_ERRNO(SysThread::longSleep(microseconds));
 }
 
 /*************************************************************************
@@ -1942,7 +1942,7 @@ RexxRoutine2(int, SysFileCopy, CSTRING, from, CSTRING, to)
     RoutineQualifiedName fromFile(context, from);
     RoutineQualifiedName toFile(context, to);
 
-    return SysFileSystem::copyFile(fromFile, toFile);
+    return HOST_ERRNO(SysFileSystem::copyFile(fromFile, toFile));
 }
 
 
@@ -1961,7 +1961,7 @@ RexxRoutine2(int, SysFileMove, CSTRING, from, CSTRING, to)
     RoutineQualifiedName fromFile(context, from);
     RoutineQualifiedName toFile(context, to);
 
-    return SysFileSystem::moveFile(fromFile, toFile);
+    return HOST_ERRNO(SysFileSystem::moveFile(fromFile, toFile));
 }
 
 

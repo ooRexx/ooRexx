@@ -57,6 +57,7 @@
 #include "InterpreterInstance.hpp"
 #include "SysInterpreterInstance.hpp"
 #include "SysThread.hpp"
+#include "SysFile.hpp"                // HOST_ERRNO
 
 #include "RexxInternalApis.h"
 #include <sys/types.h>
@@ -434,7 +435,7 @@ bool sys_process_export(RexxExitContext *context, const char * cmd, RexxObjectPt
         if (errCode != 0)
         {
             // non-zero is an error condition
-            context->RaiseCondition("ERROR", context->String(cmd), NULL, context->WholeNumberToObject(errno));
+            context->RaiseCondition("ERROR", context->String(cmd), NULL, context->WholeNumberToObject(HOST_ERRNO(errno)));
         }
         else
         {
@@ -608,7 +609,7 @@ bool sys_process_cd(RexxExitContext *context, const char * cmd, RexxObjectPtr rc
     int errCode = chdir(unquoted);
     if (errCode < 0)
     {
-        errCode = errno;
+        errCode = HOST_ERRNO(errno);
     }
     free(unquoted);
 
