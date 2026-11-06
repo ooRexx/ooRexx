@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2026 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -106,8 +106,8 @@ class StemClass : public RexxObject
 
     RexxObject *hasIndex(RexxObject **, size_t);
     RexxInternalObject *remove(RexxObject **, size_t);
-    RexxObject *hasItem(RexxInternalObject *);
-    RexxObject *index(RexxInternalObject *);
+    RexxObject *hasItem(RexxObject *);
+    RexxObject *index(RexxObject *);
     RexxObject *itemsRexx();
     RexxObject *unknownRexx(RexxString *message, ArrayClass  *arguments);
     RexxInternalObject *removeItem(RexxInternalObject *);

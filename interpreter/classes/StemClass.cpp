@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2026 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -374,8 +374,10 @@ RexxInternalObject *StemClass::remove(RexxObject **tailElements, size_t argCount
  *
  * @return .true if the object is in the collection, .false otherwise.
  */
-RexxObject *StemClass::hasItem(RexxInternalObject *target)
+RexxObject *StemClass::hasItem(RexxObject *target)
 {
+    // we require the target to be there.
+    requiredArgument(target, ARG_ONE);
     CompoundTableElement *variable = findByValue(target);
     return booleanObject(variable != OREF_NULL);
 }
@@ -427,8 +429,10 @@ RexxInternalObject *StemClass::removeItem(RexxInternalObject *target)
  *
  * @return The tail name for the match, or .nil if it was not found.
  */
-RexxObject *StemClass::index(RexxInternalObject *target)
+RexxObject *StemClass::index(RexxObject *target)
 {
+    // we require the target to be there.
+    requiredArgument(target, ARG_ONE);
     CompoundTableElement *variable = findByValue(target);
     if (variable != OREF_NULL)
     {
