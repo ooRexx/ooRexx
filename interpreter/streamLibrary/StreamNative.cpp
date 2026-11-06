@@ -91,6 +91,16 @@ const int  query_system_position = 0x10;
 #define WR_CREAT    (RX_O_WRONLY | RX_O_CREAT)
 #define IREAD_IWRITE (RX_S_IREAD | RX_S_IWRITE)
 
+// do these open flags open the stream for writing?  The access modes are
+// values, not bits (POSIX compares them after masking with O_ACCMODE):
+// where O_RDWR is O_RDONLY | O_WRONLY, as under WASI, testing them as
+// single bits would take a READ open for a writeable one
+static inline bool isWriteable(int oflag)
+{
+    int accessMode = oflag & (RX_O_RDONLY | RX_O_WRONLY | RX_O_RDWR);
+    return accessMode == RX_O_WRONLY || accessMode == RX_O_RDWR;
+}
+
 /**
  * Helper routine for the method stubs to validate the
  * stream info pointer to ensure that the stream has not
@@ -2415,7 +2425,7 @@ const char *StreamInfo::streamOpen(const char *options)
     // If read/write/both/append not specified, the default is BOTH, with the initial
     // positioning at the end
     // (According to the current doc.)
-    if (!(oflag & (RX_O_WRONLY | RDWR_CREAT )) && !read_only)
+    if (!isWriteable(oflag) && !read_only)
     {
         oflag |= RX_O_RDWR | RDWR_CREAT;    /* set this up for read/write mode   */
         pmode = IREAD_IWRITE;            /* save the pmode info               */
@@ -2501,7 +2511,7 @@ const char *StreamInfo::streamOpen(const char *options)
 /*          so set it to one                                                                */
 /********************************************************************************************/
                                         /* persistent writeable stream?      */
-    if (!fileInfo.isTransient() && (oflag & (RX_O_WRONLY | RDWR_CREAT)))
+    if (!fileInfo.isTransient() && isWriteable(oflag))
     {
         if (size() > 0)
         {   /* existing stream?                  */
