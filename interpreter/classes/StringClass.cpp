@@ -921,6 +921,9 @@ wholenumber_t RexxString::primitiveStrictComp(RexxObject *otherObj)
 {
     wholenumber_t result;
 
+    // this is reached directly from the strict comparison operators, so
+    // the argument may be missing
+    requiredArgument(otherObj, ARG_ONE);
     // get the string argument and the data/length values
     RexxString *other = otherObj->requestString();
     size_t otherLen = other->getLength();
