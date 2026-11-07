@@ -244,6 +244,30 @@ RexxObject* SystemInterpreter::buildEnvlist()
 }
 
 
+/**
+ * Tell whether a block of saved environment entries has a variable
+ * with the given name.
+ *
+ * @param entries The first saved "name=value" entry.
+ * @param end     The end of the saved entries.
+ * @param name    The name (not terminated).
+ * @param length  The length of the name.
+ *
+ * @return true if one of the saved entries is for that name.
+ */
+static bool isSavedName(const char *entries, const char *end, const char *name, size_t length)
+{
+    for (const char *entry = entries; entry < end; entry += strlen(entry) + 1)
+    {
+        if (strncmp(entry, name, length) == 0 && entry[length] == '=')
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+
 /*********************************************************************/
 /*                                                                   */
 /*   Subroutine Name:   RestoreEnvironment                           */
@@ -260,17 +284,7 @@ void SystemInterpreter::restoreEnvironment(
 {
     char  *current;                      /* ptr to saved environment   */
     size_t size;                         /* size of the saved space    */
-    size_t length;                       /* string length              */
     char  *begin;                        /* begin of saved space       */
-    char  **Environment;                 /* environment pointer        */
-
-    char  *del = NULL;                   /* ptr to old unused memory   */
-    char  *Env_Var_String;               /* enviornment entry          */
-    char   namebufsave[256], namebufcurr[256];
-    char  *np;
-    int i;
-
-    Environment = getEnvironment();    /* get the current environment*/
 
     begin = current = (char *)CurrentEnv; /* get the saved space        */
     size = ((ENVENTRY *)current)->size;   /* first read out the size    */
@@ -283,60 +297,67 @@ void SystemInterpreter::restoreEnvironment(
     }
     current += strlen(current);          /* update the pointer         */
     current++;                           /* jump over '\0'             */
-    if (!putflag)
-    {                        /* first change in the        */
-        /* environment ?              */
-        /* copy all entries to dynamic memory                            */
-        /*for all entries in the env  */
-        for (; *Environment != NULL; Environment++)
-        {
-            length = strlen(*Environment) + 1; /* get the size of the string */
-            /* and alloc space for it     */
-            Env_Var_String = (char *)malloc(length);
-            memcpy(Env_Var_String, *Environment, length); /* copy the string  */
-            putenv(Env_Var_String);          /* and make it part of env    */
-        }
-        putflag = 1;                       /* prevent do it again        */
-    }
-    /* Loop through the saved env */
-    /* entries and restore them   */
-    for (; (size_t)(current - begin) < size; current += (strlen(current) + 1))
-    {
-        Environment = getEnvironment();    /* get the environment        */
-        del = NULL;
-        np = current;
-        /* extract the the name       */
-        /* from the saved enviroment  */
-        for (i = 0; (*np != '=') && (i < 255); np++, i++)
-        {
-            memcpy(&(namebufsave[i]), np, 1);  /* copy the character         */
-        }
-        memcpy(&(namebufsave[i]), "\0", 1);  /* copy the terminator        */
-        /* find the entry in the env  */
-        for (; *Environment != NULL; Environment++)
-        {
-            np = *Environment;
-            /* extract the the name       */
-            /* from the current env       */
-            for (i = 0; (*np != '=') && (i < 255); np++, i++)
-            {
-                memcpy(&(namebufcurr[i]), np, 1); /* copy the character         */
-            }
-            memcpy(&(namebufcurr[i]), "\0", 1); /* copy the terminator        */
 
-            if (!strcmp(namebufsave, namebufcurr))
-            { /* have a match ?         */
-                del = *Environment;            /* remember it for deletion   */
-                break;                         /* found, so get out of here  */
+    // Remove the variables that were not there when the environment was
+    // saved.  unsetenv() changes environ, so start the scan again after each.
+    char *saved = current;
+    bool removed = true;
+    while (removed)
+    {
+        removed = false;
+        for (char **entry = getEnvironment(); *entry != NULL; entry++)
+        {
+            // an entry with no name, or no '=', is nothing unsetenv() can remove
+            const char *equal = strchr(*entry, '=');
+            if (equal == NULL || equal == *entry)
+            {
+                continue;
+            }
+            size_t nameLength = (size_t)(equal - *entry);
+            if (isSavedName(saved, begin + size, *entry, nameLength))
+            {
+                continue;
+            }
+            char *name = (char *)malloc(nameLength + 1);
+            if (name == NULL)
+            {
+                reportException(Error_System_service_service, "Error restoring environment variable");
+            }
+            memcpy(name, *entry, nameLength);
+            name[nameLength] = '\0';
+            int result = unsetenv(name);
+            free(name);
+            if (result == -1)
+            {
+                reportException(Error_System_service_service, "Error restoring environment variable");
+            }
+            removed = true;
+            break;
+        }
+    }
+
+    // Restore the saved "name=value" entries with setenv(), which makes its
+    // own copies.  The entries must not be given to putenv(): putenv() keeps
+    // the pointer, and these point into the saved buffer, a Rexx object that
+    // the garbage collector can move or reclaim.  Nor may the entries they
+    // replace be freed: one set with VALUE() belongs to setenv(), which keeps
+    // it and may hand it out again.
+    while ((size_t)(current - begin) < size)
+    {
+        size_t length = strlen(current);
+        char *equal = strchr(current, '=');
+        // an entry with no name, or no '=', is not something we can set
+        if (equal != NULL && equal != current)
+        {
+            // split the entry in place for the call, then put it back
+            *equal = '\0';
+            int result = setenv(current, equal + 1, 1);
+            *equal = '=';
+            if (result == -1)
+            {
+                reportException(Error_System_service_service, "Error restoring environment variable");
             }
         }
-        if (putenv(current) == -1)
-        {
-            reportException(Error_System_service_service, "Error restoring environment variable");
-        }
-        if (del)                            /* if there was an old entry  */
-        {
-            free(del);                       /* free it                    */
-        }
+        current += length + 1;
     }
 }

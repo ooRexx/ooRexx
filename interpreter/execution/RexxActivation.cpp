@@ -4761,15 +4761,12 @@ RexxObject *RexxActivation::popEnvironment()
     // only process if the top level
     if (isTopLevelCall())
     {
-        if (environmentList)
-        {
-            return (RexxObject *)environmentList->pull();
-
-        }
-        else
+        // nothing saved, or every saved environment already restored?
+        if (environmentList == OREF_NULL || environmentList->isEmpty())
         {
             return TheNilObject;
         }
+        return (RexxObject *)environmentList->pull();
     }
     else
     {
