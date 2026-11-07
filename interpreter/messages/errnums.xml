@@ -1403,6 +1403,12 @@ editbin rexx.exe /stack:100000000
 <para>Keyword "<emphasis role="italic">keyword</emphasis>" on ::<emphasis role="italic">directive</emphasis> directive conflicts with "<emphasis role="italic">word</emphasis>".</para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>938</term>
+<listitem>
+<para>FORM must be followed by one of the keywords SCIENTIFIC or ENGINEERING; found "<emphasis role="italic">word</emphasis>".</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 <section id="ERR26">

@@ -1000,9 +1000,10 @@ void LanguageParser::optionsDirective()
                             package->setForm(Numerics::FORM_ENGINEERING);
                             break;
 
-                        // bad keyword
+                        // bad keyword (not Error_Invalid_subkeyword_form, which
+                        // names the NUMERIC instruction)
                         default:
-                            syntaxError(Error_Invalid_subkeyword_form, token);
+                            syntaxError(Error_Invalid_subkeyword_options_form, token);
                             break;
                     }
                     package->setExplicitFormOption();

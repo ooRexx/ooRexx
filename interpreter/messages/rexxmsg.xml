@@ -2012,6 +2012,15 @@ editbin rexx.exe /stack:100000000
         <SymbolicName>Error_Invalid_subkeyword_conflict</SymbolicName>
         <Text>Keyword <q><Sub position="1" name="keyword"/></q> on ::<Sub position="2" name="directive"/> directive conflicts with <q><Sub position="3" name="word"/></q>.</Text>
       </SubMessage>
+      <SubMessage>
+        <Code>25</Code>
+        <Subcode>938</Subcode>
+        <MessageNumber>843</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Invalid_subkeyword_options_form</SymbolicName>
+        <Text>FORM must be followed by one of the keywords SCIENTIFIC or ENGINEERING; found <q><Sub position="1" name="word"/></q>.</Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>
