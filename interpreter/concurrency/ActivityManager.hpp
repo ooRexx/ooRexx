@@ -395,7 +395,7 @@ protected:
     // NOTE: the queue of waiting activities now lives in WaitingActivityQueue above,
     // where it is reachable only while holding the lock that protects it.
     static std::atomic<size_t> waitingAttaches;                  // the count of attaches waiting for access
-    static std::atomic<size_t> waitingAccess;                      // the count of activities waiting for access
+    static std::atomic<size_t> waitingAccess;                      // the count of activities waiting for access (queued or not, see bug #2073)
     static std::atomic<size_t> waitingApiAccess;                   // the count of activities waiting for access for API callbacks.
     static uint64_t          lastLockTime;            // the last time we granted the kernel lock.
 };

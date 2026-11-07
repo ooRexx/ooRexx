@@ -448,7 +448,8 @@ class Activity : public RexxInternalObject
     bool     suspended;                 // the suspension flag
     bool     interpreterRoot;           // This is the root activity for an interpreter instance
     bool     waitingForApiAccess;       // This activity is waiting for access for an API callback
-    bool     waitingForDispatch;        // This activity is in the dispatch queue waiting to be dispatched.
+    bool     waitingForDispatch;        // This activity is waiting for the kernel lock (in addWaitingActivity() or
+                                        // addWaitingApiActivity()), whether or not it is in the dispatch queue.
     bool     waitingOnSemaphore;        // activity is blocked while waiting for any semaphore
     // atomic: read by hasRunPermission() from other threads while the owner
     // clears/sets it -- TSan flags this, and it is the exact crash site.  bug #2074

@@ -239,8 +239,13 @@ void ActivityManager::addWaitingActivity(Activity *waitingAct, bool release )
     waitingAct->clearRunWait();
 
     // if we have a recursive reentry while waiting on either semaphore, we'll need to
-    // know later that this activity is in the dispatch queue so it can be removed from the
-    // queue until the context is unwound.
+    // know later that this activity is waiting for the kernel lock, so that it can be
+    // taken out of the waiters (and out of the dispatch queue, if it is there) until the
+    // context is unwound.  The flag does not mean that the activity is in the queue: it
+    // is set here even when it was not queued above, and so is waitingAccess.  The places
+    // that take this activity out of the queue (suspendDispatch() and the timeout case
+    // below) look for this very activity, so not being there is harmless.
+    // See bug #2073.
     waitingAct->setWaitingForDispatch();
 
     lock.release();                    // release the lock now
@@ -311,9 +316,12 @@ void ActivityManager::addWaitingApiActivity(Activity *waitingAct)
     waitingAccess++;                     // indicate that we are waiting for access
     waitingApiAccess++;                  // indicate that we are waiting on behalf of an API call.
 
-    // if we have a recursive reentry while waiting on either semaphore, we'll need to
-    // know later that this activity is in the dispatch queue so it can be removed from the
-    // queue until the context is unwound.
+    // if we have a recursive reentry while waiting on the kernel semaphore, we'll need to
+    // know later that this activity is waiting for the kernel lock, so that it can be
+    // taken out of the waiters until the context is unwound.  An API waiter is never put
+    // in the dispatch queue: it has priority and goes straight for the kernel lock, so
+    // waitingAccess and waitingApiAccess count it while the queue does not hold it.
+    // See bug #2073.
     waitingAct->setWaitingForDispatch();
 
     // if we have a lock holder currently, ask the RexxActivation to yield immediately.
