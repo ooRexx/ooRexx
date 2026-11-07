@@ -761,6 +761,7 @@
 #define Error_Invalid_subkeyword_duplicate_msg                       841
 #define Error_Invalid_subkeyword_conflict_msg                        842
 #define Error_Invalid_subkeyword_options_form_msg                    843
+#define Error_Variable_reference_use_default_msg                     844
 
 
 #endif

@@ -446,6 +446,7 @@
 #define Rexx_Error_Variable_reference_user_defined                        46900
 #define Rexx_Error_Variable_reference_missing                             46901
 #define Rexx_Error_Variable_reference_use                                 46902
+#define Rexx_Error_Variable_reference_use_default                         46903
 #define Rexx_Error_Unexpected_label                                       47000
 #define Rexx_Error_Unexpected_label_interpret                             47001
 #define Rexx_Error_Unexpected_label_do                                    47002

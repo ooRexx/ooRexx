@@ -450,6 +450,7 @@ ERROR_MESSAGE Message_table[] = {      /* table of major and minor errors   */
     MESSAGE(Error_Variable_reference_user_defined, "&1.")
     MESSAGE(Error_Variable_reference_missing, "Missing \")\" in variable reference.")
     MESSAGE(Error_Variable_reference_use, "Extra token (\"&1\") found in USE ARG variable reference; \",\" or end of instruction expected.")
+    MESSAGE(Error_Variable_reference_use_default, "Extra token (\"&1\") found in USE ARG name; \",\", \"=\" or end of instruction expected.")
     MESSAGE(Error_Unexpected_label, "Unexpected label.")
     MESSAGE(Error_Unexpected_label_interpret, "INTERPRET data must not contain labels; found \"&1\".")
     MESSAGE(Error_Unexpected_label_do, "Labels are not allowed within a DO/LOOP block; found \"&1\".")

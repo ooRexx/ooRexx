@@ -3834,6 +3834,15 @@ Say Enter A, B, or C
         <SymbolicName>Error_Variable_reference_use</SymbolicName>
         <Text>Extra token (<q><Sub position="1" name="token"/></q>) found in USE ARG variable reference; <q>,</q> or end of instruction expected.</Text>
       </SubMessage>
+      <SubMessage>
+        <Code>46</Code>
+        <Subcode>903</Subcode>
+        <MessageNumber>844</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Variable_reference_use_default</SymbolicName>
+        <Text>Extra token (<q><Sub position="1" name="token"/></q>) found in USE ARG name; <q>,</q>, <q>=</q> or end of instruction expected.</Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>

@@ -449,6 +449,7 @@ ERROR_MAP Message_map_table[] = {     /* table of major and minor errors   */
       MINOR(Error_Variable_reference_user_defined)
       MINOR(Error_Variable_reference_missing)
       MINOR(Error_Variable_reference_use)
+      MINOR(Error_Variable_reference_use_default)
   MAJOR(Error_Unexpected_label)
       MINOR(Error_Unexpected_label_interpret)
       MINOR(Error_Unexpected_label_do)

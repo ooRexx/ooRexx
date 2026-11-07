@@ -4446,7 +4446,7 @@ RexxInstruction *LanguageParser::useNew()
             else
             {
                 // if not an assignment, this needs to be a comma.
-                syntaxError(Error_Variable_reference_use, token);
+                syntaxError(Error_Variable_reference_use_default, token);
             }
         }
     }

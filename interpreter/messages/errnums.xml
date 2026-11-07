@@ -2745,6 +2745,12 @@ Say Enter A, B, or C
 <para>Extra token ("<emphasis role="italic">token</emphasis>") found in USE ARG variable reference; "," or end of instruction expected.</para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>903</term>
+<listitem>
+<para>Extra token ("<emphasis role="italic">token</emphasis>") found in USE ARG name; ",", "=" or end of instruction expected.</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 <section id="ERR47">
