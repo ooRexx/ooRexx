@@ -47,6 +47,7 @@
 #ifndef RexxInterpreter_Included
 #define RexxInterpreter_Included
 
+#include <atomic>
 #include "RexxCore.h"
 #include "SysSemaphore.hpp"
 
@@ -74,8 +75,12 @@ public:
 
     static inline bool getResourceLock() { return resourceLock().request(); }
     static inline void releaseResourceLock() { resourceLock().release(); }
+    static inline bool getStartupLock() { return startupLock().request(); }
+    static inline void releaseStartupLock() { startupLock().release(); }
     static inline void createLocks()
     {
+        // held for the whole bootstrap, so not a critical-time lock
+        startupLock().create();
         // this is a critical-time lock, which involves special processing on Windows
         resourceLock().create(true);
     }
@@ -83,13 +88,14 @@ public:
     static inline void closeLocks()
     {
         resourceLock().close();
+        startupLock().close();
     }
 
     static int createInstance(RexxInstance *&instance, RexxThreadContext *&threadContext, RexxOption *options);
     static bool terminateInterpreter();
     static void startInterpreter(InterpreterStartupMode mode, const char *imageTarget);
-    static inline bool isTerminated() { return !active; }
-    static inline bool isActive() { return active; }
+    static inline bool isTerminated() { return !active.load(std::memory_order_acquire); }
+    static inline bool isActive() { return active.load(std::memory_order_acquire); }
     static bool lastInstance();
     static InterpreterInstance *createInterpreterInstance(RexxOption *options);
     static inline InterpreterInstance *createInterpreterInstance() { return createInterpreterInstance(NULL); }
@@ -134,6 +140,11 @@ protected:
     // IMPORTANT NOTE: To avoid deadlocks, never request the kernel lock while holding the resourceLock,
     // otherwise deadlocks are possible. It is permissible to request the resource lock while holding the
     // kernel lock, but this ordering must be strictly observed.
+    // The startup lock comes before both: it serializes the one-time bootstrap in
+    // startInterpreter(), which needs the kernel lock to create the local server, so it
+    // is taken first (startup lock, then kernel lock, then resource lock) and is never
+    // requested while holding the kernel lock or the resource lock.  See bug #2079.
+    static SysMutex &startupLock();   // serializes interpreter startup
     // NOTE: this is a function returning a reference to a function-local static, not
     // a namespace-scope object.  See the definition in Interpreter.cpp for why (bug #2078).
     static SysMutex &resourceLock();  // use to lock resources accessed outside of kernel global lock
@@ -141,10 +152,36 @@ protected:
     // which is the only thing that can reach the queue it protects.
     static int    initializations;   // indicates whether we're terminated or not
     static QueueClass *interpreterInstances;  // the set of interpreter instances
-    static bool   active;            // indicates whether the interpreter is initialized
+    static std::atomic<bool> active; // indicates whether the interpreter is initialized
     static RexxString *versionNumber;  // our version number information
 
     static char *languageLevel;       // the language level of this interpreter
+};
+
+
+/**
+ * Block control for the startup lock.  See bug #2079.
+ */
+class StartupSection
+{
+public:
+    inline StartupSection()
+    {
+        // as with ResourceSection, never unlock what was not acquired (bug #2071)
+        acquired = Interpreter::getStartupLock();
+    }
+
+    inline ~StartupSection()
+    {
+        if (acquired)
+        {
+            Interpreter::releaseStartupLock();
+        }
+    }
+
+private:
+
+    bool acquired;
 };
 
 

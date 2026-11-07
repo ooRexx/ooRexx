@@ -82,13 +82,25 @@ SysMutex &Interpreter::resourceLock()
     return theLock;
 }
 
+
+/**
+ * The startup lock, which serializes the one-time bootstrap in
+ * startInterpreter().  A function-local static for the same reason as the
+ * resource lock (bug #2078).  See bug #2079.
+ */
+SysMutex &Interpreter::startupLock()
+{
+    static SysMutex theLock;
+    return theLock;
+}
+
 QueueClass *Interpreter::interpreterInstances = OREF_NULL;
 
 // the local server object
 RexxObject *Interpreter::localServer = OREF_NULL;
 
 // the interpreter active state flag
-bool Interpreter::active = false;
+std::atomic<bool> Interpreter::active(false);
 
 // the interpreter languageLevel as a string
 char *Interpreter::languageLevel=NULL;  // set by getLanguageLevelString(), originally in Version.cpp
@@ -183,7 +195,10 @@ void Interpreter::processShutdown()
  */
 void Interpreter::startInterpreter(InterpreterStartupMode mode, const char *imageTarget)
 {
-    ResourceSection lock;
+    // The bootstrap is serialized by the startup lock, not by the resource lock:
+    // creating the local server below needs the kernel lock, and the kernel lock
+    // must never be requested while holding the resource lock.  See bug #2079.
+    StartupSection startup;
 
     // has everything been shutdown?
     if (!isActive())
@@ -194,7 +209,10 @@ void Interpreter::startInterpreter(InterpreterStartupMode mode, const char *imag
         memoryObject.initialize(mode == RUN_MODE, imageTarget);
         RexxCreateSessionQueue();
         // create our instances list
-        interpreterInstances = new_queue();
+        {
+            ResourceSection lock;
+            interpreterInstances = new_queue();
+        }
         // if we have a local server created already, don't recurse.
         if (localServer == OREF_NULL)
         {
@@ -218,7 +236,7 @@ void Interpreter::startInterpreter(InterpreterStartupMode mode, const char *imag
         }
     }
     // we're live now
-    active = true;
+    active.store(true, std::memory_order_release);
 }
 
 
@@ -363,11 +381,15 @@ InterpreterInstance *Interpreter::createInterpreterInstance(RexxOption *options)
     // We need to ensure that the interpreter is initialized before we create an
     // interpreter instance.  There are some nasty recursion problems that can result,
     // so this needs to be done carefully and the initialization needs to be protected by
-    // the resource lock during the entire process.
+    // the startup lock during the entire process.  Once the interpreter is active this
+    // is skipped without taking the lock, so the startup lock is never requested by a
+    // thread that holds the kernel lock (bug #2079).
+    if (!isActive())
     {
-        ResourceSection lock;
+        StartupSection startup;
         // if our instances list has not been created yet, then the memory subsystem has not
-        // been created yet.  Keep the lock during the entire process.
+        // been created yet.  Keep the lock during the entire process.  (During the bootstrap
+        // the list already exists, and this thread already holds the startup lock.)
         if (interpreterInstances == OREF_NULL)
         {
             startInterpreter(RUN_MODE, NULL);
