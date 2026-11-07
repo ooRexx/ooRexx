@@ -256,6 +256,8 @@ ERROR_MAP Message_map_table[] = {     /* table of major and minor errors   */
       MINOR(Error_Invalid_subkeyword_address_with_io_option)
       MINOR(Error_Invalid_subkeyword_address_with_option)
       MINOR(Error_Invalid_subkeyword_numeric_subdirective)
+      MINOR(Error_Invalid_subkeyword_duplicate)
+      MINOR(Error_Invalid_subkeyword_conflict)
   MAJOR(Error_Invalid_whole_number)
       MINOR(Error_Invalid_whole_number_repeat)
       MINOR(Error_Invalid_whole_number_for)

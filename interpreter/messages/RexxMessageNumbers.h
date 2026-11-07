@@ -758,6 +758,8 @@
 #define Error_Execution_circular_requires_msg                        838
 #define Error_Symbol_expected_numeric_subdirective_msg               839
 #define Error_Invalid_subkeyword_numeric_subdirective_msg            840
+#define Error_Invalid_subkeyword_duplicate_msg                       841
+#define Error_Invalid_subkeyword_conflict_msg                        842
 
 
 #endif

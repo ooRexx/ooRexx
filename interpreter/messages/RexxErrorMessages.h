@@ -257,6 +257,8 @@ ERROR_MESSAGE Message_table[] = {      /* table of major and minor errors   */
     MESSAGE(Error_Invalid_subkeyword_address_with_io_option, "Acceptable ADDRESS WITH I/O types are NORMAL, STEM, STREAM, and USING; found \"&1\".")
     MESSAGE(Error_Invalid_subkeyword_address_with_option, "WITH must be followed by one of the keywords INPUT, OUTPUT, or ERROR; found \"&1\".")
     MESSAGE(Error_Invalid_subkeyword_numeric_subdirective, "Subdirective NUMERIC must be followed by one of the keywords INHERIT or NOINHERIT; found \"&1\".")
+    MESSAGE(Error_Invalid_subkeyword_duplicate, "Duplicate keyword on ::&1 directive; found \"&2\".")
+    MESSAGE(Error_Invalid_subkeyword_conflict, "Keyword \"&1\" on ::&2 directive conflicts with \"&3\".")
     MESSAGE(Error_Invalid_whole_number, "Invalid whole number.")
     MESSAGE(Error_Invalid_whole_number_repeat, "Value of repetition count expression in DO or LOOP instruction must be zero or a positive whole number; found \"&1\".")
     MESSAGE(Error_Invalid_whole_number_for, "Value of FOR expression in DO or LOOP instruction must be zero or a positive whole number; found \"&1\".")

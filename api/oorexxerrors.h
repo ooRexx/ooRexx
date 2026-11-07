@@ -253,6 +253,8 @@
 #define Rexx_Error_Invalid_subkeyword_address_with_io_option              25933
 #define Rexx_Error_Invalid_subkeyword_address_with_option                 25934
 #define Rexx_Error_Invalid_subkeyword_numeric_subdirective                25935
+#define Rexx_Error_Invalid_subkeyword_duplicate                           25936
+#define Rexx_Error_Invalid_subkeyword_conflict                            25937
 #define Rexx_Error_Invalid_whole_number                                   26000
 #define Rexx_Error_Invalid_whole_number_repeat                            26002
 #define Rexx_Error_Invalid_whole_number_for                               26003

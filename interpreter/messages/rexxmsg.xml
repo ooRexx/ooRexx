@@ -1994,6 +1994,24 @@ editbin rexx.exe /stack:100000000
         <SymbolicName>Error_Invalid_subkeyword_numeric_subdirective</SymbolicName>
         <Text>Subdirective NUMERIC must be followed by one of the keywords INHERIT or NOINHERIT; found <q><Sub position="1" name="word"/></q>.</Text>
       </SubMessage>
+      <SubMessage>
+        <Code>25</Code>
+        <Subcode>936</Subcode>
+        <MessageNumber>841</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Invalid_subkeyword_duplicate</SymbolicName>
+        <Text>Duplicate keyword on ::<Sub position="1" name="directive"/> directive; found <q><Sub position="2" name="keyword"/></q>.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>25</Code>
+        <Subcode>937</Subcode>
+        <MessageNumber>842</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Invalid_subkeyword_conflict</SymbolicName>
+        <Text>Keyword <q><Sub position="1" name="keyword"/></q> on ::<Sub position="2" name="directive"/> directive conflicts with <q><Sub position="3" name="word"/></q>.</Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>

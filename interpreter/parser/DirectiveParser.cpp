@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2025 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2026 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -329,10 +329,40 @@ ClassResolver *LanguageParser::parseClassReference(RexxErrorCodes error)
 
 
 /**
+ * Check an option keyword of a directive against the keyword already given
+ * for the same option, if any: a second one is a duplicate if it is the same
+ * keyword, and a conflict if it is another one (bug #2048).
+ *
+ * @param directive The directive name, without the colons.
+ * @param previous  The keyword given before for this option, or OREF_NULL;
+ *                  set to the new keyword.
+ * @param token     The keyword being processed.
+ */
+void LanguageParser::checkSubkeyword(const char *directive, RexxToken *&previous, RexxToken *token)
+{
+    if (previous != OREF_NULL)
+    {
+        if (previous->subDirective() == token->subDirective())
+        {
+            syntaxError(Error_Invalid_subkeyword_duplicate, new_string(directive), token->value());
+        }
+        syntaxError(Error_Invalid_subkeyword_conflict, token->value(), new_string(directive), previous->value());
+    }
+    previous = token;
+}
+
+
+/**
  * Process a ::CLASS directive for a source file.
  */
 void LanguageParser::classDirective()
 {
+    // the option keywords seen so far, to diagnose duplicates and conflicts
+    RexxToken *abstractKeyword = OREF_NULL;
+    RexxToken *accessKeyword = OREF_NULL;
+    RexxToken *metaclassKeyword = OREF_NULL;
+    RexxToken *subclassKeyword = OREF_NULL;
+
     // first token is the name, which must be a symbol or string name
     RexxToken *token = nextReal();
     if (!token->isSymbolOrLiteral())
@@ -395,10 +425,7 @@ void LanguageParser::classDirective()
                 // ::CLASS name METACLASS metaclass
                 case SUBDIRECTIVE_METACLASS:
                     // can't be a duplicate keyword
-                    if (activeClass->getMetaClass() != OREF_NULL)
-                    {
-                        syntaxError(Error_Invalid_subkeyword_class, token);
-                    }
+                    checkSubkeyword("CLASS", metaclassKeyword, token);
 
                     // parse off the class name and set in the directive
                     activeClass->setMetaClass(parseClassReference(Error_Symbol_or_string_metaclass));
@@ -407,10 +434,7 @@ void LanguageParser::classDirective()
                 // ::CLASS name PUBLIC
                 case SUBDIRECTIVE_PUBLIC:
                     // have we already seen an ACCESS flag?  This is an error
-                    if (accessFlag != DEFAULT_ACCESS_SCOPE)
-                    {
-                        syntaxError(Error_Invalid_subkeyword_class, token);
-                    }
+                    checkSubkeyword("CLASS", accessKeyword, token);
                     accessFlag = PUBLIC_SCOPE;
                     // set the access in the active class.
                     activeClass->setPublic();
@@ -418,10 +442,7 @@ void LanguageParser::classDirective()
 
                 // ::CLASS name PRIVATE
                 case SUBDIRECTIVE_PRIVATE:
-                    if (accessFlag != DEFAULT_ACCESS_SCOPE)
-                    {
-                        syntaxError(Error_Invalid_subkeyword_class, token);
-                    }
+                    checkSubkeyword("CLASS", accessKeyword, token);
                     accessFlag = PRIVATE_SCOPE;
 
                     // don't need to set anything in the directive...this is the default
@@ -430,10 +451,7 @@ void LanguageParser::classDirective()
                 // ::CLASS name SUBCLASS sub
                 case SUBDIRECTIVE_SUBCLASS:
                     // If we have a subclass set already, this is an error
-                    if (activeClass->getSubClass() != OREF_NULL)
-                    {
-                        syntaxError(Error_Invalid_subkeyword_class, token);
-                    }
+                    checkSubkeyword("CLASS", subclassKeyword, token);
 
                     // parse off the class name and set in the directive
                     activeClass->setSubClass(parseClassReference(Error_Symbol_or_string_subclass));
@@ -443,10 +461,7 @@ void LanguageParser::classDirective()
                 case SUBDIRECTIVE_MIXINCLASS:
                     // If we have a subclass set already, this is an error
                     // NOTE:  setting a mixin class also defines the subclass...
-                    if (activeClass->getSubClass() != OREF_NULL)
-                    {
-                        syntaxError(Error_Invalid_subkeyword_class, token);
-                    }
+                    checkSubkeyword("CLASS", subclassKeyword, token);
 
                     // parse off the class name and set in the directive
                     activeClass->setMixinClass(parseClassReference(Error_Symbol_or_string_mixinclass));
@@ -476,10 +491,7 @@ void LanguageParser::classDirective()
                 // ::CLASS name ABSTRACT
                 case SUBDIRECTIVE_ABSTRACT:
                     // already been specified?  this is an error
-                    if (activeClass->isAbstract())
-                    {
-                        syntaxError(Error_Invalid_subkeyword_class, token);
-                    }
+                    checkSubkeyword("CLASS", abstractKeyword, token);
 
                     // mark this as abstract
                     activeClass->setAbstract();
@@ -628,6 +640,14 @@ void LanguageParser::addMethod(RexxString *name, MethodClass *method, bool class
  */
 void LanguageParser::methodDirective()
 {
+    // the option keywords seen so far, to diagnose duplicates and conflicts
+    RexxToken *accessKeyword = OREF_NULL;
+    RexxToken *attributeKeyword = OREF_NULL;
+    RexxToken *classKeyword = OREF_NULL;
+    RexxToken *guardKeyword = OREF_NULL;
+    RexxToken *kindKeyword = OREF_NULL;
+    RexxToken *protectedKeyword = OREF_NULL;
+
     // set default modifiers
     AccessFlag accessFlag = DEFAULT_ACCESS_SCOPE;
     ProtectedFlag protectedFlag = DEFAULT_PROTECTION;
@@ -673,20 +693,14 @@ void LanguageParser::methodDirective()
                 // ::METHOD name CLASS
                 case SUBDIRECTIVE_CLASS:
                     // no dups
-                    if (isClass)
-                    {
-                        syntaxError(Error_Invalid_subkeyword_method, token);
-                    }
+                    checkSubkeyword("METHOD", classKeyword, token);
                     isClass = true;
                     break;
 
                 // ::METHOD name EXTERNAL extname
                 case SUBDIRECTIVE_EXTERNAL:
                     // no dup on external and abstract is mutually exclusive
-                    if (externalname != OREF_NULL || delegateName != OREF_NULL || isAbstract)
-                    {
-                        syntaxError(Error_Invalid_subkeyword_method, token);
-                    }
+                    checkSubkeyword("METHOD", kindKeyword, token);
                     token = nextReal();
                     // external name must be a string value
                     if (!token->isLiteral())
@@ -700,30 +714,21 @@ void LanguageParser::methodDirective()
                 // ::METHOD name PRIVATE
                 case SUBDIRECTIVE_PRIVATE:
                     // has an access flag already been specified?
-                    if (accessFlag != DEFAULT_ACCESS_SCOPE)
-                    {
-                        syntaxError(Error_Invalid_subkeyword_method, token);
-                    }
+                    checkSubkeyword("METHOD", accessKeyword, token);
                     accessFlag = PRIVATE_SCOPE;
                     break;
 
                 // ::METHOD name PACKAGE
                 case SUBDIRECTIVE_PACKAGE:
                     // has an access flag already been specified?
-                    if (accessFlag != DEFAULT_ACCESS_SCOPE)
-                    {
-                        syntaxError(Error_Invalid_subkeyword_method, token);
-                    }
+                    checkSubkeyword("METHOD", accessKeyword, token);
                     accessFlag = PACKAGE_SCOPE;
                     break;
 
                 // ::METHOD name PUBLIC
                 case SUBDIRECTIVE_PUBLIC:
                     // has an access flag already been specified?
-                    if (accessFlag != DEFAULT_ACCESS_SCOPE)
-                    {
-                        syntaxError(Error_Invalid_subkeyword_method, token);
-                    }
+                    checkSubkeyword("METHOD", accessKeyword, token);
 
                     accessFlag = PUBLIC_SCOPE;
                     break;
@@ -731,30 +736,21 @@ void LanguageParser::methodDirective()
                 // ::METHOD name PROTECTED
                 case SUBDIRECTIVE_PROTECTED:
                     // had a protection flag specified already?
-                    if (protectedFlag != DEFAULT_PROTECTION)
-                    {
-                        syntaxError(Error_Invalid_subkeyword_method, token);
-                    }
+                    checkSubkeyword("METHOD", protectedKeyword, token);
                     protectedFlag = PROTECTED_METHOD;
                     break;
 
                 // ::METHOD name UNPROTECTED
                 case SUBDIRECTIVE_UNPROTECTED:
                     // had a protection flag specified already?
-                    if (protectedFlag != DEFAULT_PROTECTION)
-                    {
-                        syntaxError(Error_Invalid_subkeyword_method, token);
-                    }
+                    checkSubkeyword("METHOD", protectedKeyword, token);
                     protectedFlag = UNPROTECTED_METHOD;
                     break;
 
                 // ::METHOD name UNGUARDED
                 case SUBDIRECTIVE_UNGUARDED:
                     // already had a guard specification?
-                    if (guardFlag != DEFAULT_GUARD)
-                    {
-                        syntaxError(Error_Invalid_subkeyword_method, token);
-                    }
+                    checkSubkeyword("METHOD", guardKeyword, token);
 
                     guardFlag = UNGUARDED_METHOD;
                     break;
@@ -762,10 +758,7 @@ void LanguageParser::methodDirective()
                 // ::METHOD name GUARDED
                 case SUBDIRECTIVE_GUARDED:
                     // already had a guard specification?
-                    if (guardFlag != DEFAULT_GUARD)
-                    {
-                        syntaxError(Error_Invalid_subkeyword_method, token);
-                    }
+                    checkSubkeyword("METHOD", guardKeyword, token);
 
                     guardFlag = GUARDED_METHOD;
                     break;
@@ -773,10 +766,7 @@ void LanguageParser::methodDirective()
                 // ::METHOD name ATTRIBUTE
                 case SUBDIRECTIVE_ATTRIBUTE:
                     // check for duplicates
-                    if (isAttribute)
-                    {
-                        syntaxError(Error_Invalid_subkeyword_method, token);
-                    }
+                    checkSubkeyword("METHOD", attributeKeyword, token);
 
                     isAttribute = true;
                     break;
@@ -784,10 +774,7 @@ void LanguageParser::methodDirective()
                 // ::METHOD name ABSTRACT
                 case SUBDIRECTIVE_ABSTRACT:
                     // can't have dups or external name or be a delegate
-                    if (isAbstract || externalname != OREF_NULL || delegateName != OREF_NULL)
-                    {
-                        syntaxError(Error_Invalid_subkeyword_method, token);
-                    }
+                    checkSubkeyword("METHOD", kindKeyword, token);
 
                     isAbstract = true;
                     break;
@@ -795,10 +782,7 @@ void LanguageParser::methodDirective()
                 // ::METHOD name DELEGATE property
                 case SUBDIRECTIVE_DELEGATE:
                     // no dup on external and abstract is mutually exclusive
-                    if (externalname != OREF_NULL || delegateName != OREF_NULL || isAbstract)
-                    {
-                        syntaxError(Error_Invalid_subkeyword_method, token);
-                    }
+                    checkSubkeyword("METHOD", kindKeyword, token);
 
                     token = nextReal();
                     // delegate name must be a symbol
@@ -1456,6 +1440,14 @@ typedef enum
  */
 void LanguageParser::attributeDirective()
 {
+    // the option keywords seen so far, to diagnose duplicates and conflicts
+    RexxToken *accessKeyword = OREF_NULL;
+    RexxToken *classKeyword = OREF_NULL;
+    RexxToken *guardKeyword = OREF_NULL;
+    RexxToken *kindKeyword = OREF_NULL;
+    RexxToken *protectedKeyword = OREF_NULL;
+    RexxToken *styleKeyword = OREF_NULL;
+
     // set the default attributes
     AccessFlag accessFlag = DEFAULT_ACCESS_SCOPE;
     ProtectedFlag  protectedFlag = DEFAULT_PROTECTION;
@@ -1499,20 +1491,14 @@ void LanguageParser::attributeDirective()
                 // GET define this as a attribute get method
                 case SUBDIRECTIVE_GET:
                     // only one per customer
-                    if (style != ATTRIBUTE_BOTH)
-                    {
-                        syntaxError(Error_Invalid_subkeyword_attribute, token);
-                    }
+                    checkSubkeyword("ATTRIBUTE", styleKeyword, token);
                     style = ATTRIBUTE_GET;
                     break;
 
                 // SET create an attribute assignment method
                 case SUBDIRECTIVE_SET:
                     // only one of GET/SET allowed
-                    if (style != ATTRIBUTE_BOTH)
-                    {
-                        syntaxError(Error_Invalid_subkeyword_attribute, token);
-                    }
+                    checkSubkeyword("ATTRIBUTE", styleKeyword, token);
                     style = ATTRIBUTE_SET;
                     break;
 
@@ -1520,88 +1506,61 @@ void LanguageParser::attributeDirective()
                 // ::ATTRIBUTE name CLASS  creating class methods
                 case SUBDIRECTIVE_CLASS:
                     // no dups allowed
-                    if (isClass)
-                    {
-                        syntaxError(Error_Invalid_subkeyword_attribute, token);
-                    }
+                    checkSubkeyword("ATTRIBUTE", classKeyword, token);
                     isClass = true;
                     break;
 
                 // private access?
                 case SUBDIRECTIVE_PRIVATE:
                     // can have just one of PUBLIC or PRIVATE
-                    if (accessFlag != DEFAULT_ACCESS_SCOPE)
-                    {
-                        syntaxError(Error_Invalid_subkeyword_attribute, token);
-                    }
+                    checkSubkeyword("ATTRIBUTE", accessKeyword, token);
                     accessFlag = PRIVATE_SCOPE;
                     break;
 
                 // define with public access (the default)
                 case SUBDIRECTIVE_PUBLIC:
                     // must be first access specifier
-                    if (accessFlag != DEFAULT_ACCESS_SCOPE)
-                    {
-                        syntaxError(Error_Invalid_subkeyword_attribute, token);
-                    }
+                    checkSubkeyword("ATTRIBUTE", accessKeyword, token);
                     accessFlag = PUBLIC_SCOPE;
                     break;
 
                 // define with package access
                 case SUBDIRECTIVE_PACKAGE:
                     // must be first access specifier
-                    if (accessFlag != DEFAULT_ACCESS_SCOPE)
-                    {
-                        syntaxError(Error_Invalid_subkeyword_attribute, token);
-                    }
+                    checkSubkeyword("ATTRIBUTE", accessKeyword, token);
                     accessFlag = PACKAGE_SCOPE;
                     break;
 
                 // ::METHOD name PROTECTED
                 case SUBDIRECTIVE_PROTECTED:
                     // only one of PROTECTED UNPROTECTED
-                    if (protectedFlag != DEFAULT_PROTECTION)
-                    {
-                        syntaxError(Error_Invalid_subkeyword_attribute, token);
-                    }
+                    checkSubkeyword("ATTRIBUTE", protectedKeyword, token);
                     protectedFlag = PROTECTED_METHOD;
                     break;
 
                 // unprotected method (the default)
                 case SUBDIRECTIVE_UNPROTECTED:
                     // only one of PROTECTED UNPROTECTED
-                    if (protectedFlag != DEFAULT_PROTECTION)
-                    {
-                        syntaxError(Error_Invalid_subkeyword_attribute, token);
-                    }
+                    checkSubkeyword("ATTRIBUTE", protectedKeyword, token);
                     protectedFlag = UNPROTECTED_METHOD;
                     break;
 
                 // unguarded access to an object
                 case SUBDIRECTIVE_UNGUARDED:
-                    if (guardFlag != DEFAULT_GUARD)
-                    {
-                        syntaxError(Error_Invalid_subkeyword_attribute, token);
-                    }
+                    checkSubkeyword("ATTRIBUTE", guardKeyword, token);
                     guardFlag = UNGUARDED_METHOD;
                     break;
 
                 // guarded access to a method (the default)
                 case SUBDIRECTIVE_GUARDED:
-                    if (guardFlag != DEFAULT_GUARD)
-                    {
-                        syntaxError(Error_Invalid_subkeyword_attribute, token);
-                    }
+                    checkSubkeyword("ATTRIBUTE", guardKeyword, token);
                     guardFlag = GUARDED_METHOD;
                     break;
 
                 // external attributes?
                 case SUBDIRECTIVE_EXTERNAL:
                     // can't be abstract and external
-                    if (externalname != OREF_NULL || delegateName != OREF_NULL || isAbstract)
-                    {
-                        syntaxError(Error_Invalid_subkeyword_attribute, token);
-                    }
+                    checkSubkeyword("ATTRIBUTE", kindKeyword, token);
 
                     // the external specifier must be a string
                     token = nextReal();
@@ -1616,20 +1575,14 @@ void LanguageParser::attributeDirective()
                 // abstract method
                 case SUBDIRECTIVE_ABSTRACT:
                     // abstract and external conflict
-                    if (isAbstract || externalname != OREF_NULL || delegateName != OREF_NULL)
-                    {
-                        syntaxError(Error_Invalid_subkeyword_attribute, token);
-                    }
+                    checkSubkeyword("ATTRIBUTE", kindKeyword, token);
                     isAbstract = true;
                     break;
 
                 // ::ATTRIBUTE name DELEGATE target property
                 case SUBDIRECTIVE_DELEGATE:
                     // no dup on external and abstract is mutually exclusive
-                    if (externalname != OREF_NULL || delegateName != OREF_NULL || isAbstract)
-                    {
-                        syntaxError(Error_Invalid_subkeyword_attribute, token);
-                    }
+                    checkSubkeyword("ATTRIBUTE", kindKeyword, token);
 
                     token = nextReal();
                     // delegate name must be a symbol
@@ -2564,6 +2517,10 @@ void LanguageParser::createConstantGetterMethod(RexxString *name, RexxObject *va
  */
 void LanguageParser::routineDirective()
 {
+    // the option keywords seen so far, to diagnose duplicates and conflicts
+    RexxToken *accessKeyword = OREF_NULL;
+    RexxToken *externalKeyword = OREF_NULL;
+
     // must start with a name token
     RexxToken *token = nextReal();
 
@@ -2601,10 +2558,7 @@ void LanguageParser::routineDirective()
         {
             // written in native code backed by an external library
             case SUBDIRECTIVE_EXTERNAL:
-                if (externalname != OREF_NULL)
-                {
-                    syntaxError(Error_Invalid_subkeyword_class, token);
-                }
+                checkSubkeyword("ROUTINE", externalKeyword, token);
                 token = nextReal();
                 // this is a compound string descriptor, so it must be a literal
                 if (!token->isLiteral())
@@ -2617,20 +2571,13 @@ void LanguageParser::routineDirective()
 
             // publicly available to programs that require this
             case SUBDIRECTIVE_PUBLIC:
-                if (accessFlag != DEFAULT_ACCESS_SCOPE)
-                {
-                    syntaxError(Error_Invalid_subkeyword_routine, token);
-
-                }
+                checkSubkeyword("ROUTINE", accessKeyword, token);
                 accessFlag = PUBLIC_SCOPE;
                 break;
 
             // this has private scope (the default)
             case SUBDIRECTIVE_PRIVATE:
-                if (accessFlag != DEFAULT_ACCESS_SCOPE)
-                {
-                    syntaxError(Error_Invalid_subkeyword_routine, token);
-                }
+                checkSubkeyword("ROUTINE", accessKeyword, token);
                 accessFlag = PRIVATE_SCOPE;
                 break;
 
@@ -2778,6 +2725,9 @@ void LanguageParser::routineDirective()
  */
 void LanguageParser::requiresDirective()
 {
+    // the option keywords seen so far, to diagnose duplicates and conflicts
+    RexxToken *kindKeyword = OREF_NULL;
+
     bool isLibrary = false;
     RexxString *namespaceName = OREF_NULL;
 
@@ -2809,10 +2759,7 @@ void LanguageParser::requiresDirective()
             case SUBDIRECTIVE_NAMESPACE:
             {
                 // can only have one of these and cannot have this with the LIBRARY option
-                if (isLibrary || namespaceName != OREF_NULL)
-                {
-                    syntaxError(Error_Invalid_subkeyword_requires, token);
-                }
+                checkSubkeyword("REQUIRES", kindKeyword, token);
                 // get the label token
                 token = nextReal();
                 if (!token->isSymbol())
@@ -2839,10 +2786,7 @@ void LanguageParser::requiresDirective()
                 // the LABEL keyword is not allowed on a LIBRARY requires.
                 // this might have some meaning eventually for resolving
                 // external routines, but for now, this is a restriction.
-                if (isLibrary || namespaceName != OREF_NULL)
-                {
-                    syntaxError(Error_Invalid_subkeyword_requires, token);
-                }
+                checkSubkeyword("REQUIRES", kindKeyword, token);
                 isLibrary = true;
                 break;
             }
