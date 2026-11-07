@@ -92,20 +92,26 @@ void MemoryObject::buildVirtualFunctionTable()
 
     void *objectLoc = objectBuffer;
     // instantiate an instance of each class into the buffer and
-    // grab the resulting virtual function table
+    // grab the resulting virtual function table.  A RESTOREIMAGE
+    // constructor may write more than the vtable pointer (a member
+    // with a non-trivial default constructor does), and the buffer
+    // has no check of its own, so each class is checked to fit.
    </xsl:text>
 
    <xsl:for-each select="Exported/Class">
    <xsl:text>
+   static_assert(sizeof(</xsl:text><xsl:value-of select="@class"/><xsl:text>) &lt;= sizeof(objectBuffer), "objectBuffer is too small for </xsl:text><xsl:value-of select="@class"/><xsl:text>");
    objectPtr = ::new (objectLoc) </xsl:text><xsl:value-of select="@class"/><xsl:text>(RESTOREIMAGE);
    virtualFunctionTable[T_</xsl:text><xsl:value-of select="@id"/><xsl:text>] = getVftPointer(objectLoc);
    </xsl:text>
    <xsl:if test="@classclass">
    <xsl:text>
+   static_assert(sizeof(</xsl:text><xsl:value-of select="@classclass"/><xsl:text>) &lt;= sizeof(objectBuffer), "objectBuffer is too small for </xsl:text><xsl:value-of select="@classclass"/><xsl:text>");
    objectPtr = ::new (objectLoc) </xsl:text><xsl:value-of select="@classclass"/><xsl:text>(RESTOREIMAGE);</xsl:text>
    </xsl:if>
    <xsl:if test="not(@classclass)">
    <xsl:text>
+   static_assert(sizeof(RexxClass) &lt;= sizeof(objectBuffer), "objectBuffer is too small for RexxClass");
    objectPtr = ::new (objectLoc) RexxClass(RESTOREIMAGE);</xsl:text>
    </xsl:if>
    <xsl:text>
@@ -116,6 +122,7 @@ void MemoryObject::buildVirtualFunctionTable()
 
    <xsl:for-each select="Internal/Class">
    <xsl:text>
+   static_assert(sizeof(</xsl:text><xsl:value-of select="@class"/><xsl:text>) &lt;= sizeof(objectBuffer), "objectBuffer is too small for </xsl:text><xsl:value-of select="@class"/><xsl:text>");
    objectPtr = ::new (objectLoc) </xsl:text><xsl:value-of select="@class"/><xsl:text>(RESTOREIMAGE);
    virtualFunctionTable[T_</xsl:text><xsl:value-of select="@id"/><xsl:text>] = getVftPointer(objectLoc);
    </xsl:text>
@@ -124,12 +131,14 @@ void MemoryObject::buildVirtualFunctionTable()
    <xsl:for-each select="Transient/Class">
    <xsl:if test="@objectvirtual">
    <xsl:text>
+   static_assert(sizeof(RexxObject) &lt;= sizeof(objectBuffer), "objectBuffer is too small for RexxObject");
    objectPtr = ::new (objectLoc) RexxObject(RESTOREIMAGE);
    virtualFunctionTable[T_</xsl:text><xsl:value-of select="@id"/><xsl:text>] = getVftPointer(objectLoc);
    </xsl:text>
    </xsl:if>
    <xsl:if test="not(@objectvirtual)">
    <xsl:text>
+   static_assert(sizeof(</xsl:text><xsl:value-of select="@class"/><xsl:text>) &lt;= sizeof(objectBuffer), "objectBuffer is too small for </xsl:text><xsl:value-of select="@class"/><xsl:text>");
    objectPtr = ::new (objectLoc) </xsl:text><xsl:value-of select="@class"/><xsl:text>(RESTOREIMAGE);
    virtualFunctionTable[T_</xsl:text><xsl:value-of select="@id"/><xsl:text>] = getVftPointer(objectLoc);
    </xsl:text>
