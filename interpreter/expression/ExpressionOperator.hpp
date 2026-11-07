@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2026 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -61,10 +61,15 @@ class RexxExpressionOperator : public RexxInternalObject
     inline const char *operatorName() { return operatorNames[oper]; }
 
 protected:
+    // how often a chain checks the C stack space while being evaluated: a
+    // few dozen evaluate() frames fit easily in the error recovery margin
+    static const uint32_t StackCheckInterval = 32;
+
     // table of operator names
     static const char *operatorNames[];
 
     TokenSubclass  oper;                 // operation to perform
+    uint32_t chainLength;                // operators in the chain along left_term, this one included
     RexxInternalObject *right_term;      // right term of the operator
     RexxInternalObject *left_term;       // left term of the operator
 };

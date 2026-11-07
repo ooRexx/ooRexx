@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2026 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -125,6 +125,14 @@ RexxExpressionOperator::RexxExpressionOperator(TokenSubclass op, RexxInternalObj
     oper = op;
     left_term = left;
     right_term = right;
+    // The parser builds a chain like "1+1+1+..." along the left term without
+    // recursion, but it is evaluated recursively; remember how deep we are, so
+    // that evaluate() can check the stack space every so often (bug #1247)
+    chainLength = 1;
+    if (left != OREF_NULL && left->isObjectType(T_BinaryOperatorTerm))
+    {
+        chainLength = ((RexxExpressionOperator *)left)->chainLength + 1;
+    }
 }
 
 /**
@@ -178,6 +186,14 @@ void RexxExpressionOperator::flatten(Envelope *envelope)
  */
 RexxObject *RexxBinaryOperator::evaluate(RexxActivation *context, ExpressionStack *stack )
 {
+    // A very long chain of operators would run out of C stack here, as the
+    // left term is evaluated recursively (bug #1247).  Checking the stack on
+    // every operator costs time, and every StackCheckInterval levels is
+    // enough to fail with a Rexx error instead of crashing.
+    if (chainLength % StackCheckInterval == 0)
+    {
+        context->getActivity()->checkStackSpace();
+    }
     // evaluate both expression terms
     RexxObject *left = left_term->evaluate(context, stack);
     RexxObject *right = right_term->evaluate(context, stack);

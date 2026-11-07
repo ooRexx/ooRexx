@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2022 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2026 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -91,6 +91,14 @@ RexxExpressionMessage::RexxExpressionMessage(RexxInternalObject *_target, RexxSt
     target = _target;
     super = _super;
     doubleTilde = double_form;
+    // The parser builds a chain like "x~a~b~c..." along the target without
+    // recursion, but it is evaluated recursively; remember how deep we are, so
+    // that evaluate() can check the stack space every so often (bug #1247)
+    chainLength = 1;
+    if (_target != OREF_NULL && _target->isObjectType(T_MessageSendTerm))
+    {
+        chainLength = ((RexxExpressionMessage *)_target)->chainLength + 1;
+    }
     argumentCount = argCount;
     initializeObjectArray(argCount, arguments, RexxInternalObject, arglist);
 }
@@ -154,6 +162,14 @@ void RexxExpressionMessage::flatten(Envelope *envelope)
  */
 RexxObject *RexxExpressionMessage::evaluate(RexxActivation *context, ExpressionStack *stack)
 {
+    // A very long chain of messages would run out of C stack here, as the
+    // target is evaluated recursively (bug #1247).  Checking the stack on
+    // every message costs time, and every StackCheckInterval levels is
+    // enough to fail with a Rexx error instead of crashing.
+    if (chainLength % StackCheckInterval == 0)
+    {
+        context->getActivity()->checkStackSpace();
+    }
     // evaluate the target object
     RexxObject *_target = target->evaluate(context, stack);
     RexxClass *_super = OREF_NULL;

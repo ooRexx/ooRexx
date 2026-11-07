@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2026 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -69,10 +69,15 @@ class RexxExpressionMessage : public RexxVariableBase
 
  protected:
 
+    // how often a chain checks the C stack space while being evaluated: a
+    // few dozen evaluate() frames fit easily in the error recovery margin
+    static const uint32_t StackCheckInterval = 32;
+
     RexxInternalObject * target;         // target subexpression
     RexxString *messageName;             // the message name
     RexxInternalObject *super;           // super class target
     bool   doubleTilde;                  // this is the double tilde form
+    uint32_t chainLength;                // messages in the chain along target, this one included
     size_t argumentCount;                // number of message arguments
     RexxInternalObject *arguments[1];    // list of argument subexpressions
 };
