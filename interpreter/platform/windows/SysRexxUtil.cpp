@@ -1944,7 +1944,7 @@ RexxRoutine1(int, SysReleaseMutexSem, uintptr_t, h)
 
 RexxRoutine1(int, SysCloseMutexSem, uintptr_t, h)
 {
-    return !ReleaseMutex((HANDLE)h) ? GetLastError() : 0;
+    return !CloseHandle((HANDLE)h) ? GetLastError() : 0;
 }
 
 /*************************************************************************
