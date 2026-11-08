@@ -65,10 +65,12 @@ void MessageDispatcher::handleError(wholenumber_t r, DirectoryClass *c)
 {
     // use the base error handling and set our return code to the negated error code.
     ActivityDispatcher::handleError(-r, c);
+
+    // display the error so the user knows something has happened.  This
+    // is done before telling the message object: that wakes up whoever
+    // waits on it, who can then change the condition object
+    activity->error(activation, conditionData);
     // tell the message object about the error
     message->error(c);
-
-    // but also display the error so the user knows something has happened.
-    activity->error(activation, conditionData);
 }
 

@@ -123,6 +123,7 @@ class Activity : public RexxInternalObject
     bool        raiseCondition(DirectoryClass *);
     void        checkConditionSyntaxOptions(RexxString *, RexxObject *, RexxObject *);
     void        raiseConditionObject(DirectoryClass *);
+    void        completeSyntaxCondition(DirectoryClass *);
     bool        checkCondition(RexxString *condition);
     DirectoryClass *createConditionObject(RexxString *, RexxObject *, RexxObject *, RexxObject *, RexxObject *);
     void        raiseException(RexxErrorCodes, RexxString *, ArrayClass *, RexxObject *);

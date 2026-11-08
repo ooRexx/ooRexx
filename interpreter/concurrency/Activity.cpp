@@ -787,7 +787,6 @@ void Activity::raiseConditionObject(DirectoryClass *source)
     conditionObj->put(condition, GlobalNames::CONDITION);
 
     RexxObject *description = (RexxObject *)conditionObj->get(GlobalNames::DESCRIPTION);
-    RexxObject *additional = (RexxObject *)conditionObj->get(GlobalNames::ADDITIONAL);
     RexxObject *result = (RexxObject *)conditionObj->get(GlobalNames::RESULT);
     if (description == OREF_NULL)
     {
@@ -804,40 +803,7 @@ void Activity::raiseConditionObject(DirectoryClass *source)
 
     if (condition->strCompare(GlobalNames::SYNTAX))
     {
-        RexxInternalObject *code = conditionObj->get(GlobalNames::CODE);
-        wholenumber_t errcode;
-        if (code == OREF_NULL || !isString(code) || !validErrorCode((RexxString *)code, errcode))
-        {
-            reportException(Error_Incorrect_method_user_defined, new_string("the CODE of a SYNTAX condition object must be a valid error number"));
-        }
-        if (additional == OREF_NULL)
-        {
-            additional = new_array((size_t)0);
-            conditionObj->put(additional, GlobalNames::ADDITIONAL);
-        }
-        else if (!isArray(additional))
-        {
-            reportException(Error_Incorrect_method_user_defined, new_string("the ADDITIONAL of a SYNTAX condition object must be an array"));
-        }
-
-        // RC, ERRORTEXT and MESSAGE follow from CODE and ADDITIONAL, as in
-        // createExceptionObject()
-        wholenumber_t primary = (errcode / 1000) * 1000;
-        RexxString *errortext = Interpreter::getMessageText(primary);
-        if (errortext == OREF_NULL)
-        {
-            reportException(Error_Execution_error_condition, (RexxObject *)code);
-        }
-        conditionObj->put(new_integer(primary / 1000), GlobalNames::RC);
-        conditionObj->put(errortext, GlobalNames::ERRORTEXT);
-        if (primary != errcode)
-        {
-            conditionObj->put(buildMessage(errcode, (ArrayClass *)additional), GlobalNames::MESSAGE);
-        }
-        else
-        {
-            conditionObj->put(TheNilObject, GlobalNames::MESSAGE);
-        }
+        completeSyntaxCondition(conditionObj);
         conditionObj->put(TheFalseObject, GlobalNames::PROPAGATED);
 
         // and raise it as an error raised from native code (see raiseException())
@@ -853,6 +819,54 @@ void Activity::raiseConditionObject(DirectoryClass *source)
     checkConditionSyntaxOptions(condition, description, result);
     conditionObj->put(TheFalseObject, GlobalNames::PROPAGATED);
     raiseCondition(conditionObj);
+}
+
+
+/**
+ * Check the CODE and ADDITIONAL of a SYNTAX condition object and
+ * set its RC, ERRORTEXT and MESSAGE from them, as
+ * createExceptionObject() does.  The object may have been built or
+ * changed by Rexx code: the argument of RaiseConditionObject(), or
+ * the condition object of a message object, which ~result raises
+ * again.
+ *
+ * @param conditionObj The condition object.
+ */
+void Activity::completeSyntaxCondition(DirectoryClass *conditionObj)
+{
+    RexxInternalObject *code = conditionObj->get(GlobalNames::CODE);
+    wholenumber_t errcode;
+    if (code == OREF_NULL || !isString(code) || !validErrorCode((RexxString *)code, errcode))
+    {
+        reportException(Error_Incorrect_method_user_defined, new_string("the CODE of a SYNTAX condition object must be a valid error number"));
+    }
+    RexxInternalObject *additional = conditionObj->get(GlobalNames::ADDITIONAL);
+    if (additional == OREF_NULL)
+    {
+        additional = new_array((size_t)0);
+        conditionObj->put(additional, GlobalNames::ADDITIONAL);
+    }
+    else if (!isArray(additional))
+    {
+        reportException(Error_Incorrect_method_user_defined, new_string("the ADDITIONAL of a SYNTAX condition object must be an array"));
+    }
+
+    wholenumber_t primary = (errcode / 1000) * 1000;
+    RexxString *errortext = Interpreter::getMessageText(primary);
+    if (errortext == OREF_NULL)
+    {
+        reportException(Error_Execution_error_condition, (RexxObject *)code);
+    }
+    conditionObj->put(new_integer(primary / 1000), GlobalNames::RC);
+    conditionObj->put(errortext, GlobalNames::ERRORTEXT);
+    if (primary != errcode)
+    {
+        conditionObj->put(buildMessage(errcode, (ArrayClass *)additional), GlobalNames::MESSAGE);
+    }
+    else
+    {
+        conditionObj->put(TheNilObject, GlobalNames::MESSAGE);
+    }
 }
 
 
@@ -1500,23 +1514,9 @@ void Activity::reraiseException(DirectoryClass *exobj)
         exobj->remove(GlobalNames::PACKAGE_REF);
     }
 
-    // get the error code and redo the message information
-    RexxInternalObject *errorcode = exobj->get(GlobalNames::CODE);
-    wholenumber_t errornumber = Interpreter::messageNumber((RexxString *)errorcode);
-
-    wholenumber_t primary = (errornumber / 1000) * 1000;
-    if (errornumber != primary)
-    {
-        char work[22];
-        snprintf(work, sizeof(work), "%1zd%3.3zd", errornumber / 1000, errornumber - primary);
-        errornumber = atol(work);
-
-        RexxString *message = Interpreter::getMessageText(errornumber);
-        ArrayClass *additional = (ArrayClass *)exobj->get(GlobalNames::ADDITIONAL);
-        message = messageSubstitution(message, additional);
-        // replace the original message text
-        exobj->put(message, GlobalNames::MESSAGE);
-    }
+    // redo the message information from the error code (the object
+    // ~result raises again can have been changed by Rexx code)
+    completeSyntaxCondition(exobj);
 
     raisePropagate(exobj);
 }
@@ -1565,11 +1565,12 @@ void Activity::raisePropagate(DirectoryClass *conditionObj)
  */
 void Activity::display(DirectoryClass *exobj)
 {
-    // get the traceback info
-    ListClass *trace_backList = (ListClass *)exobj->get(GlobalNames::TRACEBACK);
-    if (trace_backList != OREF_NULL)
+    // get the traceback info.  Rexx code can change the list, or put
+    // something else in its place, so check what we display
+    RexxInternalObject *trace_backList = exobj->get(GlobalNames::TRACEBACK);
+    if (trace_backList != OREF_NULL && isOfClass(List, trace_backList))
     {
-        ArrayClass *trace_back = trace_backList->makeArray();
+        ArrayClass *trace_back = ((ListClass *)trace_backList)->makeArray();
         ProtectedObject p(trace_back);
 
         // display each of the traceback lines
@@ -1577,10 +1578,12 @@ void Activity::display(DirectoryClass *exobj)
 
         for (size_t i = 1; i <= tracebackSize; i++)
         {
-            RexxString *text = (RexxString *)trace_back->get(i);
+            RexxInternalObject *line = trace_back->get(i);
             // if we have a real line, write it out
-            if (text != OREF_NULL && text != TheNilObject)
+            if (line != OREF_NULL && line != TheNilObject)
             {
+                // not a string: its default name, which runs no Rexx code
+                Protected<RexxString> text = isOfClassType(String, line) ? (RexxString *)line : line->defaultName();
                 currentRexxFrame->displayUsingTraceOutput(this, text);
             }
         }
