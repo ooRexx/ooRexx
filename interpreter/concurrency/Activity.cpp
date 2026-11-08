@@ -66,6 +66,7 @@
 #include "InterpreterInstance.hpp"
 #include "ActivityDispatcher.hpp"
 #include "MessageDispatcher.hpp"
+#include "ConditionTrappingDispatcher.hpp"
 #include "Interpreter.hpp"
 #include "PackageClass.hpp"
 #include "SystemInterpreter.hpp"
@@ -1559,12 +1560,33 @@ void Activity::raisePropagate(DirectoryClass *conditionObj)
 }
 
 /**
+ * Sets a flag for as long as it exists, and gives it back the
+ * value it had, however the block is left.
+ */
+class FlagSetter
+{
+ public:
+    FlagSetter(bool &f, bool value = true) : flag(f), saved(f) { flag = value; }
+    ~FlagSetter() { flag = saved; }
+
+ private:
+    bool &flag;
+    bool saved;
+};
+
+
+/**
  * Display information from an exception object.
  *
  * @param exobj  The exception object.
  */
 void Activity::display(DirectoryClass *exobj)
 {
+    // a .traceoutput target that fails now must not raise its error again,
+    // and once it has failed the rest goes to the console (see traceOutput())
+    FlagSetter displaying(displayingCondition);
+    FlagSetter failed(traceTargetFailed, false);
+
     // get the traceback info.  Rexx code can change the list, or put
     // something else in its place, so check what we display
     RexxInternalObject *trace_backList = exobj->get(GlobalNames::TRACEBACK);
@@ -1646,6 +1668,10 @@ void Activity::display(DirectoryClass *exobj)
  */
 void Activity::displayDebug(DirectoryClass *exobj)
 {
+    // see display()
+    FlagSetter displaying(displayingCondition);
+    FlagSetter failed(traceTargetFailed, false);
+
     // get the leading part to indicate this is a debug error, then compose the full
     // message
     RexxString *text = Interpreter::getMessageText(Message_Translations_debug_error);
@@ -3334,6 +3360,39 @@ SecurityManager* Activity::getInstanceSecurityManager()
 
 
 /**
+ * Sends a trace line to the .traceoutput target.
+ */
+class TraceOutputInvoker : public TrapInvoker
+{
+ public:
+    TraceOutputInvoker(RexxObject *s, RexxObject *l) : stream(s), line(l) { }
+
+    void invoke() override
+    {
+        ProtectedObject result;
+        stream->sendMessage(GlobalNames::LINEOUT, line, result);
+    }
+
+ private:
+    RexxObject *stream;
+    RexxObject *line;
+};
+
+
+/**
+ * Runs a TraceOutputInvoker, trapping the errors it raises (not
+ * the other conditions, which behave as they did).
+ */
+class TraceOutputDispatcher : public ConditionTrappingDispatcher
+{
+ public:
+    TraceOutputDispatcher(TrapInvoker &t) : ConditionTrappingDispatcher(t) { }
+
+    bool trapConditions() override { return false; }
+};
+
+
+/**
  * Write out a line of trace output.
  *
  * @param activation The current activation context.
@@ -3356,30 +3415,37 @@ void Activity::traceOutput(RexxActivation *activation, RexxString *line, StringT
         // would produce more trace lines, recursively, until the C stack runs
         // out (bug #1871).  So trace lines produced while we are sending one
         // to the target don't go to the target, but straight to the console.
-        if (stream != OREF_NULL && stream != TheNilObject && !sendingTraceOutput)
+        if (stream != OREF_NULL && stream != TheNilObject && !sendingTraceOutput && !(displayingCondition && traceTargetFailed))
         {
-            // clears the flag however we leave the block
-            class SendingTraceOutput
+            // the target can raise an error: it has no LINEOUT, or its LINEOUT
+            // fails.  The error is trapped in a native activation of its own,
+            // so that it unwinds only the frames of the LINEOUT call: a
+            // catch here would leave the frames between the target and the
+            // activation the error was thrown to on the stack
+            Protected<DirectoryClass> failure;
             {
-             public:
-                SendingTraceOutput(bool &f) : flag(f) { flag = true; }
-                ~SendingTraceOutput() { flag = false; }
-             private:
-                bool &flag;
-            } sending(sendingTraceOutput);
-
-            // need this in case the .traceoutput or the .error monitor
-            // gives us an invalid object with no LINEOUT
-            try
-            {
-                ProtectedObject result;
-
-                stream->sendMessage(GlobalNames::LINEOUT, traceObject, result);
+                FlagSetter sending(sendingTraceOutput);
+                TraceOutputInvoker invoker(stream, traceObject);
+                TraceOutputDispatcher dispatcher(invoker);
+                run(dispatcher);
+                failure = dispatcher.getCondition();
             }
-            catch (NativeActivation *)
+            if (!failure.isNull())
             {
                 Protected<RexxString> line = traceObject->requestString();
                 lineOut(line); // don't lose the data!
+                // and raise the error here, where the trace line came from,
+                // unless we are displaying an error: that one goes through
+                // the .traceoutput target too, and would fail again, so the
+                // rest of it goes to the console
+                if (displayingCondition)
+                {
+                    traceTargetFailed = true;
+                }
+                else
+                {
+                    raiseConditionObject(failure);
+                }
             }
         }
         // could not find the target, but don't lose the data!

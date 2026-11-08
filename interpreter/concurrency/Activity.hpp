@@ -446,6 +446,8 @@ class Activity : public RexxInternalObject
     bool     exit;                      // activity loop is to exit
     bool     requestingString;          // in error handling currently
     bool     sendingTraceOutput;        // a trace line is being sent to the .traceoutput target
+    bool     displayingCondition;       // an error is being displayed
+    bool     traceTargetFailed;         // the .traceoutput target failed while displaying it
     bool     suspended;                 // the suspension flag
     bool     interpreterRoot;           // This is the root activity for an interpreter instance
     bool     waitingForApiAccess;       // This activity is waiting for access for an API callback
