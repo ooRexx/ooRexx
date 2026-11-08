@@ -3500,12 +3500,11 @@ RexxString* Activity::traceInput(RexxActivation *activation)
         if (stream != OREF_NULL)
         {
             ProtectedObject result;
-            value = (RexxString *)stream->sendMessage(GlobalNames::LINEIN, result);
-            // use a null string of we get .nil back.
-            if (value == (RexxString *)TheNilObject)
-            {
-                value = GlobalNames::NULLSTRING;
-            }
+            RexxObject *line = stream->sendMessage(GlobalNames::LINEIN, result);
+            // use a null string if we get .nil or no value back (LINEIN
+            // can be a Rexx method that ends with a plain RETURN); anything
+            // else is used through its string value
+            value = (line == OREF_NULL || line == TheNilObject) ? GlobalNames::NULLSTRING : line->requestString();
         }
         else
         {
@@ -3536,12 +3535,10 @@ RexxString* Activity::pullInput(RexxActivation *activation)
         if (stream != OREF_NULL)
         {
             ProtectedObject result;
-            value = (RexxString *)stream->sendMessage(GlobalNames::PULL, result);
-            // if we don't get anything from the queue, try again from linein
-            if (value == (RexxString *)TheNilObject)
-            {
-                value = lineIn(activation);
-            }
+            RexxObject *line = stream->sendMessage(GlobalNames::PULL, result);
+            // if we don't get anything from the queue (.nil, or no value
+            // from a PULL that is a Rexx method), try again from linein
+            value = (line == OREF_NULL || line == TheNilObject) ? lineIn(activation) : line->requestString();
         }
     }
     return value;
@@ -3582,12 +3579,9 @@ RexxString* Activity::lineIn(RexxActivation *activation)
         if (stream != OREF_NULL)
         {
             ProtectedObject result;
-            // read using the LINEIN method
-            value = (RexxString *)stream->sendMessage(GlobalNames::LINEIN, result);
-            if (value == (RexxString *)TheNilObject)
-            {
-                value = GlobalNames::NULLSTRING;
-            }
+            // read using the LINEIN method; .nil or no value is a null string
+            RexxObject *line = stream->sendMessage(GlobalNames::LINEIN, result);
+            value = (line == OREF_NULL || line == TheNilObject) ? GlobalNames::NULLSTRING : line->requestString();
         }
         else
         {
