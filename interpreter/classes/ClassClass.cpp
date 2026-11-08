@@ -1247,8 +1247,12 @@ MethodDictionary *RexxClass::createMethodDictionary(RexxObject *sourceCollection
     // it would be nice to just grab a table iterator, but we need to use
     // a supplier here.
     ProtectedObject p2;
-    sourceCollection->sendMessage(GlobalNames::SUPPLIER, p2);
-    SupplierClass *supplier = (SupplierClass *)(RexxObject *)p2;
+    SupplierClass *supplier = (SupplierClass *)sourceCollection->sendMessage(GlobalNames::SUPPLIER, p2);
+    // SUPPLIER can be a user method, and it can answer anything
+    if (supplier == OREF_NULL || !isOfClassType(Supplier, supplier))
+    {
+        reportException(Error_Execution_no_supplier, sourceCollection);
+    }
     for (; supplier->available() == TheTrueObject; supplier->next())
     {
         MethodClass *newMethod = (MethodClass *)supplier->item();
