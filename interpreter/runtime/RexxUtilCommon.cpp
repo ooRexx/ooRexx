@@ -1445,13 +1445,18 @@ RexxRoutine0(RexxStringObject, SysUtilVersion)
  * @param name    The name of the variable
  * @param value   The object value
  *
- * @return an error code if there is a failure.
+ * @return false if the value has no string value (its STRING method raised
+ *         an error, which is now pending), true otherwise.
  */
-void writeVariable(SysFile &file, RexxCallContext *context, const char *name, RexxObjectPtr value)
+bool writeVariable(SysFile &file, RexxCallContext *context, const char *name, RexxObjectPtr value)
 {
     size_t nameLength = strlen(name);
 
     RexxStringObject stringValue = context->ObjectToString(value);
+    if (stringValue == NULLOBJECT)
+    {
+        return false;
+    }
 
     size_t valueLength = context->StringLength(stringValue);
     const char *valueData = context->StringData(stringValue);
@@ -1468,6 +1473,7 @@ void writeVariable(SysFile &file, RexxCallContext *context, const char *name, Re
 
     context->ReleaseLocalReference(stringValue);
     context->ReleaseLocalReference(value);
+    return true;
 }
 
 
@@ -1479,14 +1485,19 @@ void writeVariable(SysFile &file, RexxCallContext *context, const char *name, Re
  * @param name   The name of the variable
  * @param value  The object value
  *
- * @return an error code if there is a failure.
+ * @return false if the value has no string value (its STRING method raised
+ *         an error, which is now pending), true otherwise.
  */
-void writeVariable(SysFile &file, RexxCallContext *context, const char *stem, RexxStringObject tail, RexxObjectPtr value)
+bool writeVariable(SysFile &file, RexxCallContext *context, const char *stem, RexxStringObject tail, RexxObjectPtr value)
 {
     size_t nameLength = context->StringLength(tail);
     const char *nameData = context->StringData(tail);
 
     RexxStringObject stringValue = context->ObjectToString(value);
+    if (stringValue == NULLOBJECT)
+    {
+        return false;
+    }
 
     size_t valueLength = context->StringLength(stringValue);
     const char *valueData = context->StringData(stringValue);
@@ -1505,6 +1516,7 @@ void writeVariable(SysFile &file, RexxCallContext *context, const char *stem, Re
     context->ReleaseLocalReference(tail);
     context->ReleaseLocalReference(stringValue);
     context->ReleaseLocalReference(value);
+    return true;
 }
 
 
@@ -1557,8 +1569,13 @@ RexxRoutine1(int, SysDumpVariables, OPTIONAL_CSTRING, fileName)
 
             RexxObjectPtr stemValue = context->GetStemValue(stem);
 
-            // write out the stem name first
-            writeVariable(outFile, context, name, stemValue);
+            // write out the stem name first.  If a value has no string value,
+            // the error is pending: stop, and it is raised when we return.
+            if (!writeVariable(outFile, context, name, stemValue))
+            {
+                outFile.close();
+                return 0;
+            }
 
             // now iterate on the compound variables
             RexxDirectoryObject compoundVariables = context->GetAllStemElements(stem);
@@ -1572,7 +1589,11 @@ RexxRoutine1(int, SysDumpVariables, OPTIONAL_CSTRING, fileName)
                 RexxStringObject tailName = (RexxStringObject)context->SupplierIndex(compoundSupplier);
                 RexxObjectPtr compoundValue = context->SupplierItem(compoundSupplier);
 
-                writeVariable(outFile, context, name, tailName, compoundValue);
+                if (!writeVariable(outFile, context, name, tailName, compoundValue))
+                {
+                    outFile.close();
+                    return 0;
+                }
 
                 context->SupplierNext(compoundSupplier);
             }
@@ -1588,7 +1609,11 @@ RexxRoutine1(int, SysDumpVariables, OPTIONAL_CSTRING, fileName)
             RexxObjectPtr value = context->SupplierItem(variableSupplier);
 
             // and write it out
-            writeVariable(outFile, context, name, value);
+            if (!writeVariable(outFile, context, name, value))
+            {
+                outFile.close();
+                return 0;
+            }
         }
         // release the reference to the variable name
         context->ReleaseLocalReference(variableName);
@@ -2046,6 +2071,12 @@ RexxStringObject formatMessage(RexxCallContext *context, const char *message, Re
         else
         {
             substitutions[i - firstSubstitution] = context->ObjectToStringValue(o);
+            // no string value: its STRING method raised an error, which is
+            // now pending and is raised when we return
+            if (substitutions[i - firstSubstitution] == NULL)
+            {
+                return NULLOBJECT;
+            }
         }
     }
 
