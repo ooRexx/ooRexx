@@ -1664,7 +1664,15 @@ ArrayClass *RexxInternalObject::requestArray()
     else
     {
         ProtectedObject result;
-        return(ArrayClass *)resultOrNil(((RexxObject *)this)->sendMessage(GlobalNames::REQUEST, GlobalNames::ARRAY, result));
+        RexxObject *answer = resultOrNil(((RexxObject *)this)->sendMessage(GlobalNames::REQUEST, GlobalNames::ARRAY, result));
+        // REQUEST and MAKEARRAY can be user methods, and they can answer
+        // anything.  Only an Array can be used as one: anything else did not
+        // convert.
+        if (!answer->isInstanceOf(TheArrayClass))
+        {
+            return (ArrayClass *)TheNilObject;
+        }
+        return (ArrayClass *)answer;
     }
 }
 
