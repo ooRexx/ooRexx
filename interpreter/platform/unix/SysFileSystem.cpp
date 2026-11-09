@@ -273,9 +273,10 @@ bool SysFileSystem::hasDirectory(const char *name)
 {
     // hasDirectory() means we have enough absolute directory
     // information at the beginning to bypass performing path searches.
-    return name[0] == '~' || name[0] == '/' ||
-          (name[0] == '.' && name[1] == '/') ||
-          (name[0] == '.' && name[1] == '.' && name[2] == '/');
+    // Names starting with "./" or "../" are relative: like any other relative
+    // name, they are searched for in every directory of the search order, so
+    // that "../name" is looked for in the parent of each of them.
+    return name[0] == '~' || name[0] == '/';
 }
 
 
