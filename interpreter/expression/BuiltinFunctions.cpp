@@ -863,15 +863,50 @@ BUILTIN(ERRORTEXT)
 
     check_args(ERRORTEXT);
 
-    // verify this is in range for a Rexx error condition (we only retrieve
-    // the major error message, which does not have substitutions)
-    wholenumber_t error_number = (required_integer(ERRORTEXT, n))->getValue();
-    if (error_number < 0 || error_number > 99)
+    // n can also be an error code with a minor number, nn.nnn, as RAISE
+    // SYNTAX and the CODE of a condition object have it: that gives the
+    // secondary message, with its substitution markers (&1, &2...) as they
+    // are.  The parts are read as written, not as a number: "40.1" is
+    // 40.001, and "40.10" 40.010.  A whole number ("40.0", "4.0E1") is
+    // still read as a major error number, as it always was.
+    RexxObject *argument = get_arg(ERRORTEXT, n);
+    Protected<RexxString> code;
+    const char *decimalPoint = NULL;
+    wholenumber_t whole;
+    if (argument != OREF_NULL && (isString(argument) || isNumberString(argument)))
     {
-        reportException(Error_Incorrect_call_range, "ERRORTEXT", IntegerOne, error_number);
+        code = argument->requestString();
+        if (!code->numberValue(whole))
+        {
+            decimalPoint = (const char *)memchr(code->getStringData(), '.', code->getLength());
+        }
+    }
+
+    wholenumber_t message_number;
+    if (decimalPoint == NULL)
+    {
+        // verify this is in range for a Rexx error condition
+        wholenumber_t error_number = (required_integer(ERRORTEXT, n))->getValue();
+        if (error_number < 0 || error_number > 99)
+        {
+            reportException(Error_Incorrect_call_range, "ERRORTEXT", IntegerOne, error_number);
+        }
+        message_number = error_number * 1000;
+    }
+    else
+    {
+        size_t majorLength = decimalPoint - code->getStringData();
+        wholenumber_t major;
+        wholenumber_t minor;
+        if (!new_string(code->getStringData(), majorLength)->numberValue(major) || major < 0 || major > 99 ||
+            !new_string(decimalPoint + 1, code->getLength() - majorLength - 1)->numberValue(minor) || minor < 0 || minor > 999)
+        {
+            reportException(Error_Incorrect_call_error_code, "ERRORTEXT", IntegerOne, code);
+        }
+        message_number = major * 1000 + minor;
     }
     // get the error message for this number and return the text.
-    RexxString *result = Interpreter::getMessageText(error_number * 1000);
+    RexxString *result = Interpreter::getMessageText(message_number);
     if (result == OREF_NULL)
     {
         result = GlobalNames::NULLSTRING;

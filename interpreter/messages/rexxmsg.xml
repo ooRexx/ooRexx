@@ -3518,6 +3518,15 @@ Say Enter A, B, or C
         <SymbolicName>Error_Incorrect_call_noarray_nostem</SymbolicName>
         <Text>Argument <Sub position="1" name="argument"/> must be an array object, a stem object, or a stem name value; found <q><Sub position="2" name="value"/></q>.</Text>
       </SubMessage>
+      <SubMessage>
+        <Code>40</Code>
+        <Subcode>926</Subcode>
+        <MessageNumber>845</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Incorrect_call_error_code</SymbolicName>
+        <Text><Sub position="1" name="function_name"/> argument <Sub position="2" name="argument_number"/> must be an error code nn.nnn, with nn in the range 0-99 and nnn in the range 0-999; found <q><Sub position="3" name="value"/></q>.</Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>
