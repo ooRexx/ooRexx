@@ -590,9 +590,9 @@ bool SysFileSystem::canonicalizeName(FileNameBuffer &name)
 
 
 /**
- * Normalize an absolute Unix path name.  Removes duplicate and trailing
- * slashes, resolves and removes ./ or ../  This works for any path name,
- * whether the resovled name exists or not.
+ * Normalize an absolute Unix path name.  Removes duplicate slashes, resolves
+ * and removes ./ or ../  A trailing slash is kept only if the name ended with
+ * one.  This works for any path name, whether the resovled name exists or not.
  *
  * @param name      The path name to normalize.
  * @param resolved  On success the normalized name is returned here.
@@ -682,8 +682,17 @@ bool SysFileSystem::normalizePathName(const char *name, FileNameBuffer &resolved
     // Terminate. Where, depends on several things.
     if (resolvedName.at(dest) == '/' && dest != 0)
     {
-        // overwrite a trailing slash
-        resolvedName.at(dest) = '\0';
+        // if the name ended with a slash, keep one: "file/" names a
+        // directory, and must not be taken for "file"
+        if (name[strlen(name) - 1] == '/')
+        {
+            resolvedName.at(++dest) = '\0';
+        }
+        else
+        {
+            // overwrite a trailing slash
+            resolvedName.at(dest) = '\0';
+        }
     }
     else
     {
