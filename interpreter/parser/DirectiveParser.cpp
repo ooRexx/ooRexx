@@ -1338,6 +1338,8 @@ void LanguageParser::optionsDirective()
                             syntaxError(Error_Invalid_subkeyword_numeric_subdirective, token);
                             break;
                     }
+                    // new in 5.2.0
+                    requireLanguageLevel(LanguageLevel0606);
                     package->setExplicitNumericOption();
                     break;
                 }

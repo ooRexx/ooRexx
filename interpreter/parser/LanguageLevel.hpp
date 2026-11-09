@@ -61,7 +61,7 @@ typedef enum
     LanguageLevel0605 = 60500,                       // 060500
     LanguageLevel0606 = 60600,                       // 060600
     LanguageLevel0607 = 60700,                       // 060700
-    DefaultLanguageLevel = LanguageLevel0607,        // the default language level for translated programs
+    DefaultLanguageLevel = LanguageLevel0605,        // the default language level for translated programs
     MinimumLanguageLevel = LanguageLevel0605,        // the lowest language level we can interpret
     MaximumLanguageLevel = LanguageLevel0607,        // the highest language level we can interpret
     makeEnum32bit = 0xffffffff                       // make sure this enum is 32 bits wide

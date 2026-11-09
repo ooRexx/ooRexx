@@ -239,6 +239,7 @@ class LanguageParser: public RexxInternalObject
            bool isExposed(RexxString *varName);
     void captureGuardVariable(RexxString *varname, RexxVariableBase *retriever);
     void requireLanguageLevel(LanguageLevel l);
+    void requireBuiltinLanguageLevel(size_t builtin);
     static bool canExecute(LanguageLevel l);
 
     // instruction parsing methods

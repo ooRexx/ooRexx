@@ -814,6 +814,29 @@ void LanguageParser::requireLanguageLevel(LanguageLevel l)
 
 
 /**
+ * Mark the package as requiring the language level at which a
+ * builtin function was introduced, if it is newer than the
+ * base level.  Called once we know that a call or function
+ * reference resolves to this builtin.
+ *
+ * @param builtin The builtin function index.
+ */
+void LanguageParser::requireBuiltinLanguageLevel(size_t builtin)
+{
+    switch (builtin)
+    {
+        // new in 5.2.0
+        case BUILTIN_GC:
+            requireLanguageLevel(LanguageLevel0606);
+            break;
+
+        default:
+            break;
+    }
+}
+
+
+/**
  * Test if this version of the interpreter can handle
  * executing a program created with a given language level.
  *
@@ -1711,11 +1734,13 @@ void LanguageParser::resolveCalls()
         if (isOfClass(FunctionCallTerm, instruction))
         {
             ((RexxExpressionFunction *)instruction)->resolve(labels);
+            requireBuiltinLanguageLevel(((RexxExpressionFunction *)instruction)->resolvedBuiltin());
         }
         else
         {
             // ok, technically, this could be either a CALL or a SIGNAL.
             ((RexxInstructionCallBase *)instruction)->resolve(labels);
+            requireBuiltinLanguageLevel(((RexxInstructionCallBase *)instruction)->resolvedBuiltin());
         }
     }
 }
@@ -3251,6 +3276,11 @@ RexxInternalObject *LanguageParser::parseFunction(RexxToken *token, RexxToken *n
     if (!name->isLiteral())
     {
         addReference(func);
+    }
+    // a literal name always calls the builtin, if there is one
+    else
+    {
+        requireBuiltinLanguageLevel(name->builtin());
     }
     return func;
 }
