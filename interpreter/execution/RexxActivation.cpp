@@ -83,6 +83,7 @@
 #include "CommandIOConfiguration.hpp"
 #include "CommandIOContext.hpp"
 #include "LibraryPackage.hpp"
+#include "ConditionTrappingDispatcher.hpp"
 
 #include <atomic>
 
@@ -4776,22 +4777,74 @@ RexxObject *RexxActivation::popEnvironment()
 
 
 /**
+ * Sends CLOSE to a stream of the stream table.
+ */
+class CloseStreamInvoker : public TrapInvoker
+{
+ public:
+    CloseStreamInvoker(RexxObject *s) : stream(s) { }
+
+    void invoke() override
+    {
+        ProtectedObject result;
+        stream->sendMessage(GlobalNames::CLOSE, result);
+    }
+
+ private:
+    RexxObject *stream;
+};
+
+
+/**
+ * Runs a CloseStreamInvoker, trapping the errors it raises (not
+ * the other conditions, which behave as they did).
+ */
+class CloseStreamDispatcher : public ConditionTrappingDispatcher
+{
+ public:
+    CloseStreamDispatcher(TrapInvoker &t) : ConditionTrappingDispatcher(t) { }
+
+    bool trapConditions() override { return false; }
+};
+
+
+/**
  * Close any streams opened by the I/O builtin functions
  */
 void RexxActivation::closeStreams()
 {
-                                         /* exiting a bottom level?           */
+    // exiting a bottom level?
     if (isProgramOrMethod())
     {
-        StringTable *streams = settings.streams;  /* get the streams directory         */
-        /* actually have a table?            */
-        if (streams != OREF_NULL)
+        Protected<StringTable> streams = settings.streams;
+        // actually have a table?
+        if (!streams.isNull())
         {
-            // send each of the streams in the table a CLOSE message.
+            // A stream can fail to close: a security manager can replace it
+            // by any object (with no CLOSE method, or one that raises an
+            // error).  An error raised here ends this activation, whose
+            // termination runs again, so the table is detached first: else
+            // the streams would be closed again, and an error raised by
+            // the interpreter itself would pop this frame twice.  And every
+            // stream is closed, so that the data of the others is not lost;
+            // the first error is raised once they all are, unless this
+            // activation is being unwound by another error (it has not
+            // RETURNED): that one is the error to report.
+            settings.streams = OREF_NULL;
+            Protected<DirectoryClass> failure;
             for (HashContents::TableIterator iterator = streams->iterator(); iterator.isAvailable(); iterator.next())
             {
-                ProtectedObject result;
-                ((RexxObject *)iterator.value())->sendMessage(GlobalNames::CLOSE, result);
+                CloseStreamInvoker invoker((RexxObject *)iterator.value());
+                CloseStreamDispatcher dispatcher(invoker);
+                activity->run(dispatcher);
+                if (failure.isNull())
+                {
+                    failure = dispatcher.getCondition();
+                }
+            }
+            if (!failure.isNull() && executionState == RETURNED)
+            {
+                activity->raiseConditionObject(failure);
             }
         }
     }
