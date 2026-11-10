@@ -3506,7 +3506,16 @@ RexxString* Activity::traceInput(RexxActivation *activation)
         if (stream != OREF_NULL)
         {
             ProtectedObject result;
-            RexxObject *line = stream->sendMessage(GlobalNames::LINEIN, result);
+            // the LINEIN of .debuginput can be Rexx code that runs under
+            // interactive trace itself: its debug pauses would read from
+            // .debuginput again, recursively, until the C stack runs out.
+            // While a line is being read, debug pauses are skipped (see
+            // RexxActivation::doDebugPause())
+            RexxObject *line;
+            {
+                FlagSetter reading(readingDebugInput);
+                line = stream->sendMessage(GlobalNames::LINEIN, result);
+            }
             // use a null string if we get .nil or no value back (LINEIN
             // can be a Rexx method that ends with a plain RETURN); anything
             // else is used through its string value

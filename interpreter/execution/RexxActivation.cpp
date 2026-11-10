@@ -4289,8 +4289,10 @@ void RexxActivation::externalTraceOff()
  */
 bool RexxActivation::doDebugPause()
 {
-    // already in debug pause?  just skip pausing
-    if (debugPause)
+    // already in debug pause?  just skip pausing.  The same for the code
+    // that runs to read a line of debug input (a Rexx LINEIN method of
+    // .debuginput): it would read from .debuginput again, recursively
+    if (debugPause || activity->isReadingDebugInput())
     {
         return false;
     }
