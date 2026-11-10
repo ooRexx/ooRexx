@@ -340,8 +340,15 @@ RexxString *SecurityManager::checkRequiresAccess(RexxString *name, RexxObject *&
         {
             securityManager = secObject;
         }
-        // the name can be replaced by the security manager
-        return (RexxString *)securityArgs->get(GlobalNames::NAME);
+        // the name can be replaced by the security manager, by any object:
+        // use its string value.  A removed entry means access is not
+        // permitted.
+        RexxObject *newName = (RexxObject *)securityArgs->get(GlobalNames::NAME);
+        if (newName == OREF_NULL)
+        {
+            return OREF_NULL;
+        }
+        return newName->requestString();
     }
     // not handled, return the name unchanged
     return name;

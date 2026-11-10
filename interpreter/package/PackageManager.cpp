@@ -729,13 +729,16 @@ PackageClass *PackageManager::loadRequires(Activity *activity, RexxString *short
     SecurityManager *manager = activity->getEffectiveSecurityManager();
     RexxObject *securityManager = OREF_NULL;
 
-    shortName = manager->checkRequiresAccess(shortName, securityManager);
+    // the security manager can replace the name with a new object, which
+    // nothing else holds: protect it while we use it
+    Protected<RexxString> checkedShortName = manager->checkRequiresAccess(shortName, securityManager);
     // no return means forbidden access to this name.  Just return
     // nothing
-    if (shortName == OREF_NULL)
+    if (checkedShortName.isNull())
     {
         return OREF_NULL;
     }
+    shortName = checkedShortName;
 
 
     // first check this using the specified name.  Since we need to perform checks in the
@@ -766,13 +769,14 @@ PackageClass *PackageManager::loadRequires(Activity *activity, RexxString *short
     // it's possible we don't have a file version of this
     if (resolvedName != OREF_NULL)
     {
-        resolvedName = manager->checkRequiresAccess(resolvedName, securityManager);
+        Protected<RexxString> checkedResolvedName = manager->checkRequiresAccess(resolvedName, securityManager);
         // no return means forbidden access to this name.  Just return
         // nothing
-        if (resolvedName == OREF_NULL)
+        if (checkedResolvedName.isNull())
         {
             return OREF_NULL;
         }
+        resolvedName = checkedResolvedName;
 
 
         // now check again using the longer name
