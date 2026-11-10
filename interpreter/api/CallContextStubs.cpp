@@ -46,6 +46,7 @@
 #include "ContextApi.hpp"
 #include "NativeActivation.hpp"
 #include "SupplierClass.hpp"
+#include "StemClass.hpp"
 #include "Interpreter.hpp"
 #include "MethodClass.hpp"
 #include "PackageClass.hpp"
