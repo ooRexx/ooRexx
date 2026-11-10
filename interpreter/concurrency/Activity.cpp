@@ -1095,6 +1095,15 @@ void Activity::raiseException(RexxErrorCodes errcode, RexxString *description, A
     // get the top-most stack frame and also the top Rexx frame
     ActivationBase *topFrame = getTopStackFrame();
     RexxActivation *activation = getCurrentRexxFrame();
+
+    // create an exception object.  This must be done before the forwarded
+    // frames are removed below: their activations stay linked in the
+    // activation frames (their run() has not returned yet), which the
+    // exception object is built from, but once removed from the stack they
+    // are no longer marked, and a garbage collection while the object is
+    // being built would reclaim them.
+    conditionobj = createExceptionObject(errcode, description, additional, result);
+
     // if we're raised within a real Rexx context, we need to deal with forwarded
     // frames
     if (topFrame == activation)
@@ -1112,9 +1121,6 @@ void Activity::raiseException(RexxErrorCodes errcode, RexxString *description, A
     {
         activation = NULL;      // raised from a native context, don't add to stack trace
     }
-
-    // create an exception object
-    conditionobj = createExceptionObject(errcode, description, additional, result);
 
     // and go raise as a condition
     if (!raiseCondition(conditionobj))
