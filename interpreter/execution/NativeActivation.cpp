@@ -542,6 +542,10 @@ void NativeActivation::processArguments(size_t _argcount, RexxObject **_arglist,
                             {
                                 reportStemError(inputIndex, argument);
                             }
+                            // the stem is held only through the caller's
+                            // variable, which the STRING method of a later
+                            // argument can drop: protect it for the call
+                            createLocalReference(stem);
                             descriptors[outputIndex].value.value_RexxStemObject = (RexxStemObject)stem;
                             break;
                         }
@@ -1142,6 +1146,8 @@ bool NativeActivation::objectToValue(RexxObject *o, ValueDescriptor *value)
             {
                 return false;
             }
+            // held only through the caller's variable: protect it
+            createLocalReference(stem);
             value->value.value_RexxStemObject = (RexxStemObject)stem;
             return true;
         }

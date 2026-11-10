@@ -179,7 +179,7 @@ RexxStemObject RexxEntry ResolveStemVariable(RexxCallContext * c, RexxObjectPtr 
     ApiContext context(c);
     try
     {
-        return (RexxStemObject)context.context->resolveStemVariable((RexxObject *)s);
+        return (RexxStemObject)context.ret(context.context->resolveStemVariable((RexxObject *)s));
     }
     catch (NativeActivation *)
     {
