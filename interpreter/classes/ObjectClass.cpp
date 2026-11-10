@@ -590,10 +590,13 @@ RexxInternalObject *RexxObject::copy()
  */
 void RexxObject::copyObjectVariables(RexxObject *newObj)
 {
-    // copy the complete variable set if we have something
+    // copy the complete variable set if we have something.  The copy goes
+    // to the new object, which was cloned with our dictionaries; ours stay
+    // as they are (methods of ours that are running use them, and we might
+    // be in old space, where a new reference needs the write barrier)
     if (objectVariables != OREF_NULL)
     {
-        objectVariables = objectVariables->deepCopy();
+        OrefSet(newObj, (RexxInternalObject *&)newObj->objectVariables, objectVariables->deepCopy());
     }
 }
 
