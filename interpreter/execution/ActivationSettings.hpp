@@ -121,6 +121,7 @@ class ActivationSettings
         elapsedReset,            // The elapsed time stamp was reset via time('r')
         guardedMethod,           // this is a guarded method
         ioConfigCopied,          // We have made a copy of the config table
+        traceInhibited,          // runs for a trace line: never traced
     } ActivationFlag;
 
 
@@ -138,6 +139,8 @@ class ActivationSettings
       inline void setDebugBypass(bool v = true) { stateFlags[debugBypass] = v; }
       inline bool isTraceSuppressed() { return stateFlags[traceSuppress]; }
       inline void setTraceSuppressed(bool v = true) { stateFlags[traceSuppress] = v; }
+      inline bool isTraceInhibited() { return stateFlags[traceInhibited]; }
+      inline void setTraceInhibited(bool v = true) { stateFlags[traceInhibited] = v; }
       inline bool haveExternalTraceOn() { return stateFlags[traceOn]; }
       inline void setExternalTraceOn(bool v = true) { stateFlags[traceOn] = v; }
       inline bool haveExternalTraceOff() { return stateFlags[traceOff]; }

@@ -151,6 +151,11 @@ RexxActivation::RexxActivation(Activity* _activity, RexxActivation *_parent, Met
 
     // initialize from the package-defined settings
     inheritPackageSettings();
+    // running for a trace line?  Then never traced
+    if (activity->isRunningTraceCode())
+    {
+        inhibitTrace();
+    }
 
     // inherit numeric settings
     if (_parent != NULL && packageObject->isNumericInheritEnabled())
@@ -293,6 +298,11 @@ RexxActivation::RexxActivation(Activity *_activity, RexxActivation *_parent, Rou
 
     // initialize with the package-defined settings
     inheritPackageSettings();
+    // running for a trace line?  Then never traced
+    if (activity->isRunningTraceCode())
+    {
+        inhibitTrace();
+    }
 
     // inherit numeric settings
     if (_parent != NULL && packageObject->isNumericInheritEnabled())
@@ -438,6 +448,19 @@ void RexxActivation::inheritPackageSettings()
     settings.packageSettings = packageObject->getSettings();
     // if tracing intermediates, turn on the special fast check flag
     settings.intermediateTrace = settings.packageSettings.traceSettings.tracingIntermediates();
+}
+
+
+/**
+ * Make this activation untraceable: it runs Rexx code on behalf of a
+ * trace line (see processTraceInfo()).  Its trace setting is off, and
+ * stays off.
+ */
+void RexxActivation::inhibitTrace()
+{
+    settings.setTraceInhibited();
+    settings.packageSettings.traceSettings.setTraceOff();
+    settings.intermediateTrace = false;
 }
 
 
@@ -991,6 +1014,12 @@ void RexxActivation::setTrace(RexxString *setting)
  */
 void RexxActivation::setTrace(const TraceSetting &source)
 {
+    // running for a trace line, this activation is never traced: a TRACE
+    // instruction or an external trace request changes nothing
+    if (settings.isTraceInhibited())
+    {
+        return;
+    }
     // turn off any trace suppression
     settings.setTraceSuppressed(false);
     settings.traceSkip = 0;
@@ -5384,6 +5413,20 @@ StringTable * RexxActivation::createTraceObject(Activity *activity, RexxActivati
 }
 
 
+/**
+ * Marks the Rexx code that runs for a trace line while it exists.
+ */
+class TraceCodeMarker
+{
+ public:
+    TraceCodeMarker(Activity *a) : activity(a) { activity->enterTraceCode(); }
+    ~TraceCodeMarker() { activity->leaveTraceCode(); }
+
+ private:
+    Activity *activity;
+};
+
+
 /** Processes trace information and outputs it.
  *
  * @param traceLine the trace line to display
@@ -5395,6 +5438,13 @@ void RexxActivation::processTraceInfo(Activity *activity, RexxString *traceLine,
 {
    // make sure this is a real string value (likely, since we constructed it in the first place)
    Protected<RexxString> pline = traceLine->stringTrace();
+   // Building and writing out a trace line runs Rexx code: TraceObject (and
+   // the DateTime and Validate code it uses), its collector and notify
+   // objects, a makeString method given to TraceObject, the .traceoutput
+   // target.  If that code were traced, each of its trace lines would run it
+   // again, recursively, until the C stack ran out: the activations created
+   // while this runs are never traced.
+   TraceCodeMarker marker(activity);
    Protected<StringTable> traceObject=createTraceObject(activity, this, pline, tracePrefix, tag, value);
    activity->traceOutput(this, pline, traceObject);
 }

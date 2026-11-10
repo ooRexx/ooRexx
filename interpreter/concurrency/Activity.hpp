@@ -247,6 +247,9 @@ class Activity : public RexxInternalObject
     void queue(RexxActivation *, RexxString *, QueueOrder);
     RexxString *traceInput(RexxActivation *);
     inline bool isReadingDebugInput() { return readingDebugInput; }
+    inline bool isRunningTraceCode() { return runningTraceCode > 0; }
+    inline void enterTraceCode() { runningTraceCode++; }
+    inline void leaveTraceCode() { runningTraceCode--; }
     RexxString *pullInput(RexxActivation *);
     RexxObject *lineOut(RexxString *);
     RexxString *lineIn(RexxActivation *);
@@ -450,6 +453,7 @@ class Activity : public RexxInternalObject
     bool     displayingCondition;       // an error is being displayed
     bool     traceTargetFailed;         // the .traceoutput target failed while displaying it
     bool     readingDebugInput;         // a line of debug input is being read from .debuginput
+    size_t   runningTraceCode;          // > 0 while a trace line runs Rexx code (TraceObject, its collector...)
     bool     suspended;                 // the suspension flag
     bool     interpreterRoot;           // This is the root activity for an interpreter instance
     bool     waitingForApiAccess;       // This activity is waiting for access for an API callback

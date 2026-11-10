@@ -153,6 +153,7 @@ class RexxActivation : public ActivationBase
    MethodClass     *getMethod();
 
    void        inheritPackageSettings();
+   void        inhibitTrace();
    void        allocateStackFrame();
    void        allocateLocalVariables();
    inline void guardOff()
