@@ -1581,6 +1581,11 @@ RexxClass  *RexxClass::subclass(PackageClass *package, RexxString *class_id,
     ProtectedObject p;
     // now get an instance of the meta class
     RexxClass *new_class = (RexxClass *)meta_class->sendMessage(GlobalNames::NEW, class_id, p);
+    // NEW can be a method of the metaclass, and it can answer anything
+    if (new_class == OREF_NULL || !new_class->isInstanceOf(TheClassClass))
+    {
+        reportException(Error_Translation_bad_metaclass, meta_class);
+    }
 
     // hook this up with the source as early as possible.
     new_class->setPackage(package);
