@@ -201,7 +201,9 @@ PackageClass *PackageClass::newRexx(RexxObject **init_args, size_t argCount)
             {
                 if (isOfClass(Method, option) || isOfClass(Routine, option))
                 {
-                    sourceContext = ((BaseExecutable *)option)->getPackage();
+                    // a native method has no package (getPackageObject() is OREF_NULL):
+                    // then there is nothing to inherit, as with no context at all
+                    sourceContext = ((BaseExecutable *)option)->getPackageObject();
                 }
                 else if (isOfClass(Package, option))
                 {

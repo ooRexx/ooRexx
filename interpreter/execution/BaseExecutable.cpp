@@ -273,7 +273,9 @@ void BaseExecutable::processNewExecutableArgs(RexxObject **&init_args, size_t &a
 
         if (isOfClass(Method, option) || isOfClass(Routine, option))
         {
-            sourceContext = ((BaseExecutable *)option)->getPackage();
+            // a native method has no package (getPackageObject() is OREF_NULL):
+            // then there is nothing to inherit, as with no context at all
+            sourceContext = ((BaseExecutable *)option)->getPackageObject();
         }
         else if (isOfClass(Package, option))
         {
@@ -342,7 +344,9 @@ void BaseExecutable::processNewFileExecutableArgs(RexxString *&filename,
 
     if (isOfClass(Method, sourceContext) || isOfClass(Routine, sourceContext))
     {
-        sourceContext = ((BaseExecutable *)sourceContext)->getPackage();
+        // a native method has no package (getPackageObject() is OREF_NULL):
+        // then there is nothing to inherit, as with no context at all
+        sourceContext = ((BaseExecutable *)sourceContext)->getPackageObject();
     }
     else
     {
