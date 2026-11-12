@@ -47,7 +47,9 @@ public:
     inline SysNamedPipeConnection() : pipeHandle(INVALID_HANDLE_VALUE), ApiConnection() { }
     inline SysNamedPipeConnection(HANDLE h) : pipeHandle(h), ApiConnection() { }
     inline SysNamedPipeConnection(const char *pipe) : pipeHandle(INVALID_HANDLE_VALUE), ApiConnection() { connect(pipe); }
-    inline ~SysNamedPipeConnection() { }
+    // the base class destructor cannot do this: there, disconnect() is the
+    // one of the base class, which does nothing
+    inline ~SysNamedPipeConnection() { disconnect(); }
 
     bool read(void *buf, size_t bufsize, size_t *bytesread) override;
     bool write(void *buf, size_t bufsize, size_t *byteswritten) override;

@@ -52,7 +52,9 @@ class SysSocketConnection : public ApiConnection
 public:
     inline SysSocketConnection() : c(-1), ApiConnection() { }
     inline SysSocketConnection(int sock) : c(sock), ApiConnection() { }
-    inline ~SysSocketConnection() { }
+    // the base class destructor cannot do this: there, disconnect() is the
+    // one of the base class, which does nothing
+    inline ~SysSocketConnection() { disconnect(); }
 
     bool read(void *buf, size_t bufsize, size_t *bytesread) override;
     bool write(void *buf, size_t bufsize, size_t *byteswritten) override;
