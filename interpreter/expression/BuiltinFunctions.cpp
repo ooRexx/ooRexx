@@ -858,8 +858,9 @@ BUILTIN(USERID)
 BUILTIN(ERRORTEXT)
 {
     const size_t ERRORTEXT_Min = 1;
-    const size_t ERRORTEXT_Max = 1;
+    const size_t ERRORTEXT_Max = 2;
     const size_t ERRORTEXT_n =   1;
+    const size_t ERRORTEXT_values = 2;
 
     check_args(ERRORTEXT);
 
@@ -905,11 +906,39 @@ BUILTIN(ERRORTEXT)
         }
         message_number = major * 1000 + minor;
     }
+    // the optional values fill the substitution markers, by the same rules
+    // as when the interpreter raises the error: so that
+    // ERRORTEXT(c~code, c~additional) is the MESSAGE of a SYNTAX condition
+    // object c.  Without them, the markers are returned as they are.  A
+    // single string is taken as an array with one item, as ("x") is not an
+    // array term.
+    RexxObject *values = optional_argument(ERRORTEXT, values);
+    Protected<ArrayClass> substitutions;
+    if (values != OREF_NULL)
+    {
+        if (isString(values) || isNumberString(values) || isInteger(values) || values->isInstanceOf(TheStringClass))
+        {
+            substitutions = new_array(values);
+        }
+        else if (values->isInstanceOf(TheArrayClass) && !((ArrayClass *)values)->isMultiDimensional())
+        {
+            substitutions = (ArrayClass *)values;
+        }
+        else
+        {
+            reportException(Error_Incorrect_call_array, "ERRORTEXT", IntegerTwo, values);
+        }
+    }
+
     // get the error message for this number and return the text.
     RexxString *result = Interpreter::getMessageText(message_number);
     if (result == OREF_NULL)
     {
-        result = GlobalNames::NULLSTRING;
+        return GlobalNames::NULLSTRING;
+    }
+    if (!substitutions.isNull())
+    {
+        result = context->getActivity()->messageSubstitution(result, substitutions);
     }
     return result;
 }

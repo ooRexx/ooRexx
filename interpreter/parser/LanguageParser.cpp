@@ -815,19 +815,28 @@ void LanguageParser::requireLanguageLevel(LanguageLevel l)
 
 /**
  * Mark the package as requiring the language level at which a
- * builtin function was introduced, if it is newer than the
- * base level.  Called once we know that a call or function
- * reference resolves to this builtin.
+ * builtin function, or the form of the call to it, was introduced,
+ * if it is newer than the base level.  Called once we know that a
+ * call or function reference resolves to this builtin.
  *
- * @param builtin The builtin function index.
+ * @param builtin  The builtin function index.
+ * @param argCount The number of arguments of the call.
  */
-void LanguageParser::requireBuiltinLanguageLevel(size_t builtin)
+void LanguageParser::requireBuiltinLanguageLevel(size_t builtin, size_t argCount)
 {
     switch (builtin)
     {
         // new in 5.2.0
         case BUILTIN_GC:
             requireLanguageLevel(LanguageLevel0606);
+            break;
+
+        // the second argument is new in 5.3.0
+        case BUILTIN_ERRORTEXT:
+            if (argCount > 1)
+            {
+                requireLanguageLevel(LanguageLevel0607);
+            }
             break;
 
         default:
@@ -1734,13 +1743,13 @@ void LanguageParser::resolveCalls()
         if (isOfClass(FunctionCallTerm, instruction))
         {
             ((RexxExpressionFunction *)instruction)->resolve(labels);
-            requireBuiltinLanguageLevel(((RexxExpressionFunction *)instruction)->resolvedBuiltin());
+            requireBuiltinLanguageLevel(((RexxExpressionFunction *)instruction)->resolvedBuiltin(), ((RexxExpressionFunction *)instruction)->getArgumentCount());
         }
         else
         {
             // ok, technically, this could be either a CALL or a SIGNAL.
             ((RexxInstructionCallBase *)instruction)->resolve(labels);
-            requireBuiltinLanguageLevel(((RexxInstructionCallBase *)instruction)->resolvedBuiltin());
+            requireBuiltinLanguageLevel(((RexxInstructionCallBase *)instruction)->resolvedBuiltin(), ((RexxInstructionCallBase *)instruction)->getArgumentCount());
         }
     }
 }
@@ -3280,7 +3289,7 @@ RexxInternalObject *LanguageParser::parseFunction(RexxToken *token, RexxToken *n
     // a literal name always calls the builtin, if there is one
     else
     {
-        requireBuiltinLanguageLevel(name->builtin());
+        requireBuiltinLanguageLevel(name->builtin(), argCount);
     }
     return func;
 }

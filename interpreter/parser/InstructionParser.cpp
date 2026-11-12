@@ -1232,7 +1232,7 @@ RexxInstruction* LanguageParser::callNew()
     // a literal name always calls the builtin, if there is one
     else
     {
-        requireBuiltinLanguageLevel(builtin_index);
+        requireBuiltinLanguageLevel(builtin_index, argCount);
     }
     return newObject;
 }

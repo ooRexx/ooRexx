@@ -65,6 +65,7 @@ class RexxExpressionFunction : public RexxInternalObject
     virtual void resolve(StringTable *);
     // the builtin function this will call, if any, once resolved
     inline size_t resolvedBuiltin() { return target == OREF_NULL ? builtinIndex : NO_BUILTIN; }
+    inline size_t getArgumentCount() { return argumentCount; }
 
 protected:
 

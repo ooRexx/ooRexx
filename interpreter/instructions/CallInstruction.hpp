@@ -64,6 +64,8 @@ class RexxInstructionCallBase : public RexxInstruction
     virtual void resolve(StringTable *) = 0;
     // the builtin function this will call, if any, once resolved
     virtual BuiltinCode resolvedBuiltin() { return NO_BUILTIN; }
+    // the number of arguments of the call, if it has any
+    virtual size_t getArgumentCount() { return 0; }
 
  protected:
 
@@ -119,6 +121,7 @@ class RexxInstructionCall : public RexxInstructionCallBase
     void execute(RexxActivation *, ExpressionStack *) override;
     void resolve(StringTable *) override;
     BuiltinCode resolvedBuiltin() override { return targetInstruction == OREF_NULL ? builtinIndex : NO_BUILTIN; }
+    size_t getArgumentCount() override { return argumentCount; }
 
 protected:
 
