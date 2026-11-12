@@ -45,7 +45,8 @@
 /*  0  no detach (the usual case, as a control)                              */
 /*  1  the creating thread detaches                                          */
 /*  2  it detaches while a Rexx thread started with REPLY is still running   */
-/*     (Terminate() has to wait for that thread, which sleeps for 0.2 s)     */
+/*     (Terminate() has to wait for that thread, which sleeps for 0.2 s and  */
+/*     then calls an external function of this program)                      */
 /*  3  it detaches, attaches again, runs some Rexx code and detaches again   */
 /*  4  it detaches and another thread calls Terminate()                      */
 /*  5  another thread attaches, runs and detaches, then the creating thread  */
@@ -78,6 +79,21 @@
 #include <thread>
 
 static std::atomic<bool> finished(false);
+
+
+// case 2: set by the REPLY thread as its last action
+static std::atomic<bool> replyDone(false);
+
+/**
+ * External function DRT_REPLY_DONE, called by the REPLY thread of case 2
+ * when it has finished its work.
+ */
+static size_t REXXENTRY replyDoneFunction(CONSTANT_STRING, size_t, PCONSTRXSTRING, CONSTANT_STRING, PRXSTRING result)
+{
+    replyDone = true;
+    result->strlength = 0;
+    return 0;
+}
 
 
 // case 6: an object of another instance, with a guarded method that sleeps
@@ -236,17 +252,20 @@ static bool cycle(int which)
         case 2:
         {
             // REPLY leaves a Rexx thread running after the method returns, and
-            // Terminate() has to wait for it
+            // Terminate() has to wait for it. That thread calls DRT_REPLY_DONE
+            // as its last action, so if Terminate() waited, replyDone is set
+            // when it returns. (Timing Terminate() is not enough: on a slow
+            // machine most of the sleep can be over before it is called.)
+            replyDone = false;
             ok = run(context, ".sleeper~new~sleep; return\n"
                               "::class sleeper\n"
                               "::method sleep\n"
                               "reply\n"
-                              "call SysSleep 0.2\n");
+                              "call SysSleep 0.2\n"
+                              "call DRT_REPLY_DONE\n");
             context->DetachThread();
-            std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
             instance->Terminate();
-            std::chrono::steady_clock::duration waited = std::chrono::steady_clock::now() - start;
-            if (waited < std::chrono::milliseconds(100))
+            if (!replyDone)
             {
                 fprintf(stderr, "Terminate() did not wait for the REPLY thread\n");
                 ok = false;
@@ -345,6 +364,12 @@ int main(int argc, char **argv)
     {
         fprintf(stderr, "case must be 0 to 6; cycles and watchdog-seconds must be positive\n");
         return 2;
+    }
+
+    if (which == 2 && RexxRegisterFunctionExe("DRT_REPLY_DONE", (REXXPFN)replyDoneFunction) != RXFUNC_OK)
+    {
+        fprintf(stderr, "could not register DRT_REPLY_DONE\n");
+        return 1;
     }
 
     std::thread(watchdog, watchdogSeconds).detach();
