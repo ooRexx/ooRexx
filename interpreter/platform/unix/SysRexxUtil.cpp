@@ -1097,6 +1097,97 @@ RexxRoutine2(int, SysSetPriority, OPTIONAL_int32_t, cls, int32_t, prio)
     return setpriority(PRIO_PROCESS, 0, -prio) == 0 ? 0 : HOST_ERRNO(errno);
 }
 
+#if defined( HAVE_CATOPEN ) && defined( __GLIBC__ )
+
+#include <endian.h>
+
+// the magic number of a GNU C library message catalog
+#define GLIBC_CATALOG_MAGIC 0x960408deU
+
+/**
+ * Test whether a file that is a GNU C library message catalog, by its
+ * magic number, has a header and tables that fit in the file.  The library
+ * reads such a catalog without these checks, in catopen() and in catgets():
+ * a table with no buckets ends in a division by zero, and a table or a
+ * message that is not in the file in a read outside of the mapped file.
+ *
+ * The layout is three 32-bit words (magic number, buckets per plane,
+ * planes), two copies of the table (little endian first, big endian second;
+ * each entry is set, message number and offset of the message), and the
+ * messages, each ended by a null character.
+ *
+ * @param name   The name of the catalog file.
+ *
+ * @return false if the file is a catalog that cannot be used.  true in any
+ *         other case, including a file that cannot be read or that is not
+ *         a catalog: catopen() handles those.
+ */
+static bool isUsableCatalog(const char *name)
+{
+    int fd = open(name, O_RDONLY | O_CLOEXEC);
+    if (fd < 0)
+    {
+        return true;
+    }
+
+    bool usable = true;
+    uint32_t *table = NULL;
+    struct stat64 info;
+    uint32_t header[3];
+
+    if (fstat64(fd, &info) == 0 && S_ISREG(info.st_mode) &&
+        pread(fd, header, sizeof(header), 0) == (ssize_t)sizeof(header) &&
+        (header[0] == GLIBC_CATALOG_MAGIC || header[0] == __builtin_bswap32(GLIBC_CATALOG_MAGIC)))
+    {
+        // this is a catalog: from here on, anything wrong makes it unusable
+        usable = false;
+
+        bool swapped = header[0] != GLIBC_CATALOG_MAGIC;
+        uint64_t fileSize = (uint64_t)info.st_size;
+        uint64_t planeSize = swapped ? __builtin_bswap32(header[1]) : header[1];
+        uint64_t planeDepth = swapped ? __builtin_bswap32(header[2]) : header[2];
+        // each entry of a table is three words, and there are two tables
+        const uint64_t entrySize = 3 * sizeof(uint32_t);
+
+        // both tables, and one character of messages at least, must fit
+        // (tested by division, as the product can overflow)
+        if (planeSize != 0 && planeDepth != 0 &&
+            planeSize <= (fileSize - sizeof(header)) / (2 * entrySize) / planeDepth)
+        {
+            uint64_t entries = planeSize * planeDepth;
+            uint64_t tableSize = entries * entrySize;
+            uint64_t messagesSize = fileSize - sizeof(header) - 2 * tableSize;
+            // the library uses the table in the byte order of the machine
+            off_t tableOffset = sizeof(header) + (__BYTE_ORDER == __LITTLE_ENDIAN ? 0 : tableSize);
+            char last;
+
+            table = (uint32_t *)malloc(tableSize);
+            // the last message must be ended, and no offset may point
+            // after the end of the file
+            if (messagesSize > 0 && table != NULL &&
+                pread(fd, &last, 1, (off_t)(fileSize - 1)) == 1 && last == '\0' &&
+                pread(fd, table, tableSize, tableOffset) == (ssize_t)tableSize)
+            {
+                usable = true;
+                for (uint64_t i = 0; i < entries; i++)
+                {
+                    if (table[i * 3 + 2] >= messagesSize)
+                    {
+                        usable = false;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    free(table);
+    close(fd);
+    return usable;
+}
+#endif
+
+
 /**
  * Retrieve an error message from the repository
  *
@@ -1125,6 +1216,15 @@ char* getErrorMessage(const char *repository, int setnum, int msgnum)
     // NLSPATH may contain both %N, which is replaced by the specified
     // catalog name, and %L, which is replaced by the LANG variable.
     nl_catd catalog;                     // catalog handle
+
+#if defined( __GLIBC__ )
+    // a name with a '/' is the file that catopen() will open: the C library
+    // crashes on a damaged catalog, so look at the file first
+    if (strchr(repository, '/') != NULL && !isUsableCatalog(repository))
+    {
+        return strdup("Error: Invalid message catalog");
+    }
+#endif
 
     if ((catalog = catopen(repository, 0)) == (nl_catd)-1)
     {
