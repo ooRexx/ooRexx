@@ -1331,6 +1331,22 @@ RexxCode *LanguageParser::translateBlock()
         // any pending control levels.
         else if (type != KEYWORD_ELSE)
         {
+            // an END cannot be the instruction of a pending THEN or ELSE.
+            // This must be checked here: flushControl() would add the END
+            // as that instruction, and the END case below would then find
+            // something else at the top of the control stack.
+            if (type == KEYWORD_END)
+            {
+                InstructionKeyword pending = topDoType();
+                if (pending == KEYWORD_ELSE)
+                {
+                    syntaxError(Error_Unexpected_end_else);
+                }
+                else if (pending == KEYWORD_IFTHEN || pending == KEYWORD_WHENTHEN)
+                {
+                    syntaxError(Error_Unexpected_end_then);
+                }
+            }
             flushControl(instruction);
         }
         // validate allowed instructions in a SELECT
