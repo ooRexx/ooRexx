@@ -2170,8 +2170,11 @@ RexxCompoundVariable *LanguageParser::addCompound(RexxString *name)
 {
     // we cache compound variables also...see if we've encountered
     // this exact name before.
+    // (Not while parsing a GUARD WHEN expression: the stem and the tails
+    // must go through the guard variable capture again, which happens
+    // when the retriever is built.)
     RexxCompoundVariable *retriever = (RexxCompoundVariable *)(variables->get(name));
-    if (retriever != OREF_NULL)
+    if (retriever != OREF_NULL && !capturingGuardVariables())
     {
         return retriever;
     }
@@ -2246,7 +2249,10 @@ RexxCompoundVariable *LanguageParser::addCompound(RexxString *name)
     // variables table for this.
     variables->put(retriever, name);
 
-    // NOTE: compound variables do get added to the guard list.
+    // in a GUARD WHEN expression, watch the compound variable itself too:
+    // assigning or dropping it does not change the stem variable, which is
+    // all that addStem() adds.  It is exposed if its stem is.
+    captureGuardVariable(stemName, retriever);
     return retriever;
 }
 

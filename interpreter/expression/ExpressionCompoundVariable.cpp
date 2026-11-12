@@ -348,7 +348,10 @@ void RexxCompoundVariable::expose(RexxActivation *context, VariableDictionary *o
 void RexxCompoundVariable::setGuard(RexxActivation *context )
 {
     // get the variable element and add our activity to the inform list.
-    CompoundTableElement *variable = context->getLocalCompoundVariable(stemName, stemIndex, &tails[0], tailCount);
+    // The element must exist to hold the inform list.  An element with no
+    // value stands for one explicitly dropped, which would hide the default
+    // value of the stem, so create it as EXPOSE does: with that value.
+    CompoundTableElement *variable = context->exposeLocalCompoundVariable(stemName, stemIndex, &tails[0], tailCount);
     variable->inform(ActivityManager::currentActivity);
 }
 
@@ -360,7 +363,13 @@ void RexxCompoundVariable::setGuard(RexxActivation *context )
 void RexxCompoundVariable::clearGuard(RexxActivation *context )
 {
     // get the variable context and remove this activity from the watch list.
-    CompoundTableElement *variable = context->getLocalCompoundVariable(stemName, stemIndex, &tails[0], tailCount);
-    variable->uninform(ActivityManager::currentActivity);
+    // Do not create the element: if a tail has changed since the GUARD
+    // started, an empty one would hide the default value of the stem.
+    CompoundVariableTail resolved_tail(context, &tails[0], tailCount);
+    CompoundTableElement *variable = context->getLocalStem(stemName, stemIndex)->findCompoundVariable(resolved_tail);
+    if (variable != OREF_NULL)
+    {
+        variable->uninform(ActivityManager::currentActivity);
+    }
 }
 
