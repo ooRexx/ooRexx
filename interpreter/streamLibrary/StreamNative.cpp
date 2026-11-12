@@ -620,6 +620,8 @@ const char *StreamInfo::handleOpen(const char *options)
 
     // reset the standard fields
     resetFields();
+    // resetFields() forgets that this is a handle stream: it still is
+    opened_as_handle = true;
 
     /* copy into the full name from the name */
     qualified_name = stream_name;
@@ -684,6 +686,14 @@ const char *StreamInfo::handleOpen(const char *options)
         {
             raiseException(Rexx_Error_Incorrect_method);
         }
+    }
+
+    // resetFields() has reset fileInfo, so attach it to the handle again
+    fileInfo.open(handle_value);
+    // don't buffer if we've explicitly requested no buffering.
+    if (nobuffer)
+    {
+        fileInfo.setBuffering(false, 0);
     }
 
 /********************************************************************************************/
@@ -2578,8 +2588,9 @@ RexxMethod2(CSTRING, stream_open, CSELF, streamPtr, OPTIONAL_CSTRING, options)
  */
 void StreamInfo::setHandle(int fh)
 {
-    fileInfo.open(fh);
-    opened_as_handle = 1;
+    // the handle is attached to fileInfo when the stream is opened
+    handle_value = fh;
+    opened_as_handle = true;
 }
 
 /********************************************************************************************/
@@ -2609,9 +2620,20 @@ RexxMethod2(int, handle_set, CSELF, streamPtr, int, fh)
 /********************************************************************************************/
 RexxMethod1(int, std_set, CSELF, streamPtr)
 {
-    StreamInfo *stream_info = (StreamInfo *)streamPtr;
-    stream_info->setStandard();
-    return 0;
+    try
+    {
+        StreamInfo *stream_info = checkStreamInfo(context, streamPtr, context->NullString());
+        stream_info->setStandard();
+        return 0;
+    }
+    // this is thrown for any exceptions
+    catch (int)
+    {
+    }
+    catch (StreamInfo *)
+    {
+    }
+    return 0;     // the result value has already been set.
 }
 
 /**
@@ -3396,10 +3418,19 @@ const char *StreamInfo::getQualifiedName()
 /********************************************************************************************/
 RexxMethod1(CSTRING, qualify, CSELF, streamPtr)
 {
-    StreamInfo *stream_info = (StreamInfo *)streamPtr;
-    stream_info->setContext(context, context->NullString());
-
-    return stream_info->getQualifiedName();
+    try
+    {
+        StreamInfo *stream_info = checkStreamInfo(context, streamPtr, context->NullString());
+        return stream_info->getQualifiedName();
+    }
+    // this is thrown for any exceptions
+    catch (int)
+    {
+    }
+    catch (StreamInfo *)
+    {
+    }
+    return 0;     // the result value has already been set.
 }
 
 
@@ -3447,10 +3478,19 @@ const char *StreamInfo::streamExists()
 /********************************************************************************************/
 RexxMethod1(CSTRING, query_exists, CSELF, streamPtr)
 {
-    StreamInfo *stream_info = (StreamInfo *)streamPtr;
-    stream_info->setContext(context, context->NullString());
-
-    return stream_info->streamExists();
+    try
+    {
+        StreamInfo *stream_info = checkStreamInfo(context, streamPtr, context->NullString());
+        return stream_info->streamExists();
+    }
+    // this is thrown for any exceptions
+    catch (int)
+    {
+    }
+    catch (StreamInfo *)
+    {
+    }
+    return 0;     // the result value has already been set.
 }
 
 /**
@@ -3472,9 +3512,19 @@ RexxObjectPtr StreamInfo::queryHandle()
 /********************************************************************************************/
 RexxMethod1(RexxObjectPtr, query_handle, CSELF, streamPtr)
 {
-    StreamInfo *stream_info = (StreamInfo *)streamPtr;
-    stream_info->setContext(context, context->NullString());
-    return stream_info->queryHandle();
+    try
+    {
+        StreamInfo *stream_info = checkStreamInfo(context, streamPtr, context->NullString());
+        return stream_info->queryHandle();
+    }
+    // this is thrown for any exceptions
+    catch (int)
+    {
+    }
+    catch (StreamInfo *)
+    {
+    }
+    return NULLOBJECT;     // the result value has already been set.
 }
 
 
@@ -3505,9 +3555,19 @@ const char *StreamInfo::getStreamType()
 /********************************************************************************************/
 RexxMethod1(CSTRING, query_streamtype, CSELF, streamPtr)
 {
-    StreamInfo *stream_info = (StreamInfo *)streamPtr;
-
-    return stream_info->getStreamType();
+    try
+    {
+        StreamInfo *stream_info = checkStreamInfo(context, streamPtr, context->NullString());
+        return stream_info->getStreamType();
+    }
+    // this is thrown for any exceptions
+    catch (int)
+    {
+    }
+    catch (StreamInfo *)
+    {
+    }
+    return 0;     // the result value has already been set.
 }
 
 /**
@@ -3570,10 +3630,19 @@ const char *StreamInfo::getTimeStamp()
 /********************************************************************************************/
 RexxMethod1(RexxObjectPtr, query_size, CSELF, streamPtr)
 {
-    StreamInfo *stream_info = (StreamInfo *)streamPtr;
-    stream_info->setContext(context, context->NullString());
-
-    return stream_info->getStreamSize();
+    try
+    {
+        StreamInfo *stream_info = checkStreamInfo(context, streamPtr, context->NullString());
+        return stream_info->getStreamSize();
+    }
+    // this is thrown for any exceptions
+    catch (int)
+    {
+    }
+    catch (StreamInfo *)
+    {
+    }
+    return NULLOBJECT;     // the result value has already been set.
 }
 
 
@@ -3582,10 +3651,19 @@ RexxMethod1(RexxObjectPtr, query_size, CSELF, streamPtr)
 /********************************************************************************************/
 RexxMethod1(CSTRING, query_time, CSELF, streamPtr)
 {
-    StreamInfo *stream_info = (StreamInfo *)streamPtr;
-    stream_info->setContext(context, context->NullString());
-
-    return stream_info->getTimeStamp();
+    try
+    {
+        StreamInfo *stream_info = checkStreamInfo(context, streamPtr, context->NullString());
+        return stream_info->getTimeStamp();
+    }
+    // this is thrown for any exceptions
+    catch (int)
+    {
+    }
+    catch (StreamInfo *)
+    {
+    }
+    return 0;     // the result value has already been set.
 }
 
 /**
@@ -3619,10 +3697,19 @@ const char *StreamInfo::getState()
 /********************************************************************************************/
 RexxMethod1(CSTRING, stream_state, CSELF, streamPtr)
 {
-    StreamInfo *stream_info = (StreamInfo *)streamPtr;
-    stream_info->setContext(context, context->NullString());
-
-    return stream_info->getState();
+    try
+    {
+        StreamInfo *stream_info = checkStreamInfo(context, streamPtr, context->NullString());
+        return stream_info->getState();
+    }
+    // this is thrown for any exceptions
+    catch (int)
+    {
+    }
+    catch (StreamInfo *)
+    {
+    }
+    return 0;     // the result value has already been set.
 }
 
 
@@ -3703,10 +3790,19 @@ RexxStringObject StreamInfo::getDescription()
 
 RexxMethod1(RexxStringObject, stream_description, CSELF, streamPtr)
 {
-    StreamInfo *stream_info = (StreamInfo *)streamPtr;
-    stream_info->setContext(context, context->NullString());
-
-    return stream_info->getDescription();
+    try
+    {
+        StreamInfo *stream_info = checkStreamInfo(context, streamPtr, context->NullString());
+        return stream_info->getDescription();
+    }
+    // this is thrown for any exceptions
+    catch (int)
+    {
+    }
+    catch (StreamInfo *)
+    {
+    }
+    return NULLOBJECT;     // the result value has already been set.
 }
 
 /**
@@ -3722,6 +3818,7 @@ StreamInfo::StreamInfo(RexxObjectPtr s, const char *inputName)
     // buffer needs to be allocated
     bufferAddress = NULL;
     bufferLength = 0;
+    handle_value = -1;
 
     // initialize the default values
     resetFields();

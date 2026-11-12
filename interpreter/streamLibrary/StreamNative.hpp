@@ -186,6 +186,7 @@ protected:
    bool stdstream;                     // true if a standard I/O stream
    bool last_op_was_read;              // still needed?
    bool opened_as_handle;              // given a handle directly
+   int  handle_value;                  // the handle given with HANDLE:n
    bool transient;                     // non-persistent stream
    bool record_based;                  // uses fixed-length, non-terminated records
    bool isopen;                        // the stream is open
