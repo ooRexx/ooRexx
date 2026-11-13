@@ -1896,7 +1896,7 @@ Function Components_Page_pre
 
   StrCpy $CheckRxApiLock 'false'
   Call CheckLockedFiles
-  ${If} $$UserRequestAbort == 'true'
+  ${If} $UserRequestAbort == 'true'
     Quit
   ${EndIf}
 
@@ -3316,6 +3316,14 @@ FunctionEnd
 Function CheckLockedFiles
 
   StrCpy $UserRequestAbort 'false'
+
+  ; With no previous installation there is no location, and the key file
+  ; names below would be relative to the root of the current drive.  When the
+  ; installer runs from a read-only network share, those can not be opened
+  ; for writing, and LockedList reports them as locked (bug #1629).
+  ${If} $RegVal_uninstallLocation == ""
+    goto done_out
+  ${EndIf}
 
 check_lock_loop:
 
