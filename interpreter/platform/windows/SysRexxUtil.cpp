@@ -888,21 +888,29 @@ bool TreeFinder::checkNonPathDrive()
 // fileSpec could be a drive designator.
     if (fileSpec.at(1) == ':')
     {
-        RoutineFileNameBuffer currentDirectory(context);
-
-        SysFileSystem::getCurrentDirectory(currentDirectory);
-
         char drive[4] = { 0 };
 
         // Just copy the drive letter and the colon, omit the rest.  This is
         // necessary e.g. for something like "I:*"
         memcpy(drive, fileSpec, 2);
 
-        // Change to the specified drive, get the current directory, then go
-        // back to where we came from.
-        SysFileSystem::setCurrentDirectory(drive);
-        SysFileSystem::getCurrentDirectory(filePath);
-        SysFileSystem::setCurrentDirectory(currentDirectory);
+        // GetFullPathName() gives the current directory of that drive, or its
+        // root if it has none or does not exist.  Changing the current
+        // directory of the process to find it out would fail silently for a
+        // drive that does not exist (and we would search the directory we
+        // were in), and would disturb any other thread using relative paths.
+        DWORD len = GetFullPathName(drive, (DWORD)filePath.capacity(), (char *)filePath, NULL);
+        if (len >= filePath.capacity())
+        {
+            // too small: len is the size needed, terminating null included
+            filePath.ensureCapacity(len);
+            len = GetFullPathName(drive, (DWORD)filePath.capacity(), (char *)filePath, NULL);
+        }
+        if (len == 0 || len >= filePath.capacity())
+        {
+            // fixupFilePath() will make this the root of the drive
+            filePath = drive;
+        }
 
         // everything after the drive delimiter is the search name.
         nameSpec = ((const char *)fileSpec) + 2;
