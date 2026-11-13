@@ -1,5 +1,5 @@
                     Instructions For Using CMake To Build ooRexx
-                                  Februari 15, 2021
+                                  November 13, 2026
 
 The ooRexx project uses CMake to build ooRexx.
 There are a number of advantages to using CMake which include support for
@@ -38,6 +38,8 @@ ooRexx on multiple platforms (Windows, Linux, macOS etc) using CMake.
 3. Now create a subdirectory on your disk that is NOT in the ooRexx source tree
    that you checked out in the previous step. All build files will be placed in
    this location. Preferred is a build dir at the same level as the source dir.
+   Then change to that directory: the commands in step 4 must be run from it,
+   or the build files will be created in whatever directory you are in.
 
 4. You are now ready to build ooRexx for your platform.
    On Windows run the following commands:
