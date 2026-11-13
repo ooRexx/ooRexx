@@ -269,14 +269,14 @@ char *unquote(const char *s)
 }
 
 
-/* Handle "CD XXX" command in same process */
-bool sys_process_cd(RexxExitContext *context, const char *command, const char * cmd, RexxObjectPtr &res)
+/* Handle "CD XXX" or "CHDIR XXX" command in same process */
+bool sys_process_cd(RexxExitContext *context, const char *command, const char * cmd, size_t verbLength, RexxObjectPtr &res)
 {
     const char * st;
     int rc, error;
     res = NULLOBJECT;
 
-    st = &cmd[3];
+    st = &cmd[verbLength];
     while ((*st) && (*st == ' '))
     {
         st++;
@@ -285,6 +285,19 @@ bool sys_process_cd(RexxExitContext *context, const char *command, const char * 
     {
         return false;
     }
+
+    // trailing blanks are not part of the directory name ("cd .. ")
+    AutoFree trimmed = strdup(st);
+    if (trimmed == NULL)
+    {
+        return false;
+    }
+    size_t length = strlen(trimmed);
+    while (length > 0 && trimmed[length - 1] == ' ')
+    {
+        trimmed[--length] = '\0';
+    }
+    st = trimmed;
 
     if ((strlen(st) == 2) && (st[1] == ':'))
     {
@@ -726,11 +739,12 @@ RexxObjectPtr RexxEntry systemCommandHandler(RexxExitContext *context,
         }
         else
         {
-            strncpy(tmp, &interncmd[j], 3);
-            tmp[3] = '\0';
-            if (!stricmp("cd ",tmp))
+            strncpy(tmp, &interncmd[j], 6);
+            tmp[6] = '\0';
+            if (!strnicmp("cd ", tmp, 3) || !stricmp("chdir ", tmp))
             {
-                if (sys_process_cd(context, cmd, &interncmd[j], result))
+                size_t verbLength = !strnicmp("cd ", tmp, 3) ? 3 : 6;
+                if (sys_process_cd(context, cmd, &interncmd[j], verbLength, result))
                 {
                     return result;
                 }

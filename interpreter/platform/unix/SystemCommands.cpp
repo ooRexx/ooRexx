@@ -43,6 +43,7 @@
 /******************************************************************************/
 
 #include <string.h>
+#include <ctype.h>
 #include <sys/wait.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -198,30 +199,121 @@ RexxString *SystemInterpreter::getDefaultAddressName()
     return GlobalNames::INITIALADDRESS;
 }
 
+/**
+ * Expand the value of an "export" (or "set") command as a shell would, for
+ * the simple cases: double quotes are removed and $NAME or ${NAME} inside
+ * them is expanded; single quotes are removed and nothing inside them is
+ * expanded; a backslash outside single quotes keeps the next character as
+ * it is. An undefined variable expands to nothing, and a "$" that is not
+ * followed by a name is kept.
+ *
+ * @param value  The part of the command after the "=".
+ *
+ * @return A malloc'ed string with the expanded value, or NULL if out of memory.
+ */
+char *expandExportValue(const char *value)
+{
+    size_t size = strlen(value) + 1;
+    size_t length = 0;
+    char *result = (char *)malloc(size);
+    if (result == NULL)
+    {
+        return NULL;
+    }
+
+    bool inDouble = false;
+    bool inSingle = false;
+    const char *p = value;
+    while (*p != '\0')
+    {
+        const char *piece = p;           // what we append in this round
+        size_t pieceLength = 1;
+        char nameBuffer[256];
+
+        if (inSingle)
+        {
+            if (*p == '\'')
+            {
+                inSingle = false;
+                pieceLength = 0;
+            }
+        }
+        else if (*p == '\\' && *(p + 1) != '\0')
+        {
+            p++;
+            piece = p;
+        }
+        else if (*p == '"')
+        {
+            inDouble = !inDouble;
+            pieceLength = 0;
+        }
+        else if (*p == '\'' && !inDouble)
+        {
+            inSingle = true;
+            pieceLength = 0;
+        }
+        else if (*p == '$')
+        {
+            const char *start = p + 1;
+            bool braced = *start == '{';
+            if (braced)
+            {
+                start++;
+            }
+            const char *end = start;
+            while (*end == '_' || isalnum((unsigned char)*end))
+            {
+                end++;
+            }
+            size_t nameLength = end - start;
+            if (nameLength > 0 && nameLength < sizeof(nameBuffer) && (!braced || *end == '}'))
+            {
+                memcpy(nameBuffer, start, nameLength);
+                nameBuffer[nameLength] = '\0';
+                piece = getenv(nameBuffer);
+                pieceLength = piece == NULL ? 0 : strlen(piece);
+                p = braced ? end : end - 1;   // the last character we consumed
+            }
+        }
+
+        if (pieceLength > 0)
+        {
+            if (length + pieceLength + 1 > size)
+            {
+                size = (length + pieceLength + 1) * 2;
+                char *larger = (char *)realloc(result, size);
+                if (larger == NULL)
+                {
+                    free(result);
+                    return NULL;
+                }
+                result = larger;
+            }
+            memcpy(result + length, piece, pieceLength);
+            length += pieceLength;
+        }
+        p++;
+    }
+    result[length] = '\0';
+    return result;
+}
+
+
 /* Handle "export" command in same process */
 bool sys_process_export(RexxExitContext *context, const char * cmd, RexxObjectPtr &rc, int flag)
 {
     char *Env_Var_String = NULL;         /* Environment variable string for   */
-    size_t size, allocsize;              /* size of the string                */
+    size_t size;                         /* size of the string                */
     char      **Environment;             /* environment pointer               */
     char  *np;
-    size_t i,j,k,l,iLength, copyval;
+    size_t i, iLength;
     char   namebufcurr[1281];             /* buf for extracted name            */
     char   cmd_name[1281];                /* name of the envvariable setting   */
-    char   *array, *runarray, *runptr, *endptr, *maxptr;
-    char   temparray[1281];
+    char   *array;
     const char *st;
-    char  *tmpptr;
     char   name[1281];                    /* is the name + value + =           */
-    char   value[1281];                   /* is the part behind =              */
     char  *del = NULL;                    /* ptr to old unused memory          */
-    char  *hit = NULL;
-    bool   HitFlag = false;
-    l = 0;
-    j = 0;
-    allocsize = 1281 * 2;
-
-    memset(temparray, '\0', sizeof(temparray));
 
     Environment = getEnvironment();       /* get the environment               */
     if (flag == EXPORT_FLAG)
@@ -301,111 +393,22 @@ bool sys_process_export(RexxExitContext *context, const char * cmd, RexxObjectPt
 
     i++;                                /* the place after'=' */
 
-/* lets search the value for variable part(s)  */
+/* build "name=value", with the value expanded as a shell would do it */
 
-    strcpy(value, &(name[i]));         /* value contains the part behind '=' */
-    array = (char *) malloc(1281);
-    strcpy(array, cmd_name);
-    array[strlen(cmd_name)] = '=';
-    array[i] = '\0';                   /* copy the terminator           */
-    runarray = array + strlen(array);
-    runptr = value;
-    endptr = runptr + strlen(value);   /*this is the end of the input*/
-    maxptr = array + MAX_VALUE -1;     /* this is the end of our new string */
-
-    while ((tmpptr = (strchr(runptr, '$'))) != 0)
+    char *expanded = expandExportValue(&(name[i]));
+    if (expanded == NULL)
     {
-        Environment = getEnvironment();  /* get the beginning of the environment*/
-        HitFlag = true;          /* if not true inputvalue= outputvalue*/
-        copyval = tmpptr - runptr;
-        if (copyval)   /* runarray should keep the 'real' environment  */
-        {
-            while ((runarray + copyval) >  maxptr)
-            {
-                array = (char *) realloc(array, allocsize);
-                runarray = array + strlen(array);
-                maxptr = array + allocsize - 1;
-                allocsize = allocsize * 2;
-            }
-            memcpy(runarray,runptr, copyval);
-            runarray= runarray + copyval; /* a new place to copy */
-            *runarray = '\0';
-            runptr = tmpptr;              /* now runptr is at the place of $ */
-        }
-        runptr++;
-        for (j = 0;(*runptr != '/') && (*runptr != ':') && (*runptr != '$') &&
-            (*runptr); j++)
-        {
-            memcpy(&(temparray[j]), runptr,1); /*temparray is the env var to search*/
-            runptr++;
-        }
-
-        temparray[j] = '\0';                /* lets see what we can do    */
-        np = NULL;
-
-        for (;(*Environment != NULL) && (hit == NULL) ;Environment++)
-        {
-            np = *Environment;
-
-            for (k=0;(*np!='=')&&(k<255);np++,k++)
-            {
-                memcpy(&(namebufcurr[k]),np,1);  /* copy the character                */
-            }
-
-            namebufcurr[k] = '\0';                 /* copy the terminator           */
-
-            if (!strcmp(temparray,namebufcurr))     /* have a match ?         */
-            {
-                hit = *Environment;
-                /* copy value to new string*/
-            }
-        }
-        if (hit) /* if we have found an entry of the env var in the env list */
-        {
-            np ++;                  /* don't copy equal                     */
-            while ((runarray + strlen(np)) >  maxptr)
-            {
-                array = (char *) realloc(array, allocsize);
-                runarray = array + strlen(array);
-                maxptr = array + allocsize - 1;
-                allocsize = allocsize * 2;
-            }
-            strcpy(runarray, np);
-            runarray = runarray + strlen(np);
-            *runarray = '\0';
-            hit = NULL;
-        }
+        return false;
     }
-
-    if (HitFlag == true)
+    size = strlen(cmd_name) + 1 + strlen(expanded) + 1;
+    array = (char *) malloc(size);
+    if (array == NULL)
     {
-        if (runptr < endptr)
-        {
-            while ((runarray + strlen(runptr)) >  maxptr)
-            {
-                array = (char *) realloc(array, allocsize);
-                runarray = array + strlen(array);
-                maxptr = array + allocsize - 1;
-                allocsize = allocsize * 2;
-            }
-            strcpy(runarray, runptr);      /* if there is a part after a var */
-            runarray = runarray + strlen(runptr);
-            *runarray = '\0';
-        }
+        free(expanded);
+        return false;
     }
-    else   /* no hit so lets copy the value as it is                     */
-    {
-        while ((runarray + strlen(value)) >  maxptr)
-        {
-            array = (char *) realloc(array, allocsize);
-            runarray = array + strlen(array);
-            maxptr = array + allocsize - 1;
-            allocsize = allocsize * 2;
-        }
-        strcpy(runarray,value);
-        runarray = runarray + strlen(runptr);
-        *runarray = '\0';
-    }
+    snprintf(array, size, "%s=%s", cmd_name, expanded);
+    free(expanded);
 
     Environment = getEnvironment();     /* get the beginning of the environment*/
 
@@ -443,6 +446,7 @@ bool sys_process_export(RexxExitContext *context, const char * cmd, RexxObjectPt
         }
     }
 
+    free(array);
     if (del)                              /* if there was a old one            */
     {
         free(del);                         /* free it                           */
@@ -601,9 +605,18 @@ bool sys_process_cd(RexxExitContext *context, const char * cmd, RexxObjectPtr rc
         dir_buf = strdup(st);
     }
 
+    // trailing blanks are not part of the directory name ('cd "dir" '),
+    // unless escaped
+    size_t length = strlen(dir_buf);
+    while (length > 0 && dir_buf[length - 1] == ' ' && (length < 2 || dir_buf[length - 2] != '\\'))
+    {
+        dir_buf[--length] = '\0';
+    }
+
     char *unquoted = unquote(dir_buf);
     if (unquoted == NULL)
     {
+        free(dir_buf);
         return false;
     }
     int errCode = chdir(unquoted);
@@ -756,8 +769,12 @@ logical_t handleCommandInternally(RexxExitContext *context, char *cmd, RexxObjec
 
     if (!noDirectInvoc)
     {
-        // execute special commands in the same process
-        // we currently don't handle formats like " cd" or "'cd'" internally
+        // execute special commands in the same process; leading blanks are
+        // skipped (" cd dir"), but we don't handle formats like "'cd'"
+        while (*cmd == ' ' || *cmd == '\t')
+        {
+            cmd++;
+        }
         if (strcmp("cd", cmd) == 0 || strncmp("cd ", cmd, 3) == 0)
         {
             return sys_process_cd(context, cmd, rc);
