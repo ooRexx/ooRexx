@@ -376,16 +376,21 @@ expose stream position line available transient close
 use arg stream                         /* get the stream                    */
 position = 0                           /* set initial position              */
 available = 1                          /* assume this is available          */
+line = ''                              /* set a default line                */
+if stream~state == 'UNKNOWN' then do   /* remember initial state            */
+  close = .true
+  -- the type of a stream is only known once it is open: open it now, as
+  -- the first LINEIN would, or an unopened transient stream is read by
+  -- position (error 93.958)
+  stream~open("read")
+end
+else
+  close = .false
                                        /* a transient stream?               */
 if stream~!query_streamtype == 'TRANSIENT' then
   transient = .true                    /* remember this                     */
 else
   transient = .false                   /* we can read by position           */
-line = ''                              /* set a default line                */
-if stream~state == 'UNKNOWN' then      /* remember initial state            */
-  close = .true
-else
-  close = .false
                                        /* opened persistent stream?         */
 if stream~state == 'READY', \transient then
   position = stream~!query_position("READ LINE") - 1 /* get current position*/
