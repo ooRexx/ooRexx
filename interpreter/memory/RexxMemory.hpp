@@ -345,14 +345,28 @@ inline void OrefSet(RexxInternalObject *o, RexxInternalObject *&r, RexxInternalO
     r = v;
 }
 
+// Typed version, used by setField() and setOtherField(). The field is updated through its
+// own type, T *, instead of through a RexxInternalObject *& that aliases it: writing a T *
+// object through an lvalue of another pointer type breaks the strict-aliasing rules
+// (bug #2029). Only pointer values are converted, never the storage that holds them.
+template <typename T>
+inline void OrefSet(RexxInternalObject *o, T *&r, RexxInternalObject *v)
+{
+    if (o->isOldSpace())
+    {
+        memoryObject.setOref((RexxInternalObject *)r, v);
+    }
+    r = (T *)v;
+}
+
 // short cut version of OrefSet().  99% of the uses specify this as the object pointer...this version
 // saves a little typing :-)
-#define setField(r, v)  OrefSet(this, (RexxInternalObject *&)this->r, v)
+#define setField(r, v)  OrefSet(this, this->r, v)
 // OK, I'm lazy...a version of this for nulling out a field.
 #define clearField(r) setField(r, OREF_NULL)
 
 // cleaner version for setting in another object
-#define setOtherField(o, r, v) OrefSet(o, (RexxInternalObject *&)o->r, v)
+#define setOtherField(o, r, v) OrefSet(o, o->r, v)
 
 
 /**

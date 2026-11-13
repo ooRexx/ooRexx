@@ -392,13 +392,19 @@ RexxRoutine0(RexxObjectPtr,
     // pthread_t is opaque, so it shouldn't be converted to anything
     // but it's documented to return "the current numerical thread id"
     // we cannot directly cast it to int as it may be e.g. a struct
+    // copy the bytes instead of reading them through a pointer of another
+    // type, which breaks the strict-aliasing rules (bug #2029)
     if (sizeof(tid) >= 8)
     {
-        return context->UnsignedInt64ToObject(*(uint64_t *)&tid);
+        uint64_t id;
+        memcpy(&id, &tid, sizeof(id));
+        return context->UnsignedInt64ToObject(id);
     }
     if (sizeof(tid) >= 4)
     {
-        return context->UnsignedInt32ToObject(*(uint32_t *)&tid);
+        uint32_t id;
+        memcpy(&id, &tid, sizeof(id));
+        return context->UnsignedInt32ToObject(id);
     }
     return context->NullString();
 }

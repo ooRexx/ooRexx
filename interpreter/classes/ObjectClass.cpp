@@ -596,7 +596,7 @@ void RexxObject::copyObjectVariables(RexxObject *newObj)
     // be in old space, where a new reference needs the write barrier)
     if (objectVariables != OREF_NULL)
     {
-        OrefSet(newObj, (RexxInternalObject *&)newObj->objectVariables, objectVariables->deepCopy());
+        setOtherField(newObj, objectVariables, objectVariables->deepCopy());
     }
 }
 
