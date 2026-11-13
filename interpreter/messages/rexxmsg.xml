@@ -1659,7 +1659,7 @@ editbin rexx.exe /stack:100000000
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Invalid_subkeyword_form</SymbolicName>
-        <Text>NUMERIC FORM must be followed by one of the keywords SCIENTIFIC or ENGINEERING; found <q><Sub position="1" name="word"/></q>.</Text>
+        <Text>NUMERIC FORM must be followed by SCIENTIFIC, ENGINEERING, VALUE, or an expression whose value is SCIENTIFIC or ENGINEERING; found <q><Sub position="1" name="word"/></q>.</Text>
       </SubMessage>
       <SubMessage>
         <Code>25</Code>
