@@ -2049,9 +2049,13 @@ int StreamInfo::lineout(RexxStringObject data, bool _setPosition, int64_t positi
         // if this is a binary stream, we may have a line to complete
         if (record_based)
         {
-            // calculate length to write out
-            size_t padding = binaryRecordLength - (charWritePosition - 1) % binaryRecordLength;
-            completeLine(padding);
+            // only a partially written record needs completing; at the
+            // start of a record there is nothing to pad
+            size_t written = (size_t)((charWritePosition - 1) % binaryRecordLength);
+            if (written > 0)
+            {
+                completeLine(binaryRecordLength - written);
+            }
         }
         // not a line repositioning?  we need to close
         if (!_setPosition)
