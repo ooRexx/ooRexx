@@ -72,6 +72,8 @@ class TrapHandler;
 /**
  * An activation of a section of Rexx code.
  */
+class RexxInstructionCatch;
+
 class RexxActivation : public ActivationBase
 {
   public:
@@ -206,6 +208,10 @@ class RexxActivation : public ActivationBase
    RexxString      * traceSetting();
    void              iterate(RexxString *);
    void              leaveLoop(RexxString *);
+   bool              findCatch(RexxString *condition, DirectoryClass *conditionObj, RexxActivation *&owner, DoBlock *&block, RexxInstructionCatch *&clause);
+   void              processCatch();
+   bool              catches(RexxString *condition, DirectoryClass *conditionObj = OREF_NULL);
+   bool              enabledBelow(TrapHandler *trap, RexxActivation *owner);
    void              trapOn(RexxString *, RexxInstructionTrapBase *, bool);
    void              trapOff(RexxString *, bool);
    void              setAddress(RexxString *, CommandIOConfiguration *config);
@@ -220,6 +226,10 @@ class RexxActivation : public ActivationBase
    RexxObject      * internalCallTrap(RexxString *, RexxInstruction *, DirectoryClass *, ProtectedObject &);
    bool              callMacroSpaceFunction(RexxString *, RexxObject **, size_t, RexxString *, int, ProtectedObject &);
    static RoutineClass* getMacroCode(RexxString *macroName);
+   // a counter that orders trap activations and the entries to internal
+   // routines (RFE #31)
+   static inline uint64_t nextSequence() { return ++sequenceCounter; }
+   static uint64_t sequenceCounter;
    RexxString       *resolveProgramName(RexxString *name, ResolveType type);
    RexxClass        *findClass(RexxString *name);
    RexxObject       *resolveDotVariable(RexxString *name, RexxObject *&);
@@ -308,7 +318,13 @@ class RexxActivation : public ActivationBase
    inline DoBlock *topBlockInstruction() { return doStack; }
    inline void terminateBlockInstruction(size_t _indent) { popBlockInstruction(); settings.traceIndent = _indent; }
    inline void terminateBlockInstruction() { popBlockInstruction();  }
-   inline void newBlockInstruction(DoBlock *block) { pushBlockInstruction(block); blockNest++; settings.traceIndent++;}
+   inline void newBlockInstruction(DoBlock *block)
+   {
+       pushBlockInstruction(block);
+       blockNest++;
+       block->setNest(blockNest);
+       settings.traceIndent++;
+   }
    inline void removeBlockInstruction()
    {
        blockNest--;
@@ -653,5 +669,11 @@ class RexxActivation : public ActivationBase
     size_t               blockNest;     // block instruction nesting level
     size_t               instructionCount;  // The number of instructions since we last yielded control
     uint32_t             idntfr;        // idntfr for concurrency trace
+                                        // a condition caught by a CATCH clause, waiting
+                                        // for the unwind to reach this activation (RFE #31)
+    DoBlock             *catchBlock;    // the block that caught it
+    RexxInstructionCatch *catchClause;  // the CATCH clause that caught it
+    DirectoryClass      *catchCondition;// the condition object
+    uint64_t             entrySequence; // when this internal routine was entered (see TrapHandler)
  };
  #endif

@@ -286,6 +286,7 @@ class LanguageParser: public RexxInternalObject
     RexxInstruction *numericNew();
     RexxInstruction *optionsNew();
     RexxInstruction *otherwiseNew(RexxToken *);
+    RexxInstruction *catchNew();
     RexxInstruction *parseNew(InstructionSubKeyword);
     RexxInstruction *procedureNew();
     RexxInstruction *pushNew();

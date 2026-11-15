@@ -89,6 +89,9 @@
 #define Rexx_Error_Unexpected_end_then                                    10005
 #define Rexx_Error_Unexpected_end_else                                    10006
 #define Rexx_Error_Unexpected_end_select_nolabel                          10007
+#define Rexx_Error_Unexpected_end_catch                                   10008
+#define Rexx_Error_Unexpected_end_catch_then                              10009
+#define Rexx_Error_Unexpected_end_catch_else                              10011
 #define Rexx_Error_Control_stack                                          11000
 #define Rexx_Error_Control_stack_full                                     11001
 #define Rexx_Error_Control_stack_user_defined                             11900
@@ -185,6 +188,7 @@
 #define Rexx_Error_Symbol_expected_address_with                           20933
 #define Rexx_Error_Symbol_expected_counter                                20934
 #define Rexx_Error_Symbol_expected_numeric_subdirective                   20935
+#define Rexx_Error_Symbol_expected_catch                                  20936
 #define Rexx_Error_Invalid_data                                           21000
 #define Rexx_Error_Invalid_data_user_defined                              21900
 #define Rexx_Error_Invalid_data_nop                                       21901
@@ -256,6 +260,7 @@
 #define Rexx_Error_Invalid_subkeyword_duplicate                           25936
 #define Rexx_Error_Invalid_subkeyword_conflict                            25937
 #define Rexx_Error_Invalid_subkeyword_options_form                        25938
+#define Rexx_Error_Invalid_subkeyword_catch                               25939
 #define Rexx_Error_Invalid_whole_number                                   26000
 #define Rexx_Error_Invalid_whole_number_repeat                            26002
 #define Rexx_Error_Invalid_whole_number_for                               26003
@@ -284,6 +289,8 @@
 #define Rexx_Error_Invalid_leave_leavevar                                 28003
 #define Rexx_Error_Invalid_leave_iteratevar                               28004
 #define Rexx_Error_Invalid_leave_iterate_name                             28005
+#define Rexx_Error_Invalid_leave_leave_catch                              28006
+#define Rexx_Error_Invalid_leave_iterate_catch                            28007
 #define Rexx_Error_Environment_name                                       29000
 #define Rexx_Error_Environment_name_name                                  29001
 #define Rexx_Error_Name_too_long                                          30000
@@ -353,6 +360,7 @@
 #define Rexx_Error_Invalid_expression_case_when_list                      35934
 #define Rexx_Error_Invalid_expression_missing_general                     35935
 #define Rexx_Error_Invalid_expression_missing_constant                    35936
+#define Rexx_Error_Invalid_expression_catch_syntax                        35937
 #define Rexx_Error_Unmatched_parenthesis                                  36000
 #define Rexx_Error_Unmatched_parenthesis_user_defined                     36900
 #define Rexx_Error_Unmatched_parenthesis_paren                            36901

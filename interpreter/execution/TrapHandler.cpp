@@ -47,6 +47,7 @@
 #include "CallInstruction.hpp"
 #include "DirectoryClass.hpp"
 #include "GlobalNames.hpp"
+#include "RexxActivation.hpp"
 
 
 /**
@@ -74,6 +75,7 @@ TrapHandler::TrapHandler(RexxString *c, RexxInstructionTrapBase *h)
     condition = c;
     handler = h;
     state = ON;
+    sequence = RexxActivation::nextSequence();
 }
 
 

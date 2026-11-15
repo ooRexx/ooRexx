@@ -84,6 +84,7 @@
 #include "CommandIOContext.hpp"
 #include "LibraryPackage.hpp"
 #include "ConditionTrappingDispatcher.hpp"
+#include "CatchInstruction.hpp"
 
 #include <atomic>
 
@@ -115,6 +116,10 @@ void * RexxActivation::operator new(size_t size)
  * Initialize an activation for direct caching in the activation
  * cache.  At this time, this is not an executable activation
  */
+// orders trap activations and block entries (RFE #31)
+uint64_t RexxActivation::sequenceCounter = 0;
+
+
 RexxActivation::RexxActivation()
 {
     setHasNoReferences();          // nothing referenced from this either
@@ -140,6 +145,10 @@ RexxActivation::RexxActivation(Activity* _activity, RexxActivation *_parent, Met
     settings.intermediateTrace = false;
     activationContext = METHODCALL;  // the context is a method call
     parent = OREF_NULL;              // we don't have a parent stack frame when invoked as a method
+    catchBlock = OREF_NULL;
+    catchClause = OREF_NULL;
+    catchCondition = OREF_NULL;
+    entrySequence = 0;
     executionState = ACTIVE;         // we are now in active execution
     objectScope = SCOPE_RELEASED;    // scope not reserved yet
 
@@ -221,6 +230,10 @@ RexxActivation::RexxActivation(Activity *_activity, RexxActivation *_parent, Rex
 
     // the sender is our parent activity
     parent = _parent;
+    catchBlock = OREF_NULL;
+    catchClause = OREF_NULL;
+    catchCondition = OREF_NULL;
+    entrySequence = 0;
     executionState = ACTIVE;      // we are now in active execution
     objectScope = SCOPE_RELEASED; // internal calls don't have a scope
 
@@ -241,6 +254,8 @@ RexxActivation::RexxActivation(Activity *_activity, RexxActivation *_parent, Rex
     // settings as well.
     if (context == INTERNALCALL)
     {
+        // the traps enabled from now on are this routine's own (RFE #31)
+        entrySequence = nextSequence();
         settings.setTrapsCopied(false);
         settings.setIOConfigCopied(false);
         settings.setReplyIssued(false);
@@ -290,6 +305,10 @@ RexxActivation::RexxActivation(Activity *_activity, RexxActivation *_parent, Rou
     activationContext = context;
     settings.intermediateTrace = false;
     parent = OREF_NULL;            // there's no parent for a top level call
+    catchBlock = OREF_NULL;
+    catchClause = OREF_NULL;
+    catchCondition = OREF_NULL;
+    entrySequence = 0;
     executionState = ACTIVE;       // we are now in active execution
     objectScope = SCOPE_RELEASED;  // scope not reserved yet
 
@@ -371,6 +390,9 @@ void RexxActivation::live(size_t liveMark)
     memory_mark(environmentList);
     memory_mark(conditionQueue);
     memory_mark(contextObject);
+    memory_mark(catchBlock);
+    memory_mark(catchClause);
+    memory_mark(catchCondition);
 
     // We're holding a pointer back to our arguments directly where they
     // are created.  Since in some places, this argument list comes
@@ -406,6 +428,9 @@ void RexxActivation::liveGeneral(MarkReason reason)
     memory_mark_general(environmentList);
     memory_mark_general(conditionQueue);
     memory_mark_general(contextObject);
+    memory_mark_general(catchBlock);
+    memory_mark_general(catchClause);
+    memory_mark_general(catchCondition);
 
     // We're holding a pointer back to our arguments directly where they
     // are created.  Since in some places, this argument list comes
@@ -833,10 +858,16 @@ RexxObject* RexxActivation::run(RexxObject *_receiver, RexxString *name, RexxObj
                 stack.clear();
                 settings.timeStamp.valid = false;
 
+                // a condition caught by a CATCH clause of one of our blocks
+                // (also of a block typed at a debug pause)
+                if (catchBlock != OREF_NULL)
+                {
+                    processCatch();
+                }
                 // if we were in a debug pause, we had a error interpreting the
                 // line typed at the pause.  We're just going to terminate this
                 // like it was a return
-                if (debugPause)
+                else if (debugPause)
                 {
                     stopExecution(RETURNED);
                 }
@@ -1154,6 +1185,11 @@ void RexxActivation::iterate(RexxString *name)
             // we only recognize LOOP constructs for this.
             if (loop->isLoop())
             {
+                // the loop has ended: we are in one of its CATCH clauses
+                if (doblock->isInCatch())
+                {
+                    reportException(Error_Invalid_leave_iterate_catch, loop->getLineNumber());
+                }
                 // reset the indentation
                 setIndent(doblock->getIndent());
                 // have the loop handle a re-execution.  This will
@@ -1166,6 +1202,11 @@ void RexxActivation::iterate(RexxString *name)
         // a named LEAVE can be either a labeled block or a loop.
         else if (loop->isLabel(name))
         {
+            // the block has ended: we are in one of its CATCH clauses
+            if (doblock->isInCatch())
+            {
+                reportException(Error_Invalid_leave_iterate_catch, loop->getLineNumber());
+            }
             // if we have a name match, but this is not a loop,
             // that's a problem.
             if (!loop->isLoop())
@@ -1218,6 +1259,11 @@ void RexxActivation::leaveLoop(RexxString *name)
             // we only recognize LOOP constructs for this.
             if (loop->isLoop())
             {
+                // the loop has ended: we are in one of its CATCH clauses
+                if (doblock->isInCatch())
+                {
+                    reportException(Error_Invalid_leave_leave_catch, loop->getLineNumber());
+                }
                 loop->terminate(this, doblock);
                 return;
             }
@@ -1225,6 +1271,11 @@ void RexxActivation::leaveLoop(RexxString *name)
         // a named LEAVE can be either a labeled block or a loop.
         else if (loop->isLabel(name))
         {
+            // the block has ended: we are in one of its CATCH clauses
+            if (doblock->isInCatch())
+            {
+                reportException(Error_Invalid_leave_leave_catch, loop->getLineNumber());
+            }
             loop->terminate(this, doblock);
             return;
         }
@@ -2508,8 +2559,9 @@ bool RexxActivation::trap(RexxString *condition, DirectoryClass *exceptionObject
         notifyObject->error(exceptionObject);
     }
 
-    // are we in a debug pause?  ignore any condition other than a syntax error.
-    if (debugPause)
+    // are we in a debug pause?  ignore any condition other than a syntax error,
+    // unless a CATCH clause of a block typed at the pause catches it
+    if (debugPause && !catches(condition, exceptionObject))
     {
         if (!condition->strCompare(GlobalNames::SYNTAX))
         {
@@ -2520,27 +2572,55 @@ bool RexxActivation::trap(RexxString *condition, DirectoryClass *exceptionObject
         activity->displayDebug(exceptionObject);
         throw this;
     }
-    // no trap table set yet?  can't handle this
-    if (settings.traps == OREF_NULL)
+    // see if we have a handler for this condition (there might be no
+    // trap table yet).  The traps of the program are ignored at a debug
+    // pause
+    TrapHandler *trapHandler = OREF_NULL;
+    if (settings.traps != OREF_NULL && !debugPause)
     {
-        return false;
-    }
+        trapHandler = (TrapHandler *)settings.traps->get(condition);
 
-    // see if we have a handler for this condition
-    TrapHandler *trapHandler = (TrapHandler *)settings.traps->get(condition);
-
-    // nothing there for the specific condition.  We could have an ANY
-    // trap enabled, so check that.
-    if (trapHandler == OREF_NULL)
-    {
-
-        trapHandler = (TrapHandler *)settings.traps->get(GlobalNames::ANY);
-        // if we have a handler, but this can't handle this can condition, return false
-        if (trapHandler != OREF_NULL && !trapHandler->canHandle(condition))
+        // nothing there for the specific condition.  We could have an ANY
+        // trap enabled, so check that.
+        if (trapHandler == OREF_NULL)
         {
-            return false;
+            trapHandler = (TrapHandler *)settings.traps->get(GlobalNames::ANY);
+            // if we have a handler, but this can't handle this condition,
+            // it does not count (a CATCH clause might still catch it)
+            if (trapHandler != OREF_NULL && !trapHandler->canHandle(condition))
+            {
+                trapHandler = OREF_NULL;
+            }
         }
     }
+
+    // a CATCH clause of an active block (here, or in the code that runs
+    // this internal routine or INTERPRET) wins over a trap, wherever the
+    // trap was enabled: the clause has the scope of its block, a trap
+    // belongs to the activation.  The exception is the trap that an
+    // internal routine called from the block has enabled for itself
+    // (RFE #31)
+    RexxActivation *catchOwner;
+    DoBlock *catchingBlock;
+    RexxInstructionCatch *clause;
+    if (findCatch(condition, exceptionObject, catchOwner, catchingBlock, clause) &&
+        (trapHandler == OREF_NULL || !enabledBelow(trapHandler, catchOwner)))
+    {
+        // as for a trap, a HALT might need the system exit
+        if (condition->strCompare(GlobalNames::HALT))
+        {
+            activity->callHaltClearExit(this);
+        }
+        exceptionObject->put(GlobalNames::CATCH, GlobalNames::INSTRUCTION);
+        // the activation that owns the block jumps to the clause once the
+        // unwind reaches it (see processCatch())
+        catchOwner->catchBlock = catchingBlock;
+        catchOwner->catchClause = clause;
+        catchOwner->catchCondition = exceptionObject;
+        activity->clearCurrentCondition();
+        throw catchOwner;
+    }
+
     // if the condition is being trapped, do the CALL or SIGNAL
     if (trapHandler != OREF_NULL)
     {
@@ -2606,6 +2686,151 @@ bool RexxActivation::trap(RexxString *condition, DirectoryClass *exceptionObject
 
 
 /**
+ * Find the CATCH clause that catches a condition: the innermost
+ * active block of this activation with a clause for it, or, for an
+ * internal routine or an INTERPRET, of the code that runs it, and
+ * so on.  A block whose CATCH clause is running does not catch the
+ * conditions raised there (RFE #31).
+ *
+ * @param condition The condition name.
+ * @param conditionObj
+ *                  The condition object, or OREF_NULL if there is none
+ *                  yet (the codes of the clauses are not checked then).
+ * @param owner     Returns the activation that owns the block.
+ * @param block     Returns the block.
+ * @param clause    Returns the CATCH clause.
+ *
+ * @return true if a CATCH clause catches the condition.
+ */
+bool RexxActivation::findCatch(RexxString *condition, DirectoryClass *conditionObj, RexxActivation *&owner, DoBlock *&block, RexxInstructionCatch *&clause)
+{
+    for (RexxActivation *activation = this; activation != OREF_NULL;
+         activation = activation->isInternalLevelCall() ? activation->parent : OREF_NULL)
+    {
+        for (DoBlock *doblock = activation->doStack; doblock != OREF_NULL; doblock = doblock->getPrevious())
+        {
+            if (!doblock->isInCatch() && doblock->getCatches() != OREF_NULL)
+            {
+                RexxInstructionCatch *c = RexxInstructionCatch::findClause(doblock, condition, conditionObj, activation);
+                if (c != OREF_NULL)
+                {
+                    owner = activation;
+                    block = doblock;
+                    clause = c;
+                    return true;
+                }
+            }
+        }
+        // a line typed at an interactive trace pause runs as an INTERPRET
+        // of the paused code, but the blocks of that code are not active
+        // for it: an error there is shown at the pause, as without CATCH.
+        // The blocks typed in the line itself do catch, as those of an
+        // INTERPRET do: stop at the pause, after its own blocks
+        if (activation->debugPause)
+        {
+            break;
+        }
+    }
+    return false;
+}
+
+
+/**
+ * Test if a trap was enabled by an internal routine that runs, directly
+ * or not, for an activation: by this one, or by one of those that
+ * called it.  Such a trap is further in than the blocks of that
+ * activation, so it wins over their CATCH clauses; the traps that the
+ * routine inherited from its caller do not (RFE #31).
+ *
+ * @param trap   The trap handler.
+ * @param owner  The activation that owns the block.
+ *
+ * @return true if an internal routine below the owner enabled the trap.
+ */
+bool RexxActivation::enabledBelow(TrapHandler *trap, RexxActivation *owner)
+{
+    for (RexxActivation *activation = this; activation != OREF_NULL && activation != owner; activation = activation->parent)
+    {
+        // an INTERPRET shares the traps of the code that runs it
+        if (activation->isInternalCall() && trap->getSequence() > activation->entrySequence)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+
+/**
+ * Test if an active CATCH clause catches a condition (RFE #31).
+ *
+ * @param condition The condition name.
+ *
+ * @return true if one does.
+ */
+bool RexxActivation::catches(RexxString *condition, DirectoryClass *conditionObj)
+{
+    RexxActivation *owner;
+    DoBlock *block;
+    RexxInstructionCatch *clause;
+    return findCatch(condition, conditionObj, owner, block, clause);
+}
+
+
+/**
+ * Jump to the CATCH clause that caught a condition, once the unwind
+ * has reached this activation: end the blocks entered inside the
+ * body of the catching block, and set SIGL, RC and CONDITION() as a
+ * SIGNAL ON trap would (RFE #31).
+ */
+void RexxActivation::processCatch()
+{
+    DoBlock *block = catchBlock;
+    RexxInstructionCatch *clause = catchClause;
+    DirectoryClass *conditionObj = catchCondition;
+    catchBlock = OREF_NULL;
+    catchClause = OREF_NULL;
+    catchCondition = OREF_NULL;
+
+    // end the blocks entered inside the body
+    while (doStack != OREF_NULL && doStack != block)
+    {
+        popBlockInstruction();
+    }
+    blockNest = block->getNest();
+    settings.traceIndent = block->getIndent() + 1;
+    block->setInCatch(true);
+
+    if (current != OREF_NULL)
+    {
+        setLocalVariable(GlobalNames::SIGL, VARIABLE_SIGL, new_integer(current->getLineNumber()));
+    }
+    RexxInternalObject *rc = conditionObj->get(GlobalNames::RC);
+    if (rc != OREF_NULL)
+    {
+        setLocalVariable(GlobalNames::RC, VARIABLE_RC, (RexxObject *)rc);
+    }
+    setConditionObj(conditionObj);
+
+    setIndent(block->getIndent());
+    traceInstruction(clause);
+    settings.traceIndent = block->getIndent() + 1;
+    // CATCH variable = condition
+    clause->assignCondition(this, conditionObj);
+    next = clause->nextInstruction;
+    // interactive tracing pauses at the clause, as it does at the label
+    // of a SIGNAL ON trap, before any of its instructions run: RC, SIGL,
+    // CONDITION() and the variable can be inspected.  "=" cannot run the
+    // clause that raised the condition again (its block has ended), so
+    // there it just continues.
+    if (conditionalPauseInstruction())
+    {
+        next = clause->nextInstruction;
+    }
+}
+
+
+/**
  * Check the activation to see if this is trapping a condition.
  * This does not process the trap, but merely indicates that
  * this activation WILL trap the condition.  This is a
@@ -2643,13 +2868,25 @@ bool RexxActivation::willTrap(RexxString *condition)
         return false;
     }
 
-    // are we in a debug pause?  ignore any condition other than a syntax error.
-    if (debugPause)
+    // are we in a debug pause?  ignore any condition other than a syntax error,
+    // unless a CATCH clause of a block typed at the pause catches it
+    if (debugPause && !catches(condition))
     {
         if (!condition->strCompare(GlobalNames::SYNTAX))
         {
             return false;
         }
+        return true;
+    }
+
+    // a CATCH clause that catches it (RFE #31)
+    RexxActivation *catchOwner;
+    DoBlock *catchingBlock;
+    RexxInstructionCatch *clause;
+    // (the codes of CATCH SYNTAX number and the like are checked by
+    // trap(), once there is a condition object)
+    if (findCatch(condition, OREF_NULL, catchOwner, catchingBlock, clause))
+    {
         return true;
     }
 
@@ -2690,8 +2927,12 @@ bool RexxActivation::willTrap(RexxString *condition)
  */
 RexxObject* RexxActivation::handleNovalueEvent(RexxString *name, RexxObject *defaultValue, RexxVariable *variable)
 {
+    // an active CATCH clause for NOVALUE (or ANY) wins over ::OPTIONS
+    // NOVALUE SYNTAX, and makes the condition be raised (RFE #31)
+    bool caught = catches(GlobalNames::NOVALUE);
+
     // have we specified via ::options that errors should be raised?
-    if (isNovalueSyntaxEnabled())
+    if (isNovalueSyntaxEnabled() && !caught)
     {
         reportException(Error_Execution_unassigned_variable, name);
     }
@@ -2711,7 +2952,7 @@ RexxObject* RexxActivation::handleNovalueEvent(RexxString *name, RexxObject *def
         return value;
     }
     // raise novalue?
-    if (novalueEnabled())
+    if (novalueEnabled() || caught)
     {
         reportNovalue(name);
     }
@@ -4598,8 +4839,11 @@ void RexxActivation::command(RexxString *address, RexxString *commandString, Com
         // these are also not raised if it's a debug pause.
         if (conditionObj != OREF_NULL)
         {
-            // first check for an ::OPTIONS FAILURE SYNTAX override
-            if (failureCondition && isFailureSyntaxEnabled())
+            // first check for an ::OPTIONS FAILURE SYNTAX override (an
+            // active CATCH clause for the condition wins over the option, as
+            // a trap does, and the option applies again once the block has
+            // ended; RFE #31)
+            if (failureCondition && isFailureSyntaxEnabled() && !catches(GlobalNames::FAILURE, conditionObj))
             {
                 // we could rework our condition object, but it's easier
                 // to just raise a SYNTAX exception
@@ -4609,7 +4853,7 @@ void RexxActivation::command(RexxString *address, RexxString *commandString, Com
             }
             // next we check for an ::OPTIONS ERROR SYNTAX override (a handler
             // can raise any condition; this applies to ERROR only)
-            if (errorCondition && isErrorSyntaxEnabled())
+            if (errorCondition && isErrorSyntaxEnabled() && !catches(GlobalNames::ERRORNAME, conditionObj))
             {
                 // just raise a SYNTAX exception
                 reportException(Error_Execution_error_syntax,
@@ -4626,7 +4870,7 @@ void RexxActivation::command(RexxString *address, RexxString *commandString, Com
                 if (failureCondition)
                 {
                     // again, first check for an ::OPTIONS ERROR SYNTAX override
-                    if (isErrorSyntaxEnabled())
+                    if (isErrorSyntaxEnabled() && !catches(GlobalNames::ERRORNAME, conditionObj))
                     {
                         // if so, just raise a SYNTAX exception
                         reportException(Error_Execution_error_syntax,

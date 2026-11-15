@@ -255,6 +255,7 @@ typedef enum
     KEYWORD_REQUIRES,
     KEYWORD_USE_LOCAL,
     KEYWORD_CONSTANT,
+    KEYWORD_CATCH,
 } InstructionKeyword;
 
 // instruction subkeyword types

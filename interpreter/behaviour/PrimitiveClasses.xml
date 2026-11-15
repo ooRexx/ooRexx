@@ -225,6 +225,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <Class id="CommandIOConfiguration" class="CommandIOConfiguration" include="CommandIOConfiguration.hpp"/>
 <Class id="AddressWithInstruction" class="RexxInstructionAddressWith" include="AddressWithInstruction.hpp"/>
 <Class id="ConstantDirective" class="ConstantDirective" include="ConstantDirective.hpp"/>
+<Class id="CatchInstruction" class="RexxInstructionCatch" include="CatchInstruction.hpp"/>
 </Internal>
 <Transient>
 <Class id="Memory" class="MemoryObject" include="RexxMemory.hpp" objectvirtual="true"/>

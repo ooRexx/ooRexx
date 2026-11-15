@@ -107,6 +107,7 @@
 #include "DoInstruction.hpp"
 #include "EndInstruction.hpp"
 #include "OtherwiseInstruction.hpp"
+#include "CatchInstruction.hpp"
 #include "SelectInstruction.hpp"
 #include "ProtectedObject.hpp"
 #include "UseArgVariableRef.hpp"
@@ -430,6 +431,11 @@ RexxInstruction* LanguageParser::nextInstruction()
                 // OTEHRWISE in a SELECT
             case KEYWORD_OTHERWISE:
                 return otherwiseNew(first);
+                break;
+
+                // CATCH clause of a DO, LOOP or SELECT (RFE #31)
+            case KEYWORD_CATCH:
+                return catchNew();
                 break;
 
                 // ELSE instruction...possibly unexpected.
@@ -3078,6 +3084,165 @@ RexxInstruction *LanguageParser::optionsNew()
 
     RexxInstruction *newObject = new_instruction(OPTIONS, Options);
     ::new ((void *)newObject) RexxInstructionOptions(expression);
+    return newObject;
+}
+
+
+/**
+ * Parse a CATCH clause of a DO, LOOP or SELECT (RFE #31):
+ * CATCH [variable =] condition [, condition]...
+ * The variable gets the condition object when the clause runs.
+ * As on RAISE, SYNTAX can be followed by an error number, and ERROR
+ * and FAILURE by a return code; here they are constants (a literal
+ * string or a constant symbol, with an optional sign).
+ *
+ * @return An executable CATCH instruction object.
+ */
+RexxInstruction *LanguageParser::catchNew()
+{
+    // CATCH is new in 5.3.0: a program that uses it has a new instruction
+    // class and a new END style in its image, so an earlier interpreter
+    // must reject it when it is loaded from a compiled file
+    requireLanguageLevel(LanguageLevel0607);
+
+    // an optional variable for the condition object, as in NetRexx's
+    // CATCH [variable =] exception
+    RexxVariableBase *variable = OREF_NULL;
+    size_t start = markPosition();
+    RexxToken *first = nextReal();
+    RexxToken *second = first->isSymbol() ? nextReal() : OREF_NULL;
+    if (second != OREF_NULL && second->isOperator(OPERATOR_EQUAL))
+    {
+        if (first->isSubtype(SYMBOL_CONSTANT))
+        {
+            syntaxError(Error_Invalid_variable_number, first);
+        }
+        else if (first->isSubtype(SYMBOL_DUMMY, SYMBOL_DOTSYMBOL))
+        {
+            syntaxError(Error_Invalid_variable_period, first);
+        }
+        variable = addVariable(first);
+    }
+    else
+    {
+        // no variable: the conditions start at the first token
+        resetPosition(start);
+    }
+    ProtectedObject pVariable(variable);
+
+    // a list of conditions, separated by commas
+    Protected<ArrayClass> conditions = new_array();
+    // the code of each condition, or .nil
+    Protected<ArrayClass> codes = new_array();
+    bool hasCodes = false;
+    for (;;)
+    {
+        RexxToken *token = nextReal();
+        if (!token->isSymbol())
+        {
+            syntaxError(Error_Symbol_expected_catch);
+        }
+        RexxString *conditionName;
+        ConditionKeyword condType = token->condition();
+        if (condType == CONDITION_NONE || condType == CONDITION_PROPAGATE)
+        {
+            syntaxError(Error_Invalid_subkeyword_catch, token);
+        }
+        // USER conditions are "USER name", as for SIGNAL ON
+        else if (condType == CONDITION_USER)
+        {
+            token = nextReal();
+            if (!token->isSymbol())
+            {
+                syntaxError(Error_Symbol_expected_user);
+            }
+            conditionName = commonString(token->value()->concatToCstring("USER "));
+        }
+        else
+        {
+            conditionName = token->value();
+        }
+        conditions->append(conditionName);
+
+        token = nextReal();
+        RexxObject *code = TheNilObject;
+        // SYNTAX number, ERROR errorcode, FAILURE failurecode
+        if ((condType == CONDITION_SYNTAX || condType == CONDITION_ERROR || condType == CONDITION_FAILURE) &&
+            !token->isEndOfClause() && !token->isComma())
+        {
+            if (condType == CONDITION_SYNTAX)
+            {
+                // a simple variable is read when the clause is tested
+                if (token->isSymbol() && token->isSubtype(SYMBOL_VARIABLE))
+                {
+                    code = (RexxObject *)addVariable(token);
+                }
+                else
+                {
+                    // a number or a literal string: checked now, and kept as
+                    // major * 1000 + minor
+                    if (!token->isLiteral() && !(token->isSymbol() && token->isSubtype(SYMBOL_CONSTANT)))
+                    {
+                        // a stem, a compound variable, an environment symbol,
+                        // or not a symbol
+                        syntaxError(Error_Invalid_expression_general, token);
+                    }
+                    wholenumber_t number = RexxInstructionCatch::errorNumber(token->value());
+                    if (number < 0)
+                    {
+                        syntaxError(Error_Invalid_expression_catch_syntax, token);
+                    }
+                    code = new_integer(number);
+                }
+            }
+            // ERROR and FAILURE: a number, optionally signed (as on
+            // ::CONSTANT), a literal string, or a simple variable, which is
+            // read when the clause is tested.  Nothing is evaluated.
+            else if (token->isOperator(OPERATOR_SUBTRACT) || token->isOperator(OPERATOR_PLUS))
+            {
+                bool negative = token->isOperator(OPERATOR_SUBTRACT);
+                token = nextToken();
+                if (!token->isSymbol() || !token->isSubtype(SYMBOL_CONSTANT) || token->value()->numberString() == OREF_NULL)
+                {
+                    syntaxError(Error_Invalid_expression_general, token);
+                }
+                code = negative ? token->value()->concatToCstring("-") : token->value();
+            }
+            else if (token->isLiteral())
+            {
+                code = token->value();
+            }
+            else if (token->isSymbol() && token->isSubtype(SYMBOL_CONSTANT) && token->value()->numberString() != OREF_NULL)
+            {
+                code = token->value();
+            }
+            else if (token->isSymbol() && token->isSubtype(SYMBOL_VARIABLE))
+            {
+                code = (RexxObject *)addVariable(token);
+            }
+            else
+            {
+                // a stem, a compound variable, an environment symbol, a
+                // constant symbol that is not a number, or not a symbol
+                syntaxError(Error_Invalid_expression_general, token);
+            }
+            hasCodes = true;
+            token = nextReal();
+        }
+        codes->append(code);
+
+        if (token->isEndOfClause())
+        {
+            break;
+        }
+        if (!token->isComma())
+        {
+            syntaxError(Error_Invalid_data_condition, token);
+        }
+    }
+
+    RexxInstruction *newObject = new_instruction(CATCH, Catch);
+    ::new ((void *)newObject) RexxInstructionCatch(conditions, variable, hasCodes ? (ArrayClass *)codes : OREF_NULL);
     return newObject;
 }
 

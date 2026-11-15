@@ -157,6 +157,16 @@ void RexxInstructionEnd::execute(RexxActivation *context, ExpressionStack *stack
         }
 
         // for labeled BLOCK types, we need to remove the active marker.
+        // a block with CATCH clauses: the code of the last clause has
+        // finished, so the block ends (RFE #31)
+        case CATCH_BLOCK:
+        {
+            DoBlock *doBlock = context->topBlockInstruction();
+            doBlock->getParent()->terminate(context, doBlock);
+            context->traceInstruction(this);
+            break;
+        }
+
         case OTHERWISE_BLOCK:
         case LABELED_OTHERWISE_BLOCK:
         case LABELED_DO_BLOCK:

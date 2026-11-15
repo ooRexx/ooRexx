@@ -367,13 +367,29 @@ void RexxInstructionSelectCase::execute(RexxActivation *context, ExpressionStack
     // protect it, as the expression evaluation may trigger a GC
     Protected<DoBlock> doblock = new DoBlock (context, this);
 
+    // a SELECT CASE with CATCH clauses is active while the CASE expression
+    // is evaluated, as a loop is while its clause is (RFE #31)
+    bool catching = doblock->getCatches() != OREF_NULL;
+    if (catching)
+    {
+        context->newBlockInstruction(doblock);
+        context->unindent();
+    }
+
     // evaluate the CASE instruction and store in the doblock so the WHEN
     // instructions can retrieve it.
     ProtectedObject caseResult = caseExpr->evaluate(context, stack);
     context->traceKeywordResult(GlobalNames::CASE, caseResult);
 
     // set the block to the top of the context stack.
-    context->newBlockInstruction(doblock);
+    if (catching)
+    {
+        context->indent();
+    }
+    else
+    {
+        context->newBlockInstruction(doblock);
+    }
 
     doblock->setCase(caseResult);
 

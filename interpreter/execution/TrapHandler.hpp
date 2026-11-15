@@ -72,6 +72,7 @@ class TrapHandler : public RexxInternalObject
     RexxString *getState();
     void disable();
     void enable();
+    inline uint64_t getSequence() { return sequence; }
 
 protected:
 
@@ -86,6 +87,9 @@ protected:
     RexxInstructionTrapBase *handler;   // the instruction that handles this condition trap
     TrapState state;                    // current state of the trap
     DirectoryClass *conditionObject;    // an object associated with a active trap
+    uint64_t sequence;                  // when the trap was enabled: tells the traps an
+                                        // internal routine enabled itself, which win over
+                                        // the CATCH clauses of its callers (RFE #31)
 };
 
 #endif

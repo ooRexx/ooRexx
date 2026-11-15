@@ -869,6 +869,7 @@ set (instructions_sources  ${build_instructions_dir}/AddressInstruction.cpp
             ${build_instructions_dir}/NumericInstruction.cpp
             ${build_instructions_dir}/OptionsInstruction.cpp
             ${build_instructions_dir}/OtherwiseInstruction.cpp
+            ${build_instructions_dir}/CatchInstruction.cpp
             ${build_instructions_dir}/ParseInstruction.cpp
             ${build_instructions_dir}/ParseTarget.cpp
             ${build_instructions_dir}/ParseTrigger.cpp

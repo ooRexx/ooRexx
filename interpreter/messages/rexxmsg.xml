@@ -418,6 +418,33 @@ else                    end
         <SymbolicName>Error_Unexpected_end_select_nolabel</SymbolicName>
         <Text>END corresponding to SELECT on line <Sub position="2" name="line_number"/> must not have a symbol following it because there is no LABEL; found <q><Sub position="1" name="symbol"/></q>.</Text>
       </SubMessage>
+      <SubMessage>
+        <Code>10</Code>
+        <Subcode>008</Subcode>
+        <MessageNumber>846</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Unexpected_end_catch</SymbolicName>
+        <Text>CATCH has no corresponding DO, LOOP, or SELECT.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>10</Code>
+        <Subcode>009</Subcode>
+        <MessageNumber>851</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Unexpected_end_catch_then</SymbolicName>
+        <Text>CATCH must not immediately follow THEN.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>10</Code>
+        <Subcode>011</Subcode>
+        <MessageNumber>852</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Unexpected_end_catch_else</SymbolicName>
+        <Text>CATCH must not immediately follow ELSE.</Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>
@@ -1360,6 +1387,15 @@ editbin rexx.exe /stack:100000000
         <SymbolicName>Error_Symbol_expected_numeric_subdirective</SymbolicName>
         <Text>Symbol expected after the NUMERIC subdirective keyword.</Text>
       </SubMessage>
+      <SubMessage>
+        <Code>20</Code>
+        <Subcode>936</Subcode>
+        <MessageNumber>847</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Symbol_expected_catch</SymbolicName>
+        <Text>Symbol expected after CATCH keyword or after a comma in a CATCH clause.</Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>
@@ -2021,6 +2057,15 @@ editbin rexx.exe /stack:100000000
         <SymbolicName>Error_Invalid_subkeyword_options_form</SymbolicName>
         <Text>FORM must be followed by one of the keywords SCIENTIFIC or ENGINEERING; found <q><Sub position="1" name="word"/></q>.</Text>
       </SubMessage>
+      <SubMessage>
+        <Code>25</Code>
+        <Subcode>939</Subcode>
+        <MessageNumber>848</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Invalid_subkeyword_catch</SymbolicName>
+        <Text>CATCH must be followed by one or more of the keywords ERROR, FAILURE, HALT, LOSTDIGITS, NOTREADY, NOMETHOD, NOSTRING, NOVALUE, SYNTAX, USER, or ANY, separated by commas; found <q><Sub position="1" name="word"/></q>.</Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>
@@ -2294,6 +2339,24 @@ editbin rexx.exe /stack:100000000
         <Severity>Warning</Severity>
         <SymbolicName>Error_Invalid_leave_iterate_name</SymbolicName>
         <Text>Symbol following ITERATE (<q><Sub position="1" name="symbol"/></q>) does not match a repetitive block instruction.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>28</Code>
+        <Subcode>006</Subcode>
+        <MessageNumber>849</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Invalid_leave_leave_catch</SymbolicName>
+        <Text>LEAVE in a CATCH clause must not refer to the block instruction on line <Sub position="1" name="line_number"/>, which owns the clause.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>28</Code>
+        <Subcode>007</Subcode>
+        <MessageNumber>850</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Invalid_leave_iterate_catch</SymbolicName>
+        <Text>ITERATE in a CATCH clause must not refer to the block instruction on line <Sub position="1" name="line_number"/>, which owns the clause.</Text>
       </SubMessage>
     </Subcodes>
   </Message>
@@ -2942,6 +3005,15 @@ editbin rexx.exe /stack:100000000
         <Severity>Warning</Severity>
         <SymbolicName>Error_Invalid_expression_missing_constant</SymbolicName>
         <Text>Missing expression on ::CONSTANT directive.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>35</Code>
+        <Subcode>937</Subcode>
+        <MessageNumber>853</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Invalid_expression_catch_syntax</SymbolicName>
+        <Text>Incorrect error number following SYNTAX keyword of CATCH clause; found <q><Sub position="1" name="value"/></q>.</Text>
       </SubMessage>
     </Subcodes>
   </Message>

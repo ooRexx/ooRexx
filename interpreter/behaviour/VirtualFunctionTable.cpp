@@ -160,6 +160,7 @@
 #include "CommandIOConfiguration.hpp"
 #include "AddressWithInstruction.hpp"
 #include "ConstantDirective.hpp"
+#include "CatchInstruction.hpp"
 #include "RexxMemory.hpp"
 #include "InternalStack.hpp"
 #include "MemoryStack.hpp"
@@ -927,6 +928,10 @@ void MemoryObject::buildVirtualFunctionTable()
    static_assert(sizeof(ConstantDirective) <= sizeof(objectBuffer), "objectBuffer is too small for ConstantDirective");
    objectPtr = ::new (objectLoc) ConstantDirective(RESTOREIMAGE);
    virtualFunctionTable[T_ConstantDirective] = getVftPointer(objectLoc);
+   
+   static_assert(sizeof(RexxInstructionCatch) <= sizeof(objectBuffer), "objectBuffer is too small for RexxInstructionCatch");
+   objectPtr = ::new (objectLoc) RexxInstructionCatch(RESTOREIMAGE);
+   virtualFunctionTable[T_CatchInstruction] = getVftPointer(objectLoc);
    
    static_assert(sizeof(RexxObject) <= sizeof(objectBuffer), "objectBuffer is too small for RexxObject");
    objectPtr = ::new (objectLoc) RexxObject(RESTOREIMAGE);

@@ -46,6 +46,7 @@
 #include "DoBlock.hpp"
 #include "EndInstruction.hpp"
 #include "RexxActivation.hpp"
+#include "CatchInstruction.hpp"
 
 
 /**
@@ -77,7 +78,8 @@ void RexxInstructionSimpleDo::execute(RexxActivation *context, ExpressionStack *
 
     // if we have a label then we need to add a block to the control stack
     // so LEAVE or ITERATE can determine the block bounds.
-    if (getLabel() != OREF_NULL)
+    // a block with CATCH clauses needs one too (RFE #31)
+    if (getLabel() != OREF_NULL || RexxInstructionCatch::hasCatches(this))
     {
         // create an active block, and make this the top of the
         // control stack

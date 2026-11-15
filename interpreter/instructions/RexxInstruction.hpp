@@ -113,6 +113,7 @@ typedef enum
     LABELED_SELECT_BLOCK,
     LABELED_OTHERWISE_BLOCK,
     LABELED_DO_BLOCK,
+    CATCH_BLOCK,                // a block with CATCH clauses (RFE #31)
 } EndBlockType;
 
 class DoBlock;

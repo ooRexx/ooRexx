@@ -68,6 +68,7 @@ KeywordEntry RexxToken::keywordInstructions[] =
     KeywordEntry("ADDRESS",    KEYWORD_ADDRESS),
     KeywordEntry("ARG",        KEYWORD_ARG),
     KeywordEntry("CALL",       KEYWORD_CALL),
+    KeywordEntry("CATCH",      KEYWORD_CATCH),
     KeywordEntry("DO",         KEYWORD_DO),
     KeywordEntry("DROP",       KEYWORD_DROP),
     KeywordEntry("ELSE",       KEYWORD_ELSE),

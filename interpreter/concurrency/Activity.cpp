@@ -596,7 +596,9 @@ wholenumber_t Activity::errorNumber(DirectoryClass *conditionObject)
 void Activity::checkConditionSyntaxOptions(RexxString *condition, RexxObject *description, RexxObject *result)
 {
     RexxActivation *activation = getCurrentRexxFrame();
-    if (activation != OREF_NULL)
+    // an active CATCH clause for the condition wins over the option, which
+    // applies again once the block has ended (RFE #31)
+    if (activation != OREF_NULL && !activation->catches(condition))
     {
         if (activation->isErrorSyntaxEnabled() && condition->strCompare(GlobalNames::ERRORNAME))
         {

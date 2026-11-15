@@ -275,11 +275,28 @@ void RexxInstructionBaseLoop::execute(RexxActivation *context, ExpressionStack *
     // all we do here is create a new doblock and make it active
     Protected<DoBlock> doblock = new DoBlock(context, this);
 
+    // a loop with CATCH clauses is active while its own clause is
+    // evaluated, so the clauses also catch the conditions raised there
+    // (RFE #31; this keeps the trace indentation of the clause)
+    bool catching = doblock->getCatches() != OREF_NULL;
+    if (catching)
+    {
+        context->newBlockInstruction(doblock);
+        context->unindent();
+    }
+
     // perform loop specific initialization before pushing the doblock
     setup(context, stack, doblock);
 
     // set the block to the top of the context stack.
-    context->newBlockInstruction(doblock);
+    if (catching)
+    {
+        context->indent();
+    }
+    else
+    {
+        context->newBlockInstruction(doblock);
+    }
 
     // update the iteration counters
     doblock->newIteration();

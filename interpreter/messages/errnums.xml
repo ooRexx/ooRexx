@@ -283,6 +283,24 @@ else                    end
 <para>END corresponding to SELECT on line <emphasis role="italic">line_number</emphasis> must not have a symbol following it because there is no LABEL; found "<emphasis role="italic">symbol</emphasis>".</para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>008</term>
+<listitem>
+<para>CATCH has no corresponding DO, LOOP, or SELECT.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>009</term>
+<listitem>
+<para>CATCH must not immediately follow THEN.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>011</term>
+<listitem>
+<para>CATCH must not immediately follow ELSE.</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 <section id="ERR11">
@@ -948,6 +966,12 @@ editbin rexx.exe /stack:100000000
 <para>Symbol expected after the NUMERIC subdirective keyword.</para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>936</term>
+<listitem>
+<para>Symbol expected after CATCH keyword or after a comma in a CATCH clause.</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 <section id="ERR21">
@@ -1409,6 +1433,12 @@ editbin rexx.exe /stack:100000000
 <para>FORM must be followed by one of the keywords SCIENTIFIC or ENGINEERING; found "<emphasis role="italic">word</emphasis>".</para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>939</term>
+<listitem>
+<para>CATCH must be followed by one or more of the keywords ERROR, FAILURE, HALT, LOSTDIGITS, NOTREADY, NOMETHOD, NOSTRING, NOVALUE, SYNTAX, USER, or ANY, separated by commas; found "<emphasis role="italic">word</emphasis>".</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 <section id="ERR26">
@@ -1613,6 +1643,18 @@ editbin rexx.exe /stack:100000000
 <term>005</term>
 <listitem>
 <para>Symbol following ITERATE ("<emphasis role="italic">symbol</emphasis>") does not match a repetitive block instruction.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>006</term>
+<listitem>
+<para>LEAVE in a CATCH clause must not refer to the block instruction on line <emphasis role="italic">line_number</emphasis>, which owns the clause.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>007</term>
+<listitem>
+<para>ITERATE in a CATCH clause must not refer to the block instruction on line <emphasis role="italic">line_number</emphasis>, which owns the clause.</para>
 </listitem>
 </varlistentry>
 </variablelist>
@@ -2074,6 +2116,12 @@ editbin rexx.exe /stack:100000000
 <term>936</term>
 <listitem>
 <para>Missing expression on ::CONSTANT directive.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>937</term>
+<listitem>
+<para>Incorrect error number following SYNTAX keyword of CATCH clause; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 </variablelist>

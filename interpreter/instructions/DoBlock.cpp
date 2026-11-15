@@ -46,6 +46,7 @@
 #include "DoBlock.hpp"
 #include "RexxActivation.hpp"
 #include "Numerics.hpp"
+#include "CatchInstruction.hpp"
 
 /**
  * Allocate a new DoBlock object.
@@ -69,6 +70,10 @@ DoBlock::DoBlock(RexxActivation *context, RexxBlockInstruction *_parent)
 {
     parent = _parent;
     indent = context->getIndent();
+    // a block with CATCH clauses: find the first one (RFE #31)
+    catches = RexxInstructionCatch::firstClause(parent);
+    inCatch = false;
+    nest = 0;
     countVariable = parent->getCountVariable();
     // if we have a count variable, then we need to set the initial value
     // to zero before we do the loop termination tests.
@@ -93,6 +98,7 @@ void DoBlock::live(size_t liveMark)
     memory_mark(to);
     memory_mark(by);
     memory_mark(countVariable);
+    memory_mark(catches);
 }
 
 
@@ -111,6 +117,7 @@ void DoBlock::liveGeneral(MarkReason reason)
     memory_mark_general(to);
     memory_mark_general(by);
     memory_mark_general(countVariable);
+    memory_mark_general(catches);
 }
 
 

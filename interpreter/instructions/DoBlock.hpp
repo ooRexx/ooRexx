@@ -49,6 +49,7 @@
 
 class RexxBlockInstruction;
 class RexxVariableBase;
+class RexxInstructionCatch;
 
 /**
  * A container for state of active block instructions (DO LOOP, or SELECT)
@@ -87,6 +88,14 @@ class DoBlock : public RexxInternalObject
     inline void newIteration() { counter++; };
     void setCounter(RexxActivation *context);
 
+    // CATCH clauses (RFE #31)
+    inline void setCatches(RexxInstructionCatch *c) { catches = c; }
+    inline RexxInstructionCatch *getCatches() { return catches; }
+    inline void setInCatch(bool v) { inCatch = v; }
+    inline bool isInCatch() { return inCatch; }
+    inline void setNest(size_t n) { nest = n; }
+    inline size_t getNest() { return nest; }
+
 
 protected:
 
@@ -105,5 +114,9 @@ protected:
     TokenSubclass      compare;          // type of comparison
     RexxVariableBase  *countVariable;    // control variable for counter
     uint64_t           counter;          // the loop iteration counter
+
+    RexxInstructionCatch *catches;       // first CATCH clause of the block, if any
+    bool               inCatch;          // the code of a CATCH clause is running
+    size_t             nest;             // block nesting level of the block's body
 };
 #endif
