@@ -2788,6 +2788,11 @@ void RexxActivation::processCatch()
     DoBlock *block = catchBlock;
     RexxInstructionCatch *clause = catchClause;
     DirectoryClass *conditionObj = catchCondition;
+    // catchCondition was the condition object's only marked reference
+    // (trap() has cleared the activity's current condition), and SIGL's
+    // integer and the variables below allocate before setConditionObj():
+    // keep it protected until the clause has it
+    ProtectedObject p(conditionObj);
     catchBlock = OREF_NULL;
     catchClause = OREF_NULL;
     catchCondition = OREF_NULL;
