@@ -1911,7 +1911,7 @@ void RexxActivation::raise(RexxString *condition, RexxObject *rc, RexxString *de
     else
     {
         // build a condition object for the condition
-        p = activity->createConditionObject(condition, rc, description, additional, result);
+        p = activity->createConditionObject(condition, rc, description, additional, resultObj);
 
         conditionobj = p;
         conditionobj->put(TheFalseObject, GlobalNames::PROPAGATED);
