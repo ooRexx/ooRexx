@@ -777,6 +777,7 @@
 #define Error_Unexpected_end_after_finally_msg                       857
 #define Error_Execution_finally_exit_msg                             858
 #define Error_Translation_finally_exit_msg                           859
+#define Error_Incorrect_call_range_limits_msg                        860
 
 
 #endif

@@ -45,6 +45,10 @@
 //NOTE:  This file gets included multiple times to define different tables, so
 // it does not have standard #ifndef multiple include protections.
 
+// DIRECTORY, FILESPEC and BEEP are built-in functions since 5.3.0.  The
+// routines stay because programs compiled by older releases call them as
+// external routines of this package; RxFuncQuery and RxFuncAdd do not see
+// them (PackageManager::isRetiredRoutine()).  See BuiltinFunctionSupport.hpp.
 INTERNAL_ROUTINE(Directory, sysDirectory)
 INTERNAL_ROUTINE(Filespec, sysFilespec)
 INTERNAL_ROUTINE(Beep, sysBeep)

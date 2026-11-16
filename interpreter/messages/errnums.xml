@@ -2583,6 +2583,13 @@ Say Enter A, B, or C
 <emphasis role="italic">function_name</emphasis> argument <emphasis role="italic">argument_number</emphasis> must be an error code nn.nnn, with nn in the range 0-99 and nnn in the range 0-999; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>927</term>
+<listitem>
+<para>
+<emphasis role="italic">function_name</emphasis> argument <emphasis role="italic">argument_number</emphasis> must be in the range <emphasis role="italic">minimum</emphasis> to <emphasis role="italic">maximum</emphasis>; found "<emphasis role="italic">value</emphasis>".</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 <section id="ERR41">

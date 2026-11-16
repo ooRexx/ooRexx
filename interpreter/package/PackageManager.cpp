@@ -423,6 +423,26 @@ RoutineClass *PackageManager::loadRoutine(RexxString *packageName, RexxString *f
 
 
 /**
+ * Test for one of the retired routines of the REXX package: BEEP, DIRECTORY
+ * and FILESPEC, built-in functions since 5.3.0 (see
+ * BuiltinFunctionSupport.hpp).  The routines stay in packageRoutines, where
+ * callNativeRoutine() finds them for the programs compiled by older
+ * releases, which call them as external routines.  But, as for any other
+ * built-in function, RxFuncQuery() must not report an external function of
+ * that name, and RxFuncAdd() must be able to register one (which a call in
+ * source code does not reach, as for any other built-in function).
+ *
+ * @param name   The uppercase function name.
+ *
+ * @return true for BEEP, DIRECTORY and FILESPEC.
+ */
+bool PackageManager::isRetiredRoutine(RexxString *name)
+{
+    return name->strCompare("BEEP") || name->strCompare("DIRECTORY") || name->strCompare("FILESPEC");
+}
+
+
+/**
  * Locate an already loaded function.
  *
  * @param function  The function name.
@@ -432,11 +452,12 @@ RoutineClass *PackageManager::loadRoutine(RexxString *packageName, RexxString *f
  */
 RoutineClass *PackageManager::getLoadedRoutine(RexxString *function)
 {
-    // see if we have this one already as a package function
+    // see if we have this one already as a package function (the retired
+    // routines of the REXX package are not reported: see isRetiredRoutine())
     RoutineClass *func = (RoutineClass *)packageRoutines->get(function);
 
     // if we have this, then we can return it directly.
-    if (func != OREF_NULL)
+    if (func != OREF_NULL && !isRetiredRoutine(function))
     {
         return func;
     }
@@ -686,7 +707,8 @@ bool PackageManager::callNativeRoutine(Activity *activity, RexxString *name,
     // all of our tables use uppercase names...make this a case-insensitive lookup
     name = name->upper();
 
-    // package functions come first
+    // package functions come first (the retired routines of the REXX package
+    // included: only programs compiled by older releases get here for them)
     RoutineClass *function = (RoutineClass *)packageRoutines->get(name);
     if (function != OREF_NULL)
     {

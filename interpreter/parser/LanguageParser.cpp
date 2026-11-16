@@ -833,6 +833,14 @@ void LanguageParser::requireBuiltinLanguageLevel(size_t builtin, size_t argCount
             requireLanguageLevel(LanguageLevel0606);
             break;
 
+        // built-in functions since 5.3.0 (routines of the REXX package
+        // before): an older interpreter has no code for them
+        case BUILTIN_BEEP:
+        case BUILTIN_DIRECTORY:
+        case BUILTIN_FILESPEC:
+            requireLanguageLevel(LanguageLevel0607);
+            break;
+
         // the second argument is new in 5.3.0
         case BUILTIN_ERRORTEXT:
             if (argCount > 1)

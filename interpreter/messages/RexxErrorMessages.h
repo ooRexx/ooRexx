@@ -431,6 +431,7 @@ ERROR_MESSAGE Message_table[] = {      /* table of major and minor errors   */
     MESSAGE(Error_Incorrect_call_stem_sparse_array, "Stem element at position \"&1\" is not set.")
     MESSAGE(Error_Incorrect_call_noarray_nostem, "Argument &1 must be an array object, a stem object, or a stem name value; found \"&2\".")
     MESSAGE(Error_Incorrect_call_error_code, "&1 argument &2 must be an error code nn.nnn, with nn in the range 0-99 and nnn in the range 0-999; found \"&3\".")
+    MESSAGE(Error_Incorrect_call_range_limits, "&1 argument &2 must be in the range &3 to &4; found \"&5\".")
     MESSAGE(Error_Conversion, "Bad arithmetic conversion.")
     MESSAGE(Error_Conversion_operator, "Nonnumeric value (\"&1\") used in arithmetic operation.")
     MESSAGE(Error_Conversion_prefix, "Nonnumeric value (\"&1\") used with prefix operator.")

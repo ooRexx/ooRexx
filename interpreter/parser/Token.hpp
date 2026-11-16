@@ -514,6 +514,11 @@ typedef enum
     BUILTIN_SETLOCAL,
     BUILTIN_QUALIFY,
     BUILTIN_GC,
+    // new in 5.3.0: these three used to be routines of the REXX package;
+    // they go at the end, because compiled programs store these codes
+    BUILTIN_BEEP,
+    BUILTIN_DIRECTORY,
+    BUILTIN_FILESPEC,
 } BuiltinCode;
 
 

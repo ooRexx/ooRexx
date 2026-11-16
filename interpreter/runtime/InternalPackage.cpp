@@ -46,41 +46,34 @@
 #include "PackageManager.hpp"
 #include "SysFileSystem.hpp"
 #include "ExternalFileBuffer.hpp"
-#include "SysProcess.hpp"
+#include "BuiltinFunctionSupport.hpp"
+#include "Utilities.hpp"
 
 #include <ctype.h>
 #include <math.h>
 
-// FILESPEC function options
-#define FILESPEC_PATH         'P'
-#define FILESPEC_NAME         'N'
-#define FILESPEC_LOCATION     'L'
-#define FILESPEC_EXTENSION    'E'
-#define FILESPEC_DRIVE        'D'
-
+// BEEP, DIRECTORY and FILESPEC are built-in functions since 5.3.0.  These
+// routines are kept only for the programs compiled by older releases, which
+// call them as external routines of this package; they are hidden from
+// RxFuncQuery, RxFuncAdd and RxFuncDrop (PackageManager::isRetiredRoutine()).
+// The work is shared with the built-in functions (BuiltinFunctionSupport);
+// here, only the arguments are converted, with the native API, and the errors
+// are those these routines always gave.  They can go when MinimumLanguageLevel
+// passes 6.06 (see BuiltinFunctionSupport.hpp).
 
 /****************************************************************************/
 /* sysDirectory                                                             */
 /****************************************************************************/
 RexxRoutine1(RexxStringObject, sysDirectory, OPTIONAL_CSTRING, dir)
 {
-    if (dir != NO_CSTRING)
+    RoutineFileNameBuffer qualified(context);
+    RoutineFileNameBuffer current(context);
+    if (!BuiltinFunctionSupport::directory(dir, qualified, current))
     {
-        RoutineQualifiedName qualifiedName(context, dir);
-
-        if (!SysFileSystem::setCurrentDirectory(qualifiedName))
-        {
-            // return a NULL string if we can't change the directory
-            // to indicate an error
-            return context->NullString();
-        }
+        // a null string if we can't change the directory
+        return context->NullString();
     }
-
-    RoutineFileNameBuffer newDir(context);
-
-    // obtain the current directory
-    SysFileSystem::getCurrentDirectory(newDir);
-    return context->NewStringFromAsciiz(newDir);
+    return context->NewStringFromAsciiz(current);
 }
 
 
@@ -89,79 +82,22 @@ RexxRoutine1(RexxStringObject, sysDirectory, OPTIONAL_CSTRING, dir)
 /********************************************************************************************/
 RexxRoutine2(RexxStringObject, sysFilespec, CSTRING, option, CSTRING, name)
 {
-    const char *endPtr = name + strlen(name);        // point to last character
-
-    const char *pathStart = SysFileSystem::getPathStart(name);
-    const char *pathEnd = SysFileSystem::getPathEnd(name);
-
-    // get the end of the path portion (if any)
-    // note that pathend is one character past the end of the path.
-    // this means the length is easily calculated as pathEnd - pathStart,
-    // even in the cases where there is no patch portion
-    pathEnd = pathEnd == NULL ? pathStart : pathEnd + 1;
-    // this one needs a little adjustment for the case where this is all name
-    const char *nameStart = pathEnd == name ? name : pathEnd;
-
-    switch (Utilities::toUpper(*option)) // process each option
+    const char *part;
+    size_t length;
+    if (!BuiltinFunctionSupport::filespec(Utilities::toUpper(*option), name, part, length))
     {
-        case FILESPEC_PATH:              // extract the path (without drive)
-        {
-            return context->String(pathStart, pathEnd - pathStart);
-        }
+        char optionChar[2];
+        optionChar[0] = *option;
+        optionChar[1] = '\0';
 
-        case FILESPEC_NAME:              // extract the file name
-        {
-            return context->String(nameStart, endPtr - nameStart);
-        }
-
-        case FILESPEC_LOCATION:          // extract the path (including drive)
-        {
-            return context->String(name, pathEnd - name);
-        }
-
-        case FILESPEC_DRIVE:             // extract the drive
-        {
-            // this will return a null string if nothing is before the pathStart
-            return context->String(name, pathStart - name);
-        }
-
-        case FILESPEC_EXTENSION:           // extract the file extension
-        {
-            // find the position of the last dot
-            const char *lastDot = strrchr(name, '.');
-
-            if (lastDot >= nameStart)
-            {
-                // we don't extract the period
-                lastDot++;
-                return context->String(lastDot, endPtr - lastDot);
-            }
-            else
-            {
-                return context->NullString();        // nothing found, return the empty string
-            }
-
-        }
-        default:                           /* unknown option                    */
-        {
-            char optionChar[2];
-            optionChar[0] = *option;
-            optionChar[1] = '\0';
-
-            RexxArrayObject subs = context->Array(context->String("FILESPEC"), context->WholeNumberToObject(1),
-                                                  context->String("DELNP"), context->String(optionChar));
-            /* raise an error                    */
-            context->RaiseException(Rexx_Error_Incorrect_call_list, subs);
-            return NULLOBJECT;
-        }
+        RexxArrayObject subs = context->Array(context->String("FILESPEC"), context->WholeNumberToObject(1),
+                                              context->String(BuiltinFunctionSupport::FilespecOptions), context->String(optionChar));
+        context->RaiseException(Rexx_Error_Incorrect_call_list, subs);
+        return NULLOBJECT;
     }
+    return context->String(part, length);
 }
 
-
-#define  MAX_FREQUENCY 32767
-#define  MIN_FREQUENCY    37
-#define  MAX_DURATION  60000
-#define  MIN_DURATION      0
 
 /**
  * Get one of BEEP's arguments: a whole number in a range.  A value that is
@@ -210,7 +146,8 @@ RexxRoutine2(CSTRING, sysBeep, RexxObjectPtr, frequencyArg, OPTIONAL_RexxObjectP
     // range of a wholenumber_t (bug #2009); duration is required, but it is
     // declared optional so that a bad frequency is reported first
     wholenumber_t frequency, duration;
-    if (!beepArgument(context, frequencyArg, "frequency", MIN_FREQUENCY, MAX_FREQUENCY, frequency))
+    if (!beepArgument(context, frequencyArg, "frequency", BuiltinFunctionSupport::MinBeepFrequency,
+        BuiltinFunctionSupport::MaxBeepFrequency, frequency))
     {
         return NULL;
     }
@@ -219,12 +156,13 @@ RexxRoutine2(CSTRING, sysBeep, RexxObjectPtr, frequencyArg, OPTIONAL_RexxObjectP
         context->RaiseException1(Rexx_Error_Invalid_argument_noarg, context->WholeNumberToObject(2));
         return NULL;
     }
-    if (!beepArgument(context, durationArg, "duration", MIN_DURATION, MAX_DURATION, duration))
+    if (!beepArgument(context, durationArg, "duration", BuiltinFunctionSupport::MinBeepDuration,
+        BuiltinFunctionSupport::MaxBeepDuration, duration))
     {
         return NULL;
     }
 
-    SysProcess::beep((int)frequency, (int)duration);
+    BuiltinFunctionSupport::beep(frequency, duration);
     return "";                           /* always returns a null      */
 }
 

@@ -57,6 +57,8 @@
 #include "PackageManager.hpp"
 #include "SystemInterpreter.hpp"
 #include "SysFileSystem.hpp"
+#include "SysProcess.hpp"
+#include "BuiltinFunctionSupport.hpp"
 #include "MethodArguments.hpp"
 #include "NumberStringClass.hpp"
 
@@ -3127,6 +3129,224 @@ BUILTIN(GC)
 }
 
 
+/**
+ * Raise 40.927: a built-in function argument outside its range.
+ *
+ * @param function The function name.
+ * @param position The argument position.
+ * @param minimum  The smallest value allowed.
+ * @param maximum  The largest value allowed.
+ * @param value    The value found.
+ */
+static void reportRangeError(const char *function, size_t position, wholenumber_t minimum,
+    wholenumber_t maximum, wholenumber_t value)
+{
+    Protected<ArrayClass> subs = new_array((size_t)5);
+    subs->put(new_string(function), 1);
+    subs->put(new_integer(position), 2);
+    subs->put(new_integer(minimum), 3);
+    subs->put(new_integer(maximum), 4);
+    subs->put(new_integer(value), 5);
+    reportException(Error_Incorrect_call_range_limits, subs);
+}
+
+
+// the shared work of BEEP, DIRECTORY and FILESPEC (see BuiltinFunctionSupport.hpp)
+
+const char *const BuiltinFunctionSupport::FilespecOptions = "DELNP";
+
+/**
+ * Sound the speaker.  The arguments have been checked by the caller.
+ *
+ * @param frequency The frequency, in Hertz.
+ * @param duration  The duration, in milliseconds.
+ */
+void BuiltinFunctionSupport::beep(wholenumber_t frequency, wholenumber_t duration)
+{
+    SysProcess::beep((int)frequency, (int)duration);
+}
+
+
+/**
+ * Get the current directory, after changing it first if a new one is given.
+ *
+ * @param newDirectory
+ *                  The directory to change to, or NULL.
+ * @param qualified A buffer for the qualified name of the new directory.
+ * @param current   The buffer that receives the current directory.
+ *
+ * @return false if the new directory could not be set (and the current
+ *         directory has not been retrieved).
+ */
+bool BuiltinFunctionSupport::directory(const char *newDirectory, FileNameBuffer &qualified, FileNameBuffer &current)
+{
+    if (newDirectory != NULL)
+    {
+        SysFileSystem::qualifyStreamName(newDirectory, qualified);
+        if (!SysFileSystem::setCurrentDirectory(qualified))
+        {
+            return false;
+        }
+    }
+    SysFileSystem::getCurrentDirectory(current);
+    return true;
+}
+
+
+/**
+ * Find a part of a file specification.
+ *
+ * @param option The part (uppercase): D (drive), E (extension), L (location:
+ *               drive and path), N (name) or P (path, without the drive).
+ * @param name   The file specification.  It ends at its first null
+ *               character, as it always has.
+ * @param part   Receives the start of the part.
+ * @param length Receives the length of the part (0 if there is none).
+ *
+ * @return false for an unknown option.
+ */
+bool BuiltinFunctionSupport::filespec(char option, const char *name, const char *&part, size_t &length)
+{
+    const char *endPtr = name + strlen(name);
+
+    const char *pathStart = SysFileSystem::getPathStart(name);
+    const char *pathEnd = SysFileSystem::getPathEnd(name);
+
+    // pathEnd is made one character past the end of the path, so that the
+    // length is pathEnd - pathStart even when there is no path
+    pathEnd = pathEnd == NULL ? pathStart : pathEnd + 1;
+    // and the name starts at the beginning when there is no path at all
+    const char *nameStart = pathEnd == name ? name : pathEnd;
+
+    switch (option)
+    {
+        case 'P':                        // the path, without the drive
+            part = pathStart;
+            length = pathEnd - pathStart;
+            return true;
+
+        case 'N':                        // the file name
+            part = nameStart;
+            length = endPtr - nameStart;
+            return true;
+
+        case 'L':                        // the location: drive and path
+            part = name;
+            length = pathEnd - name;
+            return true;
+
+        case 'D':                        // the drive (nothing if none)
+            part = name;
+            length = pathStart - name;
+            return true;
+
+        case 'E':                        // the extension, without the period
+        {
+            const char *lastDot = strrchr(name, '.');
+            if (lastDot != NULL && lastDot >= nameStart)
+            {
+                part = lastDot + 1;
+                length = endPtr - part;
+            }
+            else
+            {
+                part = endPtr;
+                length = 0;
+            }
+            return true;
+        }
+
+        default:
+            return false;
+    }
+}
+
+
+/**
+ * Sound the speaker at a frequency (in Hertz) for a duration (in
+ * milliseconds).
+ */
+BUILTIN(BEEP)
+{
+    const size_t BEEP_Min = 2;
+    const size_t BEEP_Max = 2;
+    const size_t BEEP_frequency = 1;
+    const size_t BEEP_duration = 2;
+
+    check_args(BEEP);
+
+    wholenumber_t frequency = required_integer(BEEP, frequency)->getValue();
+    if (frequency < BuiltinFunctionSupport::MinBeepFrequency || frequency > BuiltinFunctionSupport::MaxBeepFrequency)
+    {
+        reportRangeError("BEEP", BEEP_frequency, BuiltinFunctionSupport::MinBeepFrequency,
+            BuiltinFunctionSupport::MaxBeepFrequency, frequency);
+    }
+    wholenumber_t duration = required_integer(BEEP, duration)->getValue();
+    if (duration < BuiltinFunctionSupport::MinBeepDuration || duration > BuiltinFunctionSupport::MaxBeepDuration)
+    {
+        reportRangeError("BEEP", BEEP_duration, BuiltinFunctionSupport::MinBeepDuration,
+            BuiltinFunctionSupport::MaxBeepDuration, duration);
+    }
+
+    BuiltinFunctionSupport::beep(frequency, duration);
+    return GlobalNames::NULLSTRING;
+}
+
+
+/**
+ * Return the current directory, after changing it first if a
+ * new one is given.  A directory that cannot be set returns
+ * the null string.
+ */
+BUILTIN(DIRECTORY)
+{
+    const size_t DIRECTORY_Min = 0;
+    const size_t DIRECTORY_Max = 1;
+    const size_t DIRECTORY_name = 1;
+
+    check_args(DIRECTORY);
+
+    RexxString *name = optional_string(DIRECTORY, name);
+
+    FileNameBuffer qualified;
+    FileNameBuffer current;
+    if (!BuiltinFunctionSupport::directory(name == OREF_NULL ? NULL : name->getStringData(), qualified, current))
+    {
+        return GlobalNames::NULLSTRING;
+    }
+    return new_string((const char *)current);
+}
+
+
+/**
+ * Return a part of a file specification: its drive, path,
+ * location (drive and path), name or extension.
+ */
+BUILTIN(FILESPEC)
+{
+    const size_t FILESPEC_Min = 2;
+    const size_t FILESPEC_Max = 2;
+    const size_t FILESPEC_option = 1;
+    const size_t FILESPEC_name = 2;
+
+    check_args(FILESPEC);
+
+    RexxString *option = required_string(FILESPEC, option);
+    RexxString *name = required_string(FILESPEC, name);
+
+    char optionChar = option->getLength() == 0 ? '\0' : Utilities::toUpper(option->getChar(0));
+    const char *part;
+    size_t length;
+    if (!BuiltinFunctionSupport::filespec(optionChar, name->getStringData(), part, length))
+    {
+        // as always, only the first character of the option is shown
+        reportException(Error_Incorrect_call_list, "FILESPEC", IntegerOne, BuiltinFunctionSupport::FilespecOptions,
+            option->getLength() == 0 ? GlobalNames::NULLSTRING : option->extract(0, 1));
+    }
+    return new_string(part, length);
+}
+
+
 // the following builtin function table must maintain the same order
 // as the BuiltinCode type defined by the RexxToken class.
 pbuiltin LanguageParser::builtinTable[] =
@@ -3213,5 +3433,8 @@ pbuiltin LanguageParser::builtinTable[] =
     &builtin_function_SETLOCAL         ,
     &builtin_function_QUALIFY          ,
     &builtin_function_GC               ,
+    &builtin_function_BEEP             ,
+    &builtin_function_DIRECTORY        ,
+    &builtin_function_FILESPEC         ,
 };
 
