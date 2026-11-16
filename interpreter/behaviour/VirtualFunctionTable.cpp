@@ -161,6 +161,7 @@
 #include "AddressWithInstruction.hpp"
 #include "ConstantDirective.hpp"
 #include "CatchInstruction.hpp"
+#include "FinallyInstruction.hpp"
 #include "RexxMemory.hpp"
 #include "InternalStack.hpp"
 #include "MemoryStack.hpp"
@@ -932,6 +933,10 @@ void MemoryObject::buildVirtualFunctionTable()
    static_assert(sizeof(RexxInstructionCatch) <= sizeof(objectBuffer), "objectBuffer is too small for RexxInstructionCatch");
    objectPtr = ::new (objectLoc) RexxInstructionCatch(RESTOREIMAGE);
    virtualFunctionTable[T_CatchInstruction] = getVftPointer(objectLoc);
+   
+   static_assert(sizeof(RexxInstructionFinally) <= sizeof(objectBuffer), "objectBuffer is too small for RexxInstructionFinally");
+   objectPtr = ::new (objectLoc) RexxInstructionFinally(RESTOREIMAGE);
+   virtualFunctionTable[T_FinallyInstruction] = getVftPointer(objectLoc);
    
    static_assert(sizeof(RexxObject) <= sizeof(objectBuffer), "objectBuffer is too small for RexxObject");
    objectPtr = ::new (objectLoc) RexxObject(RESTOREIMAGE);

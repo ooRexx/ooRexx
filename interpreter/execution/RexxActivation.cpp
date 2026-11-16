@@ -85,6 +85,7 @@
 #include "LibraryPackage.hpp"
 #include "ConditionTrappingDispatcher.hpp"
 #include "CatchInstruction.hpp"
+#include "DoBlock.hpp"
 
 #include <atomic>
 
@@ -866,9 +867,12 @@ RexxObject* RexxActivation::run(RexxObject *_receiver, RexxString *name, RexxObj
                 }
                 // if we were in a debug pause, we had a error interpreting the
                 // line typed at the pause.  We're just going to terminate this
-                // like it was a return
-                else if (debugPause)
+                // like it was a return.  (Not when a FINALLY clause of a block
+                // typed at the pause runs first: the error comes back when the
+                // clause ends.)
+                else if (debugPause && debugError)
                 {
+                    debugError = false;
                     stopExecution(RETURNED);
                 }
 
@@ -933,11 +937,12 @@ bool RexxActivation::processTraps()
             // the condition object of this occurrence
             DirectoryClass *conditionObj = (DirectoryClass *)pending->get(2);
             trapHandler->setConditionObject(conditionObj);
-            // see if we have something to assign to the RC variable
-            RexxInternalObject *rc = conditionObj->get(GlobalNames::RC);
-            if (rc != OREF_NULL)
+            // see if we have something to assign to the RC variable (a
+            // SIGNAL ON trap sets it when the jump is taken, after the
+            // FINALLY clauses of the blocks it ends: see signalTrap())
+            if (!trapHandler->isSignal())
             {
-                setLocalVariable(GlobalNames::RC, VARIABLE_RC, (RexxObject *)rc);
+                setTrapRc(conditionObj);
             }
 
             // it's possible that the condition can raise an error because of a
@@ -1131,7 +1136,7 @@ void RexxActivation::reply(RexxObject *resultObj)
  *
  * @param resultObj the return result object.
  */
-void RexxActivation::returnFrom(RexxObject *resultObj)
+void RexxActivation::returnFrom(RexxObject *resultObj, bool raising)
 {
     // already had a reply and trying to return a result?  There is nobody
     // to receive this result, so this is an error.
@@ -1139,12 +1144,24 @@ void RexxActivation::returnFrom(RexxObject *resultObj)
     {
         reportException(Error_Execution_reply_return);
     }
+    // a RETURN must not leave a FINALLY clause (the return part of a RAISE
+    // can: the clause ends by raising a condition)
+    if (!raising)
+    {
+        checkFinallyExit("RETURN", FINALLY_SCOPE_CODE);
+    }
+    // the FINALLY clauses of the active blocks run first, innermost first;
+    // the RETURN goes on when the last one reaches its END
+    if (!leaveBlocks(OREF_NULL, FINALLY_RETURN, resultObj))
+    {
+        return;
+    }
     // cause this level to terminate the execution loop and shut down
     stopExecution(RETURNED);
     // if this is an interpret, we really need to terminate the parent activation
     if (isInterpret())
     {
-        parent->returnFrom(resultObj);
+        parent->returnFrom(resultObj, raising);
     }
     // normal termination.
     else
@@ -1170,70 +1187,61 @@ void RexxActivation::returnFrom(RexxObject *resultObj)
  */
 void RexxActivation::iterate(RexxString *name)
 {
-    // get the top item off of the block stack
+    // find the target loop.  The blocks above it are not left until we know
+    // that there is one: their FINALLY clauses have to run before they are.
     DoBlock *doblock = topBlockInstruction();
-
-    // we might need to scan several levels down to find our target block instruction.
-    while (doblock != OREF_NULL)
+    for (; doblock != OREF_NULL; doblock = doblock->getPrevious())
     {
         // get the actual block instruction (might not be a loop, but it needs to be
         // for an iterate
         RexxBlockInstruction *loop = doblock->getParent();
-        // Is this a request to iterate the inner=most loop?
-        if (name == OREF_NULL)
+        // an unnamed ITERATE is for the innermost loop; a named one can match
+        // either a labeled block or a loop.
+        if (name == OREF_NULL ? loop->isLoop() : loop->isLabel(name))
         {
-            // we only recognize LOOP constructs for this.
-            if (loop->isLoop())
-            {
-                // the loop has ended: we are in one of its CATCH clauses
-                if (doblock->isInCatch())
-                {
-                    reportException(Error_Invalid_leave_iterate_catch, loop->getLineNumber());
-                }
-                // reset the indentation
-                setIndent(doblock->getIndent());
-                // have the loop handle a re-execution.  This will
-                // determine if we continue or terminate.
-                ((RexxInstructionBaseLoop *)loop)->reExecute(this, &stack, doblock);
-                return;
-            }
-
+            break;
         }
-        // a named LEAVE can be either a labeled block or a loop.
-        else if (loop->isLabel(name))
-        {
-            // the block has ended: we are in one of its CATCH clauses
-            if (doblock->isInCatch())
-            {
-                reportException(Error_Invalid_leave_iterate_catch, loop->getLineNumber());
-            }
-            // if we have a name match, but this is not a loop,
-            // that's a problem.
-            if (!loop->isLoop())
-            {
-                reportException(Error_Invalid_leave_iterate_name, name);
-            }
-            // got our target, reset the indent and do the loop.
-            setIndent(doblock->getIndent());
-            ((RexxInstructionBaseLoop *)loop)->reExecute(this, &stack, doblock);
-            return;
-        }
-        // terminate this block instruction and step to the
-        // the next level.
-        popBlockInstruction();
-        doblock = topBlockInstruction();
     }
 
-    // if we reached here, we either did not find the named
-    // block or there were no active loops at all.
-    if (name != OREF_NULL)
+    // if we did not find the named block or there were no active loops at all,
+    // this is an error
+    if (doblock == OREF_NULL)
     {
-        reportException(Error_Invalid_leave_iteratevar, name);
+        if (name != OREF_NULL)
+        {
+            reportException(Error_Invalid_leave_iteratevar, name);
+        }
+        else
+        {
+            reportException(Error_Invalid_leave_iterate);
+        }
     }
-    else
+
+    RexxBlockInstruction *loop = doblock->getParent();
+    // an ITERATE must not leave a FINALLY clause
+    checkFinallyExit("ITERATE", FINALLY_SCOPE_BLOCKS, doblock);
+    // the loop has ended: we are in one of its CATCH clauses
+    if (doblock->isInCatch())
     {
-        reportException(Error_Invalid_leave_iterate);
+        reportException(Error_Invalid_leave_iterate_catch, loop->getLineNumber());
     }
+    // if we have a name match, but this is not a loop,
+    // that's a problem.
+    if (!loop->isLoop())
+    {
+        reportException(Error_Invalid_leave_iterate_name, name);
+    }
+    // terminate the blocks inside the loop.  If one of them has a FINALLY
+    // clause, it runs first, and the ITERATE goes on when it reaches its END.
+    if (!leaveBlocks(doblock, FINALLY_ITERATE, name))
+    {
+        return;
+    }
+    // reset the indentation
+    setIndent(doblock->getIndent());
+    // have the loop handle a re-execution.  This will
+    // determine if we continue or terminate.
+    ((RexxInstructionBaseLoop *)loop)->reExecute(this, &stack, doblock);
 }
 
 
@@ -1244,59 +1252,52 @@ void RexxActivation::iterate(RexxString *name)
  */
 void RexxActivation::leaveLoop(RexxString *name)
 {
-    // scan the block stack looking for a match.
+    // find the target block.  The blocks above it are not left until we know
+    // that there is one: their FINALLY clauses have to run before they are.
     DoBlock *doblock = topBlockInstruction();
-
-    while (doblock != OREF_NULL)
+    for (; doblock != OREF_NULL; doblock = doblock->getPrevious())
     {
         // get the instruction backing the block
         RexxBlockInstruction *loop = doblock->getParent();
         // no name means leave the innermost block.  An unnamed
-        // LEAVE only works with loops.  If this is not a loop,
-        // keep searching for one.
-        if (name == OREF_NULL)
+        // LEAVE only works with loops.  A named LEAVE can be either
+        // a labeled block or a loop.
+        if (name == OREF_NULL ? loop->isLoop() : loop->isLabel(name))
         {
-            // we only recognize LOOP constructs for this.
-            if (loop->isLoop())
-            {
-                // the loop has ended: we are in one of its CATCH clauses
-                if (doblock->isInCatch())
-                {
-                    reportException(Error_Invalid_leave_leave_catch, loop->getLineNumber());
-                }
-                loop->terminate(this, doblock);
-                return;
-            }
+            break;
         }
-        // a named LEAVE can be either a labeled block or a loop.
-        else if (loop->isLabel(name))
+    }
+
+    // if we did not find anything to leave, this is either a problem with
+    // a mismatched name or there was no active loop available to leave.
+    if (doblock == OREF_NULL)
+    {
+        if (name != OREF_NULL)
         {
-            // the block has ended: we are in one of its CATCH clauses
-            if (doblock->isInCatch())
-            {
-                reportException(Error_Invalid_leave_leave_catch, loop->getLineNumber());
-            }
-            loop->terminate(this, doblock);
-            return;
+            reportException(Error_Invalid_leave_leavevar, name);
         }
-
-        // top one is not the one we need...remove this block
-        // instruction and try the next one.
-
-        popBlockInstruction();
-        doblock = topBlockInstruction();
+        else
+        {
+            reportException(Error_Invalid_leave_leave);
+        }
     }
 
-    // if we get here, we did not find anything to leave.  This is either
-    // a problem with a mismatched name or there was no active loop available to leave.
-    if (name != OREF_NULL)
+    RexxBlockInstruction *loop = doblock->getParent();
+    // a LEAVE must not leave a FINALLY clause
+    checkFinallyExit("LEAVE", FINALLY_SCOPE_BLOCKS, doblock);
+    // the block has ended: we are in one of its CATCH clauses
+    if (doblock->isInCatch())
     {
-        reportException(Error_Invalid_leave_leavevar, name);
+        reportException(Error_Invalid_leave_leave_catch, loop->getLineNumber());
     }
-    else
+    // terminate the blocks inside the target.  If one of them has a FINALLY
+    // clause, it runs first, and the LEAVE goes on when it reaches its END.
+    if (!leaveBlocks(doblock, FINALLY_LEAVE, name))
     {
-        reportException(Error_Invalid_leave_leave);
+        return;
     }
+    // and the target (its own FINALLY clause runs now)
+    loop->terminate(this, doblock);
 }
 
 
@@ -1452,6 +1453,27 @@ RexxObject* RexxActivation::forward(RexxObject  *target, RexxString  *message,
         {
             reportException(Error_Execution_reply_exit);
         }
+        // a FORWARD ends this activation, as a RETURN does: it must not
+        // leave a FINALLY clause
+        checkFinallyExit("FORWARD", FINALLY_SCOPE_CODE);
+        // FINALLY clauses have to run before this activation ends, so it
+        // cannot disappear now: the message is sent first, and its result
+        // is returned once the clauses have run
+        if (hasFinallyToRun())
+        {
+            ProtectedObject r;
+            if (superClass == OREF_NULL)
+            {
+                target->messageSend(message, arguments, argcount, r);
+            }
+            else
+            {
+                target->messageSend(message, arguments, argcount, superClass, r);
+            }
+            // after a REPLY there is nobody to receive the result
+            returnFrom(settings.isReplyIssued() ? OREF_NULL : (RexxObject *)r);
+            return OREF_NULL;
+        }
         // poof, we just became invisible
         settings.setForwarded(true);
         // we terminate the execution loop for this activation
@@ -1485,6 +1507,15 @@ RexxObject* RexxActivation::forward(RexxObject  *target, RexxString  *message,
  */
 void RexxActivation::exitFrom(RexxObject *resultObj)
 {
+    // an EXIT must not leave a FINALLY clause, here or in the code that
+    // called this internal routine
+    checkFinallyExit("EXIT", FINALLY_SCOPE_BODY);
+    // the FINALLY clauses of the active blocks run first, innermost first;
+    // the EXIT goes on when the last one reaches its END
+    if (!leaveBlocks(OREF_NULL, FINALLY_EXIT, resultObj))
+    {
+        return;
+    }
     // stop the loop execution
     stopExecution(RETURNED);
     result = resultObj;
@@ -1517,6 +1548,12 @@ void RexxActivation::exitFrom(RexxObject *resultObj)
             ActivityManager::currentActivity.load()->popStackFrame(false);
             //. go to the next level
             activation = ActivityManager::currentActivity.load()->getCurrentRexxFrame();
+            // a level with FINALLY clauses to run goes on with them, and
+            // exits when the last one reaches its END
+            if (!activation->leaveBlocks(OREF_NULL, FINALLY_EXIT, resultObj))
+            {
+                throw activation;
+            }
         }
         while (!activation->isTopLevel());
 
@@ -1835,6 +1872,35 @@ void RexxActivation::raiseExit(RexxString *condition, RexxObject *rc, RexxString
         return;
     }
 
+    // this level ends: the FINALLY clauses of its active blocks run first,
+    // and the RAISE goes on when the last one reaches its END
+    Protected<ArrayClass> raiseInfo = new_array(6);
+    raiseInfo->put(condition, 1);
+    if (rc != OREF_NULL)
+    {
+        raiseInfo->put(rc, 2);
+    }
+    if (description != OREF_NULL)
+    {
+        raiseInfo->put(description, 3);
+    }
+    if (additional != OREF_NULL)
+    {
+        raiseInfo->put(additional, 4);
+    }
+    if (resultObj != OREF_NULL)
+    {
+        raiseInfo->put(resultObj, 5);
+    }
+    if (conditionobj != OREF_NULL)
+    {
+        raiseInfo->put(conditionobj, 6);
+    }
+    if (!leaveBlocks(OREF_NULL, FINALLY_RAISE_EXIT, raiseInfo))
+    {
+        return;
+    }
+
     // are we at the top level?  This is basically an
     // exit instruction because there's nobody able to handle this.
     if (parent == OREF_NULL)
@@ -1852,6 +1918,11 @@ void RexxActivation::raiseExit(RexxString *condition, RexxObject *rc, RexxString
         // terminate the activation and remove from the stack
         termination();
         activity->popStackFrame(false);
+        // the same for the parent: it goes on with its FINALLY clauses
+        if (!parent->leaveBlocks(OREF_NULL, FINALLY_RAISE_EXIT, raiseInfo))
+        {
+            throw parent;
+        }
         // propagate to the parent
         parent->raiseExit(condition, rc, description, additional, resultObj, conditionobj);
     }
@@ -1876,6 +1947,37 @@ void RexxActivation::raise(RexxString *condition, RexxObject *rc, RexxString *de
     bool propagated = false;
 
     Protected<DirectoryClass> p = conditionobj;
+
+    // every form but a new SYNTAX error (which is raised here, as any
+    // error) ends this activation: the FINALLY clauses of its active blocks
+    // run first, and the RAISE goes on when the last one reaches its END
+    if (!condition->strCompare(GlobalNames::SYNTAX) && hasFinallyToRun())
+    {
+        Protected<ArrayClass> raiseInfo = new_array(6);
+        raiseInfo->put(condition, 1);
+        if (rc != OREF_NULL)
+        {
+            raiseInfo->put(rc, 2);
+        }
+        if (description != OREF_NULL)
+        {
+            raiseInfo->put(description, 3);
+        }
+        if (additional != OREF_NULL)
+        {
+            raiseInfo->put(additional, 4);
+        }
+        if (resultObj != OREF_NULL)
+        {
+            raiseInfo->put(resultObj, 5);
+        }
+        if (conditionobj != OREF_NULL)
+        {
+            raiseInfo->put(conditionobj, 6);
+        }
+        leaveBlocks(OREF_NULL, FINALLY_RAISE, raiseInfo);
+        return;
+    }
 
     // are we propagating an existing condition?
     if (condition->strCompare(GlobalNames::PROPAGATE))
@@ -1980,7 +2082,7 @@ void RexxActivation::raise(RexxString *condition, RexxObject *rc, RexxString *de
         }
 
         // process the return part, then unwind the call stack
-        returnFrom(resultObj);
+        returnFrom(resultObj, true);
         throw this;
     }
 }
@@ -2176,14 +2278,28 @@ StringTable* RexxActivation::getStreams()
  *
  * @param target The target of the signal instruction.
  */
-void RexxActivation::signalTo(RexxInstruction *target)
+void RexxActivation::signalTo(RexxInstruction *target, bool trapped)
 {
+    // a SIGNAL instruction must not leave a FINALLY clause (a SIGNAL ON trap
+    // can: the clause ends by raising a condition)
+    if (!trapped)
+    {
+        checkFinallyExit("SIGNAL", FINALLY_SCOPE_CODE);
+    }
+    // the FINALLY clauses of the active blocks run first, innermost first;
+    // the jump is taken when the last one reaches its END (for a trap, with
+    // the condition information as it is now)
+    if (!leaveBlocks(OREF_NULL, trapped ? FINALLY_SIGNAL_TRAP : FINALLY_SIGNAL,
+        trapped ? getConditionObj() : OREF_NULL, target))
+    {
+        return;
+    }
     // if this is an interpret or debug pause, we need to shut this
     // activation down and have the parent execute the signal.
     if (isInterpret())
     {
         stopExecution(RETURNED);
-        parent->signalTo(target);
+        parent->signalTo(target, trapped);
     }
     // need to clean up some things in a SIGNAL.  Start with
     // setting the SIGL variable to the current linenumber, then
@@ -2198,6 +2314,57 @@ void RexxActivation::signalTo(RexxInstruction *target)
         blockNest = 0;
         settings.traceIndent = 0;
     }
+}
+
+
+/**
+ * Set RC from a condition object, if it has a return code.
+ *
+ * @param conditionObj The condition object.
+ */
+void RexxActivation::setTrapRc(DirectoryClass *conditionObj)
+{
+    RexxInternalObject *rc = conditionObj->get(GlobalNames::RC);
+    if (rc != OREF_NULL)
+    {
+        setLocalVariable(GlobalNames::RC, VARIABLE_RC, (RexxObject *)rc);
+    }
+}
+
+
+/**
+ * Take the jump of a SIGNAL ON trap.  The FINALLY clauses of the
+ * active blocks run first, innermost first, and they see nothing of
+ * the trapped condition, as on the way to a CATCH clause: CONDITION()
+ * and RC are set when the jump is taken, and SIGL by signalTo()
+ * (RFE #31).
+ *
+ * @param target       The label.
+ * @param conditionObj The trapped condition.
+ */
+void RexxActivation::signalTrap(RexxInstruction *target, DirectoryClass *conditionObj)
+{
+    // an interpret (or a debug pause) leaves its own blocks, and then its
+    // parent takes the jump; the parent's settings are what the interpret
+    // pushes back to it when it ends
+    if (isInterpret())
+    {
+        if (!leaveBlocks(OREF_NULL, FINALLY_SIGNAL_TRAP, conditionObj, target))
+        {
+            return;
+        }
+        stopExecution(RETURNED);
+        parent->signalTrap(target, conditionObj);
+        setConditionObj(parent->getConditionObj());
+        return;
+    }
+    if (!leaveBlocks(OREF_NULL, FINALLY_SIGNAL_TRAP, conditionObj, target))
+    {
+        return;
+    }
+    setConditionObj(conditionObj);
+    setTrapRc(conditionObj);
+    signalTo(target, true);
 }
 
 
@@ -2552,6 +2719,11 @@ bool RexxActivation::trap(RexxString *condition, DirectoryClass *exceptionObject
         // we are not really here, so we can't handle this
         return false;
     }
+    // if this condition is going to end blocks with FINALLY clauses that
+    // have not run, they run first, and the condition is raised again when
+    // the last one reaches its END (this does not return then)
+    finallyBeforeTrap(condition, exceptionObject);
+
     // do we need to notify a message object of a syntax error?
     // send it the notification message.
     if (notifyObject != OREF_NULL && condition->strCompare(GlobalNames::SYNTAX))
@@ -2570,29 +2742,12 @@ bool RexxActivation::trap(RexxString *condition, DirectoryClass *exceptionObject
         // display the errors encountered during debug, then do the
         // error unwind to terminate the debug pause activation.
         activity->displayDebug(exceptionObject);
+        debugError = true;
         throw this;
     }
-    // see if we have a handler for this condition (there might be no
-    // trap table yet).  The traps of the program are ignored at a debug
-    // pause
-    TrapHandler *trapHandler = OREF_NULL;
-    if (settings.traps != OREF_NULL && !debugPause)
-    {
-        trapHandler = (TrapHandler *)settings.traps->get(condition);
-
-        // nothing there for the specific condition.  We could have an ANY
-        // trap enabled, so check that.
-        if (trapHandler == OREF_NULL)
-        {
-            trapHandler = (TrapHandler *)settings.traps->get(GlobalNames::ANY);
-            // if we have a handler, but this can't handle this condition,
-            // it does not count (a CATCH clause might still catch it)
-            if (trapHandler != OREF_NULL && !trapHandler->canHandle(condition))
-            {
-                trapHandler = OREF_NULL;
-            }
-        }
-    }
+    // see if we have a handler for this condition (the traps of the
+    // program are ignored at a debug pause)
+    TrapHandler *trapHandler = debugPause ? OREF_NULL : findTrapHandler(condition);
 
     // a CATCH clause of an active block (here, or in the code that runs
     // this internal routine or INTERPRET) wins over a trap, wherever the
@@ -2682,6 +2837,381 @@ bool RexxActivation::trap(RexxString *condition, DirectoryClass *exceptionObject
     }
     // not something we can handle.
     return false;
+}
+
+
+/**
+ * Find the SIGNAL ON or CALL ON trap for a condition.
+ *
+ * @param condition The condition name.
+ *
+ * @return The trap handler, or OREF_NULL if the condition is not trapped.
+ */
+TrapHandler *RexxActivation::findTrapHandler(RexxString *condition)
+{
+    // there might be no trap table yet
+    if (settings.traps == OREF_NULL)
+    {
+        return OREF_NULL;
+    }
+    TrapHandler *trapHandler = (TrapHandler *)settings.traps->get(condition);
+
+    // nothing there for the specific condition.  We could have an ANY
+    // trap enabled, so check that.
+    if (trapHandler == OREF_NULL)
+    {
+        trapHandler = (TrapHandler *)settings.traps->get(GlobalNames::ANY);
+        // if we have a handler, but this can't handle this condition,
+        // it does not count (a CATCH clause might still catch it)
+        if (trapHandler != OREF_NULL && !trapHandler->canHandle(condition))
+        {
+            trapHandler = OREF_NULL;
+        }
+    }
+    return trapHandler;
+}
+
+
+/**
+ * Test if an active block has a FINALLY clause that has not started
+ * (RFE #31).
+ *
+ * @return true if one has.
+ */
+bool RexxActivation::hasFinallyToRun()
+{
+    for (DoBlock *doblock = doStack; doblock != OREF_NULL; doblock = doblock->getPrevious())
+    {
+        if (doblock->hasFinallyToRun())
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+
+/**
+ * Leave the active blocks above a given one (all of them, if none
+ * is given), because control is going somewhere else.  This is the
+ * one place where blocks are left before their time, and so where
+ * FINALLY clauses start (RFE #31): if one of the blocks has a
+ * FINALLY clause that has not run, the blocks above it are ended,
+ * the block remembers what was going on, and the next instruction is
+ * the code of the clause.  The caller must then return without doing
+ * anything else: endFinally() calls it again, with the same
+ * arguments, when that code reaches the END of the block, and so the
+ * clauses run innermost first.
+ *
+ * A block whose FINALLY code is running is just ended: what it was
+ * waiting to do is forgotten.  That is what a condition raised in the
+ * clause does; everything else is rejected first by
+ * checkFinallyExit().
+ *
+ * @param until       The block to stop at (not left), or OREF_NULL.
+ * @param action      What is going on.
+ * @param object      An object of the action (a result, a name, a
+ *                    condition object).
+ * @param instruction An instruction of the action (a SIGNAL target, a
+ *                    CATCH clause).
+ * @param block       The block of the CATCH clause.
+ *
+ * @return true if the blocks have been left, false if a FINALLY
+ *         clause has to run first.
+ */
+bool RexxActivation::leaveBlocks(DoBlock *until, FinallyAction action, RexxInternalObject *object,
+    RexxInstruction *instruction, DoBlock *block)
+{
+    while (doStack != OREF_NULL && doStack != until)
+    {
+        if (doStack->hasFinallyToRun())
+        {
+            doStack->setPending(action, object, instruction, block, current);
+            startFinally(doStack);
+            return false;
+        }
+        popBlockInstruction();
+    }
+    return true;
+}
+
+
+/**
+ * Start the code of the FINALLY clause of a block, the top one
+ * (RFE #31).
+ *
+ * @param block  The block.
+ */
+void RexxActivation::startFinally(DoBlock *block)
+{
+    RexxInstructionCatch *clause = block->getFinally();
+    blockNest = block->getNest();
+    // the block has ended, as it has in a CATCH clause: its CATCH clauses
+    // do not catch the conditions raised here
+    block->setInCatch(true);
+    block->setInFinally(true);
+
+    setIndent(block->getIndent());
+    traceInstruction(clause);
+    settings.traceIndent = block->getIndent() + 1;
+    next = clause->nextInstruction;
+}
+
+
+/**
+ * A block is ending by itself (its body, or the code of one of its
+ * CATCH clauses, has finished; a loop has ended; a LEAVE names it).
+ * If it has a FINALLY clause that has not run, start its code: the
+ * block ends when that code reaches the END (RFE #31).
+ *
+ * @param block  The block (can be OREF_NULL).
+ *
+ * @return true if the FINALLY code has started, false if the block
+ *         must be ended now.
+ */
+bool RexxActivation::enterFinally(DoBlock *block)
+{
+    if (block == OREF_NULL || !block->hasFinallyToRun())
+    {
+        return false;
+    }
+    block->setPending(FINALLY_END, OREF_NULL, OREF_NULL, OREF_NULL, current);
+    startFinally(block);
+    return true;
+}
+
+
+/**
+ * The code of a FINALLY clause has reached the END of its block: the
+ * block ends, and what was leaving it goes on, as if it was issued
+ * now by the instruction that issued it (RFE #31).
+ *
+ * @param block  The block, the top one.
+ * @param end    The END instruction.
+ */
+void RexxActivation::endFinally(DoBlock *block, RexxInstruction *end)
+{
+    // the block is not usable once it has ended
+    FinallyAction action = block->getPendingAction();
+    ProtectedObject object(block->getPendingObject());
+    RexxInstruction *instruction = block->getPendingInstruction();
+    DoBlock *target = block->getPendingBlock();
+    RexxInstruction *source = block->getPendingCurrent();
+
+    block->getParent()->terminate(this, block);
+    traceInstruction(end);
+
+    if (action == FINALLY_END)
+    {
+        return;
+    }
+
+    // errors, SIGL and so on are those of the instruction that was leaving
+    // the block
+    current = source;
+    RexxInternalObject *pending = (RexxInternalObject *)object;
+
+    switch (action)
+    {
+        case FINALLY_LEAVE:
+            leaveLoop((RexxString *)pending);
+            break;
+
+        case FINALLY_ITERATE:
+            iterate((RexxString *)pending);
+            break;
+
+        case FINALLY_RETURN:
+            returnFrom((RexxObject *)pending);
+            break;
+
+        case FINALLY_EXIT:
+            exitFrom((RexxObject *)pending);
+            break;
+
+        case FINALLY_SIGNAL:
+            signalTo(instruction);
+            break;
+
+        // CONDITION() and so on describe the trapped condition again,
+        // whatever the code of the clause did
+        case FINALLY_SIGNAL_TRAP:
+            signalTrap(instruction, (DirectoryClass *)pending);
+            break;
+
+        case FINALLY_CATCH:
+            catchBlock = target;
+            catchClause = (RexxInstructionCatch *)instruction;
+            catchCondition = (DirectoryClass *)pending;
+            processCatch();
+            break;
+
+        // the condition is raised again here: an outer activation catches
+        // or traps it now, or it goes on to the caller
+        case FINALLY_CONDITION:
+        {
+            DirectoryClass *conditionObj = (DirectoryClass *)pending;
+            RexxString *condition = (RexxString *)conditionObj->get(GlobalNames::CONDITION);
+            if (condition->strCompare(GlobalNames::SYNTAX))
+            {
+                // this does not return
+                activity->raisePropagate(conditionObj);
+            }
+            else
+            {
+                trap(condition, conditionObj);
+            }
+            break;
+        }
+
+        case FINALLY_RAISE:
+        case FINALLY_RAISE_EXIT:
+        {
+            ArrayClass *raiseInfo = (ArrayClass *)pending;
+            RexxString *condition = (RexxString *)raiseInfo->get(1);
+            RexxObject *rc = (RexxObject *)raiseInfo->get(2);
+            RexxString *description = (RexxString *)raiseInfo->get(3);
+            RexxObject *additional = (RexxObject *)raiseInfo->get(4);
+            RexxObject *resultObj = (RexxObject *)raiseInfo->get(5);
+            DirectoryClass *conditionObj = (DirectoryClass *)raiseInfo->get(6);
+            if (action == FINALLY_RAISE)
+            {
+                raise(condition, rc, description, additional, resultObj, conditionObj);
+            }
+            else
+            {
+                raiseExit(condition, rc, description, additional, resultObj, conditionObj);
+            }
+            break;
+        }
+
+        default:
+            break;
+    }
+}
+
+
+/**
+ * The rule of FINALLY: a FINALLY clause can only end by reaching
+ * its end, or by raising a condition.  Translation rejects the
+ * instructions that would leave one (LanguageParser::checkFinallyExit());
+ * this is the check at run time, for what translation cannot see:
+ * INTERPRET, an EXIT in an internal routine called from the clause
+ * (RFE #31).
+ *
+ * @param keyword The instruction that is leaving.
+ * @param scope   What it leaves.
+ * @param last    For LEAVE and ITERATE, the target block (the last
+ *                one to check).
+ */
+void RexxActivation::checkFinallyExit(const char *keyword, FinallyScope scope, DoBlock *last)
+{
+    RexxActivation *activation = this;
+    while (activation != OREF_NULL)
+    {
+        for (DoBlock *doblock = activation->doStack; doblock != OREF_NULL; doblock = doblock->getPrevious())
+        {
+            if (doblock->isInFinally())
+            {
+                reportException(Error_Execution_finally_exit, keyword, (wholenumber_t)doblock->getFinally()->getLineNumber());
+            }
+            if (doblock == last)
+            {
+                break;
+            }
+        }
+        switch (scope)
+        {
+            case FINALLY_SCOPE_CODE:
+                activation = activation->isInterpret() ? activation->parent : OREF_NULL;
+                break;
+
+            case FINALLY_SCOPE_BODY:
+                activation = activation->isTopLevelCall() ? OREF_NULL : activation->parent;
+                break;
+
+            default:
+                activation = OREF_NULL;
+                break;
+        }
+    }
+}
+
+
+/**
+ * A condition has been raised.  If it is going to end blocks that
+ * have FINALLY clauses to run, in this activation or between this
+ * activation and the one that is going to handle the condition, the
+ * innermost of those activations goes on with them, and the
+ * condition is raised again when the last one reaches its END
+ * (endFinally(), FINALLY_CONDITION).  This does not return then.
+ *
+ * The blocks of the activation that handles the condition itself are
+ * left by processCatch() and signalTo().
+ *
+ * @param condition The condition name.
+ * @param exceptionObject
+ *                  The condition object.
+ */
+void RexxActivation::finallyBeforeTrap(RexxString *condition, DirectoryClass *exceptionObject)
+{
+    // the activation that is going to handle the condition
+    RexxActivation *handler = OREF_NULL;
+
+    // the traps of the program are ignored at a debug pause, but the
+    // clauses of a block typed there work
+    TrapHandler *trapHandler = debugPause ? OREF_NULL : findTrapHandler(condition);
+    RexxActivation *catchOwner;
+    DoBlock *catchingBlock;
+    RexxInstructionCatch *clause;
+    // a CATCH clause, here or in the code that runs this internal routine
+    // or INTERPRET
+    if (findCatch(condition, exceptionObject, catchOwner, catchingBlock, clause) &&
+        (trapHandler == OREF_NULL || !enabledBelow(trapHandler, catchOwner)))
+    {
+        handler = catchOwner;
+    }
+    else if (trapHandler != OREF_NULL)
+    {
+        // CALL ON: nothing is left
+        if (!trapHandler->isSignal())
+        {
+            return;
+        }
+        // SIGNAL ON: the code that INTERPRETs this takes the jump
+        handler = this;
+        while (handler->isInterpret())
+        {
+            handler = handler->parent;
+        }
+    }
+    // not handled here.  Only a SYNTAX condition goes on to the caller (the
+    // others are ignored), and it is raised there after this activation
+    // has ended.
+    else
+    {
+        if (!condition->strCompare(GlobalNames::SYNTAX))
+        {
+            return;
+        }
+        if (hasFinallyToRun())
+        {
+            activity->clearCurrentCondition();
+            leaveBlocks(OREF_NULL, FINALLY_CONDITION, exceptionObject);
+            throw this;
+        }
+        return;
+    }
+
+    for (RexxActivation *activation = this; activation != OREF_NULL && activation != handler; activation = activation->parent)
+    {
+        if (activation->hasFinallyToRun())
+        {
+            activity->clearCurrentCondition();
+            activation->leaveBlocks(OREF_NULL, FINALLY_CONDITION, exceptionObject);
+            throw activation;
+        }
+    }
 }
 
 
@@ -2797,10 +3327,11 @@ void RexxActivation::processCatch()
     catchClause = OREF_NULL;
     catchCondition = OREF_NULL;
 
-    // end the blocks entered inside the body
-    while (doStack != OREF_NULL && doStack != block)
+    // end the blocks entered inside the body.  If one of them has a FINALLY
+    // clause, it runs first, and we are back here when it reaches its END.
+    if (!leaveBlocks(block, FINALLY_CATCH, conditionObj, clause, block))
     {
-        popBlockInstruction();
+        return;
     }
     blockNest = block->getNest();
     settings.traceIndent = block->getIndent() + 1;

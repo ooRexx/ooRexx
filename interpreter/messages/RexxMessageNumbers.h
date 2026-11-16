@@ -771,6 +771,12 @@
 #define Error_Unexpected_end_catch_then_msg                          851
 #define Error_Unexpected_end_catch_else_msg                          852
 #define Error_Invalid_expression_catch_syntax_msg                    853
+#define Error_Unexpected_end_finally_msg                             854
+#define Error_Unexpected_end_finally_then_msg                        855
+#define Error_Unexpected_end_finally_else_msg                        856
+#define Error_Unexpected_end_after_finally_msg                       857
+#define Error_Execution_finally_exit_msg                             858
+#define Error_Translation_finally_exit_msg                           859
 
 
 #endif

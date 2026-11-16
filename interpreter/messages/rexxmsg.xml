@@ -445,6 +445,42 @@ else                    end
         <SymbolicName>Error_Unexpected_end_catch_else</SymbolicName>
         <Text>CATCH must not immediately follow ELSE.</Text>
       </SubMessage>
+      <SubMessage>
+        <Code>10</Code>
+        <Subcode>012</Subcode>
+        <MessageNumber>854</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Unexpected_end_finally</SymbolicName>
+        <Text>FINALLY has no corresponding DO, LOOP, or SELECT.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>10</Code>
+        <Subcode>013</Subcode>
+        <MessageNumber>855</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Unexpected_end_finally_then</SymbolicName>
+        <Text>FINALLY must not immediately follow THEN.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>10</Code>
+        <Subcode>014</Subcode>
+        <MessageNumber>856</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Unexpected_end_finally_else</SymbolicName>
+        <Text>FINALLY must not immediately follow ELSE.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>10</Code>
+        <Subcode>015</Subcode>
+        <MessageNumber>857</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Unexpected_end_after_finally</SymbolicName>
+        <Text>A CATCH or FINALLY clause must not follow the FINALLY clause on line <Sub position="1" name="line_number"/>.</Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>
@@ -5684,6 +5720,15 @@ Say Enter A, B, or C
       </SubMessage>
       <SubMessage>
         <Code>98</Code>
+        <Subcode>953</Subcode>
+        <MessageNumber>858</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Execution_finally_exit</SymbolicName>
+        <Text><Sub position="1" name="instruction"/> must not leave the FINALLY clause on line <Sub position="2" name="line_number"/>.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>98</Code>
         <Subcode>970</Subcode>
         <MessageNumber>495</MessageNumber>
         <Component>Rexx</Component>
@@ -6409,6 +6454,15 @@ Say Enter A, B, or C
         <Severity>Warning</Severity>
         <SymbolicName>Error_Translation_use_arg_reference_no_default</SymbolicName>
         <Text>A USE ARG default value is not allowed for variable references.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>99</Code>
+        <Subcode>951</Subcode>
+        <MessageNumber>859</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Translation_finally_exit</SymbolicName>
+        <Text><Sub position="1" name="instruction"/> must not leave the FINALLY clause on line <Sub position="2" name="line_number"/>.</Text>
       </SubMessage>
     </Subcodes>
   </Message>

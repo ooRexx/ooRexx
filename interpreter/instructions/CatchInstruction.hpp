@@ -54,6 +54,9 @@ class DirectoryClass;
  * style CATCH_BLOCK; the CATCH clauses remember the style the END
  * would have had (the style used when the body runs into the first
  * CATCH clause), the block they belong to and the next CATCH clause.
+ *
+ * A FINALLY clause (RexxInstructionFinally, a subclass) is the last
+ * clause of the same chain.
  */
 class RexxInstructionCatch : public RexxInstruction
 {
@@ -77,6 +80,8 @@ class RexxInstructionCatch : public RexxInstruction
     static RexxInstructionCatch *findClause(DoBlock *doblock, RexxString *condition, DirectoryClass *conditionObj, RexxActivation *context);
     static RexxInstructionCatch *firstClause(RexxBlockInstruction *block);
     static bool hasCatches(RexxBlockInstruction *block);
+    static RexxInstructionCatch *finallyClause(RexxInstructionCatch *first);
+    inline bool isFinally() { return isType(KEYWORD_FINALLY); }
 
     inline void setOwner(RexxBlockInstruction *o) { owner = o; }
     inline RexxBlockInstruction *getOwner() { return owner; }

@@ -73,6 +73,14 @@ DoBlock::DoBlock(RexxActivation *context, RexxBlockInstruction *_parent)
     // a block with CATCH clauses: find the first one (RFE #31)
     catches = RexxInstructionCatch::firstClause(parent);
     inCatch = false;
+    // and its FINALLY clause, the last one
+    finallyClause = RexxInstructionCatch::finallyClause(catches);
+    inFinally = false;
+    pendingAction = FINALLY_NONE;
+    pendingObject = OREF_NULL;
+    pendingInstruction = OREF_NULL;
+    pendingBlock = OREF_NULL;
+    pendingCurrent = OREF_NULL;
     nest = 0;
     countVariable = parent->getCountVariable();
     // if we have a count variable, then we need to set the initial value
@@ -99,6 +107,11 @@ void DoBlock::live(size_t liveMark)
     memory_mark(by);
     memory_mark(countVariable);
     memory_mark(catches);
+    memory_mark(finallyClause);
+    memory_mark(pendingObject);
+    memory_mark(pendingInstruction);
+    memory_mark(pendingBlock);
+    memory_mark(pendingCurrent);
 }
 
 
@@ -118,6 +131,11 @@ void DoBlock::liveGeneral(MarkReason reason)
     memory_mark_general(by);
     memory_mark_general(countVariable);
     memory_mark_general(catches);
+    memory_mark_general(finallyClause);
+    memory_mark_general(pendingObject);
+    memory_mark_general(pendingInstruction);
+    memory_mark_general(pendingBlock);
+    memory_mark_general(pendingCurrent);
 }
 
 

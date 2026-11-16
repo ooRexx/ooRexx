@@ -188,7 +188,7 @@ class RexxActivation : public ActivationBase
    }
    void              reply(RexxObject *);
    RexxObject      * forward(RexxObject *, RexxString *, RexxClass *, RexxObject **, size_t, bool);
-   void              returnFrom(RexxObject *result);
+   void              returnFrom(RexxObject *result, bool raising = false);
    void              exitFrom(RexxObject *);
    void              procedureExpose(RexxVariableBase **variables, size_t count);
    void              expose(RexxVariableBase **variables, size_t count);
@@ -202,7 +202,9 @@ class RexxActivation : public ActivationBase
    ActivationBase  * senderActivation(RexxString *conditionName);
    RexxActivation  * external();
    void              interpret(RexxString *);
-   void              signalTo(RexxInstruction *);
+   void              signalTo(RexxInstruction *, bool trapped = false);
+   void              signalTrap(RexxInstruction *, DirectoryClass *);
+   void              setTrapRc(DirectoryClass *);
    void              guardWait();
    void              debugSkip(wholenumber_t);
    RexxString      * traceSetting();
@@ -212,6 +214,22 @@ class RexxActivation : public ActivationBase
    void              processCatch();
    bool              catches(RexxString *condition, DirectoryClass *conditionObj = OREF_NULL);
    bool              enabledBelow(TrapHandler *trap, RexxActivation *owner);
+   // FINALLY clauses (RFE #31)
+   typedef enum
+   {
+       FINALLY_SCOPE_BLOCKS,       // LEAVE, ITERATE: the blocks down to the target
+       FINALLY_SCOPE_CODE,         // RETURN, SIGNAL, FORWARD: this code, and what INTERPRETs it
+       FINALLY_SCOPE_BODY,         // EXIT: up to the top level of the code body
+   } FinallyScope;
+   bool              hasFinallyToRun();
+   bool              leaveBlocks(DoBlock *until, FinallyAction action, RexxInternalObject *object = OREF_NULL,
+                                 RexxInstruction *instruction = OREF_NULL, DoBlock *block = OREF_NULL);
+   void              startFinally(DoBlock *block);
+   bool              enterFinally(DoBlock *block);
+   void              endFinally(DoBlock *block, RexxInstruction *end);
+   void              checkFinallyExit(const char *keyword, FinallyScope scope, DoBlock *last = OREF_NULL);
+   void              finallyBeforeTrap(RexxString *condition, DirectoryClass *exceptionObject);
+   TrapHandler     * findTrapHandler(RexxString *condition);
    void              trapOn(RexxString *, RexxInstructionTrapBase *, bool);
    void              trapOff(RexxString *, bool);
    void              setAddress(RexxString *, CommandIOConfiguration *config);
@@ -649,6 +667,7 @@ class RexxActivation : public ActivationBase
     RexxInstruction     *current;       // current execution pointer
     RexxInstruction     *next;          // next instruction to execute
     bool                 debugPause;    // executing a debug pause
+    bool                 debugError;    // the line typed at a debug pause ended in an error
     bool                 clauseBoundary;// special flag for clause boundary checks
     bool                 traceEntryAllowed; // true if first instruction (other than expose)
     bool                 traceEntryDone;// true if the entry in a routine or method has been traced

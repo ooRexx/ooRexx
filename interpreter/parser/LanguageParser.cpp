@@ -63,6 +63,7 @@
 #include "DoInstruction.hpp"
 #include "OtherwiseInstruction.hpp"
 #include "CatchInstruction.hpp"
+#include "FinallyInstruction.hpp"
 #include "CallInstruction.hpp"
 #include "ExpressionFunction.hpp"
 #include "ExpressionVariable.hpp"
@@ -1265,7 +1266,7 @@ RexxCode *LanguageParser::translateBlock()
             bool withinSelect = type == KEYWORD_SELECT || type == KEYWORD_SELECT_CASE ||
                                 type == KEYWORD_WHENTHEN || type == KEYWORD_ENDWHEN || type == KEYWORD_OTHERWISE;
             // a CATCH clause is part of its DO, LOOP or SELECT (RFE #31)
-            bool withinCatch = type == KEYWORD_CATCH;
+            bool withinCatch = type == KEYWORD_CATCH || type == KEYWORD_FINALLY;
             if (topDo()->isControl() || withinIf || withinSelect || withinCatch)
             {
                 // get our label name
@@ -1365,12 +1366,25 @@ RexxCode *LanguageParser::translateBlock()
                     syntaxError(Error_Unexpected_end_catch_then);
                 }
             }
+            // nor a FINALLY clause
+            else if (type == KEYWORD_FINALLY)
+            {
+                InstructionKeyword pending = topDoType();
+                if (pending == KEYWORD_ELSE)
+                {
+                    syntaxError(Error_Unexpected_end_finally_else);
+                }
+                else if (pending == KEYWORD_IFTHEN || pending == KEYWORD_WHENTHEN)
+                {
+                    syntaxError(Error_Unexpected_end_finally_then);
+                }
+            }
             flushControl(instruction);
         }
         // validate allowed instructions in a SELECT
         if (topDoIsType(KEYWORD_SELECT, KEYWORD_SELECT_CASE) &&
             (type != KEYWORD_WHEN && type != KEYWORD_WHEN_CASE && type != KEYWORD_OTHERWISE && type != KEYWORD_END &&
-             type != KEYWORD_CATCH))
+             type != KEYWORD_CATCH && type != KEYWORD_FINALLY))
         {
             syntaxError(Error_When_expected_whenotherwise, topDo());
         }
@@ -1578,11 +1592,18 @@ RexxCode *LanguageParser::translateBlock()
                 // A CATCH clause of a DO, LOOP or SELECT (RFE #31).  It follows the
                 // body, or the code of the previous CATCH clause, and lasts until
                 // the next CATCH clause or the END.
+                // A FINALLY clause is one more clause of the same chain, the last one.
             case  KEYWORD_CATCH:
+            case  KEYWORD_FINALLY:
             {
                 RexxInstructionCatch *clause = (RexxInstructionCatch *)instruction;
                 RexxInstruction *second = topDo();
                 RexxBlockInstruction *owner;
+                // nothing follows the FINALLY clause of a block but its END
+                if (second->isType(KEYWORD_FINALLY))
+                {
+                    syntaxError(Error_Unexpected_end_after_finally, new_integer(second->getLineNumber()));
+                }
                 // another clause of the same block
                 if (second->isType(KEYWORD_CATCH))
                 {
@@ -1605,7 +1626,7 @@ RexxCode *LanguageParser::translateBlock()
                     // or ELSE has already been rejected, before flushControl()
                     if (!second->isBlock() || second->isType(KEYWORD_OTHERWISE))
                     {
-                        syntaxError(Error_Unexpected_end_catch);
+                        syntaxError(type == KEYWORD_FINALLY ? Error_Unexpected_end_finally : Error_Unexpected_end_catch);
                     }
                     owner = (RexxBlockInstruction *)second;
                     clause->setFirstCatch(clause);
@@ -1613,6 +1634,21 @@ RexxCode *LanguageParser::translateBlock()
                 clause->setOwner(owner);
                 // the clause stays on the control stack until the next one or the END
                 pushDo(clause);
+
+                // FINALLY implies a semicolon after it, as OTHERWISE does: an
+                // instruction may follow on the same line.  (CATCH is followed by
+                // its conditions, which catchNew() has parsed to the end of the clause.)
+                if (type == KEYWORD_FINALLY)
+                {
+                    RexxToken *token = nextReal();
+                    if (!token->isEndOfClause())
+                    {
+                        previousToken();
+                        trimClause();
+                        // we have a clause, go back around and process this
+                        continue;
+                    }
+                }
                 break;
             }
 
@@ -1627,7 +1663,7 @@ RexxCode *LanguageParser::translateBlock()
                 // the END of a block with CATCH clauses: the last clause is on top,
                 // its block below it (RFE #31)
                 RexxInstructionCatch *lastCatch = OREF_NULL;
-                if (second->isType(KEYWORD_CATCH))
+                if (second->isType(KEYWORD_CATCH) || second->isType(KEYWORD_FINALLY))
                 {
                     lastCatch = (RexxInstructionCatch *)second;
                     second = popDo();
@@ -4379,8 +4415,9 @@ void LanguageParser::blockError(RexxInstruction *instruction)
             syntaxError(Error_Incomplete_do_otherwise, instruction);
             break;
 
-        // CATCH clause: the error is the one of its block
+        // CATCH or FINALLY clause: the error is the one of its block
         case KEYWORD_CATCH:
+        case KEYWORD_FINALLY:
             blockError(((RexxInstructionCatch *)instruction)->getOwner());
             break;
 

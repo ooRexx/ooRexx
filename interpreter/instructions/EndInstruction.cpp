@@ -162,6 +162,13 @@ void RexxInstructionEnd::execute(RexxActivation *context, ExpressionStack *stack
         case CATCH_BLOCK:
         {
             DoBlock *doBlock = context->topBlockInstruction();
+            // the code of the FINALLY clause has finished: the block ends,
+            // and what was leaving it goes on
+            if (doBlock->isInFinally())
+            {
+                context->endFinally(doBlock, this);
+                break;
+            }
             doBlock->getParent()->terminate(context, doBlock);
             context->traceInstruction(this);
             break;

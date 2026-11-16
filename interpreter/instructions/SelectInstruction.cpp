@@ -141,6 +141,8 @@ void RexxInstructionSelect::execute(RexxActivation *context, ExpressionStack *st
     // if we've been asked to re-execute.
     if (context->conditionalPauseInstruction())
     {
+        // executed again: the FINALLY clause does not run
+        doblock->setFinally(OREF_NULL);
         this->terminate(context, doblock);
     }
 }
@@ -165,6 +167,11 @@ bool RexxInstructionSelect::isLoop()
  */
 void RexxInstructionSelect::terminate(RexxActivation *context, DoBlock *doblock )
 {
+    // the code of a FINALLY clause runs first; the SELECT ends at its END
+    if (context->enterFinally(doblock))
+    {
+        return;
+    }
     // we terminate this doblock
     context->terminateBlockInstruction(doblock->getIndent());
     // and we jump to the instruction after our END
@@ -397,6 +404,8 @@ void RexxInstructionSelectCase::execute(RexxActivation *context, ExpressionStack
     // if we've been asked to re-execute.
     if (context->conditionalPauseInstruction())
     {
+        // executed again: the FINALLY clause does not run
+        doblock->setFinally(OREF_NULL);
         terminate(context, doblock);
     }
 }

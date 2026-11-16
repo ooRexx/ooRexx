@@ -108,6 +108,7 @@
 #include "EndInstruction.hpp"
 #include "OtherwiseInstruction.hpp"
 #include "CatchInstruction.hpp"
+#include "FinallyInstruction.hpp"
 #include "SelectInstruction.hpp"
 #include "ProtectedObject.hpp"
 #include "UseArgVariableRef.hpp"
@@ -436,6 +437,11 @@ RexxInstruction* LanguageParser::nextInstruction()
                 // CATCH clause of a DO, LOOP or SELECT (RFE #31)
             case KEYWORD_CATCH:
                 return catchNew();
+                break;
+
+                // FINALLY clause of a DO, LOOP or SELECT (RFE #31)
+            case KEYWORD_FINALLY:
+                return finallyNew(first);
                 break;
 
                 // ELSE instruction...possibly unexpected.
@@ -2312,6 +2318,8 @@ RexxInstruction *LanguageParser::exitNew()
     // this is pretty simple...parse the optional expression and create the
     // instruction instance.
     RexxInternalObject *expression = parseExpression(TERM_EOC);
+    // an EXIT must not leave a FINALLY clause
+    checkFinallyExit("EXIT");
     RexxInstruction *newObject = new_instruction(EXIT, Exit);
     ::new ((void *)newObject) RexxInstructionExit(expression);
     return newObject;
@@ -2574,6 +2582,12 @@ RexxInstruction *LanguageParser::forwardNew()
         }
         // go process another keyword
         token = nextReal();
+    }
+    // a FORWARD ends the method, as a RETURN does (unless it is a FORWARD
+    // CONTINUE): it must not leave a FINALLY clause
+    if (!returnContinue)
+    {
+        checkFinallyExit("FORWARD");
     }
     // and create the forward object
     RexxInstruction *newObject = new_instruction(FORWARD, Forward);
@@ -2848,6 +2862,9 @@ RexxInstruction *LanguageParser::leaveNew(InstructionKeyword type)
         name = token->value();
         requiredEndOfClause(type == KEYWORD_LEAVE ? Error_Invalid_data_leave : Error_Invalid_data_iterate);
     }
+
+    // a LEAVE or ITERATE must not leave a FINALLY clause
+    checkFinallyExit(type == KEYWORD_LEAVE ? "LEAVE" : "ITERATE", true, name);
 
     // allocate the object and return
     RexxInstruction *newObject = type == KEYWORD_LEAVE ? new_instruction(LEAVE, Leave) : new_instruction(ITERATE, Leave);
@@ -3244,6 +3261,68 @@ RexxInstruction *LanguageParser::catchNew()
     RexxInstruction *newObject = new_instruction(CATCH, Catch);
     ::new ((void *)newObject) RexxInstructionCatch(conditions, variable, hasCodes ? (ArrayClass *)codes : OREF_NULL);
     return newObject;
+}
+
+
+/**
+ * Parse a FINALLY clause of a DO, LOOP or SELECT (RFE #31).
+ * As THEN, ELSE and OTHERWISE do, the keyword implies a semicolon
+ * after it: an instruction may follow on the same line.  It is
+ * split off in translateBlock().
+ *
+ * @param token  The FINALLY keyword token.
+ *
+ * @return An executable FINALLY instruction object.
+ */
+RexxInstruction *LanguageParser::finallyNew(RexxToken *token)
+{
+    // FINALLY is new in 5.3.0: a program that uses it has a new instruction
+    // class in its image, so an earlier interpreter must reject it when it
+    // is loaded from a compiled file
+    requireLanguageLevel(LanguageLevel0607);
+
+    RexxInstruction *newObject = new_instruction(FINALLY, Finally);
+    ::new ((void *)newObject) RexxInstructionFinally(token);
+    return newObject;
+}
+
+
+/**
+ * The rule of FINALLY: a FINALLY clause can only end by reaching
+ * its end, or by raising a condition.  An instruction that takes
+ * control somewhere else must not be in the code of a FINALLY clause,
+ * unless it stays inside that code (a LEAVE or ITERATE of a block
+ * that is itself in the clause).  What cannot be seen here (INTERPRET,
+ * an EXIT in an internal routine called from the clause) is checked
+ * at run time by RexxActivation::checkFinallyExit() (RFE #31).
+ *
+ * @param keyword     The instruction, for the error message.
+ * @param blockTarget true for LEAVE and ITERATE, which only leave the
+ *                    blocks down to their target.
+ * @param name        The block name given on the LEAVE or ITERATE,
+ *                    if any.
+ */
+void LanguageParser::checkFinallyExit(const char *keyword, bool blockTarget, RexxString *name)
+{
+    // the control stack, from the innermost pending instruction outwards
+    for (size_t i = 1; i <= control->lastIndex(); i++)
+    {
+        RexxInstruction *inst = (RexxInstruction *)control->get(i);
+        // we are in the code of this FINALLY clause, and going out of it
+        if (inst->isType(KEYWORD_FINALLY))
+        {
+            syntaxError(Error_Translation_finally_exit, new_string(keyword), new_integer(inst->getLineNumber()));
+        }
+        // the target of a LEAVE or ITERATE: it is inside the clause
+        if (blockTarget && inst->isControl())
+        {
+            RexxBlockInstruction *block = (RexxBlockInstruction *)inst;
+            if (name == OREF_NULL ? block->isLoop() : block->isLabel(name))
+            {
+                return;
+            }
+        }
+    }
 }
 
 
@@ -3947,6 +4026,8 @@ RexxInstruction *LanguageParser::returnNew()
     // this is pretty simple...parse the optional expression and create the
     // instruction instance.
     RexxInternalObject *expression = parseExpression(TERM_EOC);
+    // a RETURN must not leave a FINALLY clause
+    checkFinallyExit("RETURN");
 
     RexxInstruction *newObject = new_instruction(RETURN, Return);
     ::new ((void *)newObject) RexxInstructionReturn(expression);
@@ -4071,6 +4152,9 @@ RexxInstruction *LanguageParser::dynamicSignalNew()
     // we are already positioned for processing the label expression, so
     // parse it off now.
     RexxInternalObject *labelExpression = requiredExpression(TERM_EOC, Error_Invalid_expression_signal);
+
+    // a SIGNAL must not leave a FINALLY clause
+    checkFinallyExit("SIGNAL");
 
     // create a new instruction object
     RexxInstruction *newObject = new_instruction(SIGNAL_VALUE, DynamicSignal);
@@ -4258,6 +4342,9 @@ RexxInstruction *LanguageParser::signalNew()
             requiredEndOfClause(Error_Invalid_data_signal);
         }
     }
+
+    // a SIGNAL must not leave a FINALLY clause
+    checkFinallyExit("SIGNAL");
 
     // create a new instruction object
     RexxInstruction *newObject = new_instruction(SIGNAL, Signal);

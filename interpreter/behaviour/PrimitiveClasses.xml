@@ -226,6 +226,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <Class id="AddressWithInstruction" class="RexxInstructionAddressWith" include="AddressWithInstruction.hpp"/>
 <Class id="ConstantDirective" class="ConstantDirective" include="ConstantDirective.hpp"/>
 <Class id="CatchInstruction" class="RexxInstructionCatch" include="CatchInstruction.hpp"/>
+<Class id="FinallyInstruction" class="RexxInstructionFinally" include="FinallyInstruction.hpp"/>
 </Internal>
 <Transient>
 <Class id="Memory" class="MemoryObject" include="RexxMemory.hpp" objectvirtual="true"/>

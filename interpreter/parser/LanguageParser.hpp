@@ -287,6 +287,8 @@ class LanguageParser: public RexxInternalObject
     RexxInstruction *optionsNew();
     RexxInstruction *otherwiseNew(RexxToken *);
     RexxInstruction *catchNew();
+    RexxInstruction *finallyNew(RexxToken *);
+    void checkFinallyExit(const char *keyword, bool blockTarget = false, RexxString *name = OREF_NULL);
     RexxInstruction *parseNew(InstructionSubKeyword);
     RexxInstruction *procedureNew();
     RexxInstruction *pushNew();

@@ -115,6 +115,9 @@ void RexxBlockInstruction::handleDebugPause(RexxActivation *context, DoBlock *do
         // if we have a doblock for this, do termination cleanup
         if (doblock != OREF_NULL)
         {
+            // the instruction is going to be executed again: the block has
+            // not really been entered, so its FINALLY clause does not run
+            doblock->setFinally(OREF_NULL);
             this->terminate(context, doblock);
         }
         // no block required, just remove the nesting
@@ -157,6 +160,11 @@ void RexxBaseBlockInstruction::matchEnd(RexxInstructionEnd *partner, LanguagePar
  */
 void RexxBaseBlockInstruction::terminate(RexxActivation *context, DoBlock *doblock)
 {
+    // the code of a FINALLY clause runs first; the block ends at its END
+    if (context->enterFinally(doblock))
+    {
+        return;
+    }
     // reset the DO block
     context->terminateBlockInstruction(doblock->getIndent());
     // The next instruction is the one after the END
@@ -392,6 +400,11 @@ bool RexxInstructionBaseLoop::iterate(RexxActivation *context, ExpressionStack *
  */
 void RexxInstructionBaseLoop::endLoop(RexxActivation *context)
 {
+    // the code of a FINALLY clause runs first; the loop ends at its END
+    if (context->enterFinally(context->topBlockInstruction()))
+    {
+        return;
+    }
     // pop the block instruction and remove the execution nest.
     context->popBlockInstruction();
     // jump to the loop end

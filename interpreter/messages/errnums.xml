@@ -301,6 +301,30 @@ else                    end
 <para>CATCH must not immediately follow ELSE.</para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>012</term>
+<listitem>
+<para>FINALLY has no corresponding DO, LOOP, or SELECT.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>013</term>
+<listitem>
+<para>FINALLY must not immediately follow THEN.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>014</term>
+<listitem>
+<para>FINALLY must not immediately follow ELSE.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>015</term>
+<listitem>
+<para>A CATCH or FINALLY clause must not follow the FINALLY clause on line <emphasis role="italic">line_number</emphasis>.</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 <section id="ERR11">
@@ -4006,6 +4030,13 @@ Say Enter A, B, or C
 </listitem>
 </varlistentry>
 <varlistentry>
+<term>953</term>
+<listitem>
+<para>
+<emphasis role="italic">instruction</emphasis> must not leave the FINALLY clause on line <emphasis role="italic">line_number</emphasis>.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
 <term>970</term>
 <listitem>
 <para>External command "<emphasis role="italic">command</emphasis>" ended with return code <emphasis role="italic">rc</emphasis>.</para>
@@ -4488,6 +4519,13 @@ Say Enter A, B, or C
 <term>950</term>
 <listitem>
 <para>A USE ARG default value is not allowed for variable references.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>951</term>
+<listitem>
+<para>
+<emphasis role="italic">instruction</emphasis> must not leave the FINALLY clause on line <emphasis role="italic">line_number</emphasis>.</para>
 </listitem>
 </varlistentry>
 </variablelist>

@@ -350,12 +350,13 @@ void RexxInstructionSignalOn::trap(RexxActivation *context, DirectoryClass  *con
     // we don't have a resolved label.
     if (targetInstruction == OREF_NULL)
     {
+        // RC is set before the error, as it always was
+        context->setTrapRc(conditionObj);
         reportException(Error_Label_not_found_name, targetName);
     }
 
-    // set the new condition object
-    context->setConditionObj(conditionObj);
-    // and jump to the condition target
-    context->signalTo(targetInstruction);
+    // jump to the condition target: the FINALLY clauses of the blocks it
+    // ends run first, and then the condition object and RC are set (RFE #31)
+    context->signalTrap(targetInstruction, conditionObj);
 }
 

@@ -92,6 +92,10 @@
 #define Rexx_Error_Unexpected_end_catch                                   10008
 #define Rexx_Error_Unexpected_end_catch_then                              10009
 #define Rexx_Error_Unexpected_end_catch_else                              10011
+#define Rexx_Error_Unexpected_end_finally                                 10012
+#define Rexx_Error_Unexpected_end_finally_then                            10013
+#define Rexx_Error_Unexpected_end_finally_else                            10014
+#define Rexx_Error_Unexpected_end_after_finally                           10015
 #define Rexx_Error_Control_stack                                          11000
 #define Rexx_Error_Control_stack_full                                     11001
 #define Rexx_Error_Control_stack_user_defined                             11900
@@ -647,6 +651,7 @@
 #define Rexx_Error_Execution_authorization                                98948
 #define Rexx_Error_Execution_no_concurrency                               98951
 #define Rexx_Error_Execution_circular_requires                            98952
+#define Rexx_Error_Execution_finally_exit                                 98953
 #define Rexx_Error_Execution_error_syntax                                 98970
 #define Rexx_Error_Execution_failure_syntax                               98971
 #define Rexx_Error_Execution_lostdigits_syntax                            98972
@@ -727,6 +732,7 @@
 #define Rexx_Error_Translation_use_local_compound                         99948
 #define Rexx_Error_Translation_bad_class                                  99949
 #define Rexx_Error_Translation_use_arg_reference_no_default               99950
+#define Rexx_Error_Translation_finally_exit                               99951
 
 
 #endif

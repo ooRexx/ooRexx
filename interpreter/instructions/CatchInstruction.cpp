@@ -334,7 +334,8 @@ RexxInstructionCatch *RexxInstructionCatch::findClause(DoBlock *doblock, RexxStr
     RexxInstructionCatch *clause = doblock->getCatches();
     while (clause != OREF_NULL)
     {
-        if (clause->handles(condition, conditionObj, context))
+        // a FINALLY clause, the last one of the chain, catches nothing
+        if (!clause->isFinally() && clause->handles(condition, conditionObj, context))
         {
             return clause;
         }
@@ -376,9 +377,30 @@ RexxInstructionCatch *RexxInstructionCatch::firstClause(RexxBlockInstruction *bl
     RexxInstruction *end = block->end;
     for (RexxInstruction *i = block->nextInstruction; i != OREF_NULL && i != end; i = i->nextInstruction)
     {
-        if (i->isType(KEYWORD_CATCH) && ((RexxInstructionCatch *)i)->owner == block)
+        if ((i->isType(KEYWORD_CATCH) || i->isType(KEYWORD_FINALLY)) && ((RexxInstructionCatch *)i)->owner == block)
         {
             return (RexxInstructionCatch *)i;
+        }
+    }
+    return OREF_NULL;
+}
+
+
+/**
+ * Find the FINALLY clause of a chain of clauses: the last one, if
+ * it is a FINALLY clause.
+ *
+ * @param first  The first clause of the block (can be OREF_NULL).
+ *
+ * @return The FINALLY clause, or OREF_NULL if the block has none.
+ */
+RexxInstructionCatch *RexxInstructionCatch::finallyClause(RexxInstructionCatch *first)
+{
+    for (RexxInstructionCatch *clause = first; clause != OREF_NULL; clause = clause->nextCatch)
+    {
+        if (clause->isFinally())
+        {
+            return clause;
         }
     }
     return OREF_NULL;
@@ -432,6 +454,13 @@ void RexxInstructionCatch::execute(RexxActivation *context, ExpressionStack *sta
     // the code of a CATCH clause has finished: the block ends
     if (doblock->isInCatch())
     {
+        // the FINALLY clause of the block runs now (it traces itself);
+        // the END is traced when its code reaches it
+        if (doblock->hasFinallyToRun())
+        {
+            owner->terminate(context, doblock);
+            return;
+        }
         owner->terminate(context, doblock);
         context->traceInstruction(owner->end);
         return;
@@ -457,6 +486,13 @@ void RexxInstructionCatch::execute(RexxActivation *context, ExpressionStack *sta
         }
         default:
         {
+            // the FINALLY clause of the block runs now (it traces itself);
+            // the END is traced when its code reaches it
+            if (doblock->hasFinallyToRun())
+            {
+                owner->terminate(context, doblock);
+                break;
+            }
             owner->terminate(context, doblock);
             context->traceInstruction(owner->end);
             break;

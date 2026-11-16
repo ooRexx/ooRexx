@@ -229,6 +229,7 @@
 #define TheAddressWithInstructionBehaviour      (&RexxBehaviour::primitiveBehaviours[T_AddressWithInstruction])
 #define TheConstantDirectiveBehaviour      (&RexxBehaviour::primitiveBehaviours[T_ConstantDirective])
 #define TheCatchInstructionBehaviour      (&RexxBehaviour::primitiveBehaviours[T_CatchInstruction])
+#define TheFinallyInstructionBehaviour      (&RexxBehaviour::primitiveBehaviours[T_FinallyInstruction])
 #define TheMemoryBehaviour      (&RexxBehaviour::primitiveBehaviours[T_Memory])
 #define TheInternalStackBehaviour      (&RexxBehaviour::primitiveBehaviours[T_InternalStack])
 #define ThePushThroughStackBehaviour      (&RexxBehaviour::primitiveBehaviours[T_PushThroughStack])

@@ -75,6 +75,7 @@ KeywordEntry RexxToken::keywordInstructions[] =
     KeywordEntry("END",        KEYWORD_END),
     KeywordEntry("EXIT",       KEYWORD_EXIT),
     KeywordEntry("EXPOSE",     KEYWORD_EXPOSE),
+    KeywordEntry("FINALLY",    KEYWORD_FINALLY),
     KeywordEntry("FORWARD",    KEYWORD_FORWARD),
     KeywordEntry("GUARD",      KEYWORD_GUARD),
     KeywordEntry("IF",         KEYWORD_IF),
