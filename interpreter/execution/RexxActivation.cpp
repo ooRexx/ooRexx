@@ -1929,8 +1929,12 @@ void RexxActivation::raiseExit(RexxString *condition, RexxObject *rc, RexxString
         // terminate the activation and remove from the stack
         termination();
         activity->popStackFrame(false);
-        // the same for the parent: it goes on with its FINALLY clauses
-        if (!parent->leaveBlocks(OREF_NULL, FINALLY_RAISE_EXIT, raiseInfo))
+        // the same for the parent: it goes on with its FINALLY clauses.  But
+        // a new SYNTAX error is raised at the top level of the program as
+        // any error is, with its blocks still active: their CATCH clauses
+        // can catch it, and trap() runs their FINALLY clauses
+        if (!(parent->isTopLevelCall() && condition->strCompare(GlobalNames::SYNTAX)) &&
+            !parent->leaveBlocks(OREF_NULL, FINALLY_RAISE_EXIT, raiseInfo))
         {
             throw parent;
         }
