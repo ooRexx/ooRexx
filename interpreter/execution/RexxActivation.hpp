@@ -213,6 +213,7 @@ class RexxActivation : public ActivationBase
    bool              findCatch(RexxString *condition, DirectoryClass *conditionObj, RexxActivation *&owner, DoBlock *&block, RexxInstructionCatch *&clause);
    void              processCatch();
    bool              catches(RexxString *condition, DirectoryClass *conditionObj = OREF_NULL);
+   bool              hasCatchBlocks();
    bool              enabledBelow(TrapHandler *trap, RexxActivation *owner);
    // FINALLY clauses (RFE #31)
    typedef enum
@@ -694,5 +695,6 @@ class RexxActivation : public ActivationBase
     RexxInstructionCatch *catchClause;  // the CATCH clause that caught it
     DirectoryClass      *catchCondition;// the condition object
     uint64_t             entrySequence; // when this internal routine was entered (see TrapHandler)
+    RexxActivation      *catchAncestor; // the next activation whose blocks findCatch() looks at
  };
  #endif

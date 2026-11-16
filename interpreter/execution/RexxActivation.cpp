@@ -231,6 +231,15 @@ RexxActivation::RexxActivation(Activity *_activity, RexxActivation *_parent, Rex
 
     // the sender is our parent activity
     parent = _parent;
+    // the next activation further out whose blocks can have a CATCH clause
+    // for a condition raised here (see findCatch()).  The blocks of the
+    // parent do not change while this one runs.  A debug pause does not
+    // look further out
+    catchAncestor = OREF_NULL;
+    if (!debugPause)
+    {
+        catchAncestor = _parent->hasCatchBlocks() ? _parent : _parent->catchAncestor;
+    }
     catchBlock = OREF_NULL;
     catchClause = OREF_NULL;
     catchCondition = OREF_NULL;
@@ -394,6 +403,7 @@ void RexxActivation::live(size_t liveMark)
     memory_mark(catchBlock);
     memory_mark(catchClause);
     memory_mark(catchCondition);
+    memory_mark(catchAncestor);
 
     // We're holding a pointer back to our arguments directly where they
     // are created.  Since in some places, this argument list comes
@@ -432,6 +442,7 @@ void RexxActivation::liveGeneral(MarkReason reason)
     memory_mark_general(catchBlock);
     memory_mark_general(catchClause);
     memory_mark_general(catchCondition);
+    memory_mark_general(catchAncestor);
 
     // We're holding a pointer back to our arguments directly where they
     // are created.  Since in some places, this argument list comes
@@ -3234,8 +3245,11 @@ void RexxActivation::finallyBeforeTrap(RexxString *condition, DirectoryClass *ex
  */
 bool RexxActivation::findCatch(RexxString *condition, DirectoryClass *conditionObj, RexxActivation *&owner, DoBlock *&block, RexxInstructionCatch *&clause)
 {
+    // the activations in between have no blocks with CATCH clauses: go
+    // straight to the next one that has (catchAncestor).  Walking every
+    // parent made an unwind through N internal calls cost O(N^2)
     for (RexxActivation *activation = this; activation != OREF_NULL;
-         activation = activation->isInternalLevelCall() ? activation->parent : OREF_NULL)
+         activation = activation->catchAncestor)
     {
         for (DoBlock *doblock = activation->doStack; doblock != OREF_NULL; doblock = doblock->getPrevious())
         {
@@ -3259,6 +3273,25 @@ bool RexxActivation::findCatch(RexxString *condition, DirectoryClass *conditionO
         if (activation->debugPause)
         {
             break;
+        }
+    }
+    return false;
+}
+
+
+/**
+ * Test if any active block of this activation has CATCH clauses,
+ * whether or not they catch anything now (RFE #31).
+ *
+ * @return true if one has.
+ */
+bool RexxActivation::hasCatchBlocks()
+{
+    for (DoBlock *doblock = doStack; doblock != OREF_NULL; doblock = doblock->getPrevious())
+    {
+        if (doblock->getCatches() != OREF_NULL)
+        {
+            return true;
         }
     }
     return false;
