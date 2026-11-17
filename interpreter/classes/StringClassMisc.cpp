@@ -330,7 +330,16 @@ RexxObject *RexxString::dataType(RexxString *pType)
     // if the type was specified, get the option character and perform the check
     if (pType != OREF_NULL)
     {
-        int type = optionalOptionArgument(pType, 0, ARG_ONE);
+        // a null string has no option character to report: report the
+        // value as given, as the other built-in functions do
+        RexxString *typeString = stringArgument(pType, ARG_ONE);
+        if (typeString->isNullString())
+        {
+            // the type is the method's argument 1 (DATATYPE's argument 2)
+            builtinOptionError(1, "ABILMNOSUVWX9", typeString);
+            reportException(Error_Incorrect_method_option, "ABILMNOSUVWX9", typeString);
+        }
+        int type = optionArgument(typeString, ARG_ONE);
         return StringUtil::dataType(this, type);
     }
 
