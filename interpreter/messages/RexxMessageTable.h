@@ -737,6 +737,7 @@ ERROR_MAP Message_map_table[] = {     /* table of major and minor errors   */
       MINOR(Error_Translation_bad_class)
       MINOR(Error_Translation_use_arg_reference_no_default)
       MINOR(Error_Translation_finally_exit)
+      MINOR(Error_Translation_forward_finally)
   MAJOR(Error_at_line)
       MINOR(Message_Translations_error)
       MINOR(Message_Translations_running)

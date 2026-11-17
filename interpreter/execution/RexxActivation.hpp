@@ -226,9 +226,25 @@ class RexxActivation : public ActivationBase
    bool              leaveBlocks(DoBlock *until, FinallyAction action, RexxInternalObject *object = OREF_NULL,
                                  RexxInstruction *instruction = OREF_NULL, DoBlock *block = OREF_NULL);
    void              startFinally(DoBlock *block);
-   bool              enterFinally(DoBlock *block);
+   // the usual case, a block with no FINALLY clause to run, costs a test
+   inline bool       enterFinally(DoBlock *block)
+   {
+       return block != OREF_NULL && block->hasFinallyToRun() && startFinallyAtEnd(block);
+   }
+   bool              startFinallyAtEnd(DoBlock *block);
    void              endFinally(DoBlock *block, RexxInstruction *end);
-   void              checkFinallyExit(const char *keyword, FinallyScope scope, DoBlock *last = OREF_NULL);
+   // nothing to check unless the code of a FINALLY clause is running, here
+   // or in the code that runs this INTERPRET or internal routine
+   inline void       checkFinallyExit(const char *keyword, FinallyScope scope, DoBlock *last = OREF_NULL)
+   {
+       if (finallyRunning == 0 && (scope == FINALLY_SCOPE_BLOCKS ||
+           (scope == FINALLY_SCOPE_CODE ? !isInterpret() : isTopLevelCall())))
+       {
+           return;
+       }
+       findFinallyExit(keyword, scope, last);
+   }
+   void              findFinallyExit(const char *keyword, FinallyScope scope, DoBlock *last);
    void              finallyBeforeTrap(RexxString *condition, DirectoryClass *exceptionObject);
    TrapHandler     * findTrapHandler(RexxString *condition);
    void              trapOn(RexxString *, RexxInstructionTrapBase *, bool);
@@ -329,6 +345,10 @@ class RexxActivation : public ActivationBase
    {
        removeBlockInstruction();
        DoBlock *temp = doStack;
+       if (temp->isInFinally())
+       {
+           finallyRunning--;
+       }
        doStack = temp->getPrevious();
        settings.traceIndent = temp->getIndent();
        temp->setHasNoReferences();
@@ -687,6 +707,7 @@ class RexxActivation : public ActivationBase
     uint64_t             randomSeed;    // random number seed
     bool                 randomSet;     // random seed has been set
     size_t               blockNest;     // block instruction nesting level
+    size_t               finallyRunning; // active blocks whose FINALLY code is running
     size_t               instructionCount;  // The number of instructions since we last yielded control
     uint32_t             idntfr;        // idntfr for concurrency trace
                                         // a condition caught by a CATCH clause, waiting

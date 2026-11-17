@@ -291,6 +291,19 @@ void RexxInstructionRaise::execute(RexxActivation *context, ExpressionStack *sta
         }
     }
 
+    // RAISE with RETURN or EXIT must not leave a FINALLY clause: it would
+    // replace what is pending with a result of its own.  Translation
+    // rejects it in the clause; this is for interpreted code, and for an
+    // EXIT in an internal routine called from the clause
+    if (instructionFlags[raise_return])
+    {
+        context->checkFinallyExit("RAISE", RexxActivation::FINALLY_SCOPE_CODE);
+    }
+    else if (instructionFlags[raise_exit])
+    {
+        context->checkFinallyExit("RAISE", RexxActivation::FINALLY_SCOPE_BODY);
+    }
+
     // we have two forms, both of which are handled by context
     // raise return is processed as a return instruction
     if (instructionFlags[raise_return])

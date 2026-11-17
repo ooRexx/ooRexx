@@ -1467,24 +1467,8 @@ RexxObject* RexxActivation::forward(RexxObject  *target, RexxString  *message,
         // a FORWARD ends this activation, as a RETURN does: it must not
         // leave a FINALLY clause
         checkFinallyExit("FORWARD", FINALLY_SCOPE_CODE);
-        // FINALLY clauses have to run before this activation ends, so it
-        // cannot disappear now: the message is sent first, and its result
-        // is returned once the clauses have run
-        if (hasFinallyToRun())
-        {
-            ProtectedObject r;
-            if (superClass == OREF_NULL)
-            {
-                target->messageSend(message, arguments, argcount, r);
-            }
-            else
-            {
-                target->messageSend(message, arguments, argcount, superClass, r);
-            }
-            // after a REPLY there is nobody to receive the result
-            returnFrom(settings.isReplyIssued() ? OREF_NULL : (RexxObject *)r);
-            return OREF_NULL;
-        }
+        // (a FORWARD in a block with a FINALLY clause to run is rejected at
+        // translation: the activation would have to go on to run the clause)
         // poof, we just became invisible
         settings.setForwarded(true);
         // we terminate the execution loop for this activation
@@ -2327,6 +2311,7 @@ void RexxActivation::signalTo(RexxInstruction *target, bool trapped)
         next = target;
         doStack = OREF_NULL;
         blockNest = 0;
+        finallyRunning = 0;
         settings.traceIndent = 0;
     }
 }
@@ -2965,6 +2950,7 @@ void RexxActivation::startFinally(DoBlock *block)
     // do not catch the conditions raised here
     block->setInCatch(true);
     block->setInFinally(true);
+    finallyRunning++;
 
     setIndent(block->getIndent());
     traceInstruction(clause);
@@ -2984,12 +2970,8 @@ void RexxActivation::startFinally(DoBlock *block)
  * @return true if the FINALLY code has started, false if the block
  *         must be ended now.
  */
-bool RexxActivation::enterFinally(DoBlock *block)
+bool RexxActivation::startFinallyAtEnd(DoBlock *block)
 {
-    if (block == OREF_NULL || !block->hasFinallyToRun())
-    {
-        return false;
-    }
     block->setPending(FINALLY_END, OREF_NULL, OREF_NULL, OREF_NULL, current);
     startFinally(block);
     return true;
@@ -3119,12 +3101,12 @@ void RexxActivation::endFinally(DoBlock *block, RexxInstruction *end)
  * @param last    For LEAVE and ITERATE, the target block (the last
  *                one to check).
  */
-void RexxActivation::checkFinallyExit(const char *keyword, FinallyScope scope, DoBlock *last)
+void RexxActivation::findFinallyExit(const char *keyword, FinallyScope scope, DoBlock *last)
 {
     RexxActivation *activation = this;
     while (activation != OREF_NULL)
     {
-        for (DoBlock *doblock = activation->doStack; doblock != OREF_NULL; doblock = doblock->getPrevious())
+        for (DoBlock *doblock = activation->finallyRunning == 0 ? OREF_NULL : activation->doStack; doblock != OREF_NULL; doblock = doblock->getPrevious())
         {
             if (doblock->isInFinally())
             {

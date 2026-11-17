@@ -482,6 +482,7 @@ LanguageParser::LanguageParser(RexxString *n, ProgramSource *s)
     // more objects until we start parsing.
     name = n;
     source = s;
+    hasForward = false;
 }
 
 
@@ -1640,6 +1641,19 @@ RexxCode *LanguageParser::translateBlock()
                     clause->setFirstCatch(clause);
                 }
                 clause->setOwner(owner);
+                // a FORWARD without CONTINUE ends the method at once, and a
+                // FINALLY clause needs it to go on: it must not be in a block
+                // that has one, at any depth.  Blocks nest, so any FORWARD
+                // after the start of this block is inside it
+                if (type == KEYWORD_FINALLY && hasForward)
+                {
+                    SourceLocation start = owner->getLocation();
+                    if (lastForward.getLineNumber() > start.getLineNumber() ||
+                        (lastForward.getLineNumber() == start.getLineNumber() && lastForward.getOffset() > start.getOffset()))
+                    {
+                        syntaxError(Error_Translation_forward_finally, new_integer(lastForward.getLineNumber()));
+                    }
+                }
                 // the clause stays on the control stack until the next one or the END
                 pushDo(clause);
 

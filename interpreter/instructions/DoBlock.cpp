@@ -74,7 +74,7 @@ DoBlock::DoBlock(RexxActivation *context, RexxBlockInstruction *_parent)
     catches = RexxInstructionCatch::firstClause(parent);
     inCatch = false;
     // and its FINALLY clause, the last one
-    finallyClause = RexxInstructionCatch::finallyClause(catches);
+    finallyClause = catches == OREF_NULL ? OREF_NULL : RexxInstructionCatch::finallyClause(catches);
     inFinally = false;
     pendingAction = FINALLY_NONE;
     pendingObject = OREF_NULL;

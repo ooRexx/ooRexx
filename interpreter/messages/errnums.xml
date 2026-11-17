@@ -4535,6 +4535,12 @@ Say Enter A, B, or C
 <emphasis role="italic">instruction</emphasis> must not leave the FINALLY clause on line <emphasis role="italic">line_number</emphasis>.</para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>952</term>
+<listitem>
+<para>FORWARD without CONTINUE on line <emphasis role="italic">line_number</emphasis> must not be in a block with a FINALLY clause.</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 </section>

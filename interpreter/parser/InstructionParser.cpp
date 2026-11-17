@@ -2588,6 +2588,11 @@ RexxInstruction *LanguageParser::forwardNew()
     if (!returnContinue)
     {
         checkFinallyExit("FORWARD");
+        // nor be in a block that has one: the method would have to go on,
+        // to run the clause, and a FORWARD ends it at once.  The FINALLY
+        // clause comes later, so it is the one that checks
+        lastForward = clauseLocation;
+        hasForward = true;
     }
     // and create the forward object
     RexxInstruction *newObject = new_instruction(FORWARD, Forward);
@@ -3935,6 +3940,9 @@ RexxInstruction *LanguageParser::raiseNew()
                 {
                     syntaxError(Error_Invalid_subkeyword_result);
                 }
+                // RETURN and EXIT give the routine a result of their own: they
+                // would replace what is pending in a FINALLY clause
+                checkFinallyExit("RAISE");
                 // remember which return type we need to use
                 flags[raise_return] = true;
                 // and get the return value
@@ -3955,6 +3963,7 @@ RexxInstruction *LanguageParser::raiseNew()
                 {
                     syntaxError(Error_Invalid_subkeyword_result);
                 }
+                checkFinallyExit("RAISE");
                 flags[raise_exit] = true;
                 // get the optional keyword value
                 result = parseConstantExpression();
@@ -4009,6 +4018,9 @@ RexxInstruction *LanguageParser::replyNew()
     // this is pretty simple...parse the optional expression and create the
     // instruction instance.
     RexxInternalObject *expression = parseExpression(TERM_EOC);
+    // a REPLY returns a result to the caller: in a FINALLY clause it would
+    // replace what is pending
+    checkFinallyExit("REPLY");
 
     RexxInstruction *newObject = new_instruction(REPLY, Reply);
     ::new ((void *)newObject) RexxInstructionReply(expression);

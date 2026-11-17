@@ -734,6 +734,7 @@
 #define Rexx_Error_Translation_bad_class                                  99949
 #define Rexx_Error_Translation_use_arg_reference_no_default               99950
 #define Rexx_Error_Translation_finally_exit                               99951
+#define Rexx_Error_Translation_forward_finally                            99952
 
 
 #endif

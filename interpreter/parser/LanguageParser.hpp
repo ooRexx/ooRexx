@@ -476,6 +476,8 @@ protected:
     size_t lineCount;                    // count of lines in the source
     RexxClause *clause;                  // current clause being created
     SourceLocation clauseLocation;       // current clause location for errors
+    SourceLocation lastForward;          // the last FORWARD without CONTINUE (RFE #31)
+    bool hasForward;                     // there has been one
     size_t lineNumber;                   // current line position
     size_t lineOffset;                   // current offset with in the line
 

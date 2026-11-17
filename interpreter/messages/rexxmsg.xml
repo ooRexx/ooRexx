@@ -6473,6 +6473,15 @@ Say Enter A, B, or C
         <SymbolicName>Error_Translation_finally_exit</SymbolicName>
         <Text><Sub position="1" name="instruction"/> must not leave the FINALLY clause on line <Sub position="2" name="line_number"/>.</Text>
       </SubMessage>
+      <SubMessage>
+        <Code>99</Code>
+        <Subcode>952</Subcode>
+        <MessageNumber>861</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Translation_forward_finally</SymbolicName>
+        <Text>FORWARD without CONTINUE on line <Sub position="1" name="line_number"/> must not be in a block with a FINALLY clause.</Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>

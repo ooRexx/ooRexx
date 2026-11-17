@@ -738,6 +738,7 @@ ERROR_MESSAGE Message_table[] = {      /* table of major and minor errors   */
     MESSAGE(Error_Translation_bad_class, "\"&1\" is not a valid class.")
     MESSAGE(Error_Translation_use_arg_reference_no_default, "A USE ARG default value is not allowed for variable references.")
     MESSAGE(Error_Translation_finally_exit, "&1 must not leave the FINALLY clause on line &2.")
+    MESSAGE(Error_Translation_forward_finally, "FORWARD without CONTINUE on line &1 must not be in a block with a FINALLY clause.")
     MESSAGE(Error_at_line, "Error &1 running &2, line &3:.")
     MESSAGE(Message_Translations_error, "Error")
     MESSAGE(Message_Translations_running, "running")
