@@ -709,10 +709,12 @@ bool InterpreterInstance::haltAllActivities(RexxString *name)
     for (size_t listIndex = 1; listIndex <= allActivities.items(); listIndex++)
     {
         Activity *activity = (Activity *)allActivities.get(listIndex);
-        // only halt the active ones
-        if (activity->isActive())
+        // only halt the active ones, every one of them, even after one that
+        // could not take it because a halt is already pending there
+        // (result && ... would skip the rest)
+        if (activity->isActive() && !activity->halt(OREF_NULL))
         {
-            result = result && activity->halt(OREF_NULL);
+            result = false;
         }
     }
     return result;

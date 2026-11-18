@@ -461,8 +461,12 @@ bool Interpreter::haltAllActivities(RexxString *name)
     for (size_t listIndex = 1; listIndex <= interpreterInstances->items(); listIndex++)
     {
         InterpreterInstance *instance = (InterpreterInstance *)interpreterInstances->get(listIndex);
-        // halt every thing
-        result = result && instance->haltAllActivities(name);
+        // halt every thing: every instance, even after one that could not
+        // take it (result && ... would skip the rest)
+        if (!instance->haltAllActivities(name))
+        {
+            result = false;
+        }
     }
     return result;
 }
