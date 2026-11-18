@@ -149,6 +149,8 @@ class Activity : public RexxInternalObject
     void        reraiseException(DirectoryClass *);
     void        raisePropagate(DirectoryClass *);
     void        throwCondition(DirectoryClass *);
+    void        throwNewCondition(RexxString *, RexxObject *, RexxString *, RexxObject *);
+    void        apiThrow(const char *, RexxObject *, RexxObject *, RexxObject *);
     static bool isThrown(RexxString *, DirectoryClass *);
     DirectoryClass *uncaughtThrown(DirectoryClass *);
     void        display(DirectoryClass *);

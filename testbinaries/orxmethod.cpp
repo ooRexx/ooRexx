@@ -2280,7 +2280,23 @@ RexxMethod4(int,
             OPTIONAL_RexxArrayObject, add,
             OPTIONAL_RexxObjectPtr, result)
 {
-    context->ThrowCondition(name, (RexxStringObject)desc, add, result);
+    // desc is a C string: it must be passed as a String object
+    context->ThrowCondition(name, desc == NULL ? NULLOBJECT : context->String(desc), add, result);
+    // this should never execute
+    context->SetObjectVariable("CONTINUE", context->True());
+    return 0;
+}
+
+// Throw() (RFE #31): as the THROW instruction.  The arguments are passed as
+// they come, so that the tests can check how Throw() rejects bad ones
+RexxMethod4(int,
+            TestThrow,
+            OPTIONAL_CSTRING, name,
+            OPTIONAL_RexxObjectPtr, rc,
+            OPTIONAL_RexxObjectPtr, desc,
+            OPTIONAL_RexxObjectPtr, add)
+{
+    context->Throw(name, rc, (RexxStringObject)desc, add);
     // this should never execute
     context->SetObjectVariable("CONTINUE", context->True());
     return 0;
@@ -2837,6 +2853,7 @@ RexxMethodEntry orxtest_methods[] = {
     REXX_METHOD(TestThrowException2,         TestThrowException2),
     REXX_METHOD(TestThrowException,          TestThrowException),
     REXX_METHOD(TestThrowCondition,          TestThrowCondition),
+    REXX_METHOD(TestThrow,                   TestThrow),
     REXX_METHOD(TestSetGuard,                TestSetGuard),
     REXX_METHOD(TestSetGuardOn,              TestSetGuardOn),
     REXX_METHOD(TestSetGuardOff,             TestSetGuardOff),

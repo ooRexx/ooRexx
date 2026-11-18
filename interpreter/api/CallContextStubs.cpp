@@ -240,6 +240,14 @@ void RexxEntry CallThrowCondition(RexxCallContext *c, CSTRING n, RexxStringObjec
     context.activity->raiseCondition(name, OREF_NULL, (RexxString *)desc, (RexxObject *)add, (RexxObject *)result);
 }
 
+// added in CALL_INTERFACE_VERSION_5_3_0: throw a condition as the THROW
+// instruction does (RFE #31); this does not return
+void RexxEntry CallThrow(RexxCallContext *c, CSTRING n, RexxObjectPtr rc, RexxStringObject desc, RexxObjectPtr add)
+{
+    ApiContext context(c);
+    context.activity->apiThrow(n, (RexxObject *)rc, (RexxObject *)desc, (RexxObject *)add);
+}
+
 void RexxEntry SetExitContextVariable(RexxExitContext *c, CSTRING n, RexxObjectPtr v)
 {
     ApiContext context(c);
@@ -353,6 +361,14 @@ void RexxEntry ExitThrowCondition(RexxExitContext *c, CSTRING n, RexxStringObjec
     Protected<RexxString> name = new_upper_string(n);
     context.context->enableConditionTrap();
     context.activity->raiseCondition(name, OREF_NULL, (RexxString *)desc, (RexxObject *)add, (RexxObject *)result);
+}
+
+// added in EXIT_INTERFACE_VERSION_5_3_0: throw a condition as the THROW
+// instruction does (RFE #31); this does not return
+void RexxEntry ExitThrow(RexxExitContext *c, CSTRING n, RexxObjectPtr rc, RexxStringObject desc, RexxObjectPtr add)
+{
+    ApiContext context(c);
+    context.activity->apiThrow(n, (RexxObject *)rc, (RexxObject *)desc, (RexxObject *)add);
 }
 
 stringsize_t RexxEntry GetContextDigits(RexxCallContext *c)
@@ -700,6 +716,7 @@ CallContextInterface Activity::callContextFunctions =
     CallThrowException2,
     CallThrowException,
     CallThrowCondition,
+    CallThrow,
 };
 
 
@@ -720,6 +737,7 @@ ExitContextInterface Activity::exitContextFunctions =
     ExitThrowException2,
     ExitThrowException,
     ExitThrowCondition,
+    ExitThrow,
 };
 
 

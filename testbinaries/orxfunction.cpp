@@ -994,7 +994,23 @@ RexxRoutine4(int,
             OPTIONAL_RexxArrayObject, add,
             OPTIONAL_RexxObjectPtr, result)
 {
-    context->ThrowCondition(name, (RexxStringObject)desc, add, result);
+    // desc is a C string: it must be passed as a String object
+    context->ThrowCondition(name, desc == NULL ? NULLOBJECT : context->String(desc), add, result);
+    // this should never execute
+    context->SetContextVariable("CONTINUE", context->True());
+    return 0;
+}
+
+// Throw() (RFE #31): as the THROW instruction.  The arguments are passed as
+// they come, so that the tests can check how Throw() rejects bad ones
+RexxRoutine4(int,
+            TestThrow,
+            OPTIONAL_CSTRING, name,
+            OPTIONAL_RexxObjectPtr, rc,
+            OPTIONAL_RexxObjectPtr, desc,
+            OPTIONAL_RexxObjectPtr, add)
+{
+    context->Throw(name, rc, (RexxStringObject)desc, add);
     // this should never execute
     context->SetContextVariable("CONTINUE", context->True());
     return 0;
@@ -1096,6 +1112,7 @@ RexxRoutineEntry orxtest_funcs[] = {
     REXX_TYPED_ROUTINE(TestThrowException2,         TestThrowException2),
     REXX_TYPED_ROUTINE(TestThrowException,          TestThrowException),
     REXX_TYPED_ROUTINE(TestThrowCondition,          TestThrowCondition),
+    REXX_TYPED_ROUTINE(TestThrow,                   TestThrow),
     REXX_TYPED_ROUTINE(TestNestedAttach,            TestNestedAttach),
     REXX_TYPED_ROUTINE(TestHaltThread,              TestHaltThread),
     REXX_LAST_ROUTINE()

@@ -366,15 +366,12 @@ void RexxInstructionRaise::throwCondition(RexxActivation *context, RexxObject *r
         {
             activity->completeSyntaxCondition(condition);
         }
+        activity->throwCondition(condition);
     }
-    // THROW SYNTAX: an error, as RAISE SYNTAX raises it
-    else if (instructionFlags[raise_syntax])
-    {
-        condition = activity->createExceptionObject((RexxErrorCodes)((RexxInteger *)rc)->getValue(), _description, (ArrayClass *)_additional, OREF_NULL);
-    }
+    // a new condition, as the Throw() API throws it (THROW SYNTAX is an
+    // error, as RAISE SYNTAX raises it)
     else
     {
-        condition = activity->createConditionObject(conditionName, rc, _description, _additional, OREF_NULL);
+        activity->throwNewCondition(conditionName, rc, _description, _additional);
     }
-    activity->throwCondition(condition);
 }

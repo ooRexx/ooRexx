@@ -695,7 +695,8 @@ typedef struct
 #define METHOD_INTERFACE_VERSION_4_0_0 100
 #define METHOD_INTERFACE_VERSION_4_2_0 101
 #define METHOD_INTERFACE_VERSION_5_0_0 102
-#define METHOD_INTERFACE_VERSION 102
+#define METHOD_INTERFACE_VERSION_5_3_0 103
+#define METHOD_INTERFACE_VERSION 103
 
 typedef struct
 {
@@ -727,11 +728,14 @@ typedef struct
      void (RexxEntry *ThrowException2)(RexxMethodContext *, size_t, RexxObjectPtr, RexxObjectPtr);
      void (RexxEntry *ThrowException)(RexxMethodContext *, size_t, RexxArrayObject);
      void (RexxEntry *ThrowCondition)(RexxMethodContext *, CSTRING, RexxStringObject, RexxObjectPtr, RexxObjectPtr);
+     // added in METHOD_INTERFACE_VERSION_5_3_0
+     void (RexxEntry *Throw)(RexxMethodContext *, CSTRING, RexxObjectPtr, RexxStringObject, RexxObjectPtr);
 } MethodContextInterface;
 
 #define CALL_INTERFACE_VERSION_4_0_0 100
 #define CALL_INTERFACE_VERSION_5_0_0 101
-#define CALL_INTERFACE_VERSION 101
+#define CALL_INTERFACE_VERSION_5_3_0 102
+#define CALL_INTERFACE_VERSION 102
 
 typedef struct
 {
@@ -758,11 +762,14 @@ typedef struct
      void (RexxEntry *ThrowException2)(RexxCallContext *, size_t, RexxObjectPtr, RexxObjectPtr);
      void (RexxEntry *ThrowException)(RexxCallContext *, size_t, RexxArrayObject);
      void (RexxEntry *ThrowCondition)(RexxCallContext *, CSTRING, RexxStringObject, RexxObjectPtr, RexxObjectPtr);
+     // added in CALL_INTERFACE_VERSION_5_3_0
+     void (RexxEntry *Throw)(RexxCallContext *, CSTRING, RexxObjectPtr, RexxStringObject, RexxObjectPtr);
 } CallContextInterface;
 
 #define EXIT_INTERFACE_VERSION_4_0_0 100
 #define EXIT_INTERFACE_VERSION_5_0_0 101
-#define EXIT_INTERFACE_VERSION 101
+#define EXIT_INTERFACE_VERSION_5_3_0 102
+#define EXIT_INTERFACE_VERSION 102
 
 typedef struct
 {
@@ -778,6 +785,8 @@ typedef struct
      void (RexxEntry *ThrowException2)(RexxExitContext *, size_t, RexxObjectPtr, RexxObjectPtr);
      void (RexxEntry *ThrowException)(RexxExitContext *, size_t, RexxArrayObject);
      void (RexxEntry *ThrowCondition)(RexxExitContext *, CSTRING, RexxStringObject, RexxObjectPtr, RexxObjectPtr);
+     // added in EXIT_INTERFACE_VERSION_5_3_0
+     void (RexxEntry *Throw)(RexxExitContext *, CSTRING, RexxObjectPtr, RexxStringObject, RexxObjectPtr);
 } ExitContextInterface;
 
 
@@ -2447,6 +2456,10 @@ struct RexxMethodContext_
      {
          functions->ThrowCondition(this, s1, s2, ao, o);
      }
+     void Throw(CSTRING n, RexxObjectPtr rc, RexxStringObject d, RexxObjectPtr a)
+     {
+         functions->Throw(this, n, rc, d, a);
+     }
 
 
      RexxObjectPtr Nil()
@@ -3305,6 +3318,10 @@ struct RexxCallContext_
      {
          functions->ThrowCondition(this, s1, s2, ao, o);
      }
+     void Throw(CSTRING n, RexxObjectPtr rc, RexxStringObject d, RexxObjectPtr a)
+     {
+         functions->Throw(this, n, rc, d, a);
+     }
 
 
      RexxObjectPtr Nil()
@@ -4142,6 +4159,10 @@ struct RexxExitContext_
      void ThrowCondition(CSTRING s1, RexxStringObject s2, RexxObjectPtr ao, RexxObjectPtr o)
      {
          functions->ThrowCondition(this, s1, s2, ao, o);
+     }
+     void Throw(CSTRING n, RexxObjectPtr rc, RexxStringObject d, RexxObjectPtr a)
+     {
+         functions->Throw(this, n, rc, d, a);
      }
 
      RexxObjectPtr Nil()

@@ -367,6 +367,14 @@ void RexxEntry ThrowCondition(RexxMethodContext *c, CSTRING n, RexxStringObject 
     context.activity->raiseCondition(name, OREF_NULL, (RexxString *)desc, (RexxObject *)add, (RexxObject *)result);
 }
 
+// added in METHOD_INTERFACE_VERSION_5_3_0: throw a condition as the THROW
+// instruction does (RFE #31); this does not return
+void RexxEntry Throw(RexxMethodContext *c, CSTRING n, RexxObjectPtr rc, RexxStringObject desc, RexxObjectPtr add)
+{
+    ApiContext context(c);
+    context.activity->apiThrow(n, (RexxObject *)rc, (RexxObject *)desc, (RexxObject *)add);
+}
+
 
 END_EXTERN_C()
 
@@ -400,6 +408,7 @@ MethodContextInterface Activity::methodContextFunctions =
     ThrowException2,
     ThrowException,
     ThrowCondition,
+    Throw,
 };
 
 

@@ -1698,6 +1698,134 @@ void Activity::throwCondition(DirectoryClass *conditionObj)
     // Rexx activation that catches it does not return here)
 }
 
+
+/**
+ * Create the condition object of a THROW, or of the Throw() API, and
+ * throw it (RFE #31).  This does not return.
+ *
+ * @param condition The condition name, in uppercase ("USER name" for a
+ *                  user condition).
+ * @param rc        The RC (ERROR and FAILURE), or, for SYNTAX, the error
+ *                  number as an Integer (major * 1000 + minor).
+ * @param description
+ *                  The DESCRIPTION, or OREF_NULL.
+ * @param additional
+ *                  The ADDITIONAL information, or OREF_NULL.  For SYNTAX,
+ *                  the Array of substitution values.
+ */
+void Activity::throwNewCondition(RexxString *condition, RexxObject *rc, RexxString *description, RexxObject *additional)
+{
+    Protected<DirectoryClass> conditionObj;
+    // THROW SYNTAX: an error, as RAISE SYNTAX raises it
+    if (condition->strCompare(GlobalNames::SYNTAX))
+    {
+        conditionObj = createExceptionObject((RexxErrorCodes)((RexxInteger *)rc)->getValue(), description, (ArrayClass *)additional, OREF_NULL);
+    }
+    else
+    {
+        conditionObj = createConditionObject(condition, rc, description, additional, OREF_NULL);
+    }
+    throwCondition(conditionObj);
+}
+
+
+/**
+ * The Throw() API (RFE #31): throw a condition from native code, as
+ * the THROW instruction does.  The arguments are checked as THROW
+ * checks them; then the condition is thrown, and this does not return:
+ * the native method, routine or exit ends here.
+ *
+ * @param name      The condition name, as for RaiseCondition(): one of
+ *                  the names THROW accepts, with "USER name" for a user
+ *                  condition.
+ * @param rc        The RC: required for ERROR, FAILURE and SYNTAX (for
+ *                  SYNTAX, the error code as in Rexx, "nn.nnn"), and not
+ *                  allowed for any other condition.
+ * @param description
+ *                  The description, or OREF_NULL.
+ * @param additional
+ *                  The additional information, or OREF_NULL.  For SYNTAX,
+ *                  an Array of substitution values.
+ */
+void Activity::apiThrow(const char *name, RexxObject *rc, RexxObject *description, RexxObject *additional)
+{
+    if (name == NULL)
+    {
+        reportException(Error_Incorrect_method_user_defined, new_string("Throw needs a condition name"));
+    }
+    Protected<RexxString> condition = new_upper_string(name);
+    // the names THROW accepts: one word, or USER and the user condition's name
+    wholenumber_t words = condition->words()->getValue();
+    Protected<RexxString> first = words == 0 ? GlobalNames::NULLSTRING : condition->word(IntegerOne);
+    if (first->strCompare("USER"))
+    {
+        if (words != 2)
+        {
+            reportException(Error_Incorrect_method_user_defined, new_string("Throw needs USER and one user condition name"));
+        }
+        // "USER name", with one blank, as THROW USER name has it
+        condition = first->concatWith(condition->word(IntegerTwo), ' ');
+    }
+    else if (words != 1 ||
+        !(first->strCompare(GlobalNames::ERRORNAME) || first->strCompare(GlobalNames::FAILURE) ||
+          first->strCompare(GlobalNames::SYNTAX) || first->strCompare(GlobalNames::HALT) ||
+          first->strCompare(GlobalNames::LOSTDIGITS) || first->strCompare(GlobalNames::NOMETHOD) ||
+          first->strCompare(GlobalNames::NOSTRING) || first->strCompare(GlobalNames::NOTREADY) ||
+          first->strCompare(GlobalNames::NOVALUE)))
+    {
+        reportException(Error_Incorrect_method_user_defined, new_string("Throw cannot throw a condition named \"")->concat(condition)->concatWithCstring("\""));
+    }
+
+    // an RC with ERROR, FAILURE and SYNTAX, and with nothing else
+    bool hasRC = condition->strCompare(GlobalNames::ERRORNAME) || condition->strCompare(GlobalNames::FAILURE) ||
+        condition->strCompare(GlobalNames::SYNTAX);
+    if (hasRC && rc == OREF_NULL)
+    {
+        reportException(Error_Incorrect_method_user_defined, new_string("Throw needs an RC for an ERROR, FAILURE or SYNTAX condition"));
+    }
+    if (!hasRC && rc != OREF_NULL)
+    {
+        reportException(Error_Incorrect_method_user_defined, new_string("Throw takes an RC only for an ERROR, FAILURE or SYNTAX condition"));
+    }
+    if (description != OREF_NULL && !isString(description))
+    {
+        reportException(Error_Incorrect_method_user_defined, new_string("the Throw description must be a String"));
+    }
+
+    Protected<RexxObject> rcValue = rc;
+    Protected<RexxObject> additionalValue = additional;
+    Protected<RexxString> descriptionValue = (RexxString *)description;
+    // as THROW SYNTAX does (see RexxInstructionRaise::execute())
+    if (condition->strCompare(GlobalNames::SYNTAX))
+    {
+        RexxString *errorcode = rc->requestString();
+        if (errorcode == TheNilObject)
+        {
+            reportException(Error_Conversion_raise, rc);
+        }
+        rcValue = new_integer(Interpreter::messageNumber(errorcode));
+        if (descriptionValue.isNull())
+        {
+            descriptionValue = GlobalNames::NULLSTRING;
+        }
+        if (additionalValue.isNull())
+        {
+            additionalValue = new_array();
+        }
+        else
+        {
+            // compared through a plain pointer (MSVC: C2666 with Protected)
+            RexxObject *array = additional->requestArray();
+            if (array == TheNilObject || ((ArrayClass *)array)->isMultiDimensional())
+            {
+                reportException(Error_Execution_syntax_additional);
+            }
+            additionalValue = array;
+        }
+    }
+    throwNewCondition(condition, rcValue, descriptionValue, additionalValue);
+}
+
 /**
  * Sets a flag for as long as it exists, and gives it back the
  * value it had, however the block is left.
