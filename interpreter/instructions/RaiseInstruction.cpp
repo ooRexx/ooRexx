@@ -50,6 +50,8 @@
 #include "RaiseInstruction.hpp"
 #include "Interpreter.hpp"
 #include "MethodArguments.hpp"
+#include "Activity.hpp"
+#include "ActivityManager.hpp"
 
 
 /**
@@ -291,6 +293,14 @@ void RexxInstructionRaise::execute(RexxActivation *context, ExpressionStack *sta
         }
     }
 
+    // THROW (RFE #31): raised here, and it goes on until something
+    // catches it
+    if (instructionFlags[raise_throw])
+    {
+        throwCondition(context, rc, _description, _additional, conditionobj);
+        return;
+    }
+
     // RAISE with RETURN or EXIT must not leave a FINALLY clause: it would
     // replace what is pending with a result of its own.  Translation
     // rejects it in the clause; this is for interpreted code, and for an
@@ -317,3 +327,54 @@ void RexxInstructionRaise::execute(RexxActivation *context, ExpressionStack *sta
     }
 }
 
+
+/**
+ * Throw the condition of a THROW instruction (RFE #31).  This does not
+ * return.
+ *
+ * @param context The current execution context.
+ * @param rc      The RC value (ERROR, FAILURE and SYNTAX).
+ * @param _description
+ *                The DESCRIPTION, if given.
+ * @param _additional
+ *                The ADDITIONAL information, if given.
+ * @param conditionobj
+ *                For THROW PROPAGATE, the condition being handled.
+ */
+void RexxInstructionRaise::throwCondition(RexxActivation *context, RexxObject *rc, RexxString *_description,
+    RexxObject *_additional, DirectoryClass *conditionobj)
+{
+    Activity *activity = ActivityManager::currentActivity;
+    Protected<DirectoryClass> condition = conditionobj;
+
+    // THROW PROPAGATE: the condition being handled, raised or thrown, with
+    // DESCRIPTION and ADDITIONAL replaced if they are given, as in RAISE
+    // PROPAGATE
+    if (instructionFlags[raise_propagate])
+    {
+        if (description != OREF_NULL)
+        {
+            condition->put(_description, GlobalNames::DESCRIPTION);
+        }
+        if (_additional != OREF_NULL)
+        {
+            condition->put(_additional, GlobalNames::ADDITIONAL);
+        }
+        RexxString *name = (RexxString *)condition->get(GlobalNames::CONDITION);
+        // the message of an error is built from its ADDITIONAL
+        if (name->strCompare(GlobalNames::SYNTAX) && _additional != OREF_NULL)
+        {
+            activity->completeSyntaxCondition(condition);
+        }
+    }
+    // THROW SYNTAX: an error, as RAISE SYNTAX raises it
+    else if (instructionFlags[raise_syntax])
+    {
+        condition = activity->createExceptionObject((RexxErrorCodes)((RexxInteger *)rc)->getValue(), _description, (ArrayClass *)_additional, OREF_NULL);
+    }
+    else
+    {
+        condition = activity->createConditionObject(conditionName, rc, _description, _additional, OREF_NULL);
+    }
+    activity->throwCondition(condition);
+}

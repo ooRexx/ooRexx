@@ -193,6 +193,7 @@
 #define Rexx_Error_Symbol_expected_counter                                20934
 #define Rexx_Error_Symbol_expected_numeric_subdirective                   20935
 #define Rexx_Error_Symbol_expected_catch                                  20936
+#define Rexx_Error_Symbol_expected_throw                                  20937
 #define Rexx_Error_Invalid_data                                           21000
 #define Rexx_Error_Invalid_data_user_defined                              21900
 #define Rexx_Error_Invalid_data_nop                                       21901
@@ -265,6 +266,8 @@
 #define Rexx_Error_Invalid_subkeyword_conflict                            25937
 #define Rexx_Error_Invalid_subkeyword_options_form                        25938
 #define Rexx_Error_Invalid_subkeyword_catch                               25939
+#define Rexx_Error_Invalid_subkeyword_throw                               25940
+#define Rexx_Error_Invalid_subkeyword_throwoption                         25941
 #define Rexx_Error_Invalid_whole_number                                   26000
 #define Rexx_Error_Invalid_whole_number_repeat                            26002
 #define Rexx_Error_Invalid_whole_number_for                               26003
@@ -365,6 +368,8 @@
 #define Rexx_Error_Invalid_expression_missing_general                     35935
 #define Rexx_Error_Invalid_expression_missing_constant                    35936
 #define Rexx_Error_Invalid_expression_catch_syntax                        35937
+#define Rexx_Error_Invalid_expression_throw_description                   35938
+#define Rexx_Error_Invalid_expression_throw_additional                    35939
 #define Rexx_Error_Unmatched_parenthesis                                  36000
 #define Rexx_Error_Unmatched_parenthesis_user_defined                     36900
 #define Rexx_Error_Unmatched_parenthesis_paren                            36901

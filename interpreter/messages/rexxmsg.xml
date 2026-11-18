@@ -1432,6 +1432,15 @@ editbin rexx.exe /stack:100000000
         <SymbolicName>Error_Symbol_expected_catch</SymbolicName>
         <Text>Symbol expected after CATCH keyword or after a comma in a CATCH clause.</Text>
       </SubMessage>
+      <SubMessage>
+        <Code>20</Code>
+        <Subcode>937</Subcode>
+        <MessageNumber>862</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Symbol_expected_throw</SymbolicName>
+        <Text>Symbol expected after THROW keyword.</Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>
@@ -2101,6 +2110,24 @@ editbin rexx.exe /stack:100000000
         <Severity>Warning</Severity>
         <SymbolicName>Error_Invalid_subkeyword_catch</SymbolicName>
         <Text>CATCH must be followed by one or more of the keywords ERROR, FAILURE, HALT, LOSTDIGITS, NOTREADY, NOMETHOD, NOSTRING, NOVALUE, SYNTAX, USER, or ANY, separated by commas; found <q><Sub position="1" name="word"/></q>.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>25</Code>
+        <Subcode>940</Subcode>
+        <MessageNumber>863</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Invalid_subkeyword_throw</SymbolicName>
+        <Text>THROW must be followed by one of the keywords ERROR, FAILURE, HALT, LOSTDIGITS, NOMETHOD, NOSTRING, NOTREADY, NOVALUE, PROPAGATE, SYNTAX, or USER; found <q><Sub position="1" name="word"/></q>.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>25</Code>
+        <Subcode>941</Subcode>
+        <MessageNumber>864</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Invalid_subkeyword_throwoption</SymbolicName>
+        <Text>Unknown keyword on THROW instruction; found <q><Sub position="1" name="word"/></q>.</Text>
       </SubMessage>
     </Subcodes>
   </Message>
@@ -3050,6 +3077,24 @@ editbin rexx.exe /stack:100000000
         <Severity>Warning</Severity>
         <SymbolicName>Error_Invalid_expression_catch_syntax</SymbolicName>
         <Text>Incorrect error number following SYNTAX keyword of CATCH clause; found <q><Sub position="1" name="value"/></q>.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>35</Code>
+        <Subcode>938</Subcode>
+        <MessageNumber>865</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Invalid_expression_throw_description</SymbolicName>
+        <Text>Missing expression following DESCRIPTION keyword of a THROW instruction.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>35</Code>
+        <Subcode>939</Subcode>
+        <MessageNumber>866</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Invalid_expression_throw_additional</SymbolicName>
+        <Text>Missing expression following ADDITIONAL keyword of a THROW instruction.</Text>
       </SubMessage>
     </Subcodes>
   </Message>

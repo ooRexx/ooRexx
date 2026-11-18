@@ -1986,6 +1986,9 @@ void RexxActivation::raise(RexxString *condition, RexxObject *rc, RexxString *de
         propagated = true;
         // fill in the propagation status
         conditionobj->put(TheTrueObject, GlobalNames::PROPAGATED);
+        // RAISE PROPAGATE raises it one level, whether it was raised or
+        // thrown (RFE #31)
+        conditionobj->put(TheFalseObject, GlobalNames::THROWN);
         // if no result was specified, use the one from the condition object
         if (resultObj == OREF_NULL)
         {
@@ -2724,9 +2727,12 @@ bool RexxActivation::trap(RexxString *condition, DirectoryClass *exceptionObject
     // the last one reaches its END (this does not return then)
     finallyBeforeTrap(condition, exceptionObject);
 
+    // a SYNTAX error, or a condition thrown by THROW (RFE #31)
+    bool thrown = Activity::isThrown(condition, exceptionObject);
+
     // do we need to notify a message object of a syntax error?
     // send it the notification message.
-    if (notifyObject != OREF_NULL && condition->strCompare(GlobalNames::SYNTAX))
+    if (notifyObject != OREF_NULL && thrown)
     {
         notifyObject->error(exceptionObject);
     }
@@ -2735,7 +2741,7 @@ bool RexxActivation::trap(RexxString *condition, DirectoryClass *exceptionObject
     // unless a CATCH clause of a block typed at the pause catches it
     if (debugPause && !catches(condition, exceptionObject))
     {
-        if (!condition->strCompare(GlobalNames::SYNTAX))
+        if (!thrown)
         {
             return false;
         }
@@ -2747,7 +2753,7 @@ bool RexxActivation::trap(RexxString *condition, DirectoryClass *exceptionObject
     }
     // see if we have a handler for this condition (the traps of the
     // program are ignored at a debug pause)
-    TrapHandler *trapHandler = debugPause ? OREF_NULL : findTrapHandler(condition);
+    TrapHandler *trapHandler = debugPause ? OREF_NULL : findTrapHandler(condition, exceptionObject);
 
     // a CATCH clause of an active block (here, or in the code that runs
     // this internal routine or INTERPRET) wins over a trap, wherever the
@@ -2837,6 +2843,28 @@ bool RexxActivation::trap(RexxString *condition, DirectoryClass *exceptionObject
     }
     // not something we can handle.
     return false;
+}
+
+
+/**
+ * Find the trap for a condition that has a condition object: a CALL
+ * ON trap does not trap a condition thrown by THROW, as it does not
+ * trap a SYNTAX error (RFE #31).
+ *
+ * @param condition The condition name.
+ * @param exceptionObject
+ *                  The condition object.
+ *
+ * @return The trap handler, or OREF_NULL if the condition is not trapped.
+ */
+TrapHandler *RexxActivation::findTrapHandler(RexxString *condition, DirectoryClass *exceptionObject)
+{
+    TrapHandler *trapHandler = findTrapHandler(condition);
+    if (trapHandler != OREF_NULL && !trapHandler->isSignal() && Activity::isThrown(condition, exceptionObject))
+    {
+        return OREF_NULL;
+    }
+    return trapHandler;
 }
 
 
@@ -3049,7 +3077,7 @@ void RexxActivation::endFinally(DoBlock *block, RexxInstruction *end)
         {
             DirectoryClass *conditionObj = (DirectoryClass *)pending;
             RexxString *condition = (RexxString *)conditionObj->get(GlobalNames::CONDITION);
-            if (condition->strCompare(GlobalNames::SYNTAX))
+            if (Activity::isThrown(condition, conditionObj))
             {
                 // this does not return
                 activity->raisePropagate(conditionObj);
@@ -3157,7 +3185,7 @@ void RexxActivation::finallyBeforeTrap(RexxString *condition, DirectoryClass *ex
 
     // the traps of the program are ignored at a debug pause, but the
     // clauses of a block typed there work
-    TrapHandler *trapHandler = debugPause ? OREF_NULL : findTrapHandler(condition);
+    TrapHandler *trapHandler = debugPause ? OREF_NULL : findTrapHandler(condition, exceptionObject);
     RexxActivation *catchOwner;
     DoBlock *catchingBlock;
     RexxInstructionCatch *clause;
@@ -3182,12 +3210,12 @@ void RexxActivation::finallyBeforeTrap(RexxString *condition, DirectoryClass *ex
             handler = handler->parent;
         }
     }
-    // not handled here.  Only a SYNTAX condition goes on to the caller (the
-    // others are ignored), and it is raised there after this activation
-    // has ended.
+    // not handled here.  Only a SYNTAX condition, or a thrown one, goes on
+    // to the caller (the others are ignored), and it is raised there after
+    // this activation has ended.
     else
     {
-        if (!condition->strCompare(GlobalNames::SYNTAX))
+        if (!Activity::isThrown(condition, exceptionObject))
         {
             return;
         }

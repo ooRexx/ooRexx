@@ -247,6 +247,7 @@ class RexxActivation : public ActivationBase
    void              findFinallyExit(const char *keyword, FinallyScope scope, DoBlock *last);
    void              finallyBeforeTrap(RexxString *condition, DirectoryClass *exceptionObject);
    TrapHandler     * findTrapHandler(RexxString *condition);
+   TrapHandler     * findTrapHandler(RexxString *condition, DirectoryClass *exceptionObject);
    void              trapOn(RexxString *, RexxInstructionTrapBase *, bool);
    void              trapOff(RexxString *, bool);
    void              setAddress(RexxString *, CommandIOConfiguration *config);

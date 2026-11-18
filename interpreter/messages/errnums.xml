@@ -996,6 +996,12 @@ editbin rexx.exe /stack:100000000
 <para>Symbol expected after CATCH keyword or after a comma in a CATCH clause.</para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>937</term>
+<listitem>
+<para>Symbol expected after THROW keyword.</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 <section id="ERR21">
@@ -1461,6 +1467,18 @@ editbin rexx.exe /stack:100000000
 <term>939</term>
 <listitem>
 <para>CATCH must be followed by one or more of the keywords ERROR, FAILURE, HALT, LOSTDIGITS, NOTREADY, NOMETHOD, NOSTRING, NOVALUE, SYNTAX, USER, or ANY, separated by commas; found "<emphasis role="italic">word</emphasis>".</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>940</term>
+<listitem>
+<para>THROW must be followed by one of the keywords ERROR, FAILURE, HALT, LOSTDIGITS, NOMETHOD, NOSTRING, NOTREADY, NOVALUE, PROPAGATE, SYNTAX, or USER; found "<emphasis role="italic">word</emphasis>".</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>941</term>
+<listitem>
+<para>Unknown keyword on THROW instruction; found "<emphasis role="italic">word</emphasis>".</para>
 </listitem>
 </varlistentry>
 </variablelist>
@@ -2146,6 +2164,18 @@ editbin rexx.exe /stack:100000000
 <term>937</term>
 <listitem>
 <para>Incorrect error number following SYNTAX keyword of CATCH clause; found "<emphasis role="italic">value</emphasis>".</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>938</term>
+<listitem>
+<para>Missing expression following DESCRIPTION keyword of a THROW instruction.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>939</term>
+<listitem>
+<para>Missing expression following ADDITIONAL keyword of a THROW instruction.</para>
 </listitem>
 </varlistentry>
 </variablelist>

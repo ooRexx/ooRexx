@@ -779,6 +779,11 @@
 #define Error_Translation_finally_exit_msg                           859
 #define Error_Incorrect_call_range_limits_msg                        860
 #define Error_Translation_forward_finally_msg                        861
+#define Error_Symbol_expected_throw_msg                              862
+#define Error_Invalid_subkeyword_throw_msg                           863
+#define Error_Invalid_subkeyword_throwoption_msg                     864
+#define Error_Invalid_expression_throw_description_msg               865
+#define Error_Invalid_expression_throw_additional_msg                866
 
 
 #endif

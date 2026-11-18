@@ -148,6 +148,9 @@ class Activity : public RexxInternalObject
     void        reportAnException(RexxErrorCodes, const char *, RexxObject *, const char *, RexxObject *);
     void        reraiseException(DirectoryClass *);
     void        raisePropagate(DirectoryClass *);
+    void        throwCondition(DirectoryClass *);
+    static bool isThrown(RexxString *, DirectoryClass *);
+    DirectoryClass *uncaughtThrown(DirectoryClass *);
     void        display(DirectoryClass *);
     void        displayDebug(DirectoryClass *);
     RexxString *buildMessage(wholenumber_t, ArrayClass *);

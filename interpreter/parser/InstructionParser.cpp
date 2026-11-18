@@ -292,7 +292,12 @@ RexxInstruction* LanguageParser::nextInstruction()
 
                 // RAISE instruction
             case KEYWORD_RAISE:
-                return raiseNew();
+                return raiseNew(false);
+                break;
+
+                // THROW instruction (RFE #31)
+            case KEYWORD_THROW:
+                return raiseNew(true);
                 break;
 
                 // ADDRESS instruction
@@ -3759,11 +3764,15 @@ RexxInstruction *LanguageParser::pushNew()
 
 
 /**
- * Parse a RAISE instruction and return a new executable object.
+ * Parse a RAISE or THROW instruction and return a new executable
+ * object.  THROW (RFE #31) has the form of RAISE without the RETURN
+ * and EXIT options.
  *
- * @return An instructon object that can execute this RAISE instruction.
+ * @param isThrow true for THROW, false for RAISE.
+ *
+ * @return An instructon object that can execute this instruction.
  */
-RexxInstruction *LanguageParser::raiseNew()
+RexxInstruction *LanguageParser::raiseNew(bool isThrow)
 {
     ArrayClass *arrayItems = OREF_NULL;
     RexxInternalObject *rcValue = OREF_NULL;
@@ -3772,12 +3781,19 @@ RexxInstruction *LanguageParser::raiseNew()
     RexxInternalObject *result = OREF_NULL;
     FlagSet<RaiseInstructionFlags, 32> flags;
 
+    // THROW is new in 5.3.0
+    if (isThrow)
+    {
+        requireLanguageLevel(LanguageLevel0607);
+        flags[raise_throw] = true;
+    }
+
     // ok, get the first TOKEN
     RexxToken *token = nextReal();
     // the first token is the condition name, and must be a symbol
     if (!token->isSymbol())
     {
-        syntaxError(Error_Symbol_expected_raise);
+        syntaxError(isThrow ? Error_Symbol_expected_throw : Error_Symbol_expected_raise);
     }
 
     RexxString *_condition = token->value();
@@ -3846,7 +3862,7 @@ RexxInstruction *LanguageParser::raiseNew()
 
         // could be ALL, or could be something completely unknown.
         default:
-            syntaxError(Error_Invalid_subkeyword_raise, token);
+            syntaxError(isThrow ? Error_Invalid_subkeyword_throw : Error_Invalid_subkeyword_raise, token);
             break;
     }
 
@@ -3859,11 +3875,17 @@ RexxInstruction *LanguageParser::raiseNew()
         // all options are symbol names,
         if (!token->isSymbol())
         {
-            syntaxError(Error_Invalid_subkeyword_raiseoption, token);
+            syntaxError(isThrow ? Error_Invalid_subkeyword_throwoption : Error_Invalid_subkeyword_raiseoption, token);
         }
 
         // map the keyword name to a symbolic identifier.
         InstructionSubKeyword option = token->subKeyword();
+        // a thrown condition ends every level it leaves, and none of them
+        // returns anything: THROW has no RETURN and no EXIT
+        if (isThrow && (option == SUBKEY_RETURN || option == SUBKEY_EXIT))
+        {
+            syntaxError(Error_Invalid_subkeyword_throwoption, token);
+        }
         switch (option)
         {
             // RAISE .... DESCRIPTION expr
@@ -3878,7 +3900,7 @@ RexxInstruction *LanguageParser::raiseNew()
                 description = parseConstantExpression();
                 if (description == OREF_NULL)
                 {
-                    syntaxError(Error_Invalid_expression_raise_description);
+                    syntaxError(isThrow ? Error_Invalid_expression_throw_description : Error_Invalid_expression_raise_description);
                 }
                 // protect from GC.
                 pushSubTerm(description);
@@ -3897,7 +3919,7 @@ RexxInstruction *LanguageParser::raiseNew()
                 additional = parseConstantExpression();
                 if (additional == OREF_NULL)
                 {
-                    syntaxError(Error_Invalid_expression_raise_additional);
+                    syntaxError(isThrow ? Error_Invalid_expression_throw_additional : Error_Invalid_expression_raise_additional);
                 }
                 pushSubTerm(additional);
                 break;
@@ -3976,7 +3998,7 @@ RexxInstruction *LanguageParser::raiseNew()
 
             // and invalid subkeyword
             default:
-                syntaxError(Error_Invalid_subkeyword_raiseoption, token);
+                syntaxError(isThrow ? Error_Invalid_subkeyword_throwoption : Error_Invalid_subkeyword_raiseoption, token);
                 break;
         }
         token = nextReal();                /* step to the next keyword          */
@@ -3990,12 +4012,13 @@ RexxInstruction *LanguageParser::raiseNew()
         size_t arrayCount = arrayItems->size();
         // we pass this as the additional...the flag tells us which to use
         additional = arrayItems;
-        newObject = new_variable_instruction(RAISE, Raise, arrayCount, RexxObject *);
+        newObject = isThrow ? new_variable_instruction(THROW, Raise, arrayCount, RexxObject *)
+                            : new_variable_instruction(RAISE, Raise, arrayCount, RexxObject *);
     }
     // fixed instruction size
     else
     {
-        newObject = new_instruction(RAISE, Raise);
+        newObject = isThrow ? new_instruction(THROW, Raise) : new_instruction(RAISE, Raise);
     }
     ::new ((void *)newObject) RexxInstructionRaise(_condition, rcValue, description, additional, result, flags);
     return newObject;

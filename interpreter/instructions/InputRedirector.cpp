@@ -73,7 +73,7 @@ public:
         // we're only interested in NOTREADY or SYNTAX conditions. We swallow the
         // NOTREADY's, and propagate the SYNTAX conditions
         RexxString *conditionName = (RexxString *)conditionObj->get(GlobalNames::CONDITION);
-        if (conditionName->strCompare(GlobalNames::SYNTAX))
+        if (Activity::isThrown(conditionName, conditionObj))
         {
             // set this in the base command callout activation so the error will get raised
             // when the command completes.

@@ -1819,8 +1819,9 @@ void NativeActivation::checkConditions()
         // base of the stack, there's nothing left to handle this.
         if (!isStackBase())
         {
-            // syntax errors are fatal...we need to reraise this
-            if (conditionName->strCompare(GlobalNames::SYNTAX))
+            // syntax errors are fatal...we need to reraise this, and a
+            // thrown condition goes on in the same way (RFE #31)
+            if (Activity::isThrown(conditionName, conditionObj))
             {
                 // this prevents us from trying to trap this again
                 trapErrors = false;
@@ -1882,7 +1883,7 @@ void NativeActivation::clearCondition()
     if (conditionObj != OREF_NULL)
     {
         // syntax errors need to be propagated, only clear other types
-        if (!conditionName->strCompare(GlobalNames::SYNTAX))
+        if (!Activity::isThrown(conditionName, conditionObj))
         {
             clearException();
         }
@@ -2681,8 +2682,9 @@ bool NativeActivation::trap(RexxString *condition, DirectoryClass *exception_obj
     // one so it can be raised in the caller's context.
 
     // we end up seeing this a second time if we're raising the exception on
-    // return from an external call or method.
-    if (condition->isEqual(GlobalNames::SYNTAX))
+    // return from an external call or method.  A thrown condition is held
+    // as an error is (RFE #31)
+    if (Activity::isThrown(condition, exception_object))
     {
         if (trapErrors)
         {
@@ -2745,7 +2747,7 @@ void NativeActivation::setConditionInfo(DirectoryClass *c)
 void NativeActivation::setCalleeConditionInfo(DirectoryClass *c)
 {
     setConditionInfo(c);
-    calleeCondition = !conditionName->strCompare(GlobalNames::SYNTAX);
+    calleeCondition = !Activity::isThrown(conditionName, conditionObj);
 }
 
 

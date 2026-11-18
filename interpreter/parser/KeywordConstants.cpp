@@ -99,6 +99,7 @@ KeywordEntry RexxToken::keywordInstructions[] =
     KeywordEntry("SELECT",     KEYWORD_SELECT),
     KeywordEntry("SIGNAL",     KEYWORD_SIGNAL),
     KeywordEntry("THEN",       KEYWORD_THEN),
+    KeywordEntry("THROW",      KEYWORD_THROW),
     KeywordEntry("TRACE",      KEYWORD_TRACE),
     KeywordEntry("USE",        KEYWORD_USE),
     KeywordEntry("WHEN",       KEYWORD_WHEN),

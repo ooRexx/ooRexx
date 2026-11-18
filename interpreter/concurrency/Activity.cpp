@@ -544,6 +544,10 @@ wholenumber_t Activity::displayCondition(DirectoryClass *errorInfo)
         return 0;   // no error condition to return
     }
 
+    // a thrown condition that nothing has caught is error 4.1 (RFE #31)
+    Protected<DirectoryClass> uncaught = uncaughtThrown(errorInfo);
+    errorInfo = uncaught;
+
     RexxString *condition = (RexxString *)errorInfo->get(GlobalNames::CONDITION);
     // we only display syntax conditions
     if (condition == OREF_NULL || !condition->isEqual(GlobalNames::SYNTAX))
@@ -575,10 +579,81 @@ wholenumber_t Activity::errorNumber(DirectoryClass *conditionObject)
     wholenumber_t rc = Error_Interpretation / 1000;
     if (conditionObject != OREF_NULL)
     {
+        RexxString *condition = (RexxString *)conditionObject->get(GlobalNames::CONDITION);
+        // a thrown condition that nothing has caught is error 4.1 (RFE #31)
+        if (condition != OREF_NULL && !condition->strCompare(GlobalNames::SYNTAX) && isThrown(condition, conditionObject))
+        {
+            return Error_Program_interrupted / 1000;
+        }
         // try to convert.  Leaves unchanged if not value
-        conditionObject->get(GlobalNames::RC)->numberValue(rc);
+        RexxObject *rcValue = (RexxObject *)conditionObject->get(GlobalNames::RC);
+        if (rcValue != OREF_NULL)
+        {
+            rcValue->numberValue(rc);
+        }
     }
     return rc;
+}
+
+
+/**
+ * Test if a condition propagates as an error does: a SYNTAX error,
+ * or a condition thrown by THROW (RFE #31).  Such a condition goes
+ * from caller to caller until it is caught, CALL ON does not trap
+ * it, and a message object or native code that receives it keeps it.
+ *
+ * @param condition The condition name.
+ * @param conditionObj
+ *                  The condition object (can be null).
+ *
+ * @return true if it propagates as an error.
+ */
+bool Activity::isThrown(RexxString *condition, DirectoryClass *conditionObj)
+{
+    if (condition->strCompare(GlobalNames::SYNTAX))
+    {
+        return true;
+    }
+    return conditionObj != OREF_NULL && conditionObj->get(GlobalNames::THROWN) == TheTrueObject;
+}
+
+
+/**
+ * The error a thrown condition that nothing has caught becomes at
+ * the base of a program or a thread: 4.1, "Program interrupted with
+ * condition condition.", with the location and traceback of the
+ * thrown condition (RFE #31).
+ *
+ * @param conditionObj
+ *               The condition object.
+ *
+ * @return The condition object to display: the same one for anything
+ *         that is not a thrown condition other than SYNTAX.
+ */
+DirectoryClass *Activity::uncaughtThrown(DirectoryClass *conditionObj)
+{
+    RexxString *condition = (RexxString *)conditionObj->get(GlobalNames::CONDITION);
+    if (condition == OREF_NULL || !isString(condition) || condition->strCompare(GlobalNames::SYNTAX) || !isThrown(condition, conditionObj))
+    {
+        return conditionObj;
+    }
+    Protected<DirectoryClass> error = createExceptionObject(Error_Program_interrupted_condition, OREF_NULL, new_array(condition), OREF_NULL);
+    // where it was thrown, not where it is displayed
+    RexxInternalObject *items[] = { GlobalNames::TRACEBACK, GlobalNames::STACKFRAMES, GlobalNames::POSITION, GlobalNames::PROGRAM, GlobalNames::PACKAGE_REF };
+    for (size_t i = 0; i < sizeof(items) / sizeof(items[0]); i++)
+    {
+        RexxInternalObject *value = conditionObj->get((RexxString *)items[i]);
+        if (value != OREF_NULL)
+        {
+            error->put(value, (RexxString *)items[i]);
+        }
+        else
+        {
+            error->remove((RexxString *)items[i]);
+        }
+    }
+    error->put(TheTrueObject, GlobalNames::PROPAGATED);
+    return error;
 }
 
 
@@ -894,6 +969,8 @@ DirectoryClass* Activity::createConditionObject(RexxString *condition, RexxObjec
     conditionObj->put(condition, GlobalNames::CONDITION);
     conditionObj->put(description == OREF_NULL ? GlobalNames::NULLSTRING : description, GlobalNames::DESCRIPTION);
     conditionObj->put(TheFalseObject, GlobalNames::PROPAGATED);
+    // raised, not thrown (RFE #31)
+    conditionObj->put(TheFalseObject, GlobalNames::THROWN);
 
     // the remainders don't have defaults, so only add the items if provided.
     if (rc != OREF_NULL)
@@ -1238,6 +1315,8 @@ DirectoryClass* Activity::createExceptionObject(RexxErrorCodes errcode,
     // fill in the propagation status.  This is always false for the first
     // potential trap level, gets turned to true if this goes down levels.
     exobj->put(TheFalseObject, GlobalNames::PROPAGATED);
+    // raised by the interpreter or RAISE, not thrown (RFE #31)
+    exobj->put(TheFalseObject, GlobalNames::THROWN);
 
     return exobj;
 }
@@ -1524,8 +1603,13 @@ void Activity::reraiseException(DirectoryClass *exobj)
     }
 
     // redo the message information from the error code (the object
-    // ~result raises again can have been changed by Rexx code)
-    completeSyntaxCondition(exobj);
+    // ~result raises again can have been changed by Rexx code).  A thrown
+    // condition other than SYNTAX has none (RFE #31)
+    RexxString *condition = (RexxString *)exobj->get(GlobalNames::CONDITION);
+    if (condition != OREF_NULL && isString(condition) && condition->strCompare(GlobalNames::SYNTAX))
+    {
+        completeSyntaxCondition(exobj);
+    }
 
     raisePropagate(exobj);
 }
@@ -1565,6 +1649,53 @@ void Activity::raisePropagate(DirectoryClass *conditionObj)
     }
     // not trapped, so kill the activity for this error
     kill(conditionObj);
+}
+
+
+/**
+ * Throw a condition with THROW (RFE #31): it is raised where THROW
+ * runs, and if that level does not catch it, it goes from caller to
+ * caller until something catches it, as a SYNTAX error does.  This
+ * does not return.
+ *
+ * @param conditionObj
+ *               The condition object.
+ */
+void Activity::throwCondition(DirectoryClass *conditionObj)
+{
+    // anchored while it propagates (see reraiseException())
+    conditionobj = conditionObj;
+    conditionObj->put(TheTrueObject, GlobalNames::THROWN);
+    conditionObj->put(TheFalseObject, GlobalNames::PROPAGATED);
+
+    // as for an error (see raiseException())
+    ActivationBase *topFrame = getTopStackFrame();
+    RexxActivation *activation = getCurrentRexxFrame();
+    if (topFrame == activation)
+    {
+        while (activation != OREF_NULL && activation->isForwarded())
+        {
+            popStackFrame(activation);
+            activation = getCurrentRexxFrame();
+        }
+    }
+    else
+    {
+        activation = NULL;
+    }
+
+    if (!raiseCondition(conditionObj))
+    {
+        conditionObj->put(TheTrueObject, GlobalNames::PROPAGATED);
+        if (activation != OREF_NULL)
+        {
+            unwindToFrame(activation);
+            popStackFrame(activation);
+        }
+        raisePropagate(conditionObj);
+    }
+    // (a CALL ON trap does not catch a thrown condition, see trap(): a
+    // Rexx activation that catches it does not return here)
 }
 
 /**

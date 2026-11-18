@@ -293,7 +293,7 @@ class LanguageParser: public RexxInternalObject
     RexxInstruction *procedureNew();
     RexxInstruction *pushNew();
     RexxInstruction *queueNew();
-    RexxInstruction *raiseNew();
+    RexxInstruction *raiseNew(bool isThrow);
     RexxInstruction *replyNew();
     RexxInstruction *returnNew();
     RexxInstruction *sayNew();

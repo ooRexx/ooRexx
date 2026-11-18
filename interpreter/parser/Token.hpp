@@ -257,6 +257,7 @@ typedef enum
     KEYWORD_CONSTANT,
     KEYWORD_CATCH,
     KEYWORD_FINALLY,
+    KEYWORD_THROW,
 } InstructionKeyword;
 
 // instruction subkeyword types

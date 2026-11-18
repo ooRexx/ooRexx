@@ -54,7 +54,8 @@ typedef enum
     raise_exit,
     raise_array,
     raise_syntax,
-    raise_propagate
+    raise_propagate,
+    raise_throw                     // THROW: propagates until caught (RFE #31)
 } RaiseInstructionFlags;
 
 class RexxInstructionRaise : public RexxInstruction
@@ -69,6 +70,7 @@ class RexxInstructionRaise : public RexxInstruction
     void flatten(Envelope*) override;
 
     void execute(RexxActivation *, ExpressionStack *) override;
+    void throwCondition(RexxActivation *, RexxObject *, RexxString *, RexxObject *, DirectoryClass *);
 
  protected:
 
