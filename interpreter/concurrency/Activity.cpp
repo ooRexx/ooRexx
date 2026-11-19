@@ -621,8 +621,10 @@ bool Activity::isThrown(RexxString *condition, DirectoryClass *conditionObj)
 /**
  * The error a thrown condition that nothing has caught becomes at
  * the base of a program or a thread: 4.1, "Program interrupted with
- * condition condition.", with the location and traceback of the
- * thrown condition (RFE #31).
+ * condition condition.", or 4.901, "Program interrupted with condition
+ * condition: description.", when its DESCRIPTION is a String that is
+ * not null, with the location and traceback of the thrown condition
+ * (RFE #31).
  *
  * @param conditionObj
  *               The condition object.
@@ -637,7 +639,18 @@ DirectoryClass *Activity::uncaughtThrown(DirectoryClass *conditionObj)
     {
         return conditionObj;
     }
-    Protected<DirectoryClass> error = createExceptionObject(Error_Program_interrupted_condition, OREF_NULL, new_array(condition), OREF_NULL);
+    // with a description, 4.901 says it.  A description that is not a String
+    // is left out: its string value could raise a condition of its own here
+    RexxObject *description = (RexxObject *)conditionObj->get(GlobalNames::DESCRIPTION);
+    Protected<DirectoryClass> error;
+    if (description != OREF_NULL && isString(description) && ((RexxString *)description)->getLength() > 0)
+    {
+        error = createExceptionObject(Error_Program_interrupted_condition_description, OREF_NULL, new_array(condition, description), OREF_NULL);
+    }
+    else
+    {
+        error = createExceptionObject(Error_Program_interrupted_condition, OREF_NULL, new_array(condition), OREF_NULL);
+    }
     // where it was thrown, not where it is displayed
     RexxInternalObject *items[] = { GlobalNames::TRACEBACK, GlobalNames::STACKFRAMES, GlobalNames::POSITION, GlobalNames::PROGRAM, GlobalNames::PACKAGE_REF };
     for (size_t i = 0; i < sizeof(items) / sizeof(items[0]); i++)

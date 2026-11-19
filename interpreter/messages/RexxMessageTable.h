@@ -67,6 +67,7 @@ ERROR_MAP Message_map_table[] = {     /* table of major and minor errors   */
   MAJOR(Error_Program_interrupted)
       MINOR(Error_Program_interrupted_condition)
       MINOR(Error_Program_interrupted_user_defined)
+      MINOR(Error_Program_interrupted_condition_description)
   MAJOR(Error_System_resources)
       MINOR(Error_System_resources_user_defined)
   MAJOR(Error_Unmatched_quote)

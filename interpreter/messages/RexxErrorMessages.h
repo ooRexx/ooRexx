@@ -68,6 +68,7 @@ ERROR_MESSAGE Message_table[] = {      /* table of major and minor errors   */
     MESSAGE(Error_Program_interrupted, "Program interrupted.")
     MESSAGE(Error_Program_interrupted_condition, "Program interrupted with &1 condition.")
     MESSAGE(Error_Program_interrupted_user_defined, "&1.")
+    MESSAGE(Error_Program_interrupted_condition_description, "Program interrupted with &1 condition: &2.")
     MESSAGE(Error_System_resources, "System resources exhausted.")
     MESSAGE(Error_System_resources_user_defined, "&1.")
     MESSAGE(Error_Unmatched_quote, "Unmatched \"/*\" or quote.")

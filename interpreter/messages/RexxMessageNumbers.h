@@ -784,6 +784,7 @@
 #define Error_Invalid_subkeyword_throwoption_msg                     864
 #define Error_Invalid_expression_throw_description_msg               865
 #define Error_Invalid_expression_throw_additional_msg                866
+#define Error_Program_interrupted_condition_description_msg          867
 
 
 #endif

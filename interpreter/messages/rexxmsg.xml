@@ -134,6 +134,15 @@ optional for the subcodes.
         <SymbolicName>Error_Program_interrupted_user_defined</SymbolicName>
         <Text><Sub position="1" name="message"/>.</Text>
       </SubMessage>
+      <SubMessage>
+        <Code>4</Code>
+        <Subcode>901</Subcode>
+        <MessageNumber>867</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Program_interrupted_condition_description</SymbolicName>
+        <Text>Program interrupted with <Sub position="1" name="condition"/> condition: <Sub position="2" name="description"/>.</Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>

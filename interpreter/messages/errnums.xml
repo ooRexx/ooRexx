@@ -68,6 +68,12 @@
 <emphasis role="italic">message</emphasis>.</para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>901</term>
+<listitem>
+<para>Program interrupted with <emphasis role="italic">condition</emphasis> condition: <emphasis role="italic">description</emphasis>.</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 <section id="ERR5">

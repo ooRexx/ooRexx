@@ -64,6 +64,7 @@
 #define Rexx_Error_Program_interrupted                                    4000
 #define Rexx_Error_Program_interrupted_condition                          4001
 #define Rexx_Error_Program_interrupted_user_defined                       4900
+#define Rexx_Error_Program_interrupted_condition_description              4901
 #define Rexx_Error_System_resources                                       5000
 #define Rexx_Error_System_resources_user_defined                          5900
 #define Rexx_Error_Unmatched_quote                                        6000
