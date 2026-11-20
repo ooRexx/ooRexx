@@ -1945,7 +1945,28 @@ void RexxEntry RaiseConditionObject(RexxThreadContext *c, RexxDirectoryObject d)
             reportException(Error_Incorrect_method_noclass, 1, new_string("Directory"));
         }
         context.context->enableConditionTrap();
-        context.activity->raiseConditionObject((DirectoryClass *)d);
+        context.activity->raiseConditionObject((DirectoryClass *)d, Activity::CONDITION_RAISE);
+    }
+    catch (NativeActivation *)
+    {
+    }
+}
+
+void RexxEntry ThrowObject(RexxThreadContext *c, RexxDirectoryObject d)
+{
+    ApiContext context(c);
+    try
+    {
+        if (d == NULLOBJECT)
+        {
+            reportException(Error_Incorrect_method_null, 1);
+        }
+        if (!isOfClass(Directory, (RexxObject *)d))
+        {
+            reportException(Error_Incorrect_method_noclass, 1, new_string("Directory"));
+        }
+        context.context->enableConditionTrap();
+        context.activity->raiseConditionObject((DirectoryClass *)d, Activity::CONDITION_THROW);
     }
     catch (NativeActivation *)
     {
@@ -2293,4 +2314,5 @@ RexxThreadInterface Activity::threadContextFunctions =
     SendMessageScoped,
     GetInterpreterInstance,
     RaiseConditionObject,
+    ThrowObject,
 };

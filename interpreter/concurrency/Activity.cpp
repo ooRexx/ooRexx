@@ -856,15 +856,24 @@ static bool validErrorCode(RexxString *code, wholenumber_t &number)
 
 /**
  * Raise a condition described by an existing condition object,
- * for the RaiseConditionObject() API.  A copy of the object is
- * raised, with everything it holds (RC, DESCRIPTION, ADDITIONAL,
- * RESULT...), as the condition it describes: a SYNTAX error is
- * raised as an error, any other condition as RaiseCondition()
- * raises it, after the ::OPTIONS condition SYNTAX checks.
+ * for the RaiseConditionObject() and ThrowObject() APIs.  A copy of
+ * the object is raised, with everything it holds (RC, DESCRIPTION,
+ * ADDITIONAL, RESULT...), as the condition it describes: a SYNTAX
+ * error is raised as an error; any other condition, if it is raised,
+ * as RaiseCondition() raises it, after the ::OPTIONS condition SYNTAX
+ * checks, and if it is thrown, as Throw() throws it, but left pending
+ * until the native code returns (RFE #31).
  *
  * @param source The condition object.
+ * @param mode   CONDITION_RAISE (RaiseConditionObject()): THROWN is set
+ *               .false, and the condition is raised one level, as RAISE
+ *               does.  CONDITION_THROW (ThrowObject()): THROWN is set
+ *               .true, and the condition is thrown, as THROW does.
+ *               CONDITION_AS_IS (the interpreter raising again a
+ *               condition it got): thrown if its THROWN is .true, and
+ *               raised otherwise, with THROWN .false.
  */
-void Activity::raiseConditionObject(DirectoryClass *source)
+void Activity::raiseConditionObject(DirectoryClass *source, ConditionObjectMode mode)
 {
     RexxInternalObject *name = source->get(GlobalNames::CONDITION);
     if (name == OREF_NULL || !isString(name))
@@ -876,6 +885,11 @@ void Activity::raiseConditionObject(DirectoryClass *source)
     // we raise a copy, so the caller's object is left as it is
     Protected<DirectoryClass> conditionObj = (DirectoryClass *)source->copy();
     conditionObj->put(condition, GlobalNames::CONDITION);
+
+    // every condition object has a THROWN entry, .true or .false (an object
+    // built by hand may have none)
+    bool thrown = mode == CONDITION_THROW || (mode == CONDITION_AS_IS && conditionObj->get(GlobalNames::THROWN) == TheTrueObject);
+    conditionObj->put(thrown ? TheTrueObject : TheFalseObject, GlobalNames::THROWN);
 
     RexxObject *description = (RexxObject *)conditionObj->get(GlobalNames::DESCRIPTION);
     RexxObject *result = (RexxObject *)conditionObj->get(GlobalNames::RESULT);
@@ -906,9 +920,16 @@ void Activity::raiseConditionObject(DirectoryClass *source)
         return;
     }
 
-    // ::OPTIONS condition SYNTAX applies as for RaiseCondition()
-    checkConditionSyntaxOptions(condition, description, result);
+    // ::OPTIONS condition SYNTAX applies as for RaiseCondition(), and not
+    // to a thrown condition, as for THROW
+    if (!thrown)
+    {
+        checkConditionSyntaxOptions(condition, description, result);
+    }
     conditionObj->put(TheFalseObject, GlobalNames::PROPAGATED);
+    // a thrown condition is kept by the native activation, as an error is,
+    // and thrown again when the native code returns (see
+    // NativeActivation::checkConditions())
     raiseCondition(conditionObj);
 }
 

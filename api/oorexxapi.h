@@ -688,6 +688,7 @@ typedef struct
      RexxInstance *(RexxEntry *GetInterpreterInstance)(RexxThreadContext *);
      // added in THREAD_INTERFACE_VERSION_5_3_0
      void             (RexxEntry *RaiseConditionObject)(RexxThreadContext *, RexxDirectoryObject);
+     void             (RexxEntry *ThrowObject)(RexxThreadContext *, RexxDirectoryObject);
 
 } RexxThreadInterface;
 
@@ -1657,6 +1658,10 @@ struct RexxThreadContext_
      {
          functions->RaiseConditionObject(this, d);
      }
+     void ThrowObject(RexxDirectoryObject d)
+     {
+         functions->ThrowObject(this, d);
+     }
      logical_t CheckCondition()
      {
          return functions->CheckCondition(this);
@@ -2411,6 +2416,10 @@ struct RexxMethodContext_
      void RaiseConditionObject(RexxDirectoryObject d)
      {
          threadContext->RaiseConditionObject(d);
+     }
+     void ThrowObject(RexxDirectoryObject d)
+     {
+         threadContext->ThrowObject(d);
      }
      logical_t CheckCondition()
      {
@@ -3274,6 +3283,10 @@ struct RexxCallContext_
      {
          threadContext->RaiseConditionObject(d);
      }
+     void ThrowObject(RexxDirectoryObject d)
+     {
+         threadContext->ThrowObject(d);
+     }
      logical_t CheckCondition()
      {
          return threadContext->CheckCondition();
@@ -4115,6 +4128,10 @@ struct RexxExitContext_
      void RaiseConditionObject(RexxDirectoryObject d)
      {
          threadContext->RaiseConditionObject(d);
+     }
+     void ThrowObject(RexxDirectoryObject d)
+     {
+         threadContext->ThrowObject(d);
      }
      logical_t CheckCondition()
      {

@@ -122,7 +122,11 @@ class Activity : public RexxInternalObject
     bool        raiseCondition(RexxString *, RexxObject *, RexxObject *, RexxObject *, RexxObject *);
     bool        raiseCondition(DirectoryClass *);
     void        checkConditionSyntaxOptions(RexxString *, RexxObject *, RexxObject *);
-    void        raiseConditionObject(DirectoryClass *);
+    // how raiseConditionObject() raises: as the object says (the
+    // interpreter's own uses), always raised (RaiseConditionObject()), or
+    // always thrown (ThrowObject())
+    typedef enum { CONDITION_AS_IS, CONDITION_RAISE, CONDITION_THROW } ConditionObjectMode;
+    void        raiseConditionObject(DirectoryClass *, ConditionObjectMode mode = CONDITION_AS_IS);
     void        completeSyntaxCondition(DirectoryClass *);
     bool        checkCondition(RexxString *condition);
     DirectoryClass *createConditionObject(RexxString *, RexxObject *, RexxObject *, RexxObject *, RexxObject *);

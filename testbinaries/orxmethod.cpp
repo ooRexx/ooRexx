@@ -2207,6 +2207,47 @@ RexxMethod1(int,
     return 0;
 }
 
+// ThrowObject() (RFE #31): throws a copy of the condition object, and
+// returns; the condition is thrown when the native method returns
+RexxMethod1(int,
+            TestThrowObject,
+            OPTIONAL_RexxObjectPtr, condition)
+{
+    context->ThrowObject((RexxDirectoryObject)condition);
+    // this should still get executed
+    context->SetObjectVariable("CONTINUE", context->True());
+    return 0;
+}
+
+// what a bridge does to pass a thrown condition through: call Rexx code and
+// throw any condition it threw again in our caller, raising the others
+RexxMethod2(RexxObjectPtr,
+            TestCallRoutineAndRethrow,
+            RexxObjectPtr, routine,
+            OPTIONAL_RexxArrayObject, args)
+{
+    if (args == NULLOBJECT)
+    {
+        args = context->NewArray(0);
+    }
+    RexxObjectPtr result = context->CallRoutine((RexxRoutineObject)routine, args);
+    if (context->CheckCondition())
+    {
+        RexxDirectoryObject condition = context->GetConditionInfo();
+        context->ClearCondition();
+        if (context->DirectoryAt(condition, "THROWN") == context->True())
+        {
+            context->ThrowObject(condition);
+        }
+        else
+        {
+            context->RaiseConditionObject(condition);
+        }
+        return NULLOBJECT;
+    }
+    return result;
+}
+
 // what a bridge does: call Rexx code and raise any condition it raised
 // again in our caller
 RexxMethod2(RexxObjectPtr,
@@ -2821,6 +2862,8 @@ RexxMethodEntry orxtest_methods[] = {
     REXX_METHOD(TestRaiseException,          TestRaiseException),
     REXX_METHOD(TestRaiseCondition,          TestRaiseCondition),
     REXX_METHOD(TestRaiseConditionObject,    TestRaiseConditionObject),
+    REXX_METHOD(TestThrowObject,             TestThrowObject),
+    REXX_METHOD(TestCallRoutineAndRethrow,   TestCallRoutineAndRethrow),
     REXX_METHOD(TestCallRoutineAndReraise,   TestCallRoutineAndReraise),
     REXX_METHOD(TestInterpreterVersion,      TestInterpreterVersion),
     REXX_METHOD(TestLanguageLevel,           TestLanguageLevel),
