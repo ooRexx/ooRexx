@@ -1773,8 +1773,9 @@ void Activity::throwNewCondition(RexxString *condition, RexxObject *rc, RexxStri
  *                  the names THROW accepts, with "USER name" for a user
  *                  condition.
  * @param rc        The RC: required for ERROR, FAILURE and SYNTAX (for
- *                  SYNTAX, the error code as in Rexx, "nn.nnn"), and not
- *                  allowed for any other condition.
+ *                  SYNTAX, the error code as in Rexx, "nn.nnn", or "nn",
+ *                  CODE nn.0, as for THROW SYNTAX nn), and not allowed
+ *                  for any other condition.
  * @param description
  *                  The description, or OREF_NULL.
  * @param additional
@@ -1808,6 +1809,11 @@ void Activity::apiThrow(const char *name, RexxObject *rc, RexxObject *descriptio
           first->strCompare(GlobalNames::NOVALUE)))
     {
         reportException(Error_Incorrect_method_user_defined, new_string("Throw cannot throw a condition named \"")->concat(condition)->concatWithCstring("\""));
+    }
+    else
+    {
+        // the name without the blanks around it, as THROW has it
+        condition = first;
     }
 
     // an RC with ERROR, FAILURE and SYNTAX, and with nothing else
