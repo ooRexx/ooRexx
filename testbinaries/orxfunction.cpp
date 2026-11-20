@@ -621,6 +621,34 @@ RexxObjectPtr RexxEntry cHandler(RexxExitContext *context,
 }
 
 
+// test DIRECT command handler for TestAddCommandEnvironment "throw" (RFE #31):
+// throws the condition named by the command (e.g. "USER FOO") with the
+// description "thrown"; "ERROR" and "FAILURE" are thrown with RC 7
+RexxObjectPtr RexxEntry tHandler(RexxExitContext *context,
+                                 RexxStringObject address,
+                                 RexxStringObject command)
+{
+    CSTRING name = context->CString(command);
+    RexxObjectPtr rc = NULLOBJECT;
+    if (strcmp(name, "ERROR") == 0 || strcmp(name, "FAILURE") == 0)
+    {
+        rc = context->WholeNumberToObject(7);
+    }
+    context->Throw(name, rc, context->String("thrown"), NULLOBJECT);
+    return context->WholeNumberToObject(7);
+}
+
+
+// the same, as a REDIRECTING command handler
+RexxObjectPtr RexxEntry tRHandler(RexxExitContext *context,
+                                  RexxStringObject address,
+                                  RexxStringObject command,
+                                  RexxIORedirectorContext *ioContext)
+{
+    return tHandler(context, address, command);
+}
+
+
 // the exit context of the "nested" command handler while it runs (bug #2104)
 static RexxExitContext *nestedExitContext = NULL;
 
@@ -833,7 +861,8 @@ RexxObjectPtr RexxEntry ioHandler(RexxExitContext *context, RexxStringObject add
 }
 
 
-// install 'ioHandler', 'rHandler', 'cHandler', 'nHandler', or 'dHandler'
+// install 'ioHandler', 'rHandler', 'cHandler', 'tHandler', 'tRHandler', 'nHandler',
+// or 'dHandler'
 RexxRoutine2(RexxObjectPtr,
              TestAddCommandEnvironment,
              CSTRING, name,
@@ -853,6 +882,18 @@ RexxRoutine2(RexxObjectPtr,
     else if (type[0] == 'c' || type[0] == 'C')
     {   // direct command handler that raises the condition named by the command
         context->AddCommandEnvironment(name, (REXXPFN)cHandler, DIRECT_COMMAND_ENVIRONMENT);
+    }
+    else if (type[0] == 't' || type[0] == 'T')
+    {   // command handler that throws the condition named by the command:
+        // "throw" (direct) or "throw-redirecting"
+        if (strcmp(type + 1, "hrow-redirecting") == 0)
+        {
+            context->AddCommandEnvironment(name, (REXXPFN)tRHandler, REDIRECTING_COMMAND_ENVIRONMENT);
+        }
+        else
+        {
+            context->AddCommandEnvironment(name, (REXXPFN)tHandler, DIRECT_COMMAND_ENVIRONMENT);
+        }
     }
     else if (type[0] == 'n' || type[0] == 'N')
     {   // direct command handler whose exit context is used again while it runs

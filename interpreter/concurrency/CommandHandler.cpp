@@ -304,8 +304,9 @@ void ContextCommandHandlerDispatcher::handleError(DirectoryClass *c)
         RexxString *conditionName = (RexxString *)c->get(GlobalNames::CONDITION);
         // if this is not a syntax error, this is likely an error
         // or failure condition, and the return value is taken from
-        // the condition object.
-        if (!conditionName->strCompare(GlobalNames::SYNTAX))
+        // the condition object.  A thrown condition goes on as a syntax
+        // error does: raised in the issuer, it would stop there (RFE #31)
+        if (!Activity::isThrown(conditionName, c))
         {
             // just set the condition now...additional processing will be
             // done on return to the command issuer
