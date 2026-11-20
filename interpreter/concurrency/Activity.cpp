@@ -1510,7 +1510,11 @@ RexxString* Activity::buildMessage(wholenumber_t messageCode, ArrayClass *substi
     // bad message if we can't find this
     if (message == OREF_NULL)
     {
-        reportException(Error_Execution_error_condition, messageCode);
+        // show the code in the "nn.nnn" form of a CODE (93.9),
+        // not as the internal number (93009)
+        char work[32];
+        snprintf(work, sizeof(work), "%d.%d", (int)(messageCode / 1000), (int)(messageCode % 1000));
+        reportException(Error_Execution_error_condition, new_string(work));
     }
     // do required substitutions
     return messageSubstitution(message, substitutions);
