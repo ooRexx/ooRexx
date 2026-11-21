@@ -511,8 +511,11 @@ typedef struct
 #define THREAD_INTERFACE_VERSION_4_1_1 101
 #define THREAD_INTERFACE_VERSION_4_2_0 102
 #define THREAD_INTERFACE_VERSION_5_0_0 103
-#define THREAD_INTERFACE_VERSION_5_3_0 104
-#define THREAD_INTERFACE_VERSION 104
+// 104 was the 5.3.0 betas from r13329 to r13553, which had
+// RaiseConditionObject only (and in it a thrown condition was thrown
+// again); 105 adds ThrowObject, so that a package can check for it
+#define THREAD_INTERFACE_VERSION_5_3_0 105
+#define THREAD_INTERFACE_VERSION 105
 
 BEGIN_EXTERN_C()
 
