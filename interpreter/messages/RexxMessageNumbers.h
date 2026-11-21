@@ -785,6 +785,9 @@
 #define Error_Invalid_expression_throw_description_msg               865
 #define Error_Invalid_expression_throw_additional_msg                866
 #define Error_Program_interrupted_condition_description_msg          867
+#define Error_Expression_result_throw_msg                            868
+#define Error_Conversion_throw_msg                                   869
+#define Error_Execution_error_condition_throw_msg                    870
 
 
 #endif

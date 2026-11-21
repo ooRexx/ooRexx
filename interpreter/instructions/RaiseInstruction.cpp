@@ -191,16 +191,10 @@ void RexxInstructionRaise::execute(RexxActivation *context, ExpressionStack *sta
         _additional = new_array();
         // The description is a null string
         _description = GlobalNames::NULLSTRING;
-        // the RC must have a string value...this is an error if it doesn.
-        RexxString *errorcode = rc->requestString();
-        if (errorcode == TheNilObject)
-        {
-            reportException(Error_Conversion_raise, rc);
-        }
-
         // convert this to decimal, then create an integer object
-        // that we replace the input rc value with
-        wholenumber_t msgNum = Interpreter::messageNumber(errorcode);
+        // that we replace the input rc value with (the errors name
+        // THROW for a THROW)
+        wholenumber_t msgNum = Interpreter::syntaxErrorNumber(rc, instructionFlags[raise_throw]);
         rc = new_integer(msgNum);
     }
 

@@ -2604,6 +2604,15 @@ editbin rexx.exe /stack:100000000
         <SymbolicName>Error_Expression_result_raise</SymbolicName>
         <Text>Incorrect expression result following SYNTAX keyword of RAISE instruction.</Text>
       </SubMessage>
+      <SubMessage>
+        <Code>33</Code>
+        <Subcode>905</Subcode>
+        <MessageNumber>868</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Expression_result_throw</SymbolicName>
+        <Text>Incorrect expression result following SYNTAX keyword of THROW instruction.</Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>
@@ -3782,6 +3791,15 @@ Say Enter A, B, or C
         <Severity>Warning</Severity>
         <SymbolicName>Error_Conversion_raise</SymbolicName>
         <Text>Value of RAISE instruction SYNTAX expression must be numeric; found <q><Sub position="1" name="value"/></q>.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>41</Code>
+        <Subcode>902</Subcode>
+        <MessageNumber>869</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Conversion_throw</SymbolicName>
+        <Text>Value of THROW instruction SYNTAX expression must be numeric; found <q><Sub position="1" name="value"/></q>.</Text>
       </SubMessage>
     </Subcodes>
   </Message>
@@ -5690,6 +5708,15 @@ Say Enter A, B, or C
         <Severity>Warning</Severity>
         <SymbolicName>Error_Execution_syntax_additional</SymbolicName>
         <Text>Additional information for SYNTAX errors must be a single-dimensional array of values.</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>98</Code>
+        <Subcode>940</Subcode>
+        <MessageNumber>870</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Execution_error_condition_throw</SymbolicName>
+        <Text>Unknown error number specified on THROW SYNTAX; found <q><Sub position="1" name="number"/></q>.</Text>
       </SubMessage>
       <SubMessage>
         <Code>98</Code>

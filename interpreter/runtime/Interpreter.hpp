@@ -123,7 +123,8 @@ public:
 
 
     static void logicError (const char *desc);
-    static wholenumber_t messageNumber(RexxString *);
+    static wholenumber_t messageNumber(RexxString *, bool isThrow = false);
+    static wholenumber_t syntaxErrorNumber(RexxObject *, bool isThrow);
     static bool haltAllActivities(RexxString *);
     static void decodeConditionData(DirectoryClass *conditionObj, RexxCondition *condData);
     static RexxClass *findClass(RexxString *className);

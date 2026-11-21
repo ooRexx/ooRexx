@@ -1842,12 +1842,7 @@ void Activity::apiThrow(const char *name, RexxObject *rc, RexxObject *descriptio
     // as THROW SYNTAX does (see RexxInstructionRaise::execute())
     if (condition->strCompare(GlobalNames::SYNTAX))
     {
-        RexxString *errorcode = rc->requestString();
-        if (errorcode == TheNilObject)
-        {
-            reportException(Error_Conversion_raise, rc);
-        }
-        rcValue = new_integer(Interpreter::messageNumber(errorcode));
+        rcValue = new_integer(Interpreter::syntaxErrorNumber(rc, true));
         if (descriptionValue.isNull())
         {
             descriptionValue = GlobalNames::NULLSTRING;

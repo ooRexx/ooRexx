@@ -729,10 +729,12 @@ void Interpreter::logicError (const char *desc)
  * Parse out the error code string into the messagecode value
  *
  * @param errorcode The string version of the error code.
+ * @param isThrow   true if the code was given to THROW (or to the Throw()
+ *                  API), so that an error names THROW instead of RAISE.
  *
  * @return The composite error code number.
  */
-wholenumber_t Interpreter::messageNumber(RexxString *errorcode)
+wholenumber_t Interpreter::messageNumber(RexxString *errorcode, bool isThrow)
 {
     wholenumber_t  primary = 0;          /* Primary part of error code, major */
     wholenumber_t  secondary = 0;        /* Secondary protion (minor code)    */
@@ -747,7 +749,7 @@ wholenumber_t Interpreter::messageNumber(RexxString *errorcode)
     // must be a whole number in the correct range
     if (!new_string(errorcode->getStringData(), count)->numberValue(primary) || primary < 1 || primary >= 100)
     {
-        reportException(Error_Expression_result_raise);
+        reportException(isThrow ? Error_Expression_result_throw : Error_Expression_result_raise);
 
     }
 
@@ -759,10 +761,42 @@ wholenumber_t Interpreter::messageNumber(RexxString *errorcode)
     {
         if (!new_string(decimalPoint + 1, errorcode->getLength() - count -1)->numberValue(secondary) || secondary < 0  || secondary >= 1000)
         {
-            reportException(Error_Expression_result_raise);
+            reportException(isThrow ? Error_Expression_result_throw : Error_Expression_result_raise);
         }
     }
     return primary + secondary;          // add two portions together, return
+}
+
+
+/**
+ * Convert the RC of a SYNTAX condition given to RAISE or THROW (or to
+ * the Throw() API) to an error number, and check that the error exists.
+ *
+ * @param rc      The RC value.
+ * @param isThrow true for THROW and Throw(), so that the errors name THROW.
+ *
+ * @return The composite error code number.
+ */
+wholenumber_t Interpreter::syntaxErrorNumber(RexxObject *rc, bool isThrow)
+{
+    // the RC must have a string value
+    RexxString *errorcode = rc->requestString();
+    if (errorcode == TheNilObject)
+    {
+        reportException(isThrow ? Error_Conversion_throw : Error_Conversion_raise, rc);
+    }
+
+    wholenumber_t number = messageNumber(errorcode, isThrow);
+    wholenumber_t primary = (number / 1000) * 1000;
+    // both the primary and the secondary message must exist
+    if (getMessageText(primary) == OREF_NULL || (number != primary && getMessageText(number) == OREF_NULL))
+    {
+        // shown in the "nn.nnn" form of a CODE (93.9), not as 93009
+        char work[32];
+        snprintf(work, sizeof(work), "%d.%d", (int)(number / 1000), (int)(number % 1000));
+        reportException(isThrow ? Error_Execution_error_condition_throw : Error_Execution_error_condition, new_string(work));
+    }
+    return number;
 }
 
 

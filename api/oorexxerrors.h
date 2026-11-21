@@ -317,6 +317,7 @@
 #define Rexx_Error_Expression_result_signal                               33902
 #define Rexx_Error_Expression_result_trace                                33903
 #define Rexx_Error_Expression_result_raise                                33904
+#define Rexx_Error_Expression_result_throw                                33905
 #define Rexx_Error_Logical_value                                          34000
 #define Rexx_Error_Logical_value_if                                       34001
 #define Rexx_Error_Logical_value_when                                     34002
@@ -443,6 +444,7 @@
 #define Rexx_Error_Conversion_exponent                                    41007
 #define Rexx_Error_Conversion_user_defined                                41900
 #define Rexx_Error_Conversion_raise                                       41901
+#define Rexx_Error_Conversion_throw                                       41902
 #define Rexx_Error_Overflow                                               42000
 #define Rexx_Error_Overflow_overflow                                      42001
 #define Rexx_Error_Overflow_underflow                                     42002
@@ -648,6 +650,7 @@
 #define Rexx_Error_Execution_reply_exit                                   98937
 #define Rexx_Error_Execution_super                                        98938
 #define Rexx_Error_Execution_syntax_additional                            98939
+#define Rexx_Error_Execution_error_condition_throw                        98940
 #define Rexx_Error_Execution_error_condition                              98941
 #define Rexx_Error_Execution_mixinclass                                   98942
 #define Rexx_Error_Execution_baseclass                                    98943

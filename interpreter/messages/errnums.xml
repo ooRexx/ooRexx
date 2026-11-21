@@ -1832,6 +1832,12 @@ editbin rexx.exe /stack:100000000
 <para>Incorrect expression result following SYNTAX keyword of RAISE instruction.</para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>905</term>
+<listitem>
+<para>Incorrect expression result following SYNTAX keyword of THROW instruction.</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 <section id="ERR34">
@@ -2684,6 +2690,12 @@ Say Enter A, B, or C
 <term>901</term>
 <listitem>
 <para>Value of RAISE instruction SYNTAX expression must be numeric; found "<emphasis role="italic">value</emphasis>".</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>902</term>
+<listitem>
+<para>Value of THROW instruction SYNTAX expression must be numeric; found "<emphasis role="italic">value</emphasis>".</para>
 </listitem>
 </varlistentry>
 </variablelist>
@@ -4010,6 +4022,12 @@ Say Enter A, B, or C
 <term>939</term>
 <listitem>
 <para>Additional information for SYNTAX errors must be a single-dimensional array of values.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>940</term>
+<listitem>
+<para>Unknown error number specified on THROW SYNTAX; found "<emphasis role="italic">number</emphasis>".</para>
 </listitem>
 </varlistentry>
 <varlistentry>
