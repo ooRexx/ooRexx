@@ -549,6 +549,7 @@ set (build_extensions_csvstream_dir ${build_extensions_dir}/csvStream)
 set (build_extensions_logicalwrapper_dir ${build_extensions_dir}/logicalwrapper)
 set (build_extensions_json_dir ${build_extensions_dir}/json)
 set (build_extensions_yaml_dir ${build_extensions_dir}/yaml)
+set (build_extensions_parser_dir ${build_extensions_dir}/parser)
 set (build_extensions_dateparser_dir ${build_extensions_dir}/dateparser)
 set (build_extensions_rxmath_dir ${build_extensions_dir}/rxmath)
 set (build_extensions_rxregexp_dir ${build_extensions_dir}/rxregexp)
@@ -1724,6 +1725,17 @@ copy_build_file(yaml.cls         ${build_extensions_yaml_dir})
 copy_build_file(yaml.dtd         ${build_extensions_yaml_dir})
 copy_build_file(yaml.xsd         ${build_extensions_yaml_dir})
 copy_build_file(xmlToYaml.xsl    ${build_extensions_yaml_dir})
+# The Rexx Parser and Highlighter (RFE #878): parser.cls, and the parser/
+# directory next to it (classes, HLDrivers/, css/ and resources/), as they are
+copy_build_file(parser.cls       ${build_extensions_parser_dir})
+file(GLOB_RECURSE parser_files RELATIVE
+     ${CMAKE_CURRENT_SOURCE_DIR}/${build_extensions_parser_dir}
+     ${CMAKE_CURRENT_SOURCE_DIR}/${build_extensions_parser_dir}/parser/*)
+set (parser_build_files ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/parser.cls)
+foreach (parser_file ${parser_files})
+    copy_build_file(${parser_file} ${build_extensions_parser_dir})
+    list(APPEND parser_build_files ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${parser_file})
+endforeach ()
 copy_build_file(dateparser.cls   ${build_extensions_dateparser_dir})
 copy_build_file(socket.cls       ${build_extensions_rxsock_dir})
 copy_build_file(streamsocket.cls ${build_extensions_rxsock_dir})
@@ -1791,6 +1803,7 @@ add_custom_target(class_files ALL DEPENDS
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/yaml.dtd
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/yaml.xsd
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/xmlToYaml.xsl
+    ${parser_build_files}
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/socket.cls
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/streamsocket.cls
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/mime.cls
@@ -1820,6 +1833,8 @@ install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/yaml.cls COMPONENT Core DESTINAT
 install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/yaml.dtd COMPONENT Core DESTINATION ${INSTALL_CLS_DIR})
 install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/yaml.xsd COMPONENT Core DESTINATION ${INSTALL_CLS_DIR})
 install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/xmlToYaml.xsl COMPONENT Core DESTINATION ${INSTALL_CLS_DIR})
+install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/parser.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR})
+install(DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/parser COMPONENT Core DESTINATION ${INSTALL_CLS_DIR})
 install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/dateparser.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR})
 
 install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/socket.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR})
