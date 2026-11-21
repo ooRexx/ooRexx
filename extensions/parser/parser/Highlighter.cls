@@ -91,6 +91,9 @@
 /*                  Language Association, as the rest of ooRexx (RFE #878)    */
 /* 20261121         The LaTeX driver is looked for in the search path, as     */
 /*                  rexxpub/Latex.Driver.cls (RFE #878)                       */
+/* 20261121         The parser gets the name of the program (it got the       */
+/*                  unset variable FILE: the error had the right name only    */
+/*                  because it was renamed when it went up)                   */
 /*                                                                            */
 /******************************************************************************/
 
@@ -260,7 +263,7 @@ Return
       parserOptions~append( (cms, 1) )
 
     -- Instantiate a parser, parse the program, and get the first element
-    parser  = .Rexx.Parser~new(file, source, parserOptions)
+    parser  = .Rexx.Parser~new(name, source, parserOptions)
     package = parser~package
     element = package~firstElement
 
@@ -283,10 +286,8 @@ Return
     Options.!Driver~Epilog
 
     Return output
-  Catch co = User Rexx.Parser.Error
-    -- A syntax error in the source: it is in "name" (the parser only knew
-    -- the name it was given)
-    co~additional~in( name )~throw
+  -- A syntax error in the source (a Rexx.Parser.Error) already has the
+  -- name: it goes up as the parser threw it
   Catch co = Syntax
    .Error~Say( "Error" co~code "in" co~program", line" co~position":" )
     Raise Propagate

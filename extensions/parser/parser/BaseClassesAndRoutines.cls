@@ -434,7 +434,7 @@ Return
 
 -- The report of the error as ooRexx shows it, one line per item: the
 -- clause (or else the line), the major and the secondary messages, and the
--- hint, if any
+-- hint, if any. The major message says "running NAME line N", as ooRexx
 ::Method report
   Expose line clause hint name sourceLine
   report = .Array~new
@@ -444,7 +444,7 @@ Return
     report~append( "Error" self~major "running INSTORE line" line": " -
       self~majorMessage )
   Else
-    report~append( "Error" self~major "in" name", line" line": " -
+    report~append( "Error" self~major "running" name "line" line": " -
       self~majorMessage )
   report~append( "Error" self~code": " self~message )
   If hint \== "" Then report~append( "Hint:" hint )

@@ -6,8 +6,10 @@ highlights Rexx programs as HTML, ANSI terminal output or DocBook, using CSS
 style sheets; FencedCode highlights the Rexx fenced code blocks of a Markdown
 or HTML file. See RFE #878.
 
-Upstream, with its documentation, its history and the RexxPub publishing
-framework that uses it: <https://rexx.epbcn.com/rexx-parser/>.
+This is the original: the Rexx Parser is developed here, in ooRexx's
+repository, and its tests are in test/trunk/ooRexx/extensions/parser. Its
+history, its publications and the RexxPub publishing framework that uses it:
+<https://rexx.epbcn.com/rexx-parser/>.
 
 ## Usage
 

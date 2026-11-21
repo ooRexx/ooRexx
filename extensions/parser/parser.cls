@@ -94,6 +94,10 @@
 /* 20261121         .Rexx.Parser~version: the release and the refresh, so     */
 /*                  that a client can check the parser it has, also when it   */
 /*                  comes with ooRexx and there is no readme.md (RFE #878)    */
+/* 20261121         options may be .Nil, as when it is omitted                */
+/* 20261121         A file that does not exist or cannot be read is a SYNTAX  */
+/*                  error 3.1, as in Routine~newFile (it was an empty         */
+/*                  program)                                                  */
 /*                                                                            */
 /******************************************************************************/
 
@@ -156,7 +160,7 @@
  .environment~Options.CMS          = 0
  .environment~Options.Unicode      = 0
  .environment~Options.Interpret    = 0
-  If Arg(3,'E') Then Do
+  If Arg(3,'E'), options \== .Nil Then Do
     .Validate~classType("options",options,.Array)
     If \ options~isEmpty Then Do
       -- Ensure that keys are all in uppercase
@@ -188,7 +192,14 @@
   If \.Parser.Options~hasIndex( earlyCheck ) Then
     .Parser.Options[ earlyCheck ] = Set()
 
+  -- No source: name is a file. A file that does not exist or cannot be
+  -- read is error 3.1, as in Routine~newFile
   If Arg(2,'O') | Arg(2) == .Nil Then Do
+    If \SysIsFile(name) | Stream(name, "C", "Query Exists") == "" Then
+      Raise Syntax 3.1 Array(name)
+    If Stream(name, "C", "Open Read") \= "READY:" Then
+      Raise Syntax 3.1 Array(name)
+    Call Stream name, "C", "Close"
     source = LoadProgramSource(name)
   End
   Else If source~isA( .String ) Then source = Array( source )
