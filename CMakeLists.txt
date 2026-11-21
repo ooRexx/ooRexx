@@ -1736,6 +1736,17 @@ foreach (parser_file ${parser_files})
     copy_build_file(${parser_file} ${build_extensions_parser_dir})
     list(APPEND parser_build_files ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${parser_file})
 endforeach ()
+# Its utilities, with the shebang line adjusted: highlight, fencedcode and
+# rexxcheck go to the bin directory, as rexxtry; elements, elident and rxcomp
+# are samples
+foreach (parser_utility highlight.rex fencedcode.rex rexxcheck.rex)
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${build_extensions_parser_dir}/utilities/${parser_utility}
+                   ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${parser_utility} @ONLY)
+endforeach ()
+foreach (parser_sample elements.rex elident.rex rxcomp.rex)
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${build_extensions_parser_dir}/samples/${parser_sample}
+                   ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/${parser_sample} @ONLY)
+endforeach ()
 copy_build_file(dateparser.cls   ${build_extensions_dateparser_dir})
 copy_build_file(socket.cls       ${build_extensions_rxsock_dir})
 copy_build_file(streamsocket.cls ${build_extensions_rxsock_dir})
@@ -1843,6 +1854,10 @@ install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/mime.cls COMPONENT Core DESTINAT
 install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/smtp.cls COMPONENT Core DESTINATION ${INSTALL_CLS_DIR})
 # technically a sample, but this is so useful we add it to the binary dir
 install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/rexxtry.rex COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
+# the utilities of the Rexx Parser (RFE #878)
+install(PROGRAMS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/highlight.rex COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
+install(PROGRAMS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/fencedcode.rex COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
+install(PROGRAMS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rexxcheck.rex COMPONENT Core DESTINATION ${INSTALL_EXECUTABLE_DIR})
 
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_api_dir}/rexx.h COMPONENT DevLib DESTINATION ${INSTALL_INCLUDE_DIR})
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${build_api_dir}/rexxapidefs.h COMPONENT DevLib DESTINATION ${INSTALL_INCLUDE_DIR})
@@ -1889,6 +1904,9 @@ install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/useledit.rex COMPONENT Sample
 install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/usepipe.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/usesingleton.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/usetree.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/elements.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/elident.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/rxcomp.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 
 install(PROGRAMS ${SAMPLES_SOURCE}/cmdhandlers.cls COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 install(PROGRAMS ${SAMPLES_SOURCE}/complex.cls COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})

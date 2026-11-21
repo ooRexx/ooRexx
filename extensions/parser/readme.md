@@ -34,6 +34,27 @@ These are the files that should be deployed in installations:
   - `parser/resources/` ... the Unicode Character Database files used by the
                             TUTOR-flavoured Unicode support
 
+## Utilities
+
+In `utilities/`, installed in the `bin` directory, next to `rexxtry.rex`:
+
+- `highlight.rex`  ... highlights a Rexx program (ANSI, HTML or DocBook)
+- `fencedcode.rex` ... highlights the Rexx fenced code blocks of a Markdown or
+                       HTML file
+- `rexxcheck.rex`  ... checks a Rexx program for syntax errors, running the
+                       parser with all its early checks
+
+In `samples/`, installed with the samples:
+
+- `elements.rex` ... lists the elements of a program, as the parser returns
+                     them
+- `elident.rex`  ... checks that the elements put back together are the
+                     program
+- `rxcomp.rex`   ... compares two programs element by element
+
+Their first line, `#!@OOREXX_SHEBANG_PROGRAM@`, is adjusted by the build, as
+the one of `rexxtry.rex`.
+
 ## ooRexx Test Suite
 
 The tests (ooTest `.testGroup` files: the parser, the highlighter and
