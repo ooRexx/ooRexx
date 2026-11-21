@@ -1,0 +1,594 @@
+/*----------------------------------------------------------------------------*/
+/*                                                                            */
+/* Copyright (c) 2024-2026 Josep Maria Blasco. All rights reserved.           */
+/* Copyright (c) 2026 Rexx Language Association. All rights reserved.         */
+/*                                                                            */
+/* This program and the accompanying materials are made available under       */
+/* the terms of the Common Public License v1.0 which accompanies this         */
+/* distribution. A copy is also available at the following address:           */
+/* https://www.oorexx.org/license.html                                        */
+/*                                                                            */
+/* Redistribution and use in source and binary forms, with or                 */
+/* without modification, are permitted provided that the following            */
+/* conditions are met:                                                        */
+/*                                                                            */
+/* Redistributions of source code must retain the above copyright             */
+/* notice, this list of conditions and the following disclaimer.              */
+/* Redistributions in binary form must reproduce the above copyright          */
+/* notice, this list of conditions and the following disclaimer in            */
+/* the documentation and/or other materials provided with the distribution.   */
+/*                                                                            */
+/* Neither the name of Rexx Language Association nor the names                */
+/* of its contributors may be used to endorse or promote products             */
+/* derived from this software without specific prior written permission.      */
+/*                                                                            */
+/* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS        */
+/* "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT          */
+/* LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS          */
+/* FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT   */
+/* OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,      */
+/* SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED   */
+/* TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,        */
+/* OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY     */
+/* OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING    */
+/* NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS         */
+/* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
+/*                                                                            */
+/*----------------------------------------------------------------------------*/
+/******************************************************************************/
+/*                                                                            */
+/* rexx-print.css - CSS for Rexx highlighting, print-optimized style         */
+/* =================================================================         */
+/*                                                                            */
+/* Designed for paper output: white background, high-contrast colours         */
+/* that remain distinguishable when printed in colour or greyscale.           */
+/* Inspired by the conventions of LaTeX listings and printed textbooks.       */
+/*                                                                            */
+/* This program is part of the Rexx Parser package                            */
+/* [See https://rexx.epbcn.com/rexx-parser/]                                  */
+/*                                                                            */
+/* Version history:                                                           */
+/*                                                                            */
+/* Date     Version Details                                                   */
+/* -------- ------- --------------------------------------------------------- */
+/* 20260310    0.5  First release                                             */
+/* 20261031         Directive keywords: a thin dotted underline, half their   */
+/*                  colour (Rony: a solid one draws the eye to them first)    */
+/* 20261121         Common Public License 1.0, and copyright also of the Rexx */
+/*                  Language Association, as the rest of ooRexx (RFE #878)    */
+/*                                                                            */
+/******************************************************************************/
+
+/******************************************************************************/
+/******************************************************************************/
+/* BASE SELECTOR: highlight-rexx-print                                        */
+/******************************************************************************/
+/******************************************************************************/
+/*   Format: "highlight-rexx-<stylename>                                      */
+/*   It will apply to the whole CSS file                                      */
+/******************************************************************************/
+
+.highlight-rexx-print {
+
+  /* print keeps its own line-number grey, #aaaaaa, rather than the shared    */
+  /* fallback -- this tone is a contract with the ooRexx documentation, which */
+  /* is typeset with this theme, so it must not drift with the default.       */
+  --rx-gutter-number: #aaaaaa;
+  --rx-gutter-bar:    #aaaaaa;
+
+/******************************************************************************/
+/* Default settings                                                           */
+/* ================                                                           */
+/*                                                                            */
+/*   Pure white background, near-black text.                                  */
+/*   The "rexx" class is used as a fallback when no suitable class is found   */
+/*                                                                            */
+/******************************************************************************/
+
+  pre, .rexx {
+    background-color: #ffffff;
+    color: #1a1a1a;
+  }
+
+/******************************************************************************/
+/* Support for line numbers                                                   */
+/* ========================                                                   */
+/******************************************************************************/
+
+  .rx-lineno  {                         /* ANSI Driver only                   */
+    color: #888888;
+    font-style: italic;
+  }
+  .rx-linebar {                         /* ANSI Driver only                   */
+    color: #aaaaaa;
+  }
+
+  /* Line numbering. The number hangs OUTSIDE the code ground, in a gutter of  */
+  /* its own, with a continuous rule between gutter and code -- the same       */
+  /* result Pandoc gets for its fenced blocks, reached by the same technique.  */
+  /* The technique is borrowed; the class names are NOT. Pandoc scopes its     */
+  /* rules by ITS names (.sourceCode, .numberSource), so a block wearing them  */
+  /* would take its margins, overflow, line-height and background from a sheet */
+  /* we do not control -- a dependency that would surface as a bug nobody      */
+  /* could trace. Everything below is keyed to rx- names and stated in full.   */
+  /*                                                                           */
+  /* How it works. The <pre> is pushed 3em right and given a left border: that */
+  /* opens a gutter outside the code ground, and the border IS the vertical    */
+  /* rule. Each line is a <span> shifted 4em left by relative positioning      */
+  /* (visual only -- the box does not move), and the number is an inline-block */
+  /* 4em cell in front of the line, which pushes the code back to where it     */
+  /* belongs. Net effect: code where the <pre> says, number in the gutter.     */
+  /* The number is generated content on the line's anchor, counted by CSS, so  */
+  /* it is never selected or copied along with the code.                       */
+  /*                                                                           */
+  /* The 4em cell holds five digits at any font size, so the gutter does not   */
+  /* need to vary with rx-w<n>; a block that needs more can widen it there.    */
+  /* The scrolling box has to be the WRAPPER, not the <pre>. A <pre> with      */
+  /* overflow-x:auto (markdown.css sets exactly that, and it is a sane default */
+  /* for code) is a scroll container, and anything a scroll container's        */
+  /* content sticks out to the LEFT is clipped and cannot be scrolled to. The  */
+  /* gutter lives precisely there, so a numbered <pre> is given back           */
+  /* overflow:visible and the wrapper takes over the horizontal scrolling.     */
+  &.rx-blockwrap { overflow-x: auto; }
+
+  pre.rx-numbered {
+    overflow: visible;
+    margin-left: 3em;
+    /* The gutter's two colours come from theme variables, each with the
+       discreet grey as fallback. A theme that says nothing gets the grey;
+       a theme that wants, say, a bold blue rule sets --rx-gutter-bar once
+       on its .highlight-rexx-<name> and never touches this block.         */
+    border-left: 1px solid var(--rx-gutter-bar, #b0b0a8);   /* the vertical bar */
+    padding-left: 4px;
+
+    code { counter-reset: rx-line var(--rx-start, 0); }
+
+    code > span {
+      position: relative;
+      left: -4em;
+      counter-increment: rx-line;
+    }
+
+    code > span > a:first-child::before {
+      content: counter(rx-line);
+      position: relative;
+      left: -1em;
+      /* The cell's OUTER width must not depend on the host page. Pandoc's cell
+         is 4em wide with 4px of padding inside it -- but whether that padding
+         counts inside or outside depends on whether the page carries a global
+         border-box reset, which we do not control. Stating the outer width
+         and putting the gap in margin-right instead makes the geometry the
+         same in every host: 4em of cell, then a fixed 4px gap to the rule.  */
+      width: 4em;
+      padding: 0;
+      margin-right: 4px;
+      display: inline-block;
+      text-align: right;
+      /* A host page that justifies its text sets text-align-last, which is
+         INHERITED and wins over text-align on a last line -- and a one-line
+         number is always a last line. Stated here so the digits cannot be
+         pushed to the far end of the cell by a stylesheet we do not own.   */
+      text-align-last: right;
+      /* box-sizing is stated, not inherited: a host page may or may not carry
+         a global border-box reset (Bootstrap has one), and the cell's outer
+         width has to be the same either way. border-box is the value that
+         makes the cell 4em INCLUDING its padding -- which is what a Pandoc
+         block ends up with under such a reset, so the two line up.         */
+      box-sizing: border-box;
+      vertical-align: baseline;
+      border: none;
+      color: var(--rx-gutter-number, #b0b0a8);
+      /* keep the number out of text selection / copy */
+      -webkit-user-select: none;
+      user-select: none;
+    }
+  }
+
+/******************************************************************************/
+/* Whitespace and continuations                                               */
+/* ============================                                               */
+/******************************************************************************/
+
+  .rx-ws, .rx-cont { color: #aaaaaa; }
+
+/******************************************************************************/
+/* Standard (non-doc) comments                                                */
+/* ===========================                                                */
+/******************************************************************************/
+
+  .rx-cm,                               /* Classic, block comments            */
+  .rx-lncm {                            /* Line comments                      */
+    color: #606060;
+    font-style: italic;
+  }
+
+/******************************************************************************/
+/* Doc-comments                                                               */
+/* ============                                                               */
+/******************************************************************************/
+
+  .rx-doc-comment,                      /* Classic style doc-comments         */
+  .rx-doc-comment-markdown {            /* Markdown style doc-comments        */
+
+    color: #505060;                     /* Default values (for "block"..      */
+    font-style: italic;                 /* ..highlighting).                   */
+
+    &.rx-doc-comment-armature,          /* Armature, whitespace and main      */
+    &.rx-doc-comment-whitespace,        /* description share the same style.  */
+    &.rx-doc-comment-main-description {
+      color: #505060;
+      font-style: italic;
+    }
+    &.rx-doc-comment-summary {          /* Initial summary statement.         */
+      color: #8b4500;
+      text-decoration:underline;
+      font-style: normal;
+    }
+    &.rx-doc-comment-tag {              /* @block-tag                         */
+      color: #9a2040;
+      font-style: normal;
+    }
+    &.rx-doc-comment-tag-value {        /* As the name in "@param name".      */
+      color: #6a1b9a;
+      font-style: normal;
+    }
+    &.rx-doc-comment-tag-description {  /* Text after @deprecated.            */
+      color: #2e6e4e;
+      font-style: italic;
+    }
+  }
+
+/******************************************************************************/
+/* Shebangs                                                                   */
+/* ========                                                                   */
+/******************************************************************************/
+
+  .rx-shb { color: #9a2040; font-style: italic; }
+
+/******************************************************************************/
+/* Keywords and subkeywords, assignment sequences, and "::"                   */
+/* ========================================================                   */
+/******************************************************************************/
+
+  .rx-kw,                               /* Keywords                           */
+  .rx-skw,                              /* Subkeywords                        */
+  .rx-dkw,                              /* Directive keywords                 */
+  .rx-dskw,                             /* Directive subkeywords              */
+  .rx-asg,                              /* Assignment sequences (incl. "=")   */
+  .rx-dir                               /* The directive start "::" sequence  */
+  {
+    color: #2b3d8f;
+    font-weight: bold;
+  }
+
+  /* Additionally, directive keywords and subkeywords are underlined          */
+
+  .rx-dkw, .rx-dskw { text-decoration: underline dotted #2b3d8f80; text-decoration-thickness: .5px; text-underline-offset: .2em; }
+
+/******************************************************************************/
+/* Strings (including taken constants that are strings)                       */
+/* ====================================================                       */
+/******************************************************************************/
+
+  .rx-str , .rx-bstr, .rx-xstr,         /* Classic Rexx strings               */
+  .rx-ystr, .rx-pstr, .rx-gstr, .rx-tstr, .rx-ustr { /* TUTOR Unicode strings */
+    color: #3a6e2e;                     /* the inner part of the string       */
+    &.rx-ssuf            {color: #a04000;} /* String suffix                   */
+    &.rx-oquo, &.rx-cquo {color: #6a4000;} /* Quotes                         */
+  }
+
+  /* Taken constants that are strings                                         */
+
+  .rx-const {
+    &.rx-ssuf            {color: #a04000;} /* String suffix                   */
+    &.rx-oquo, &.rx-cquo {color: #6a4000;} /* Quotes                         */
+  }
+
+/******************************************************************************/
+/* Numbers                                                                    */
+/* =======                                                                    */
+/******************************************************************************/
+
+  /*--------------------------------------------------------------------------*/
+  /* Simple highlighting classes (not used by the highlighter)                */
+  /*--------------------------------------------------------------------------*/
+
+  .rx-int,                              /* Integers                           */
+  .rx-deci,                             /* Decimals (w/ a dot, no exponent)   */
+  .rx-exp {                             /* Exponentials (w/ or w/o a dot)     */
+    color:#a04000;
+  }
+
+  /*--------------------------------------------------------------------------*/
+  /* Detailed highlighting (includes non X and B strings that are numbers)    */
+  /*--------------------------------------------------------------------------*/
+
+  .rx-nsign { color: #6a4000; }         /* Number sign (for strings only)     */
+
+
+  .rx-ipart,                            /* Integer part                       */
+  .rx-fpart,                            /* Fractional part                    */
+  .rx-expon                             /* The exponent itself                */
+  {
+    color:#a04000;
+  }
+
+  .rx-dpoint { color: #6a4000; }        /* The decimal point                  */
+  .rx-emark  { color: #6a4000; }        /* The exponent mark ("E" or "e")     */
+  .rx-esign  { color: #6a4000; }        /* The (optional) exponent sign       */
+
+/******************************************************************************/
+/* Variables and constant symbols                                             */
+/* ==============================                                             */
+/******************************************************************************/
+
+  /* Common color for all variables (except stems)                            */
+  .rx-var, .rx-xvar, .rx-cmp, .rx-xcmp { color: #1a1a1a; }
+
+  /* Stems get their own color to stand out                                   */
+  .rx-stem, .rx-xstem { color: #6a1b9a; }
+
+  /* Additionally, exposed variables will be italicized                       */
+  .rx-xvar, .rx-xstem, .rx-xcmp { font-style: italic; }
+
+  /* Environment symbols                                                      */
+  .rx-env { color: #6a1b9a; font-style: italic; }
+
+  /* Const symbols that are not environment symbols                           */
+  .rx-lit { color: #5a6e50; }
+
+/******************************************************************************/
+/* Special characters                                                         */
+/* ==================                                                         */
+/******************************************************************************/
+
+  .rx-spe { color:#9a2040; }
+
+/******************************************************************************/
+/* Operators                                                                  */
+/* =========                                                                  */
+/******************************************************************************/
+
+  .rx-op  { color:#5a6e50; }
+
+/******************************************************************************/
+/* Taken constants                                                            */
+/* ===============                                                            */
+/*                                                                            */
+/*   I.e., tokens that are "strings or symbols taken as a constant".          */
+/*   In the case of strings, quotes and suffixes are styled under "strings".  */
+/******************************************************************************/
+
+  .rx-const {
+
+    /*------------------------------------------------------------------------*/
+    /* Default highlighting                                                   */
+    /*------------------------------------------------------------------------*/
+
+    color: #4a5a8a;
+
+    /*------------------------------------------------------------------------*/
+    /* Named arguments (Executor)                                             */
+    /*------------------------------------------------------------------------*/
+
+    &.rx-argument-name {
+      color:#8b4500;                     /* Color                             */
+    }
+
+    /*------------------------------------------------------------------------*/
+    /* Built-in functions and procedures                                      */
+    /*------------------------------------------------------------------------*/
+
+    &.rx-bif-func, &.rx-bif-proc {
+      color:#4a5a8a;                     /* Color (symbols and strings)        */
+      &.rx-ssuf {color: #a04000;}        /* Suffix (for strings)               */
+      &.rx-oquo,                         /* Quotes (for strings)               */
+      &.rx-cquo {color: #6a4000;}
+    }
+
+    /*------------------------------------------------------------------------*/
+    /* Internal functions and procedures, labels and block instruction names  */
+    /*------------------------------------------------------------------------*/
+
+    &.rx-int-func, &.rx-int-proc, &.rx-block, &.rx-label {
+      color:#a04000;                     /* Color (symbols and strings)        */
+      &.rx-ssuf {color: #a04000;}        /* Suffix (for strings)               */
+      &.rx-oquo,                         /* Quotes (for strings)               */
+      &.rx-cquo {color: #6a4000;}
+    }
+
+    /*------------------------------------------------------------------------*/
+    /* ::ROUTINE names, ::ROUTINE function and procedure calls,               */
+    /* and namespace-qualified ::ROUTINEs                                     */
+    /*------------------------------------------------------------------------*/
+
+    &.rx-routine, &.rx-pkg-func, &.rx-pkg-proc, &.rx-ext-pkg-func,
+    &.rx-ext-pkg-proc {
+      color:#9a2040;                     /* Color (symbols and strings)        */
+      &.rx-ssuf {color: #a04000;}        /* Suffix (for strings)               */
+      &.rx-oquo,                         /* Quotes (for strings)               */
+      &.rx-cquo {color: #6a4000;}
+    }
+
+    /*------------------------------------------------------------------------*/
+    /* External calls                                                         */
+    /*------------------------------------------------------------------------*/
+
+    &.rx-ext-func, &.rx-ext-proc {
+      color:#9a2040;                     /* Color (symbols and strings)        */
+      font-style: italic;               /* Italic (symbols and strings)       */
+      &.rx-ssuf {color: #a04000;}        /* Suffix (for strings)               */
+      &.rx-oquo,                         /* Quotes (for strings)               */
+      &.rx-cquo {color: #6a4000;}
+    }
+
+    /*------------------------------------------------------------------------*/
+    /* Method names                                                           */
+    /*------------------------------------------------------------------------*/
+
+    &.rx-method {
+      color:#8b4500;                     /* Color (symbols and strings)        */
+      font-style: italic;               /* Italic (symbols and strings)       */
+      &.rx-ssuf {color: #a04000;}        /* Suffix (for strings)               */
+      &.rx-oquo,                         /* Quotes (for strings)               */
+      &.rx-cquo {color: #6a4000;}
+    }
+
+    /*------------------------------------------------------------------------*/
+    /* Namespace names                                                        */
+    /*------------------------------------------------------------------------*/
+
+    &.rx-namespace {
+      color: #8b4500;                    /* Color (symbols and strings)        */
+      &.rx-ssuf {color: #a04000;}        /* Suffix (for strings)               */
+      &.rx-oquo,                         /* Quotes (for strings)               */
+      &.rx-cquo {color: #6a4000;}
+    }
+
+    /*------------------------------------------------------------------------*/
+    /* Resources                                                              */
+    /*------------------------------------------------------------------------*/
+
+    /* Resource name                                                          */
+    &.rx-resource {
+      color: #8b4500;                    /* Color (symbols and strings)        */
+      &.rx-ssuf {color: #a04000;}        /* Suffix (for strings)               */
+      &.rx-oquo,                         /* Quotes (for strings)               */
+      &.rx-cquo {color: #6a4000;}
+    }
+
+    /* Resource delimiter                                                     */
+    .rx-res-delimiter {
+      color: #8b4500;
+      text-decoration:underline;
+    }
+
+  } /* <-- END OF .rx-const                                                   */
+
+/******************************************************************************/
+/* ::RESOURCE data and ignored stuff                                          */
+/******************************************************************************/
+
+  /* Resource data                                                            */
+  .rx-res-data {
+    color: #8b4500;
+    font-style: italic;
+  }
+
+  /* Resource ignored stuff                                                   */
+  .rx-res-ignore {
+    color: #606060;
+    font-style: italic;
+  }
+
+/******************************************************************************/
+/******************************************************************************/
+/* END highlight-rexx-print                                                   */
+/******************************************************************************/
+/******************************************************************************/
+
+/******************************************************************************/
+/* SPOTLIGHT - this style's pens                                              */
+/*                                                                            */
+/* The mechanism (line box, transition, @media print) lives in spotlight.css  */
+/* and knows no colours. The TINTS live here, beside this style's token       */
+/* palette, because they are the same decision: whoever changes the palette   */
+/* must see the pens without leaving the file.                                */
+/*                                                                            */
+/* Ground of this style: #ffffff.                                             */
+/* Recipe "print". Stepped in lightness as well as hue: on a black-and-white  */
+/* printer hue is lost, and the only pen still telling itself apart is the    */
+/* one that is also lighter or darker than the others.                        */
+/*                                                                            */
+/* These are DECLARATIONS on the base selector, not nested rules, for two     */
+/* reasons. They inherit, so a marked line inside a block of this style picks */
+/* its pen up with no selector at all -- and the runtime can copy them onto   */
+/* listings that sit OUTSIDE any style scope (a ~~~output block is Pandoc's   */
+/* and carries no highlight-rexx-* class), which is what keeps a program line */
+/* and its output line the same colour. And being plain declarations they add */
+/* no nested rule, so they do not trip the restricted CSS nesting of the      */
+/* Chromium pinned by pagedjs-cli (115), which rejects a nested rule that     */
+/* starts with a type selector.                                               */
+/******************************************************************************/
+
+    --spot-pen-1-bar: #B26A00;                 /* pen 1: amber */
+    --spot-pen-1-bg:  rgba(255,210,140,.50);
+    --spot-pen-2-bar: #1E7A4C;                 /* pen 2: green */
+    --spot-pen-2-bg:  rgba(175,225,195,.55);
+    --spot-pen-3-bar: #1F5FA8;                 /* pen 3: blue  */
+    --spot-pen-3-bg:  rgba(180,210,245,.60);
+    --spot-pen-4-bar: #8B2D63;                 /* pen 4: wine  */
+    --spot-pen-4-bg:  rgba(230,190,215,.65);
+
+} /* <--- END OF highlight-rexx-print                                         */
+
+/******************************************************************************/
+/******************************************************************************/
+/* END OF BASE SELECTOR highlight-rexx-print                                  */
+/******************************************************************************/
+/******************************************************************************/
+
+/******************************************************************************/
+/* Visible blanks (blanks= / {.blanks})                                      */
+/*                                                                            */
+/* One open box per blank, DRAWN rather than typed: U+2423 is not in every    */
+/* typeface -- IBM Plex has no glyph for it at any subset -- and a missing    */
+/* glyph in a monospaced listing does not merely look wrong, it shifts the    */
+/* column and makes the reader count something that is not there. Each        */
+/* blank has a span of its own, and its box is drawn as inset SHADOWS on an   */
+/* ::after: Chromium and Firefox print thin gradients wrong (a tick or the    */
+/* bar lost, or a block), and draw no border thinner than 1px. The real       */
+/* blanks stay in the text: the listing can still be copied and run.          */
+/*                                                                            */
+/* The ink follows the element the blank belongs to (a blank inside a string  */
+/* is the string's colour); a theme that wants its own sets --rx-blank-ink.   */
+/* The proportions come from the real glyph: ink across 12%..87% of the cell, */
+/* strokes .045em thick (U+2423 has .07em, which prints as heavy as the       */
+/* letters) and ticks .3em tall, all sitting low, below the baseline          */
+/* as U+2423 does.                                                            */
+/******************************************************************************/
+
+.highlight-rexx-print .rx-blank-mark {
+  position: relative;
+}
+.highlight-rexx-print .rx-blank-mark::after {
+  /* The box hangs from the BOTTOM of the inline box -- the descent line --
+     and never from a measured baseline: how tall that box is depends on the
+     font in use (1.31em in one, 1.18em in another), and an em-based offset
+     that fits one font puts the mark outside the box in the next. Anchored
+     at bottom: 0, it sits right whatever the listing is set in. */
+  content: "";
+  position: absolute;
+  left: 12%;
+  right: 13%;
+  bottom: 0;
+  height: .3em;
+  /* Shadows, not borders: Chromium draws a border of less than 1px as 1px,
+     as thick as the letters (Rony, 20/10). .045em is half a stem. The
+     ticks' shadows go up as well as sideways: with no rise, the top of
+     each shadow's hole ran along the top of the box, and the PDF drew
+     that seam as a hairline that closed the box (Rony, 20/10). */
+  box-shadow: inset 0 -.045em 0 var(--rx-blank-ink, currentColor),
+              inset .045em -.045em 0 var(--rx-blank-ink, currentColor),
+              inset -.045em -.045em 0 var(--rx-blank-ink, currentColor);
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+  pointer-events: none;
+}
+.highlight-rexx-print .rx-tab-mark {
+  /* A tab, drawn as editors draw it: an arrow running into a wall, --->|, the
+     wall being the tab stop. Drawn once however wide the tab is -- not the
+     blank's box, because a tab is not a blank and is not one cell wide.
+     Four layers: the shaft, the two strokes of the arrowhead, and the wall.
+     A stroke is the diagonal of its own small box: with a corner keyword,
+     the 50% line of a gradient runs through the other two corners. */
+  background-image:
+    linear-gradient(var(--rx-blank-ink, currentColor), var(--rx-blank-ink, currentColor)),
+    linear-gradient(to top right, transparent 42%, var(--rx-blank-ink, currentColor) 42%, var(--rx-blank-ink, currentColor) 58%, transparent 58%),
+    linear-gradient(to bottom right, transparent 42%, var(--rx-blank-ink, currentColor) 42%, var(--rx-blank-ink, currentColor) 58%, transparent 58%),
+    linear-gradient(var(--rx-blank-ink, currentColor), var(--rx-blank-ink, currentColor));
+  background-size: calc(100% - .45ch) .07em, .28em .2em, .28em .2em, .07em .5em;
+  background-position: left .1ch bottom .25em, right .3ch bottom .285em,
+                       right .3ch bottom .085em, right .2ch bottom .03em;
+  background-repeat: no-repeat;
+}
