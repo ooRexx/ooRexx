@@ -60,6 +60,7 @@ public:
         ALL = 9,
         CONSOLE = 10,
         CONSOLE_DEBUG = 11,
+        THROW = 12,     // context exits only: Throw() an ERROR condition
     } ExitAction;
 
     typedef enum
@@ -131,6 +132,10 @@ public:
                 {
                     action = CONSOLE_DEBUG;
                 }
+                else if (strcmp("THROW", a) == 0)
+                {
+                    action = THROW;
+                }
                 else
                 {
                     action = DISABLED;
@@ -177,6 +182,8 @@ public:
                         return "CONSOLE";
                     case CONSOLE_DEBUG:
                         return "DEBUG";
+                    case THROW:
+                        return "THROW";
                 }
                 return "DISABLED";
             }

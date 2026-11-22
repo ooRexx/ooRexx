@@ -134,6 +134,16 @@ int invokeExitFunction(RexxExitContext *context, const char *name, PEXIT exitInf
     }
 }
 
+// THROW action (RFE #31): Throw() an ERROR condition, RC 4321, with the exit
+// as its description.  It is thrown once: the exit then passes, so that the
+// clauses that catch it (and an RXHLT or RXTRC exit called after each of them)
+// can run.  Throw() does not return.
+static void throwFromExit(RexxExitContext *context, InstanceInfo::ExitConfig &config, const char *exitName)
+{
+    config = InstanceInfo::SKIP;
+    context->Throw("ERROR", context->WholeNumber(4321), context->String(exitName), NULLOBJECT);
+}
+
 int RexxEntry TestContextFunctionExit(RexxExitContext *context, int code, int subcode, PEXIT exitInfo)
 {
     InstanceInfo *instanceInfo = (InstanceInfo *)context->GetApplicationData();
@@ -146,6 +156,9 @@ int RexxEntry TestContextFunctionExit(RexxExitContext *context, int code, int su
             return RXEXIT_RAISE_ERROR;
         case InstanceInfo::RAISE:
             context->RaiseException1(Rexx_Error_System_service_user_defined, context->NewStringFromAsciiz("Function Exit"));
+            return RXEXIT_NOT_HANDLED;
+        case InstanceInfo::THROW:
+            throwFromExit(context, instanceInfo->fnc, "Function Exit");
             return RXEXIT_NOT_HANDLED;
         default: break; // avoid warning: enumeration values not handled in switch
     }
@@ -197,6 +210,9 @@ int RexxEntry TestContextCommandExit(RexxExitContext *context, int code, int sub
             return RXEXIT_RAISE_ERROR;
         case InstanceInfo::RAISE:
             context->RaiseException1(Rexx_Error_System_service_user_defined, context->NewStringFromAsciiz("Command Exit"));
+            return RXEXIT_NOT_HANDLED;
+        case InstanceInfo::THROW:
+            throwFromExit(context, instanceInfo->cmd, "Command Exit");
             return RXEXIT_NOT_HANDLED;
         default: break; // avoid warning: enumeration values not handled in switch
     }
@@ -270,6 +286,9 @@ int RexxEntry TestContextQueueExit(RexxExitContext *context, int code, int subco
         case InstanceInfo::RAISE:
             context->RaiseException1(Rexx_Error_System_service_user_defined, context->NewStringFromAsciiz("Queue Exit"));
             return RXEXIT_NOT_HANDLED;
+        case InstanceInfo::THROW:
+            throwFromExit(context, instanceInfo->msq, "Queue Exit");
+            return RXEXIT_NOT_HANDLED;
         default: break; // avoid warning: enumeration values not handled in switch
     }
 
@@ -338,6 +357,9 @@ int RexxEntry TestContextSessionIOExit(RexxExitContext *context, int code, int s
             return RXEXIT_RAISE_ERROR;
         case InstanceInfo::RAISE:
             context->RaiseException1(Rexx_Error_System_service_user_defined, context->NewStringFromAsciiz("I/O Exit"));
+            return RXEXIT_NOT_HANDLED;
+        case InstanceInfo::THROW:
+            throwFromExit(context, instanceInfo->sio, "Session I/O Exit");
             return RXEXIT_NOT_HANDLED;
         default: break; // avoid warning: enumeration values not handled in switch
     }
@@ -409,6 +431,9 @@ int RexxEntry TestContextHaltExit(RexxExitContext *context, int code, int subcod
         case InstanceInfo::RAISE:
             context->RaiseException1(Rexx_Error_System_service_user_defined, context->NewStringFromAsciiz("Halt Exit"));
             return RXEXIT_NOT_HANDLED;
+        case InstanceInfo::THROW:
+            throwFromExit(context, instanceInfo->hlt, "Halt Exit");
+            return RXEXIT_NOT_HANDLED;
         case InstanceInfo::HALT:
         {
             RXHLTTST_PARM *parms = (RXHLTTST_PARM *)exitInfo;
@@ -440,6 +465,9 @@ int RexxEntry TestContextTraceExit(RexxExitContext *context, int code, int subco
             return RXEXIT_RAISE_ERROR;
         case InstanceInfo::RAISE:
             context->RaiseException1(Rexx_Error_System_service_user_defined, context->NewStringFromAsciiz("Trace Exit"));
+            return RXEXIT_NOT_HANDLED;
+        case InstanceInfo::THROW:
+            throwFromExit(context, instanceInfo->trc, "Trace Exit");
             return RXEXIT_NOT_HANDLED;
         case InstanceInfo::TRACEON:
         {
@@ -474,6 +502,9 @@ int RexxEntry TestContextInitExit(RexxExitContext *context, int code, int subcod
         case InstanceInfo::RAISE:
             context->RaiseException1(Rexx_Error_System_service_user_defined, context->NewStringFromAsciiz("Init Exit"));
             return RXEXIT_NOT_HANDLED;
+        case InstanceInfo::THROW:
+            throwFromExit(context, instanceInfo->ini, "Init Exit");
+            return RXEXIT_NOT_HANDLED;
         default: break; // avoid warning: enumeration values not handled in switch
     }
 
@@ -504,6 +535,9 @@ int RexxEntry TestContextTerminationExit(RexxExitContext *context, int code, int
         case InstanceInfo::RAISE:
             context->RaiseException1(Rexx_Error_System_service_user_defined, context->NewStringFromAsciiz("Termination Exit"));
             return RXEXIT_NOT_HANDLED;
+        case InstanceInfo::THROW:
+            throwFromExit(context, instanceInfo->ter, "Termination Exit");
+            return RXEXIT_NOT_HANDLED;
         default: break; // avoid warning: enumeration values not handled in switch
     }
 
@@ -528,6 +562,9 @@ int RexxEntry TestContextScriptFunctionExit(RexxExitContext *context, int code, 
         case InstanceInfo::RAISE:
             context->RaiseException1(Rexx_Error_System_service_user_defined, context->NewStringFromAsciiz("Script Function Exit"));
             return RXEXIT_NOT_HANDLED;
+        case InstanceInfo::THROW:
+            throwFromExit(context, instanceInfo->exf, "Scripting Function Exit");
+            return RXEXIT_NOT_HANDLED;
         default: break; // avoid warning: enumeration values not handled in switch
     }
     return invokeExitFunction(context, "Script", exitInfo);
@@ -546,6 +583,9 @@ int RexxEntry TestContextObjectFunctionExit(RexxExitContext *context, int code, 
         case InstanceInfo::RAISE:
             context->RaiseException1(Rexx_Error_System_service_user_defined, context->NewStringFromAsciiz("Object Function Exit"));
             return RXEXIT_NOT_HANDLED;
+        case InstanceInfo::THROW:
+            throwFromExit(context, instanceInfo->ofnc, "Object Function Exit");
+            return RXEXIT_NOT_HANDLED;
         default: break; // avoid warning: enumeration values not handled in switch
     }
     return invokeExitFunction(context, "Object", exitInfo);
@@ -563,6 +603,9 @@ int RexxEntry TestContextNovalueExit(RexxExitContext *context, int code, int sub
             return RXEXIT_RAISE_ERROR;
         case InstanceInfo::RAISE:
             context->RaiseException1(Rexx_Error_System_service_user_defined, context->NewStringFromAsciiz("Novalue Exit"));
+            return RXEXIT_NOT_HANDLED;
+        case InstanceInfo::THROW:
+            throwFromExit(context, instanceInfo->var, "Novalue Exit");
             return RXEXIT_NOT_HANDLED;
         default: break; // avoid warning: enumeration values not handled in switch
     }
@@ -592,6 +635,9 @@ int RexxEntry TestContextValueExit(RexxExitContext *context, int code, int subco
             return RXEXIT_RAISE_ERROR;
         case InstanceInfo::RAISE:
             context->RaiseException1(Rexx_Error_System_service_user_defined, context->NewStringFromAsciiz("Value() Exit"));
+            return RXEXIT_NOT_HANDLED;
+        case InstanceInfo::THROW:
+            throwFromExit(context, instanceInfo->val, "Value Exit");
             return RXEXIT_NOT_HANDLED;
         default: break; // avoid warning: enumeration values not handled in switch
     }
