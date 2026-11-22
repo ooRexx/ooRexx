@@ -78,6 +78,8 @@
 /*                  rxcheck failed with 93.907 ("a~b:*")                      */
 /* 20261121         Common Public License 1.0, and copyright also of the Rexx */
 /*                  Language Association, as the rest of ooRexx (RFE #878)    */
+/* 20261122         The first element of a compound variable no longer gets a */
+/*                  term (Element~term is gone)                               */
 /*                                                                            */
 /******************************************************************************/
 
@@ -1407,7 +1409,6 @@ Return
 
   term = .Compound.Variable.Term~new( variable, parts )
 
-  variable~term  = term
   variable~parts = parts
 
   Exit term

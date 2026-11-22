@@ -96,6 +96,9 @@
 /*                  build that follows r13550)                                */
 /* 20261121         Common Public License 1.0, and copyright also of the Rexx */
 /*                  Language Association, as the rest of ooRexx (RFE #878)    */
+/* 20261122         Rexx.Instruction~terminating is 0 by default (init        */
+/*                  assigned a local variable, and the attribute returned its */
+/*                  own name)                                                 */
 /*                                                                            */
 /******************************************************************************/
 
@@ -153,6 +156,7 @@
 ::Constant isBlockInstruction 0
 ::Attribute terminating -- True when all branches end with EXIT or RETURN
 ::Method init
+  Expose terminating
   Use Strict Arg package, begin, end
   self~init:super( package, begin, end )
   terminating = 0

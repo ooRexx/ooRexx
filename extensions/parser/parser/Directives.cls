@@ -81,6 +81,12 @@
 /*                  as ooRexx since r13411 (#1966; was 25.11).                */
 /* 20261121         Common Public License 1.0, and copyright also of the Rexx */
 /*                  Language Association, as the rest of ooRexx (RFE #878)    */
+/* 20261122         Method.Directive~isConstant is 0: a ::METHOD is never a   */
+/*                  constant (it was never assigned). Resource.Directive      */
+/*                  ~fromLine and ~toLine are the first and last lines of the */
+/*                  resource data (toLine < fromLine when it is empty; they   */
+/*                  were not exposed, nor set). The three attributes returned */
+/*                  their own names                                           */
 /*                                                                            */
 /******************************************************************************/
 
@@ -860,8 +866,10 @@ Return
 
 ::Method init
   Expose name isAbstract isAttribute isClassMethod isGuarded -
-    isPackage isPrivate isProtected delegateName external extends overrides
+    isPackage isPrivate isProtected delegateName external extends overrides -
+    isConstant
   Use Strict Arg package, begin, end, name, options.
+  isConstant    = 0 -- A ::METHOD is never a constant (see ::CONSTANT)
   isAttribute   = options.isAttribute
   isAbstract    = options.isAbstract
   isClassMethod = options.isClassMethod
@@ -1212,10 +1220,21 @@ Done:
 ::Attribute fromLine  Get
 ::Attribute toLine    Get
 ::Method init
-  Expose name delimiter
+  Expose name delimiter fromLine toLine
   Use Strict Arg package, begin, end, name, delimiter
+  -- The scanner has already put the resource data element in the
+  -- directive: its first and last lines are the lines of the resource.
   fromLine = ""
   toLine   = ""
+  element  = begin
+  Do While element \== .Nil, element \== end
+    If element < .EL.RESOURCE_DATA Then Do
+      Parse Value element~from With fromLine .
+      Parse Value element~to   With toLine   .
+      Leave
+    End
+    element = element~next
+  End
   self~init:super( package, begin, end )
 
 /******************************************************************************/

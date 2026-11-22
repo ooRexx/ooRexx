@@ -54,6 +54,8 @@
 /*                  blank operator (Rony, 25-Oct)                             */
 /* 20261121         Common Public License 1.0, and copyright also of the Rexx */
 /*                  Language Association, as the rest of ooRexx (RFE #878)    */
+/* 20261122         StringOrSymbol.Element~term removed: it was set only for  */
+/*                  compound variables, and nobody read it                    */
 /*                                                                            */
 /******************************************************************************/
 
@@ -368,7 +370,6 @@
 ::Attribute invocationType
 ::Attribute traceOnly                   -- For labels
 ::Attribute labelFor                    -- For labels
-::Attribute term
 ::Attribute parts                       -- of a compound variable
 ::Method value
   source = self~source

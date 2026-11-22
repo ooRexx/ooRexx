@@ -128,6 +128,8 @@
 /*                  CheckMessages.rex did not look in bin/parser/ until now   */
 /* 20261121         Common Public License 1.0, and copyright also of the Rexx */
 /*                  Language Association, as the rest of ooRexx (RFE #878)    */
+/* 20261122         Forward.Instruction~namedArguments works (init did not    */
+/*                  expose it, and the attribute returned its own name)       */
 /*                                                                            */
 /******************************************************************************/
 
@@ -1012,7 +1014,7 @@ Done:
 ::Attribute theClass       Get
 ::Attribute To             Get
 ::Method init
-  Expose Continue Arguments Array Message theClass To
+  Expose Continue Arguments NamedArguments Array Message theClass To
 
   Use Strict Arg package, begin, end, options.
 
