@@ -96,6 +96,7 @@
 /*                  r13535)                                                   */
 /* 20261121         Common Public License 1.0, and copyright also of the Rexx */
 /*                  Language Association, as the rest of ooRexx (RFE #878)    */
+/* 20261122         The implicit EXIT is terminating, as EXIT and RETURN      */
 /*                                                                            */
 /******************************************************************************/
 
@@ -1242,6 +1243,10 @@ Done:
 --------------------------------------------------------------------------------
 
 ::Class Implicit.Exit.Instruction Public SubClass Rexx.Instruction
+::Method init
+  Use Strict Arg package, begin, end
+  self~init:super( package, begin, end )
+  self~terminating = .True
 
 /******************************************************************************/
 /* ITERATIVE.CLAUSE                                                           */
