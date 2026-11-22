@@ -54,6 +54,11 @@
 /*                  tables and STATICSPOTS                                    */
 /* 20261121         Common Public License 1.0, and copyright also of the Rexx */
 /*                  Language Association, as the rest of ooRexx (RFE #878)    */
+/* 20261122         Only the options that FencedCode uses: --default,         */
+/*                  --continue, --css and -it. The output is HTML, and the    */
+/*                  rest (the mode, -n, --patch, --pad, --doccomments...) are */
+/*                  attributes of the fences; the options, left over from     */
+/*                  highlight.rex, did nothing. --css works without -h        */
 /*                                                                            */
 /******************************************************************************/
 
@@ -90,84 +95,37 @@ Main:
   myHelp       = CLIhelper~help
   args         = CLIhelper~args
 
-  -- We will store our processed options in a stem
+  -- We will store our processed options in a stem. The output is HTML; how
+  -- each block is highlighted is said by the attributes of its fence (or
+  -- --default)
   options. = 0
 
-  -- Set default mode to ANSI if called from the command line...
-  Parse Source . how .
-  If how == "COMMAND"
-    Then options.mode = ANSI
-    -- ...otherwise, assume HTML.
-    Else options.mode = HTML
-
   options.default     = ""
-  options.style       = "dark"   -- Use attributes in the fences, or --default
+  options.style       = "dark"   -- The style sheet that --css links
 
   myPath              = FileSpec("Location",.context~package~name)
   sep                 = .File~separator
-  patch               = .Nil
 
   Loop While args~size > 0, args[1] \== "-", args[1][1] == "-"
     option = args[1]
     args~delete(1)
 
     Select Case Lower(option)
-      When "--help"            Then Signal Help
+      When "-h", "--help"      Then Signal Help
       When "--default"         Then Do
         If args~size == 0 Then
           Call Error "Missing attributes after '"option"' option."
         options.default = args[1]
         args~delete(1)
       End
-      When "--doccomments"     Then Do
-        If args~size == 0 Then
-          Call Error "Missing value after '"option"' option."
-        value = args[1]
-        args~delete(1)
-        If WordPos(value,"detailed block") == 0 Then
-          Call Error "Invalid value for --doccomments: '"value"'."
-        options.doccomments = value
-      End
-      When "--patch"           Then Do
-        If args~size == 0 Then
-          Call Error "Missing value after '"option"' option."
-        patch = .StylePatch~of( args[1] )
-        args~delete(1)
-      End
-      When "--patchfile"       Then Do
-        If args~size == 0 Then
-          Call Error "Missing value after '"option"' option."
-        value = args[1]
-        args~delete(1)
-        file = Stream(value,"C", "Q Exists")
-        If file == "" Then Call Error "File '"value"' not found."
-        value = File2Array( file )
-        patch = .StylePatch~of( value )
-      End
-
-      When "--startfrom"         Then options.startFrom    = Natural(value)
-      When "-w", "--width"       Then options.width        = Natural(value)
-      When "--pad"               Then options.pad          = Natural(value)
-
-      When "-it", "--itrace"     Then options.itrace       =  1
-      When "-h", "--html"        Then options.mode         =  HTML
-      When "-l", "--latex"       Then options.mode         =  LaTeX
-      When "-d", "--docbook"     Then options.mode         =  DOCBOOK
-      When "-n", "--numberlines" Then options.numberlines  = .True
-      When "-a", "--ansi"        Then options.mode         =  ANSI
-      When "--css"               Then options.css          = 1
-      When "--noprolog"          Then options.prolog       = 0
-      When "--prolog"            Then options.prolog       = 1
-      When "--continue"          Then options.continue     = 1
+      When "-it", "--itrace"   Then options.itrace       =  1
+      When "--css"             Then options.css          =  1
+      When "--continue"        Then options.continue     =  1
 
       Otherwise Call Error "Invalid option '"option"'."
     End
   End
 
-  If options.css, options.mode \== "HTML" Then
-    Call Error "The --css option cannot be used in" options.mode "mode."
-
-  -- This means that "highlight -h" will display help, which is good.
   If args~items == 0 Then Signal Help
 
   If args~items > 1 Then Call Error "Invalid argument '"args[2]"'."
@@ -224,19 +182,6 @@ ProcessSource:
   -- each fence (or --default): see doc/highlighter/fencedcode/
   Return FencedCode( file, source, , options. )
 
-After:
-  If args~size == 0 Then
-    Call Error "Missing value after '"option"' option."
-  Return args~delete(1)
-
-Natural:
-  If args~size == 0 Then
-    Call Error "Missing number after '"option"' option."
-  n = args[1]
-  args~delete(1)
-  If DataType(n,"W"), n > 0 Then Return n
-  Call Error "Positive whole number expected after '"option"', found '"n"'."
-
 --------------------------------------------------------------------------------
 
 Error:
@@ -266,28 +211,18 @@ If the only option is -h or --help, or if no arguments are present,
 then display this help and exit.
 
 Process all the Rexx fenced code blocks in FILE (a .md or .html file, or
-"-" to read it from .input) and highlight them. The style, Executor, CMS,
-Experimental and Unicode are attributes of each fence (or --default).
-To highlight a Rexx program, use highlight.
+"-" to read it from .input), highlight them as HTML, and write the file,
+with its blocks highlighted, to .output. How each block is highlighted
+(the style, line numbers, patches, Executor, CMS...) is said by the
+attributes of its fence, or by --default. To highlight a Rexx program,
+use highlight.
 
 Options:
-  -a,  --ansi               Select ANSI mode
        --continue           Continue when a fenced code block is in error
-       --css                Include links to css files (HTML only)
-  -d,  --docbook            Select DocBook mode
-       --default attributes Select default attributes for code blocks
-       --doccomments detailed|block Select highlighting level for doc-comments
-  -h,  --html               Select HTML mode
-  -it, --itrace             Printing internal traceback on error
-  -l,  --latex              Select LaTeX mode
-       --noprolog           Do not print a prolog (LaTeX only)
-  -n,  --numberlines        Print line numbers
-       --patch "PATCHES"    Apply semicolon-separated PATCHES
-       --patchfile FILE     Load patches from FILE
-       --pad N              Pad doc-comments and ::resources to N characters
-       --prolog             Print a prolog (LaTeX only)
-       --startFrom N        Start line numbers at N
-  -w,  --width N            Ensure that all lines have width >= N (ANSI only)
+       --css                Write a whole HTML page, with links to the
+                            style sheet of the "dark" style
+       --default attributes Default attributes for all the code blocks
+  -it, --itrace             Print internal traceback on error
 
 The 'myname' program is part of the Rexx Parser package,
 see https://rexx.epbcn.com/rexx-parser/. It is distributed under
