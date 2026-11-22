@@ -90,6 +90,11 @@
 /* 20261121         --css: the style is looked for in parser/css/ first       */
 /* 20261121         Common Public License 1.0, and copyright also of the Rexx */
 /*                  Language Association, as the rest of ooRexx (RFE #878)    */
+/* 20261122         --css puts the style inside the page (StyleFile), and     */
+/*                  links a rexx-STYLE.css of the current directory after     */
+/*                  it; no more links to rexx.epbcn.com and file:////. -l     */
+/*                  without RexxPub's LaTeX driver says so, without a         */
+/*                  traceback                                                 */
 /*                                                                            */
 /******************************************************************************/
 
@@ -200,6 +205,11 @@ Main:
   If options.css, options.mode \== "HTML" Then
     Call Error "The --css option cannot be used in" options.mode "mode."
 
+  -- The LaTeX driver is RexxPub's: without it, -l says so (not a traceback)
+  If options.mode == "LATEX", \.environment~hasIndex("LATEX.HIGHLIGHTER") Then
+    Call Error "LaTeX mode needs the LaTeX driver (rexxpub/Latex.Driver.cls),",
+      "which is part of RexxPub, and is not in the search path."
+
   -- This means that "highlight -h" will display help, which is good.
   If args~items == 0 Then Signal Help
 
@@ -232,21 +242,23 @@ Main:
   If Options.style == 0 Then mystyle = "dark"
   Else                       mystyle = Options.style
 
-  -- A possible copy could reside in our installation: parser/css/, next to
-  -- us, or the css/ directory of the tree
-  cssPath = mypath"parser"sep"css"sep"rexx-"mystyle".css"
-  If Stream(cssPath,"c","query exists") == "" Then
-    cssPath = mypath".."sep"css"sep"rexx-"mystyle".css"
-  cssPath = ChangeStr("\",cssPath,"/")
-  -- A possible copy could reside in the current directory
+  -- The style goes inside the page, so that it looks the same anywhere
+  -- (StyleFile finds it as the Highlighter does, or says it is not there).
+  -- A rexx-STYLE.css in the current directory, if there is one, is linked
+  -- after it, so that it can be retouched without regenerating the page
+  cssFile = StyleFile( mystyle )
+  css     = CharIn( cssFile, 1, Chars(cssFile) )
+  Call Stream cssFile, "C", "Close"
   local   = Stream(Directory()||sep"rexx-"mystyle".css","c","query exists")
 
   Do line Over .Resources[HTML]
     Select Case line
       When "[*CSS*]" Then Do
-        Say  "    <link rel='stylesheet' href='https://rexx.epbcn.com/rexx-parser/css/rexx-"mystyle".css'></link>"
-        Say  "    <link rel='stylesheet' href='file:///"cssPath"'></link>"
-        If local \== "" Then Say  "    <link rel='stylesheet' href='rexx-"mystyle".css'></link>"
+        Say "    <style>"
+        Say css~strip("T", "0a"x)~strip("T", "0d"x)
+        Say "    </style>"
+        If local \== "" Then
+          Say "    <link rel='stylesheet' href='rexx-"mystyle".css'>"
       End
       When "[*CONTENTS*]" Then Say ProcessSource()
       Otherwise Say line
@@ -291,6 +303,7 @@ Help:
 ::Requires "parser/Highlighter.cls"
 ::Requires "parser/CLISupport.cls"
 ::Requires "parser/ErrorHandler.cls"
+::Requires "parser/StyleSheet.cls"
 
 ::Resource Help
 myname - Highlight a Rexx program
@@ -305,7 +318,7 @@ Rexx fenced code blocks of a Markdown or HTML file, use fencedcode.
 
 Options:
   -a,  --ansi               Select ANSI mode
-       --css                Include links to css files (HTML only)
+       --css                A whole page, with the style inside (HTML only)
   -d,  --docbook            Select DocBook mode
        --doccomments detailed|block Select highlighting level for doc-comments
   -xtr,--executor           Enable support for Executor

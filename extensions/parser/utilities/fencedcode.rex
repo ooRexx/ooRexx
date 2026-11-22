@@ -59,6 +59,10 @@
 /*                  rest (the mode, -n, --patch, --pad, --doccomments...) are */
 /*                  attributes of the fences; the options, left over from     */
 /*                  highlight.rex, did nothing. --css works without -h        */
+/* 20261122         --css puts the style inside the page (StyleFile), and     */
+/*                  links a rexx-STYLE.css of the current directory after     */
+/*                  it, as highlight; no more links to rexx.epbcn.com and     */
+/*                  file:////                                                 */
 /*                                                                            */
 /******************************************************************************/
 
@@ -101,7 +105,7 @@ Main:
   options. = 0
 
   options.default     = ""
-  options.style       = "dark"   -- The style sheet that --css links
+  options.style       = "dark"   -- The style sheet that --css puts in
 
   myPath              = FileSpec("Location",.context~package~name)
   sep                 = .File~separator
@@ -154,21 +158,23 @@ Main:
 
   mystyle = Options.style
 
-  -- A possible copy could reside in our installation: parser/css/, next to
-  -- us, or the css/ directory of the tree
-  cssPath = mypath"parser"sep"css"sep"rexx-"mystyle".css"
-  If Stream(cssPath,"c","query exists") == "" Then
-    cssPath = mypath".."sep"css"sep"rexx-"mystyle".css"
-  cssPath = ChangeStr("\",cssPath,"/")
-  -- A possible copy could reside in the current directory
+  -- The style goes inside the page, so that it looks the same anywhere
+  -- (StyleFile finds it as the Highlighter does, or says it is not there).
+  -- A rexx-STYLE.css in the current directory, if there is one, is linked
+  -- after it, so that it can be retouched without regenerating the page
+  cssFile = StyleFile( mystyle )
+  css     = CharIn( cssFile, 1, Chars(cssFile) )
+  Call Stream cssFile, "C", "Close"
   local   = Stream(Directory()||sep"rexx-"mystyle".css","c","query exists")
 
   Do line Over .Resources[HTML]
     Select Case line
       When "[*CSS*]" Then Do
-        Say  "    <link rel='stylesheet' href='https://rexx.epbcn.com/rexx-parser/css/rexx-"mystyle".css'></link>"
-        Say  "    <link rel='stylesheet' href='file:///"cssPath"'></link>"
-        If local \== "" Then Say  "    <link rel='stylesheet' href='rexx-"mystyle".css'></link>"
+        Say "    <style>"
+        Say css~strip("T", "0a"x)~strip("T", "0d"x)
+        Say "    </style>"
+        If local \== "" Then
+          Say "    <link rel='stylesheet' href='rexx-"mystyle".css'>"
       End
       When "[*CONTENTS*]" Then Say ProcessSource()
       Otherwise Say line
@@ -201,6 +207,7 @@ Help:
 ::Requires "parser/FencedCode.cls"
 ::Requires "parser/CLISupport.cls"
 ::Requires "parser/ErrorHandler.cls"
+::Requires "parser/StyleSheet.cls"
 
 ::Resource Help
 myname - Highlight the Rexx fenced code blocks of a Markdown or HTML file
@@ -219,8 +226,8 @@ use highlight.
 
 Options:
        --continue           Continue when a fenced code block is in error
-       --css                Write a whole HTML page, with links to the
-                            style sheet of the "dark" style
+       --css                Write a whole HTML page, with the style sheet
+                            of the "dark" style inside
        --default attributes Default attributes for all the code blocks
   -it, --itrace             Print internal traceback on error
 

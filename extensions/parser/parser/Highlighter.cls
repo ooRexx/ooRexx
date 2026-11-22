@@ -94,6 +94,9 @@
 /* 20261121         The parser gets the name of the program (it got the       */
 /*                  unset variable FILE: the error had the right name only    */
 /*                  because it was renamed when it went up)                   */
+/* 20261122         The LaTeX driver only in the search path (no              */
+/*                  ../rexxpub/); no Options.!UniqueID (nobody used it: the   */
+/*                  HTML of a patch uses the block id)                        */
 /*                                                                            */
 /******************************************************************************/
 
@@ -116,11 +119,8 @@ package~loadPackage(mypath"HLDrivers/Drivers.cls")
 
 -- The LaTeX driver is RexxPub's: it lives in the rexxpub/ directory of
 -- RexxPub's package, which may not be installed. When the search path finds
--- it, we call it as Drivers.cls calls the drivers next to it. While the
--- parser and RexxPub share a repository, rexxpub/ is also our sibling
+-- it, we call it as Drivers.cls calls the drivers next to it
 latexDriver = package~findProgram("rexxpub/Latex.Driver.cls")
-If latexDriver == .Nil Then
-  latexDriver = package~findProgram(mypath"../rexxpub/Latex.Driver.cls")
 If latexDriver \== .Nil Then Call (latexDriver)
 
 ::Requires "BaseClassesAndRoutines.cls"
@@ -234,16 +234,6 @@ Return
     Else If patch \== .Nil     Then
       .Validate~classType("patch", patch, .StylePatch)
     Options.!Patch = patch
-
-    If patch \== .Nil Then Do
-      -- If we are going to use an additional patch, we will need
-      -- to generate a unique ID for our DIV.
-      id = Lower(                                              -
-        Random(0, 16777215)~d2x(3)Random(0, 16777215)~d2x(3)|| -
-        Random(0, 16777215)~d2x(3)Random(0, 16777215)~d2x(3)   -
-      )
-      Options.!UniqueID = id
-    End
 
     HTMLClass = HTMLClasses( options. )
     Options.!HTMLClass = HTMLClass

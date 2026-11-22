@@ -155,6 +155,14 @@
 /*                  ../../css/, as before                                     */
 /* 20261121         Common Public License 1.0, and copyright also of the Rexx */
 /*                  Language Association, as the rest of ooRexx (RFE #878)    */
+/* 20261122         A style is a file only when it has a "/" or a "\", or     */
+/*                  ends in ".css", as in LocalStyle ("my.x" is a name). A    */
+/*                  name is looked for in parser/css/, next to us, and then   */
+/*                  in the directories of REXX_PARSER_STYLE_PATH, in order    */
+/*                  (RexxPub puts its css/ there); no more ../../css/. A      */
+/*                  style that is not found is SYNTAX 98.900, which says      */
+/*                  where it was looked for, not a HALT. StyleFile: the file  */
+/*                  of a style (highlight --css puts it in the page)          */
 /*                                                                            */
 /******************************************************************************/
 
@@ -166,6 +174,49 @@
 /******************************************************************************/
 /* GETHIGHLIGHT                                                               */
 /******************************************************************************/
+
+--- The file of a style. A style is a file when it has a "/" or a "\", or
+--- ends in ".css" (as in LocalStyle). Otherwise it is a name: a style of
+--- the author's own (LocalStyle) is found where it was said; the others,
+--- as "rexx-NAME.css" in parser/css/, next to us, and then in each
+--- directory of REXX_PARSER_STYLE_PATH, in order (RexxPub puts its css/
+--- there, with the styles that do not come with ooRexx). The shipped
+--- styles come first: a copy of one elsewhere does not hide it.
+---
+--- @param style  A style name, like "dark", or the name of a file.
+--- @return       The full name of the file. A style that is not found is
+---               SYNTAX 98.900, which says where it was looked for.
+---
+
+::Routine StyleFile Public
+
+  Use Strict Arg style
+
+  If Pos("/", style) + Pos("\", style) > 0 | -
+    style~caselessEndsWith(".css") Then Do
+    exists = Stream( style, "C", "Q Exists" )
+    If exists == "" Then Raise Syntax 98.900 -
+      Array( "The style file '"style"' does not exist" )
+    Return exists
+  End
+
+  file = .context~package~local["CSS.FILE."style]
+  If file \== .Nil Then Do
+    exists = Stream( file, "C", "Q Exists" )
+    If exists == "" Then Raise Syntax 98.900 -
+      Array( "Style '"style"' not found (looked for" file")" )
+    Return exists
+  End
+
+  dirs  = StyleDirectories()
+  where = ""
+  Do dir Over dirs
+    exists = Stream( dir"rexx-"style".css", "C", "Q Exists" )
+    If exists \== "" Then Return exists
+    where ||= ", "dir
+  End
+  Raise Syntax 98.900 Array( "Style '"style"' not found (looked for" -
+    "rexx-"style".css in" SubStr(where, 3)")" )
 
 --- Gets the highlighting associated to a style and a set of classes.
 ---
@@ -182,34 +233,12 @@
 
   Use Strict Arg style, myClasses
 
-  -- Compute the stylesheet file name, if needed: If "style" is
-  -- a simple style name, we look for "css/rexx-"style".css" next to us
-  -- (bin/parser/css/, where an installation keeps the styles), and then
-  -- for "../../css/rexx-"style".css" (the css/ directory of the tree);
-  -- otherwise, we assume that "style" is in itself the file name.
-  --
-  -- In both cases, the file must exist.
-  --
-
-  If Pos(".", style) + Pos("/", style) > 0 Then Do
+  file = StyleFile( style )
+  If Pos("/", style) + Pos("\", style) > 0 | -
+    style~caselessEndsWith(".css") Then Do
     Parse Value Reverse(style) With "ssc."elyts"-xxer"
-    file = style
     style = Reverse(elyts)
   End
-  Else Do
-     -- A style of the author's own (LocalStyle) is found where it was said
-     file = .context~package~local["CSS.FILE."style]
-     If file == .Nil Then Do
-       parse source . . thisPgm
-       pgmDir = filespec(location,thisPgm)
-       file = pgmDir"css/rexx-"style".css"
-       If Stream( file, "C", "Q Exists" ) == "" Then
-         file = pgmDir"../../css/rexx-"style".css"
-     End
-  End
-
-  exists = Stream( file, "C", "Q Exists")
-  If exists = "" Then Call Halt "File '"file"' does not exist."
 
   -- Sort the classes to get a unique key to cache the results
   myClasses = myClasses~makeArray(" ")~sort~makeString("L"," ")
@@ -954,8 +983,22 @@ Return declarations
 /* Utility routines                                                           */
 /******************************************************************************/
 
--- Raise the HALT condition in such a way that a Syntax traceback will
--- offer some readable information.
+-- StyleDirectories - where a style name is looked for: parser/css/, next to
+-- us, and then the directories of REXX_PARSER_STYLE_PATH (separated by ";" on
+-- Windows and ":" elsewhere, as the PATH), each one ending in a separator.
 
-::Routine Halt
-  Interpret "Raise Halt Array('"ChangeStr("'",Arg(1),"''")"')"
+::Routine StyleDirectories
+  sl = .File~separator
+  If sl == "\" Then pathSep = ";"
+               Else pathSep = ":"
+  Parse Source . . thisPgm
+  dirs = .Array~of( FileSpec("Location", thisPgm)"css"sl )
+  list = Value("REXX_PARSER_STYLE_PATH", , "ENVIRONMENT")
+  Do While list \== ""
+    Parse Var list dir (pathSep) list
+    dir = Strip(dir)
+    If dir == "" Then Iterate
+    If \dir~endsWith(sl), \dir~endsWith("/") Then dir ||= sl
+    dirs~append( dir )
+  End
+  Return dirs

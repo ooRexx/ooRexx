@@ -56,6 +56,10 @@
 /*                  #878: everything but parser.cls lives in parser/)         */
 /* 20261121         Common Public License 1.0, and copyright also of the Rexx */
 /*                  Language Association, as the rest of ooRexx (RFE #878)    */
+/* 20261122         width is the width of the whole visible line, its number  */
+/*                  and " | " included (it was one column more without        */
+/*                  numbers, and two less with them); a UTF-8 character       */
+/*                  takes one column, not one per byte                        */
 /*                                                                            */
 /******************************************************************************/
 
@@ -140,20 +144,31 @@ End
   Parse Value self~CachedCSS(style, "rexx") With ":"background
   If background = "" Then Return
   background = color2SGR(background)
-  len = Columns( output[ output~last ] ) - options.!numberWidth - 1
+  -- width is the width of the whole visible line: the line number and
+  -- its " | " included, when there are numbers
+  len = Columns( output[ output~last ] )
   If len >= Options.width Then Return
   self~emit( ANSI( "48;2;"background, Copies(" ",Options.width-len)) )
 Return
 
+-- The visible columns of a line: its characters (not its bytes: a UTF-8
+-- character takes one column), without the SGR sequences
 Columns: Procedure
   Use Strict Arg string
   len = 0
   esc = "1B"x
   Do While string~contains(esc)
     Parse Var string before(esc)"m"string
-    len += Length(before)
+    len += Chars8(before)
   End
-  Return len+Length(string)
+  Return len + Chars8(string)
+
+Chars8: Procedure
+  Use Strict Arg s
+  -- The continuation bytes of UTF-8 (80-BF) are not characters
+  t    = s~translate( Copies("00"x, 64), XRange("80"x, "BF"x) )
+  cont = CountStr("00"x, t) - CountStr("00"x, s)
+  Return Length(s) - cont
 
 ----------
 

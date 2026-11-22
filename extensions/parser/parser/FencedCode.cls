@@ -118,6 +118,10 @@
 /* 20261121         Spots.cls and GridTables.cls are looked for as            */
 /*                  rexxpub/Spots.cls and rexxpub/GridTables.cls in the       */
 /*                  search path, not next to us (RFE #878)                    */
+/* 20261122         Spots.cls and GridTables.cls only in the search path (no  */
+/*                  ../rexxpub/: the parser and RexxPub no longer share a     */
+/*                  tree); the header says that "rexx" is caseless, as it is  */
+/*                  since 20261027                                            */
 /*                                                                            */
 /******************************************************************************/
 
@@ -146,8 +150,7 @@
 -- * The word "rexx" has to follow "```" or "~~~", with or without
 --   intervening blanks or tabs. Code blocks that are not marked with "rexx"
 --   will not be processed by this routine.
--- * Please note that "rexx" has to be written in lowercase (i.e., "Rexx" or
---   "REXX" are not recognized).
+-- * "rexx" is caseless: "Rexx" and "REXX" are recognized too.
 -- * If you want to specify additional attributes, you may do so by enclosing
 --   them between braces after the "rexx" marker. Blanks and/or tabs after
 --   "rexx" and before the left brace are optional.
@@ -272,13 +275,9 @@ package~loadPackage(mypath"HLDrivers/HTML.Driver.cls")
 -- the code in the cells of a grid table (GridTables.cls). They live in the
 -- rexxpub/ directory of RexxPub's package, which may not be installed: we
 -- load them when the search path finds them, and remember whether it did
--- (.FencedCode.Spots and .FencedCode.GridTables). While the parser and
--- RexxPub share a repository, rexxpub/ is also our sibling (../rexxpub/),
--- found without the search path
+-- (.FencedCode.Spots and .FencedCode.GridTables)
 Do optional Over "Spots", "GridTables"
   file   = package~findProgram( "rexxpub/"optional".cls" )
-  If file == .Nil Then
-    file = package~findProgram( mypath"../rexxpub/"optional".cls" )
   isHere = file \== .Nil
   If isHere Then package~loadPackage( file )
   package~local["FENCEDCODE."Upper(optional)] = isHere

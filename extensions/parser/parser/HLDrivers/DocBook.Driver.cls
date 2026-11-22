@@ -86,6 +86,8 @@
 /*                  #878: everything but parser.cls lives in parser/)         */
 /* 20261121         Common Public License 1.0, and copyright also of the Rexx */
 /*                  Language Association, as the rest of ooRexx (RFE #878)    */
+/* 20261122         Whitespace goes without a phrase whatever the class       */
+/*                  prefix (it looked for "rx-ws")                            */
 /*                                                                            */
 /******************************************************************************/
 
@@ -109,12 +111,14 @@ End
   self~say("")
 
 ::Method Highlight
+  Expose Options.
   Use Strict Arg category, subCategory, variant, tags, string
 
   -- Whitespace: emit as-is (XML-escaped, no element wrapper).  A
   -- <phrase> around a run of spaces would carry no information and
   -- would bloat the document for no gain.
-  If tags == "rx-ws" Then Do
+  -- Whitespace goes as it is, whatever the class prefix
+  If tags == Options.classprefix"ws" Then Do
     self~emit( XMLEscape(string) )
     Return
   End

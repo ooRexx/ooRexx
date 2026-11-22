@@ -67,6 +67,8 @@
 /*                  later), not SYNTAX 98.900                                 */
 /* 20261121         Common Public License 1.0, and copyright also of the Rexx */
 /*                  Language Association, as the rest of ooRexx (RFE #878)    */
+/* 20261122         Help: "the parser's stream" (it said "the Parser'         */
+/*                  stream")                                                  */
 /*                                                                            */
 /******************************************************************************/
 
@@ -221,7 +223,7 @@ Error:
   Exit 1
 
 ::Resource HELP
-myname -- Checks that the Parser' stream of elements is identical to a FILE.
+myname -- Checks that the parser's stream of elements is identical to a FILE.
 
 Usage: myname [OPTION]... [FILE]
 

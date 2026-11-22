@@ -53,6 +53,10 @@
 /* 20250622    0.2d Change fg/bg char separator to ":"                        */
 /* 20261121         Common Public License 1.0, and copyright also of the Rexx */
 /*                  Language Association, as the rest of ooRexx (RFE #878)    */
+/* 20261122         A colour may be only a background (":#cc0"); a name that  */
+/*                  is a set of names (BUILTIN) patches each one; every       */
+/*                  colour is rrggbbaa, as those of GetHighlight (#rgb gave   */
+/*                  rrggbb, and a named colour rrggbbaa)                      */
 /*                                                                            */
 /******************************************************************************/
 
@@ -165,7 +169,11 @@ BadMode:
   Use Strict Arg name, attributes
   constant = .EL.TAKEN_CONSTANT
   attr = self~parse( attributes )
-  Tag2Attr.constant.name = attr
+  -- A name may be a set of names (BUILTIN is BUILTIN.FUNCTION and
+  -- BUILTIN.SUBROUTINE): one character each
+  Do c Over name~makeArray("")
+    Tag2Attr.constant.c = attr
+  End
 
 ::Method Add
   Expose Tag2Attr.
@@ -219,7 +227,9 @@ BadMode:
             bg = Normalize(bg)
           End
         End
-        If color[1] \== "#" Then Do
+        -- ":bg" alone: only the background
+        If color == "" Then Nop
+        Else If color[1] \== "#" Then Do
           fg = .HTML.Color[color]
           If fg == "" Then Signal BadColor
           fg = fg || "ff"
@@ -236,14 +246,16 @@ BadMode:
   If no Then Signal BadFinalNo
   Return b i u fg":"bg
 
+-- Always rrggbbaa, as GetHighlight and the named colors
 Normalize:
   col = .HTML.Color[Arg(1)]
-  If col \== "" Then Return col
+  If col \== "" Then Return col"ff"
   Select Case Length(Arg(1))
-    When 6, 8 Then Return Arg(1)
+    When 6 Then Return Arg(1)"ff"
+    When 8 Then Return Arg(1)
     When 3 Then Do
       Parse Value Arg(1) With a +1 b +1 c +1
-      Return Space( a a b b c c , 0 )
+      Return Space( a a b b c c , 0 )"ff"
     End
     When 4 Then Do
       Parse Value Arg(1) With r +1 g +1 b +1 a +1

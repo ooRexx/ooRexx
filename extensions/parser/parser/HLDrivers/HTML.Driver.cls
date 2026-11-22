@@ -62,6 +62,8 @@
 /*                  #878: everything but parser.cls lives in parser/)         */
 /* 20261121         Common Public License 1.0, and copyright also of the Rexx */
 /*                  Language Association, as the rest of ooRexx (RFE #878)    */
+/* 20261122         The colours of a style patch are #rrggbb when they are    */
+/*                  opaque, #rrggbbaa otherwise (CSSColor)                    */
 /*                                                                            */
 /******************************************************************************/
 
@@ -178,8 +180,9 @@ If \.environment~hasIndex( HTML.Highlighter ) Then
           Otherwise Nop
         End
       End
-      If color      \== "" Then style ||= "color:#"color"; "
-      If background \== "" Then style ||= "background-color:#"background"; "
+      If color      \== "" Then style ||= "color:#"CSSColor(color)"; "
+      If background \== "" Then
+        style ||= "background-color:#"CSSColor(background)"; "
 
       self~say( "#"id "."lastClass "{"style"}" )
 
@@ -490,3 +493,11 @@ If \.environment~hasIndex( HTML.Highlighter ) Then
   v = v~changeStr('"', "&quot;")
   v = v~changeStr("<", "&lt;")
   Return v~changeStr(">", "&gt;")
+
+-- CSSColor - a colour of a style patch (rrggbbaa) as CSS writes it: rrggbb
+-- when it is opaque, rrggbbaa otherwise
+::Routine CSSColor
+  Use Strict Arg rgba
+  If Length(rgba) == 8, Lower(Right(rgba, 2)) == "ff" Then
+    Return Left(rgba, 6)
+  Return rgba
