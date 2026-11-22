@@ -141,7 +141,7 @@
 -- ****  Change it with every refresh, as the line of the readme.  ****
 -- (A test of RexxPub, in Md2slidesVersion.testGroup, checks that both say
 -- the same.)
-::Constant version "0.7 20261121"
+::Constant version "0.7 20261122"
 
 ::Attribute package
 
