@@ -58,6 +58,9 @@ In `samples/`, installed with the samples:
                       below) compiles a program to an identical copy of it
 - `identtest.rex` ... runs elident and trident on every `.rex` and `.cls`
                       file of a directory tree
+- `erexx.rex`     ... translates a program that uses the experimental class
+                      extensions to standard ooRexx, with a compiler built
+                      on the identity compiler, and runs it
 
 Their first line, `#!@OOREXX_SHEBANG_PROGRAM@`, is adjusted by the build, as
 the one of `rexxtry.rex`.
@@ -81,6 +84,14 @@ In `parser/modules/`:
                                the tree (clauses, directives, expressions,
                                instructions, iterations and parsing
                                templates)
+- `experimental/`          ... the class extensions of the `EXPERIMENTAL`
+                               option: `classextensions.cls`, a compiler
+                               built on the identity compiler that
+                               translates them to standard ooRexx (it is
+                               what `erexx` uses), and
+                               `EnableExperimentalFeatures.rex`, which a
+                               translated program calls to add the methods
+                               to their classes
 
 A program uses the identity compiler with
 
