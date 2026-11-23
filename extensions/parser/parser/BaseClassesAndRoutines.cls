@@ -99,6 +99,9 @@
 /* 20261122         Rexx.Instruction~terminating is 0 by default (init        */
 /*                  assigned a local variable, and the attribute returned its */
 /*                  own name)                                                 */
+/* 20261123         No table constructors ("[...]", inspired by NetRexx and   */
+/*                  Lua, with EXPERIMENTAL): an experiment that was not       */
+/*                  followed                                                  */
 /*                                                                            */
 /******************************************************************************/
 
@@ -849,8 +852,7 @@ Error:
 --------------------------------------------------------------------------------
 -- PREPAREEXPRESSION                                                          --
 --   Performs a quick scan and sanitizing of an expression list.              --
---   It produces syntax errors for opening brackets preceded by whitespace,   --
---     except when Experimental options are active.                           --
+--   It produces syntax errors for opening brackets preceded by whitespace.   --
 --   It stops prescanning if one the provided keywords is found, and in this  --
 --     case, it marks the keyword as such, which automatically marks          --
 --     whitespace before and after the keyword, if any, as ignorable.         --
@@ -936,13 +938,8 @@ Error:
         nesting~append( element )
         Call CheckAbuttal
       End
-      -- A left bracket can be found alone when experimental options
-      -- are active, as this will start a table constructor (a modified
-      -- form of an "initializer", in Dallas draft parlance, or "array
-      -- initializers" in NetRexx).
       When .EL.LEFT_BRACKET Then Do
-        If \.Options.Experimental, \predecessor~isNil, -
-          predecessor < .ALL.WHITESPACE_LIKE Then
+        If \predecessor~isNil, predecessor < .ALL.WHITESPACE_LIKE Then
           Call 35.001 "["
         nesting~append( element )
       End
@@ -985,9 +982,9 @@ Error:
   lastItem = nesting~lastItem
   Parse Value lastItem~from With line pos
   If lastItem < .EL.LEFT_PARENTHESIS Then Call UnclosedParenthesis
-  -- An unclosed "[" that does not follow a term (a table constructor, only
-  -- with experimental features) is 35.1 in ooRexx, whatever it holds.
-  If lastItem < .EL.LEFT_BRACKET, \.Options.Experimental Then Do
+  -- An unclosed "[" that does not follow a term is 35.1 in ooRexx, whatever
+  -- it holds.
+  If lastItem < .EL.LEFT_BRACKET Then Do
     prev = lastItem~prev
     If prev == .Nil Then prev = lastItem
     If prev \< .ALL.SYMBOLS_AND_STRINGS, prev \< .ALL.RIGHT_BRACES Then Do

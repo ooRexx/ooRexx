@@ -80,6 +80,9 @@
 /*                  Language Association, as the rest of ooRexx (RFE #878)    */
 /* 20261122         The first element of a compound variable no longer gets a */
 /*                  term (Element~term is gone)                               */
+/* 20261123         No table constructors ("[...]", inspired by NetRexx and   */
+/*                  Lua, with EXPERIMENTAL): an experiment that was not       */
+/*                  followed                                                  */
 /*                                                                            */
 /******************************************************************************/
 
@@ -92,7 +95,6 @@
  .environment ~ Comparison.Expression      = .Comparison.Expression
  .environment ~ Multiplication.Expression  = .Multiplication.Expression
  .environment ~ Or.Expression              = .Or.Expression
- .environment ~ Initializer                = .Initializer
  .environment ~ Source.Literal             = .Source.Literal
  .environment ~ Lambda.Expression          = .Lambda.Expression
  .environment ~ Prefix.Expression          = .Prefix.Expression
@@ -941,15 +943,12 @@ Missing: Syntax( missing, Arg(1) )
 
   Use Strict Arg package, begin, terminators
 
-  allowInitializers = .Options.Experimental
 
   Select
     When begin < .EL.LEFT_CURLY_BRACKET Then
       Exit Source.Literal( package, begin, "" )
     When begin < .EL.LEFT_PARENTHESIS Then
       Exit SubExpression( package, begin, terminators )
-    When allowInitializers, begin < .EL.LEFT_BRACKET Then
-      Exit Initializer( package, begin, terminators )
     When begin < .ALL.SYMBOLS Then Do
       symbol = begin
 
@@ -1011,140 +1010,6 @@ Missing: Syntax( missing, Arg(1) )
 
 -- Incorrect expression detected at "&1".
 35.001: Syntax( 35.001, begin, Arg(1) )
-
-/******************************************************************************/
-/*                                                                            */
-/* INITIALIZER                                                                */
-/*                                                                            */
-/*   Parsing of extended initializers inspired by NetRexx and Lua             */
-/*                                                                            */
-/*   An "initializer" is an array expression in the Dallas report:            */
-/*     initializer := '['expression_list (']' | Msg36.n)                      */
-/*   The syntax is probably taken from NetRexx.                               */
-/*                                                                            */
-/*   We combine that with the following productions, taken from the syntax    */
-/*   of Lua 5.5 beta:                                                         */
-/*     tableconstructor ::= '{' [fieldlist] '}'                               */
-/*     fieldlist        ::= field {fieldsep field} [fieldsep]                 */
-/*     field            ::= '[' exp ']' '=' exp | Name '=' exp | exp          */
-/*     fieldsep         ::= ',' | ';'                                         */
-/*                                                                            */
-/*   In our case, the outer brackets will be "[" and "]", left-hand side      */
-/*   bracketed expressions will use parentheses,                              */
-/*     '(' exp ')' '=' exp                                                    */
-/*   and the field separator has to be a comma ",", with no optional          */
-/*   trailing separator.                                                      */
-/*                                                                            */
-/******************************************************************************/
-
-::Routine Initializer
-
-  Use Strict Arg package, begin, terminators
-
-  terminators = .EL.RIGHT_BRACKET
-
-  fieldList      = Array()
-  element        = TheElementAfter(begin)
-  If element < .EL.RIGHT_BRACKET Then Signal Done
-  stopParsing    = .EL.KEYWORD || .EL.END_OF_CLAUSE
-  terminators  ||= stopParsing
-  commasFound    = 0
-
-  newTerminators = terminators || .EL.COMMA
-
-  Loop While element \< terminators
-
-    lhs = .Nil
-    If element < .ALL.OPS.ADDITIVE Then Do
-      next = TheElementAfter(element)
-      If next < .EL.INTEGER_NUMBER Then Do
-        next2 = TheElementAfter(next)
-        If next2 = .EL.OP.EQUAL Then Do
-          lhs = Prefix.Expression(package, element, .EL.OP.EQUAL)
-          element = TheElementAfter( next2 )
-        End
-      End
-    End
-    Else If element < .ALL.SYMBOLS_AND_STRINGS Then Do
-      next = TheElementAfter(element)
-      If next < .EL.OP.EQUAL Then Do
-        lhs     = element
-        Call SetConstantName lhs, .TABLE.FIELD.NAME
-        element = TheElementAfter( next )
-      End
-    End
-    Else If element < .EL.LEFT_PARENTHESIS Then Do
-      -- Prepareexpression has ensured that parentheses
-      -- and brackets are balanced.
-      Stack = .Array~of("(")
-      next = TheElementAfter( element )
-      Loop
-        If next < (.EL.LEFT_PARENTHESIS || .EL.LEFT_BRACKET) Then
-          Stack~append(next~value)
-        Else If next < (.EL.RIGHT_PARENTHESIS || .EL.RIGHT_BRACKET) Then
-          Stack~delete(Stack~items)
-        next = TheElementAfter( next )
-        If Stack~items > 0 Then Iterate
-        If next < .EL.OP.EQUAL Then Do
-          next1 = TheElementAfter( element )
-          lhs = Or.Expression(package, next1, .EL.RIGHT_PARENTHESIS)
-          element = TheElementAfter( next )
-        End
-        Leave
-      End
-    End
-
-    field = Or.Expression(package, element, newTerminators)
-    element = field~end
-    fieldList~append( (lhs, field) )
-
-  If element \< .EL.COMMA Then Leave
-
-    element = TheElementAfter( element )
-
-    Loop While element < .EL.COMMA
-      fieldList~append( .Nil )
-      element = TheElementAfter( element )
-    End
-
-  End
-
-  If element \< .EL.RIGHT_BRACKET Then Do
-    Parse Value element~from With line Pos
-    Signal 36.902
-  End
-
-Done:
-  Return .Initializer~new( fieldList, begin, element )
-
--- Square bracket "[" in position &1 on line &2 requires
--- a corresponding right square bracket "]".
-36.902: Syntax( 36.902, element, pos, line)
-
---------------------------------------------------------------------------------
-
-::Class Initializer Public SubClass Rexx.Expression
-::Attribute fields
-::Attribute begin
-::Attribute end
-::Attribute args
-::Method arg
-  Expose fields
-  Arg n, option +1
-  Select Case Arg()
-    When 0 Then Return fields~size
-    When 1 Then Return fields[n]
-    Otherwise
-      Select Case option
-        When "E" Then Return  fields~hasIndex(n)
-        When "O" Then Return \fields~hasIndex(n)
-      End
-  End
-::Method init
-  Expose args fields begin end
-  Use Strict Arg args, begin, end
-  end = end~next
-  fields = args
 
 --------------------------------------------------------------------------------
 -- ARRAY.TERM                                                                 --

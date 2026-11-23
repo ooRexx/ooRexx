@@ -73,6 +73,7 @@
 /*                  under CMS or Executor                                     */
 /* 20261121         Common Public License 1.0, and copyright also of the Rexx */
 /*                  Language Association, as the rest of ooRexx (RFE #878)    */
+/* 20261123         No TABLE.FIELD.NAME: no table constructors                */
 /*                                                                            */
 /******************************************************************************/
 
@@ -663,9 +664,6 @@ SkipOverTheInternalRoutines:            -- Main code continues here
   Call NewConstant ROUTINE.NAME
   Call NewConstant USER.CONDITION.NAME
   Call NewConstant ARGUMENT.NAME          -- For Executor named arguments
-
-  -- Experimental names
-  Call NewConstant TABLE.FIELD.NAME       -- The name of a table field
 
   -- Constant that are not names, but values
   Call NewConstant ANNOTATION.VALUE       -- Not including the optional sign

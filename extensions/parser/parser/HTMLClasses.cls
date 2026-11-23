@@ -62,6 +62,7 @@
 /* 20251213         Add support for curly brackets and argument names         */
 /* 20261121         Common Public License 1.0, and copyright also of the Rexx */
 /*                  Language Association, as the rest of ooRexx (RFE #878)    */
+/* 20261123         No TABLE.FIELD.NAME: no table constructors                */
 /*                                                                            */
 /******************************************************************************/
 
@@ -559,8 +560,6 @@ SkipOverConstant:
   Call Constant .RESOURCE.NAME,                    "resource"
   Call Constant .RESOURCE.DELIMITER.NAME,          "res-delimiter"
   Call Constant .USER.CONDITION.NAME,              "user-condition"
-
-  Call Constant .TABLE.FIELD.NAME,                 "table-field-name"
 
   Call Constant .ANNOTATION.VALUE,                 "annotation-value"
   Call Constant .CONSTANT.VALUE,                   "constant-value"
