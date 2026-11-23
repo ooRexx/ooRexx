@@ -1136,6 +1136,43 @@ NumberString * RexxInternalObject::numberString()
 
 
 /**
+ * Check the answer of a method that should give a string value (REQUEST,
+ * STRING, OBJECTNAME, MAKESTRING, which can all be Rexx methods) and force
+ * it to a primitive string.
+ *
+ * @param answer The answer, possibly OREF_NULL.
+ *
+ * @return The primitive string, or .nil if there was no answer or the
+ *         answer has no primitive string value.
+ */
+static RexxString *primitiveStringOrNil(RexxInternalObject *answer)
+{
+    return answer == OREF_NULL ? (RexxString *)TheNilObject : answer->primitiveMakeString();
+}
+
+
+/**
+ * Check the answer of a STRING method.  Besides what
+ * primitiveStringOrNil() accepts, an object that converts through the
+ * request mechanism (it has a MAKESTRING method) is accepted too.
+ *
+ * @param answer The answer, possibly OREF_NULL.
+ *
+ * @return The primitive string, or .nil if there was no acceptable answer.
+ */
+static RexxString *stringAnswerOrNil(RexxInternalObject *answer)
+{
+    RexxString *string_value = primitiveStringOrNil(answer);
+    // one level only: makeString() checks what REQUEST answers itself
+    if (string_value == TheNilObject && answer != OREF_NULL && !answer->isBaseClass())
+    {
+        string_value = answer->makeString();
+    }
+    return string_value;
+}
+
+
+/**
  * Convert a primitive internal object to a string value
  *
  * @return The string value of the internal object, which is always
@@ -1160,7 +1197,15 @@ RexxString *RexxInternalObject::stringValue()
 RexxString *RexxObject::stringValue()
 {
     ProtectedObject result;
-    return (RexxString *)sendMessage(GlobalNames::OBJECTNAME, result);
+    sendMessage(GlobalNames::OBJECTNAME, result);
+    // OBJECTNAME can be redefined: an answer that is no value or has no
+    // string value gives the default name, which needs no method
+    RexxString *name = primitiveStringOrNil((RexxInternalObject *)result);
+    if (name == TheNilObject)
+    {
+        return defaultName();
+    }
+    return name;
 }
 
 
@@ -1191,7 +1236,10 @@ RexxString *RexxInternalObject::makeString()
     else
     {
         ProtectedObject result;
-        return (RexxString *)resultOrNil(((RexxObject *)this)->sendMessage(GlobalNames::REQUEST, GlobalNames::STRING, result));
+        ((RexxObject *)this)->sendMessage(GlobalNames::REQUEST, GlobalNames::STRING, result);
+        // REQUEST can be redefined: an answer that is no value or has no
+        // string value does not convert
+        return primitiveStringOrNil((RexxInternalObject *)result);
     }
 }
 
@@ -1258,34 +1306,25 @@ RexxString *RexxInternalObject::requestString()
 
         ((RexxObject *)this)->sendMessage(GlobalNames::REQUEST, GlobalNames::STRING, string_value);
         // The returned value might be an Integer or NumberString value.  We need to
-        // force this to be a real string value.
-        string_value = ((RexxObject *)string_value)->primitiveMakeString();
+        // force this to be a real string value.  REQUEST can be redefined: no
+        // value, or an answer with no string value, means it did not convert.
+        string_value = primitiveStringOrNil((RexxInternalObject *)string_value);
 
         // if this did not convert, we send the STRING message to get a value
         if ((RexxObject *)string_value == TheNilObject)
         {
             ((RexxObject *)this)->sendMessage(GlobalNames::STRING, string_value);
             // we're really dependent upon the program respecting the protocol
-            // here and returning a value.  It is possible there is a
-            // problem, so how to handle this.  We could just raise an error, but this
-            // isn't the most ideal message since the error is raised at the
-            // line where the string value is required, but this is a rare
-            // situation.  As a fallback, use the default object STRING method,
-            // then raise an error if we still don't get anything.  This at least
-            // keeps the interpreter from crashing, there's a good chance the
-            // program will run.  Frankly, there's something seriously wrong
-            // if this error ever gets issued.
-            if (((RexxObject *)string_value) == OREF_NULL)
+            // here and returning a string value.  When it does not (no value,
+            // or an object with no string value), we use the default STRING,
+            // and in the end the default name.  Raising an error here is not
+            // a good idea: we may be building a trace line or an error message.
+            string_value = stringAnswerOrNil((RexxInternalObject *)string_value);
+            if ((RexxObject *)string_value == TheNilObject)
             {
+                // this always gives a string (the default name in the end)
                 string_value = stringValue();
-                if (((RexxObject *)string_value) == OREF_NULL)
-                {
-                    reportException(Error_No_result_object_message, GlobalNames::STRING);
-                }
             }
-            // The returned value might be an Integer or NumberString value.  We need to
-            // force this to be a real string value.
-            string_value = ((RexxObject *)string_value)->primitiveMakeString();
             // raise a NOSTRING condition
             ActivityManager::currentActivity.load()->raiseCondition(GlobalNames::NOSTRING, OREF_NULL, (RexxString *)string_value, (RexxObject *)this, OREF_NULL);
         }
@@ -1322,12 +1361,17 @@ RexxString *RexxInternalObject::requestStringNoNOSTRING()
         // have to do this via message sends
         ProtectedObject string_value;
         ((RexxObject *)this)->sendMessage(GlobalNames::REQUEST, GlobalNames::STRING, string_value);
+        // the same checks as requestString()
+        string_value = primitiveStringOrNil((RexxInternalObject *)string_value);
         if ((RexxObject *)string_value == TheNilObject)
         {
             ((RexxObject *)this)->sendMessage(GlobalNames::STRING, string_value);
+            string_value = stringAnswerOrNil((RexxInternalObject *)string_value);
+            if ((RexxObject *)string_value == TheNilObject)
+            {
+                string_value = stringValue();
+            }
         }
-
-        // we better get something here.
         return (RexxString *)string_value;
     }
 }

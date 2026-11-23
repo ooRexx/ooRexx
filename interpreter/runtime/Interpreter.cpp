@@ -779,12 +779,8 @@ wholenumber_t Interpreter::messageNumber(RexxString *errorcode, bool isThrow)
  */
 wholenumber_t Interpreter::syntaxErrorNumber(RexxObject *rc, bool isThrow)
 {
-    // the RC must have a string value
+    // the string value of the RC (requestString() always gives a string)
     RexxString *errorcode = rc->requestString();
-    if (errorcode == TheNilObject)
-    {
-        reportException(isThrow ? Error_Conversion_throw : Error_Conversion_raise, rc);
-    }
 
     wholenumber_t number = messageNumber(errorcode, isThrow);
     wholenumber_t primary = (number / 1000) * 1000;
