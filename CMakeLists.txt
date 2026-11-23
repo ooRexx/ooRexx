@@ -1737,13 +1737,13 @@ foreach (parser_file ${parser_files})
     list(APPEND parser_build_files ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${parser_file})
 endforeach ()
 # Its utilities, with the shebang line adjusted: highlight, fencedcode and
-# rexxcheck go to the bin directory, as rexxtry; elements, elident and rxcomp
-# are samples
+# rexxcheck go to the bin directory, as rexxtry; elements, elident, rxcomp,
+# trident and identtest are samples
 foreach (parser_utility highlight.rex fencedcode.rex rexxcheck.rex)
     configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${build_extensions_parser_dir}/utilities/${parser_utility}
                    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${parser_utility} @ONLY)
 endforeach ()
-foreach (parser_sample elements.rex elident.rex rxcomp.rex)
+foreach (parser_sample elements.rex elident.rex rxcomp.rex trident.rex identtest.rex)
     configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${build_extensions_parser_dir}/samples/${parser_sample}
                    ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/${parser_sample} @ONLY)
 endforeach ()
@@ -1907,6 +1907,8 @@ install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/usetree.rex COMPONENT Samples
 install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/elements.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/elident.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/rxcomp.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/trident.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
+install(PROGRAMS ${CMAKE_SAMPLES_OUTPUT_DIRECTORY}/identtest.rex COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 
 install(PROGRAMS ${SAMPLES_SOURCE}/cmdhandlers.cls COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})
 install(PROGRAMS ${SAMPLES_SOURCE}/complex.cls COMPONENT Samples DESTINATION ${INSTALL_SAMPLES_DIR})

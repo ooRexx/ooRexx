@@ -30,11 +30,12 @@ These are the files that should be deployed in installations:
 
 - `parser.cls`          ... `bin` directory or equivalent
 - `parser/`             ... a `parser` directory next to `parser.cls`, with
-                            its three subdirectories:
+                            its four subdirectories:
   - `parser/HLDrivers/` ... the highlighter's drivers (ANSI, HTML, DocBook)
   - `parser/css/`       ... the style sheets (`rexx-<style>.css`)
   - `parser/resources/` ... the Unicode Character Database files used by the
                             TUTOR-flavoured Unicode support
+  - `parser/modules/`   ... the parser's modules (see *Modules*, below)
 
 ## Utilities
 
@@ -48,14 +49,53 @@ In `utilities/`, installed in the `bin` directory, next to `rexxtry.rex`:
 
 In `samples/`, installed with the samples:
 
-- `elements.rex` ... lists the elements of a program, as the parser returns
-                     them
-- `elident.rex`  ... checks that the elements put back together are the
-                     program
-- `rxcomp.rex`   ... compares two programs element by element
+- `elements.rex`  ... lists the elements of a program, as the parser returns
+                      them
+- `elident.rex`   ... checks that the elements put back together are the
+                      program
+- `rxcomp.rex`    ... compares two programs element by element
+- `trident.rex`   ... checks that the identity compiler (see *Modules*,
+                      below) compiles a program to an identical copy of it
+- `identtest.rex` ... runs elident and trident on every `.rex` and `.cls`
+                      file of a directory tree
 
 Their first line, `#!@OOREXX_SHEBANG_PROGRAM@`, is adjusted by the build, as
 the one of `rexxtry.rex`.
+
+## Modules
+
+In `parser/modules/`:
+
+- `Load.Parser.Module.rex` ... the loader of the parser's modules: a module
+                               adds methods to the parser's classes, and
+                               calls the loader to define them
+- `identity.cls`           ... the identity compiler: it compiles a program,
+                               through the parser's tree, to an identical copy
+                               of itself, and so it is a skeleton for other
+                               compilers. It requires the files of
+                               `identity/`
+- `identity/`              ... the compiler: `compile.cls`, with the
+                               routines that compilers built on it use
+                               (`Clone` and `PrepareClause`), and the files
+                               that add a `compile` method to the classes of
+                               the tree (clauses, directives, expressions,
+                               instructions, iterations and parsing
+                               templates)
+
+A program uses the identity compiler with
+
+```rexx
+::Requires "parser.cls"
+::Requires "parser/modules/identity.cls"
+```
+
+and, for a `parser = .Rexx.Parser~new(name, source)`, compiles the program
+with `parser~package~compile(parser~firstElement, stream, .StringTable~new)`,
+where `stream` is an output stream (or anything that understands `say` and
+`charOut`). A compiler built on it gives its own `compile` method to the
+classes that it translates, with `Load.Parser.Module.rex`; `Clone` and
+`PrepareClause`, in `identity/compile.cls`, help to write them. See the
+chapter *The Tree* of the book *The Rexx Parser*.
 
 ## ooRexx Test Suite
 
