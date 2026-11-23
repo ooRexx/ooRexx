@@ -2094,6 +2094,7 @@ if (DOC_SOURCE_DIR)
    install(FILES ${build_extensions_oodialog_dir}/ooDialog_ReleaseNotes.txt COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
    install(FILES ${DOC_SOURCE_DIR}/oodguide.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
    install(FILES ${DOC_SOURCE_DIR}/rexxextensions.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+   install(FILES ${DOC_SOURCE_DIR}/rexxparser.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
    install(FILES ${DOC_SOURCE_DIR}/winextensions.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
    install(FILES ${SAMPLES_SOURCE}/windows/oodialog/ooRexxTry/doc/ooRexxTry.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
 
@@ -2110,6 +2111,7 @@ if (DOC_SOURCE_DIR)
    install_doc_shortcut("ooDialog Release Notes" "ooDialog_ReleaseNotes.txt")
    install_doc_shortcut("ooDialog User Guide" "oodguide.pdf")
    install_doc_shortcut("ooRexx Extensions Reference" "rexxextensions.pdf")
+   install_doc_shortcut("ooRexx Rexx Parser Reference" "rexxparser.pdf")
    install_doc_shortcut("ooRexx Windows Reference" "winextensions.pdf")
    install_doc_shortcut("ooRexxTry Reference" "ooRexxTry.pdf")
 
@@ -2163,6 +2165,7 @@ if (DOC_SOURCE_DIR)
                  ${DOC_SOURCE_DIR}/oodialog.pdf
                  ${DOC_SOURCE_DIR}/oodguide.pdf
                  ${DOC_SOURCE_DIR}/rexxextensions.pdf
+                 ${DOC_SOURCE_DIR}/rexxparser.pdf
                  ${DOC_SOURCE_DIR}/winextensions.pdf
                  ${build_platform_dir}/install/cpack.nsi
          VERBATIM
@@ -2235,6 +2238,7 @@ if (DOC_SOURCE_DIR)
 
 	   install(FILES ${DOC_SOURCE_DIR}/rexxapi.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
 	   install(FILES ${DOC_SOURCE_DIR}/rexxextensions.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
+	   install(FILES ${DOC_SOURCE_DIR}/rexxparser.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
 
 	   install(FILES ${DOC_SOURCE_DIR}/rexxpg.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
 	   install(FILES ${DOC_SOURCE_DIR}/rexxref.pdf COMPONENT Docs DESTINATION ${INSTALL_DOC_DIR})
