@@ -624,7 +624,120 @@ typedef struct RxSemData
 {
      bool          named;               /* Named semaphore?           */
      sem_t *handle;              /* Semaphore pointer          */
+     struct RxSemData *next;     /* next live semaphore        */
 } RXSEMDATA;
+
+
+/*************************************************************************
+* The handle a program gets is the address of its RXSEMDATA.  A handle   *
+* that was closed, rounded by arithmetic or made up would be used as an  *
+* address and crash, so every live semaphore is kept in a list, and a    *
+* handle is only used if it is one of them (the list is searched by      *
+* value, a handle is never dereferenced before it is found).             *
+*************************************************************************/
+
+static RXSEMDATA *liveSemaphores = NULL;
+static pthread_mutex_t liveSemaphoresLock = PTHREAD_MUTEX_INITIALIZER;
+
+
+/**
+ * Add a newly created or opened semaphore to the live list.
+ *
+ * @param semdata The semaphore data.
+ *
+ * @return The handle to give back to the program.
+ */
+static uintptr_t registerSemaphore(RXSEMDATA *semdata)
+{
+    pthread_mutex_lock(&liveSemaphoresLock);
+    semdata->next = liveSemaphores;
+    liveSemaphores = semdata;
+    pthread_mutex_unlock(&liveSemaphoresLock);
+    return (uintptr_t)semdata;
+}
+
+
+/**
+ * Find a live semaphore by its handle.  The caller must hold
+ * liveSemaphoresLock.
+ *
+ * @param vhandle The handle given by the program.
+ *
+ * @return The semaphore data, or NULL if the handle names no live semaphore.
+ */
+static RXSEMDATA *findSemaphoreLocked(uintptr_t vhandle)
+{
+    for (RXSEMDATA *semdata = liveSemaphores; semdata != NULL; semdata = semdata->next)
+    {
+        if ((uintptr_t)semdata == vhandle)
+        {
+            return semdata;
+        }
+    }
+    return NULL;
+}
+
+
+/**
+ * Find a live semaphore by its handle.
+ *
+ * @param vhandle The handle given by the program.
+ *
+ * @return The semaphore data, or NULL if the handle names no live semaphore.
+ */
+static RXSEMDATA *findSemaphore(uintptr_t vhandle)
+{
+    pthread_mutex_lock(&liveSemaphoresLock);
+    RXSEMDATA *semdata = findSemaphoreLocked(vhandle);
+    pthread_mutex_unlock(&liveSemaphoresLock);
+    return semdata;
+}
+
+
+/**
+ * Close a semaphore and, if that worked, remove it from the live list and
+ * free it.  Shared by SysCloseEventSem and SysCloseMutexSem.
+ *
+ * @param vhandle The handle given by the program.
+ *
+ * @return 0, 6 if the handle names no live semaphore, or 102.
+ */
+static int closeSemaphore(uintptr_t vhandle)
+{
+    pthread_mutex_lock(&liveSemaphoresLock);
+    RXSEMDATA *semdata = findSemaphoreLocked(vhandle);
+    if (semdata == NULL)
+    {
+        pthread_mutex_unlock(&liveSemaphoresLock);
+        return 6;
+    }
+
+    // an unnamed semaphore is destroyed, a named one is closed
+    int rc = semdata->named ? sem_close(semdata->handle) : sem_destroy(semdata->handle);
+    if (rc != 0)
+    {
+        int error = errno;
+        pthread_mutex_unlock(&liveSemaphoresLock);
+        return error == EINVAL ? 6 : 102;
+    }
+
+    // unchain it
+    RXSEMDATA **link = &liveSemaphores;
+    while (*link != semdata)
+    {
+        link = &(*link)->next;
+    }
+    *link = semdata->next;
+    pthread_mutex_unlock(&liveSemaphoresLock);
+
+    if (!semdata->named)
+    {
+        // the sem_t of an unnamed semaphore was allocated by us
+        free(semdata->handle);
+    }
+    free(semdata);
+    return 0;
+}
 
 
 /*************************************************************************
@@ -655,9 +768,10 @@ RexxRoutine2(RexxObjectPtr, SysCreateEventSem, OPTIONAL_CSTRING, name, OPTIONAL_
     {
         /* this is an unnamed semaphore */
         semdata->handle = (sem_t *)malloc(sizeof(sem_t));
-        rc = sem_init(semdata->handle, 0, 0);
+        rc = semdata->handle == NULL ? -1 : sem_init(semdata->handle, 0, 0);
         if (rc == -1)
         {
+            free(semdata->handle);
             free(semdata);
             return context->String("");
         }
@@ -674,7 +788,7 @@ RexxRoutine2(RexxObjectPtr, SysCreateEventSem, OPTIONAL_CSTRING, name, OPTIONAL_
         }
         semdata->named = true;
     }
-    return context->Uintptr((uintptr_t)semdata);
+    return context->Uintptr(registerSemaphore(semdata));
 }
 
 
@@ -699,10 +813,11 @@ RexxRoutine1(uintptr_t, SysOpenEventSem, CSTRING, name)
     semdata->handle = sem_open(name, 0);
     if (semdata->handle == SEM_FAILED)
     {
+        free(semdata);
         return 0;
     }
     semdata->named = true;
-    return (uintptr_t)semdata;
+    return registerSemaphore(semdata);
 }
 
 
@@ -718,7 +833,11 @@ RexxRoutine1(uintptr_t, SysOpenEventSem, CSTRING, name)
 
 RexxRoutine1(int, SysResetEventSem, uintptr_t, vhandle)
 {
-    RXSEMDATA *semdata = (RXSEMDATA *)vhandle;
+    RXSEMDATA *semdata = findSemaphore(vhandle);
+    if (semdata == NULL)
+    {
+        return 6;
+    }
 
     sem_init(semdata->handle, 1, 0);
     return 0;
@@ -737,7 +856,11 @@ RexxRoutine1(int, SysResetEventSem, uintptr_t, vhandle)
 
 RexxRoutine1(int, SysPostEventSem, uintptr_t, vhandle)
 {
-    RXSEMDATA *semdata = (RXSEMDATA *)vhandle;
+    RXSEMDATA *semdata = findSemaphore(vhandle);
+    if (semdata == NULL)
+    {
+        return 6;
+    }
     int rc;
 
     rc = sem_post(semdata->handle);
@@ -761,40 +884,7 @@ RexxRoutine1(int, SysPostEventSem, uintptr_t, vhandle)
 
 RexxRoutine1(int, SysCloseEventSem, uintptr_t, vhandle)
 {
-    RXSEMDATA *semdata = (RXSEMDATA *)vhandle;
-
-    if (semdata->named == false)
-    {
-        /* this is an unnamed semaphore so we must free the target */
-        if (sem_destroy(semdata->handle))
-        {
-            if (errno == EINVAL)
-            {
-                return 6;
-            }
-            else if (errno)
-            {
-                return 102;
-            }
-        }
-    }
-    else
-    {
-        /* this is a named semaphore */
-        if (sem_close(semdata->handle))
-        {
-            if (errno == EINVAL)
-            {
-                return 6;
-            }
-            else if (errno)
-            {
-                return 102;
-            }
-        }
-    }
-    free(semdata);
-    return 0;
+    return closeSemaphore(vhandle);
 }
 
 
@@ -813,7 +903,11 @@ RexxRoutine1(int, SysCloseEventSem, uintptr_t, vhandle)
 
 RexxRoutine2(int, SysWaitEventSem, uintptr_t, vhandle, OPTIONAL_int, timeout)
 {
-    RXSEMDATA *semdata = (RXSEMDATA *)vhandle;
+    RXSEMDATA *semdata = findSemaphore(vhandle);
+    if (semdata == NULL)
+    {
+        return 6;
+    }
     int rc = 0;
 
     if (timeout != 0)
@@ -881,9 +975,10 @@ RexxRoutine1(RexxObjectPtr, SysCreateMutexSem, OPTIONAL_CSTRING, name)
     {
         /* this is an unnamed semaphore */
         semdata->handle = (sem_t *)malloc(sizeof(sem_t));
-        rc = sem_init(semdata->handle, 0, 0);
+        rc = semdata->handle == NULL ? -1 : sem_init(semdata->handle, 0, 0);
         if (rc == -1)
         {
+            free(semdata->handle);
             free(semdata);
             return context->String("");
         }
@@ -901,7 +996,7 @@ RexxRoutine1(RexxObjectPtr, SysCreateMutexSem, OPTIONAL_CSTRING, name)
         semdata->named = true;
     }
     rc = sem_post(semdata->handle);
-    return context->Uintptr((uintptr_t)semdata);
+    return context->Uintptr(registerSemaphore(semdata));
 }
 
 
@@ -927,10 +1022,11 @@ RexxRoutine1(uintptr_t, SysOpenMutexSem, CSTRING, name)
     semdata->handle = sem_open(name, 0);
     if (semdata->handle == SEM_FAILED)
     {
+        free(semdata);
         return 0;
     }
     semdata->named = true;
-    return (uintptr_t)semdata;
+    return registerSemaphore(semdata);
 }
 
 
@@ -946,7 +1042,11 @@ RexxRoutine1(uintptr_t, SysOpenMutexSem, CSTRING, name)
 
 RexxRoutine2(int, SysRequestMutexSem, uintptr_t, vhandle, OPTIONAL_int, timeout)
 {
-    RXSEMDATA *semdata = (RXSEMDATA *)vhandle;
+    RXSEMDATA *semdata = findSemaphore(vhandle);
+    if (semdata == NULL)
+    {
+        return 6;
+    }
     int rc = 0;
 
     if (timeout != 0)
@@ -998,7 +1098,11 @@ RexxRoutine2(int, SysRequestMutexSem, uintptr_t, vhandle, OPTIONAL_int, timeout)
 
 RexxRoutine1(int, SysReleaseMutexSem, uintptr_t, vhandle)
 {
-    RXSEMDATA *semdata = (RXSEMDATA *)vhandle;
+    RXSEMDATA *semdata = findSemaphore(vhandle);
+    if (semdata == NULL)
+    {
+        return 6;
+    }
     int rc;
     int val;
 
@@ -1039,40 +1143,7 @@ RexxRoutine1(int, SysReleaseMutexSem, uintptr_t, vhandle)
 
 RexxRoutine1(int, SysCloseMutexSem, uintptr_t, vhandle)
 {
-    RXSEMDATA *semdata = (RXSEMDATA *)vhandle;
-
-    if (semdata->named == false)
-    {
-        /* this is an unnamed semaphore so we must free the target */
-        if (sem_destroy(semdata->handle))
-        {
-            if (errno == EINVAL)
-            {
-                return 6;
-            }
-            else if (errno)
-            {
-                return 102;
-            }
-        }
-    }
-    else
-    {
-        /* this is a named semaphore */
-        if (sem_close(semdata->handle))
-        {
-            if (errno == EINVAL)
-            {
-                return 6;
-            }
-            else if (errno)
-            {
-                return 102;
-            }
-        }
-    }
-    free(semdata);
-    return 0;
+    return closeSemaphore(vhandle);
 }
 
 // macOS doesn't support above sem_xxx functions
