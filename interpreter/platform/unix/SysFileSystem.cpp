@@ -484,7 +484,13 @@ bool SysFileSystem::resolveTilde(FileNameBuffer &name)
         // save everything after the first character
         tempName = ((const char *)name) + 1;
         // start with the home directory
-        name = getenv("HOME");
+        const char *home = getenv("HOME");
+        // without HOME the name cannot be resolved, as for an unknown user
+        if (home == NULL)
+        {
+            return false;
+        }
+        name = home;
         // We don't need to add a slash : If we have "~" alone, then no final slash expected (same as for "~user"). If "~/..." then we have the slash already
         name += (const char *)tempName;
     }

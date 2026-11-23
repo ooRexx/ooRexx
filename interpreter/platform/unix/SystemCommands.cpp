@@ -545,6 +545,10 @@ bool sys_process_cd(RexxExitContext *context, const char * cmd, RexxObjectPtr rc
         {
             /* get home directory path    */
             home_dir = getenv("HOME");     /* from the environment       */
+            if (!home_dir)                  /* if no home dir info        */
+            {
+                return false;
+            }
                                            /* get space for the buf      */
             bufSize = strlen(home_dir) + 2;
             dir_buf = (char *)malloc(bufSize);
