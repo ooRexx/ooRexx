@@ -151,29 +151,41 @@ In state 1 we consume "A" and transition to state 2.
 In state 2 we consume "B" and transition to state 3.
 In state 3 we consume the final "C", and transition to the terminal state 4.
 
+Every part of the FSM that the parser builds (an expression, a term, a
+factor) follows the same rule: its states are contiguous, it is entered
+through its first state, and it is left by going to the state that follows
+its last one.  A part can then simply be followed by another one, with no
+need to patch the states already built.
+
 Now let's see what happens if we change the pattern to e. g. "ABC*".
 Having parsed "ABC", the FSM is as shown above.
 When the parser sees the asterisk, it will modify the FSM as follows
-(see factor() function, block regexp[currentPos] == '*'):
-
-(1)     setState(freeState, EPSILON, freeState+1, t2);
-(2)     next1[t1-1] = freeState;
-
-(1) adds a new epsilon-state that allows to either transition to the new
-terminal state (freeState+1), or to the start of the last expression, which
-in our example is state 3, which consumes "C".
-(2) modifies the existing state t1-1, the state before our last expression,
-in our case state 2, consuming "B", to alternatively transition to state 4. 
+(see factor() function, block regexp[currentPos] == '*'): the states of
+the atom "C" move up by one (insertStateAt), and two epsilon states are
+added: one before the atom, the factor's entry, that goes to a loop state
+after it; and the loop state, that either leaves the factor (to state 6)
+or matches the atom once more (state 4):
 state   ch      next1   next2
 0       eps     1
 1       A       2
-2       B       4       3
-3       C       4
-4       eps     5       3
+2       B       3
+3       eps     5
+4       C       5
+5       eps     6       4
 
 Following the state transitions, we find that this will - as expected -
 allow AB, ABC, ABCC, ABCCC.. to be successfully matched.
 
+An "|" is built in the same way: for "AB|C" the states of the term "AB"
+move up by one, to make room for an entry state that goes to either term,
+and an epsilon state after "AB" jumps over the "C" to the end:
+state   ch      next1   next2
+0       eps     1
+1       eps     2       5
+2       A       3
+3       B       4
+4       eps     6
+5       C       6
 
 Parsing is done (roughly) according to this regular expression BNF:
 
@@ -324,25 +336,28 @@ int automaton::letter(int c)
 /**************************************************************/
 int automaton::expression()
 {
-    int t1, t2;
-    int r;
+    // every part of the automaton (expression, term, factor) is built the
+    // same way: its states are contiguous, it is entered through its first
+    // state, and it is left by going to the state that follows its last
+    // one.  So a part needs no patching when another one follows it.
+    int start = freeState;
 
-    t1 = term();
-    r = t1;
+    term();
     // is the current character an 'or' operator?
     if (regexp[currentPos] == '|')
     {
         currentPos++;
-        freeState++;
-        r = t2 = freeState;
-        freeState++;
-        // set epsilon transitions, evaluate right expression
-        // (left one has already been processed at this point)
-        setState(t2, EPSILON, expression(), t1);
-        setState(t2-1, EPSILON, freeState, freeState);
-        setState(t1-1, ch[t1-1], t2, next2[t1-1]);
+        // the left term moves up one state, to make room for the entry
+        // state, which goes to either term
+        insertStateAt(start);
+        // after the left term, jump over the right expression
+        int jump = freeState++;
+        int right = freeState;
+        expression();
+        setState(start, EPSILON, start + 1, right);
+        setState(jump, EPSILON, freeState, freeState);
     }
-    return r;
+    return start;
 }
 
 /*********************************/
@@ -354,19 +369,20 @@ int automaton::expression()
 /*********************************/
 int automaton::term()
 {
-    int r;
+    int start = freeState;
 
-    r = factor();
+    factor();
 
-    // another term following?
-    if ( (regexp[currentPos] == '(') ||
-         (regexp[currentPos] == '[') ||
-          letter(regexp[currentPos]))
+    // another factor following?  each factor is entered through its first
+    // state, which is the state the previous one goes to when it is done
+    while ( (regexp[currentPos] == '(') ||
+            (regexp[currentPos] == '[') ||
+            letter(regexp[currentPos]))
     {
-        term();
+        factor();
     }
 
-    return r;
+    return start;
 }
 
 /***************************************************************/
@@ -386,8 +402,7 @@ int automaton::term()
 /***************************************************************/
 int automaton::factor()
 {
-    int t1, t2;
-    int r;
+    int t1;
 
     t1 = freeState;
     switch (regexp[currentPos])
@@ -396,7 +411,6 @@ int automaton::factor()
         case '?':
             // consume any character and transition to the following state
             setState(freeState, ANY, freeState+1, freeState+1);
-            r = t2 = freeState;
             freeState++;
             currentPos++;
             break;
@@ -406,30 +420,22 @@ int automaton::factor()
             if (regexp[currentPos] == 0x00) throw E_UNEXPECTED_EOP;
             // consume the current character and transition to the following state
             setState(freeState, regexp[currentPos], freeState+1, freeState+1);
-            t2 = freeState;
             freeState++;
             currentPos++;
             break;
             // set definition
         case '[':
             currentPos++;
-            t2 = set();
+            set();
             if (regexp[currentPos] == ']') currentPos++;
             else throw E_ILLEGAL_SET;
             break;
             // an expression in parenthesis
         case '(':
             currentPos++;              // step over "("
-
-            // parenthesis need an extra leading epsilon transition so that | works correctly
-            freeState++;               // reserve space for leading epsilon transition
-            t2 = expression();
-            setState(t1, EPSILON, t2, t2);
-
-            // we also require an extra closing epsilon transition to make "(A|B)x*" work
-            setState(freeState, EPSILON, freeState + 1, freeState + 1);
-            freeState++;
-
+            // an expression is entered through its first state and left
+            // by going to the state that follows it, as any factor
+            expression();
             if (regexp[currentPos] == ')') currentPos++;
             else throw E_MISSING_PAREN_CLOSE;
             break;
@@ -439,7 +445,6 @@ int automaton::factor()
             {
                 // consume the letter and transition to the following state
                 setState(freeState, regexp[currentPos], freeState+1, freeState+1);
-                t2 = freeState;
                 freeState++;
                 currentPos++;
             }
@@ -457,18 +462,20 @@ int automaton::factor()
     // match previous expression zero or more times
     if (regexp[currentPos] == '*')
     {
-        setState(freeState, EPSILON, freeState+1, t2);
-        r = freeState;
-        next1[t1-1] = freeState;
-        freeState++;
+        // the atom moves up one state, to make room for the entry state,
+        // which goes to the loop state that follows the atom
+        insertStateAt(t1);
+        int loop = freeState++;
+        // the loop state leaves, or matches the atom once more
+        setState(loop, EPSILON, freeState, t1 + 1);
+        setState(t1, EPSILON, loop, loop);
         currentPos++;
     }
     // match previous expression one or more times
     else if (regexp[currentPos] == '+')
     {
-        // consume the letter and transition to the following state
+        // after the atom, match it once more or leave
         setState(freeState, EPSILON, t1, freeState+1);
-        r = t1;
         freeState++;
         currentPos++;
     }
@@ -479,9 +486,6 @@ int automaton::factor()
         int tempPos = currentPos+1;
         int i = 0;
         int j,k, size;
-        bool orExpression = t1!=t2;
-
-        r = t2;
 
         // get n
         while (regexp[tempPos] && regexp[tempPos] != '}')
@@ -503,20 +507,12 @@ int automaton::factor()
         }
 
         // the previous expression will be copied and insert
-        // n times into the automaton
+        // n times into the automaton: each copy is entered from the end of
+        // the one before it, and goes to the state that follows it
         size = freeState - t1;
-        if (orExpression)
-        {
-            size++;
-        }
         while (i--)
         {
             k = freeState;
-            if (orExpression)
-            {
-                t2 += size;
-                setState(freeState++, EPSILON, t2, t2);
-            }
             for (j=t1;j<k;j++,freeState++)
             {
                 setState(freeState, ch[j], next1[j]+size, next2[j]+size);
@@ -526,11 +522,28 @@ int automaton::factor()
 
         currentPos = tempPos + 1;
     }
-    else
+    return t1;
+}
+
+
+/*******************************************************************/
+/* automaton::insertStateAt                                        */
+/*                                                                 */
+/* make room for one state at position, moving the states from it  */
+/* to the last one up by one.  The states moved are those of the   */
+/* part being built, which only go to states inside it or to the   */
+/* one that follows it: those move up by one too.  The states      */
+/* before position that go to it now go to the new state there.    */
+/*******************************************************************/
+void automaton::insertStateAt(int position)
+{
+    for (int i = freeState - 1; i >= position; i--)
     {
-        r = t2;
+        setState(i + 1, ch[i],
+                 next1[i] >= position ? next1[i] + 1 : next1[i],
+                 next2[i] >= position ? next2[i] + 1 : next2[i]);
     }
-    return r;
+    freeState++;
 }
 
 /**********************************************************/
@@ -786,6 +799,20 @@ int automaton::insertSet(char *range, int rangeSize)
 /* matching is non-recursively done with a queue */
 /* that has a push, put and pop method.          */
 /*************************************************/
+/*************************************************************/
+/* queueNext                                                 */
+/*                                                           */
+/* queue a state for the next position in the string, unless */
+/* it is already queued for it.                              */
+/*************************************************************/
+static void queueNext(doubleQueue &dq, int *queuedNext, int state, int position)
+{
+  if (queuedNext[state] != position + 1) {
+    queuedNext[state] = position + 1;
+    dq.put(state);
+  }
+}
+
 int automaton::match(const char *a, int N)  // string length passed in
                                       // instead of strlen
 {
@@ -798,6 +825,18 @@ int automaton::match(const char *a, int N)  // string length passed in
   int set;
   int len;
   bool found;
+  // a state is queued at most once for each position in the string: an
+  // automaton may have a cycle of epsilon transitions (as in "(a*)*"), and
+  // following one again and again never ended.  queuedNow[s] is the position
+  // s was last queued for with push (this position), queuedNext[s] the one
+  // it was last queued for with put (the next position).
+  int states = freeState + 1;
+  int *queuedNow = (int*) malloc(sizeof(int)*states);
+  int *queuedNext = (int*) malloc(sizeof(int)*states);
+  for (i=0; i<states; i++) {
+    queuedNow[i] = -1;
+    queuedNext[i] = -1;
+  }
 
   // terminates when end state (==0) is reached
   while (state) {
@@ -819,8 +858,14 @@ int automaton::match(const char *a, int N)  // string length passed in
     case EPSILON:        // epsilon transition
       n1 = next1[state];
       n2 = next2[state];
-      dq.push(n1);
-      if (n1 != n2) dq.push(n2);
+      if (queuedNow[n1] != j) {
+        queuedNow[n1] = j;
+        dq.push(n1);
+      }
+      if (queuedNow[n2] != j) {
+        queuedNow[n2] = j;
+        dq.push(n2);
+      }
       break;
     case SET:            // inclusive set
     case SET|NOT:        // exclusive set
@@ -835,21 +880,21 @@ int automaton::match(const char *a, int N)  // string length passed in
         }
       }
       if (found) {
-        dq.put(next1[state]);
+        queueNext(dq, queuedNext, next1[state], j);
       }
       break;
     case ANY:            // just match any character
-      dq.put(next1[state]);
+      queueNext(dq, queuedNext, next1[state], j);
       break;
     default:
       if (j < N) { // freeState: we can't read past end of string
         // normal character?
         if (ch[state] == (int) a[j]) {
-          dq.put(next1[state]);
+          queueNext(dq, queuedNext, next1[state], j);
         }
       } else if (j == N) {  // simulate zero-terminated string in any case
         if (ch[state] == (int) 0) {
-          dq.put(next1[state]);
+          queueNext(dq, queuedNext, next1[state], j);
         }
       }
       break;
@@ -863,6 +908,9 @@ int automaton::match(const char *a, int N)  // string length passed in
     if (dq.isEmpty() || (j>(N+1)) ) break;
     state = dq.pop();
   }
+
+  free(queuedNow);
+  free(queuedNext);
 
   currentPos = j;
 
