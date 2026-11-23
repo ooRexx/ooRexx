@@ -1855,6 +1855,8 @@ PackageClass *PackageClass::loadPackageRexx(RexxString *name, ArrayClass *s)
     else
     {
         Protected<ArrayClass> source = arrayArgument(s, "source");
+        // every item must be a string value, as for Package~new
+        stringArrayArgument(source, "source");
         return loadRequires(ActivityManager::currentActivity, packageName, source);
     }
 }
