@@ -567,17 +567,23 @@ int automaton::set()
     // to next specified character (fill in all in-between)
     // (a '-' at the beginning is interpreted as a simple character)
     if (*ptr == '-' && i) {
-      char b=ptr[-1], e=ptr[1];
+      // the range is of byte values, 00 to FF: with a signed char, a
+      // range ending at 7F never ended and one above 7F was the wrong range
+      unsigned char b=(unsigned char)ptr[-1], e=(unsigned char)ptr[1];
       if (e == 0x00 || e == ']') throw E_ILLEGAL_SET;
       ptr+=2;
-      // start character > end character? then swap them
+      // the start character is already in the set; the end one is not
+      int first=b+1;
+      // start character > end character? then swap them, and the new start
+      // (the end character) must be filled in too
       if (b>e) {
-        char t=b;
+        unsigned char t=b;
         b=e; e=t;
+        first=b;
       }
       // fill up the range
-      for (char c=b+1;c<=e;c++) {
-        if (checkRange(range,i,c)) range[i++] = c;
+      for (int c=first;c<=e;c++) {
+        if (checkRange(range,i,(char)c)) range[i++] = (char)c;
         if (i == length) {
           range = (char*) realloc(range,length*2);
           length *= 2;
