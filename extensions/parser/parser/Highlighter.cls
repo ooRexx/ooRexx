@@ -97,6 +97,9 @@
 /* 20261122         The LaTeX driver only in the search path (no              */
 /*                  ../rexxpub/); no Options.!UniqueID (nobody used it: the   */
 /*                  HTML of a patch uses the block id)                        */
+/* 20261123         No Catch of SYNTAX in parse: it wrote an error header to  */
+/*                  .ERROR even when the caller caught the condition, and a   */
+/*                  utility that prints its own printed it twice              */
 /*                                                                            */
 /******************************************************************************/
 
@@ -198,90 +201,82 @@ Return
 ::Method parse
   Expose name source options. HTMLClass
 
-  -- We should catch syntax errors present in our source
-  Do
-    numberLines = options.numberLines
+  numberLines = options.numberLines
 
-    output = .Array~of("")
+  output = .Array~of("")
 
-    Select Case Options.mode
-      When "HTML"  Then
-        Options.!Driver =  .HTML.Highlighter~new( Options., output )
-      When "HTML-INLINE" Then
-        Options.!Driver =  .HTML.Inline.Highlighter~new( Options., output )
-      When "ANSI" Then
-        Options.!Driver =  .ANSI.Highlighter~new( Options., output )
-      When "LATEX" Then Do
-        -- The LaTeX driver is RexxPub's, and may not be installed
-        If \.environment~hasIndex("LATEX.HIGHLIGHTER") Then
-          Raise Syntax 98.900 Array( "LaTeX highlighting needs the LaTeX" -
-            "driver (rexxpub/Latex.Driver.cls), which is part of RexxPub" )
-        Options.!Driver = .LaTeX.Highlighter~new( Options., output )
-      End
-      When "DOCBOOK" Then
-        Options.!Driver = .DocBook.Highlighter~new( Options., output )
-      Otherwise Nop
+  Select Case Options.mode
+    When "HTML"  Then
+      Options.!Driver =  .HTML.Highlighter~new( Options., output )
+    When "HTML-INLINE" Then
+      Options.!Driver =  .HTML.Inline.Highlighter~new( Options., output )
+    When "ANSI" Then
+      Options.!Driver =  .ANSI.Highlighter~new( Options., output )
+    When "LATEX" Then Do
+      -- The LaTeX driver is RexxPub's, and may not be installed
+      If \.environment~hasIndex("LATEX.HIGHLIGHTER") Then
+        Raise Syntax 98.900 Array( "LaTeX highlighting needs the LaTeX" -
+          "driver (rexxpub/Latex.Driver.cls), which is part of RexxPub" )
+      Options.!Driver = .LaTeX.Highlighter~new( Options., output )
     End
-
-    Use Strict arg patch = (.Nil)
-
-    If patch == .Nil Then Do
-      If Options.~hasIndex(additional) Then
-        patch = Options.additional
-    End
-    If      patch~isA(.String) Then patch = .StylePatch~of( patch )
-    Else If patch~isA(.Array)  Then patch = .StylePatch~of( patch )
-    Else If patch \== .Nil     Then
-      .Validate~classType("patch", patch, .StylePatch)
-    Options.!Patch = patch
-
-    HTMLClass = HTMLClasses( options. )
-    Options.!HTMLClass = HTMLClass
-
-    Options.!inc = 1
-
-    parserOptions = .Array~new
-    If options.~hasIndex(extraletters) Then
-      parserOptions~append( (extraletters, options.extraletters) )
-    If options.unicode == 1 | options.tutor == 1 Then
-      parserOptions~append( (unicode, 1) )
-    If options.experimental == 1 Then
-      parserOptions~append( (experimental, 1) )
-    If options.executor == 1 Then
-      parserOptions~append( (executor, 1) )
-    If options.cms == 1 Then
-      parserOptions~append( (cms, 1) )
-
-    -- Instantiate a parser, parse the program, and get the first element
-    parser  = .Rexx.Parser~new(name, source, parserOptions)
-    package = parser~package
-    element = package~firstElement
-
-    -- Emit a prolog
-    Options.!Driver~Prolog
-
-    -- Process all elements in turn until the element chain is exhausted
-
-    currentLine = 1
-    last = .Nil
-    Loop Until element == .Nil
-      -- Print an element...
-      Call Print source, output, element, Options., >currentLine, HTMLClass
-      -- ... and fetch the next one.
-      last  = element
-      element = element~next
-    End
-
-    -- Emit our epilog
-    Options.!Driver~Epilog
-
-    Return output
-  -- A syntax error in the source (a Rexx.Parser.Error) already has the
-  -- name: it goes up as the parser threw it
-  Catch co = Syntax
-   .Error~Say( "Error" co~code "in" co~program", line" co~position":" )
-    Raise Propagate
+    When "DOCBOOK" Then
+      Options.!Driver = .DocBook.Highlighter~new( Options., output )
+    Otherwise Nop
   End
+
+  Use Strict arg patch = (.Nil)
+
+  If patch == .Nil Then Do
+    If Options.~hasIndex(additional) Then
+      patch = Options.additional
+  End
+  If      patch~isA(.String) Then patch = .StylePatch~of( patch )
+  Else If patch~isA(.Array)  Then patch = .StylePatch~of( patch )
+  Else If patch \== .Nil     Then
+    .Validate~classType("patch", patch, .StylePatch)
+  Options.!Patch = patch
+
+  HTMLClass = HTMLClasses( options. )
+  Options.!HTMLClass = HTMLClass
+
+  Options.!inc = 1
+
+  parserOptions = .Array~new
+  If options.~hasIndex(extraletters) Then
+    parserOptions~append( (extraletters, options.extraletters) )
+  If options.unicode == 1 | options.tutor == 1 Then
+    parserOptions~append( (unicode, 1) )
+  If options.experimental == 1 Then
+    parserOptions~append( (experimental, 1) )
+  If options.executor == 1 Then
+    parserOptions~append( (executor, 1) )
+  If options.cms == 1 Then
+    parserOptions~append( (cms, 1) )
+
+  -- Instantiate a parser, parse the program, and get the first element
+  parser  = .Rexx.Parser~new(name, source, parserOptions)
+  package = parser~package
+  element = package~firstElement
+
+  -- Emit a prolog
+  Options.!Driver~Prolog
+
+  -- Process all elements in turn until the element chain is exhausted
+
+  currentLine = 1
+  last = .Nil
+  Loop Until element == .Nil
+    -- Print an element...
+    Call Print source, output, element, Options., >currentLine, HTMLClass
+    -- ... and fetch the next one.
+    last  = element
+    element = element~next
+  End
+
+  -- Emit our epilog
+  Options.!Driver~Epilog
+
+  Return output
 
 /******************************************************************************/
 /* PRINT -- Process an element: tag it appropriately and append it            */
