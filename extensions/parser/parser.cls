@@ -98,6 +98,10 @@
 /* 20261121         A file that does not exist or cannot be read is a SYNTAX  */
 /*                  error 3.1, as in Routine~newFile (it was an empty         */
 /*                  program)                                                  */
+/* 20261124         hasClass and hasRoutine: the checks for a duplicate class */
+/*                  or routine, and for the target of ::ANNOTATE, built the   */
+/*                  union of the private and public ones every time (O(n^2)   */
+/*                  for a package with many). Noted by the ooRexx bugs chain  */
 /*                                                                            */
 /******************************************************************************/
 
@@ -723,6 +727,20 @@ CheckThatUseLocalIsValid:
   Expose privateRoutines publicRoutines
   Return privateRoutines~union( publicRoutines )
 
+-- hasClass and hasRoutine -- Is there a class (a routine) with this name,
+-- private or public? As classes~hasIndex (routines~hasIndex), without
+-- building the union.
+
+::Method hasClass
+  Expose privateClasses publicClasses
+  Use Strict Arg name
+  Return privateClasses~hasIndex( name ) | publicClasses~hasIndex( name )
+
+::Method hasRoutine
+  Expose privateRoutines publicRoutines
+  Use Strict Arg name
+  Return privateRoutines~hasIndex( name ) | publicRoutines~hasIndex( name )
+
 ::Method sourceLine -- [As in in the ooRexx Package class]
   Expose source
   Use Strict Arg n
@@ -760,8 +778,8 @@ CheckThatUseLocalIsValid:
 ::Routine AnnotationTargetExists
   Use Strict Arg package, type, name
   Select Case type
-    When "CLASS"   Then Return package~classes~hasIndex( name )
-    When "ROUTINE" Then Return package~routines~hasIndex( name )
+    When "CLASS"   Then Return package~hasClass( name )
+    When "ROUTINE" Then Return package~hasRoutine( name )
     Otherwise Nop
   End
   If package~inTheProlog Then Do
@@ -895,8 +913,7 @@ Return
   package~currentClass = class
   name = Upper( directive~name~value )
   options. = directive~options.
-  If package~publicClasses~hasIndex( name ) Then Signal 99.901
-  If package~      classes~hasIndex( name ) Then Signal 99.901
+  If package~hasClass( name ) Then Signal 99.901
   Select Case options.public
     When 1 Then package~addPublicClass( name, class )
     When 0 Then package~addClass(       name, class )
@@ -1153,7 +1170,7 @@ CheckExternal:
   End
   routine = .Rexx.Routine~new( name, codeBody, directive )
   name = Upper( name~value )
-  If package~routines~hasIndex(name) Then Signal 99.903
+  If package~hasRoutine( name ) Then Signal 99.903
   If directive~private Then package~addRoutine(name, routine)
   Else                      package~addPublicRoutine(name, routine)
 
