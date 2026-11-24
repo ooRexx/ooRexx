@@ -909,8 +909,9 @@ RexxMethod3(RexxObjectPtr, cmdcontext_forward, RexxObjectPtr, target, RexxString
     {
         RexxObject *contextObject = (RexxObject *)self;
         RexxClass *contextClass = Interpreter::findClass(new_string("COMMANDCONTEXT"));
-        RexxObject *cself = contextObject->getObjectVariable(new_string("CSELF"), contextClass);
-        CommandState *state = liveState(context, cself == OREF_NULL ? NULL : ((BufferClass *)cself)->getData(), ctx.activity);
+        // getCSelf() checks that CSELF is a Buffer or a Pointer: a context made
+        // with ~new holds whatever object it was given (bug #2189)
+        CommandState *state = liveState(context, contextObject->getCSelf(contextClass), ctx.activity);
         CommandHandler *handler = nativeHandlerOf((RexxObject *)target);
         RexxClass *nativeClass = Interpreter::findClass(new_string("NATIVECOMMANDHANDLER"));
         RexxString *address = (RexxString *)((RexxObject *)target)->getObjectVariable(new_string("NAME"), nativeClass);
