@@ -71,6 +71,9 @@
 /* Define to 1 if struct lstat has a member st_mtimespec */
 #cmakedefine HAVE_STAT_ST_MTIMESPEC
 
+/* Define to 1 if struct tm has a member tm_gmtoff */
+#cmakedefine HAVE_TM_GMTOFF
+
 /* Define to 1 if you have the 'catopen' function. */
 #cmakedefine HAVE_CATOPEN
 

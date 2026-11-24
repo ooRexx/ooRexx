@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2023 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2026 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -67,6 +67,15 @@ void SystemInterpreter::getCurrentTime(RexxDateTime *Date )
     Date->month = ++SystemDate->tm_mon;
     Date->year = SystemDate->tm_year + 1900;
 
+#ifdef HAVE_TM_GMTOFF
+    // localtime() has already worked out the offset from UTC for this very
+    // time stamp: use it.  Besides being much cheaper than gmtime() plus
+    // mktime() (a lot cheaper on some systems), it is also right in the hours
+    // around a daylight saving time change, where the mktime() round trip
+    // below gives the offset of a different instant.
+    // in microseconds
+    Date->timeZoneOffset = ((int64_t)SystemDate->tm_gmtoff) * 1000000;
+#else
     struct tm *GMTDate;                  /* system date structure ptr  */
 #ifdef AIX
     struct tm GD;                        /* system date area           */
@@ -80,6 +89,7 @@ void SystemInterpreter::getCurrentTime(RexxDateTime *Date )
     GMTDate->tm_isdst = -1;
     // in microseconds
     Date->timeZoneOffset = ((int64_t)(tv.tv_sec - mktime(GMTDate))) * 1000000UL;
+#endif
 }
 
 

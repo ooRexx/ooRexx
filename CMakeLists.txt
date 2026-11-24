@@ -498,6 +498,7 @@ if (NOT WIN32) # Unix header files, libraries, and functions
   check_symbol_exists(KERN_PROC_ARGV "sys/types.h;sys/sysctl.h" HAVE_KERN_PROC_ARGV)
   check_struct_has_member("struct stat" st_mtim sys/stat.h HAVE_STAT_ST_MTIM)
   check_struct_has_member("struct stat" st_mtimespec sys/stat.h HAVE_STAT_ST_MTIMESPEC)
+  check_struct_has_member("struct tm" tm_gmtoff time.h HAVE_TM_GMTOFF)
 
   message(STATUS "-- determine available pragmas --")
   check_c_source_compiles("void main() {
