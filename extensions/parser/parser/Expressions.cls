@@ -86,6 +86,7 @@
 /* 20261124         childAttributes, children and parent of expressions and   */
 /*                  terms. Source.Literal~endClause; a source literal adopts  */
 /*                  its instructions and its end clause                       */
+/* 20261124         Rexx.Expression and Rexx.Term inherit Rexx.Node           */
 /*                                                                            */
 /******************************************************************************/
 
@@ -129,15 +130,7 @@
 /******************************************************************************/
 /******************************************************************************/
 
-::Class Rexx.Expression      Public
-::Constant childAttributes ""
--- children, parent -- The nodes it contains, in source order, and the
--- node that contains it, found from its clause (see TreeChildren and
--- TreeParent)
-::Method children
-  Return TreeChildren( self )
-::Method parent
-  Return TreeParent( self )
+::Class Rexx.Expression      Public Inherit Rexx.Node
 ::Constant isEmpty 0
 
 /******************************************************************************/
@@ -911,15 +904,7 @@ Missing: Syntax( missing, Arg(1) )
 /******************************************************************************/
 /******************************************************************************/
 
-::Class Rexx.Term Public
-::Constant childAttributes ""
--- children, parent -- The nodes it contains, in source order, and the
--- node that contains it, found from its clause (see TreeChildren and
--- TreeParent)
-::Method children
-  Return TreeChildren( self )
-::Method parent
-  Return TreeParent( self )
+::Class Rexx.Term Public Inherit Rexx.Node
 ::Method arg
   Arg n, option +1
   If Arg() == 0 Then Return 1

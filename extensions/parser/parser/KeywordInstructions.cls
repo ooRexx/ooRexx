@@ -135,6 +135,8 @@
 /*                  prefix, not the element after it                          */
 /* 20261124         childAttributes of the instructions; children and parent  */
 /*                  of the templates                                          */
+/* 20261124         Template.List, Template and Prefixed.Template inherit     */
+/*                  Rexx.Node                                                 */
 /*                                                                            */
 /******************************************************************************/
 
@@ -3121,15 +3123,7 @@ GetASymbol:
 
 --------------------------------------------------------------------------------
 
-::Class Template.List SubClass Array
-::Constant childAttributes ""
--- children, parent -- The nodes it contains, in source order, and the
--- node that contains it, found from its clause (see TreeChildren and
--- TreeParent)
-::Method children
-  Return TreeChildren( self )
-::Method parent
-  Return TreeParent( self )
+::Class Template.List SubClass Array Inherit Rexx.Node
 ::Attribute begin
 ::Attribute end
 
@@ -3274,15 +3268,7 @@ GetASymbol:
 
 --------------------------------------------------------------------------------
 
-::Class Template SubClass Array
-::Constant childAttributes ""
--- children, parent -- The nodes it contains, in source order, and the
--- node that contains it, found from its clause (see TreeChildren and
--- TreeParent)
-::Method children
-  Return TreeChildren( self )
-::Method parent
-  Return TreeParent( self )
+::Class Template SubClass Array Inherit Rexx.Node
 ::Attribute begin
 ::Attribute end
 
@@ -3330,15 +3316,8 @@ GetASymbol:
 
 --------------------------------------------------------------------------------
 
-::Class Prefixed.Template Public
+::Class Prefixed.Template Public Inherit Rexx.Node
 ::Constant childAttributes "ELEMENTORSUBEXPRESSION"
--- children, parent -- The nodes it contains, in source order, and the
--- node that contains it, found from its clause (see TreeChildren and
--- TreeParent)
-::Method children
-  Return TreeChildren( self )
-::Method parent
-  Return TreeParent( self )
 ::Attribute prefix Get
 ::Attribute elementOrSubExpression Get
 ::Attribute begin

@@ -107,6 +107,9 @@
 /* 20261124         children (TreeChildren, from the childAttributes of each  */
 /*                  class) and the parent of the nodes that are not clauses   */
 /*                  (TreeParent, found from their clause)                     */
+/* 20261124         Rexx.Node, the mixin of all the nodes of the tree: the    */
+/*                  childAttributes, children and parent that six classes     */
+/*                  repeated                                                  */
 /*                                                                            */
 /******************************************************************************/
 
@@ -123,12 +126,33 @@
  .environment~Rexx.Clause      = .Rexx.Clause
  .environment~Rexx.Directive   = .Rexx.Directive
  .environment~Rexx.Instruction = .Rexx.Instruction
+ .environment~Rexx.Node        = .Rexx.Node
+
+/******************************************************************************/
+/* A node of the tree                                                         */
+/******************************************************************************/
+
+-- Rexx.Node -- What all the nodes of the tree have in common: clauses,
+-- expressions, terms, templates and the package. It is a mixin, because some
+-- nodes are arrays (Template, Template.List).
+--
+-- childAttributes names the attributes that hold the children of the node;
+-- each class that adds children redefines it. children are the nodes that
+-- the node contains, in source order (see TreeChildren), and parent is the
+-- node that contains it, found from its clause (see TreeParent). Clauses and
+-- the package redefine parent; the package, also children.
+::Class Rexx.Node MixinClass Object Public
+::Constant childAttributes ""
+::Method children
+  Return TreeChildren( self )
+::Method parent
+  Return TreeParent( self )
 
 /******************************************************************************/
 /* A Rexx Clause                                                              */
 /******************************************************************************/
 
-::Class Rexx.Clause Public
+::Class Rexx.Clause Public Inherit Rexx.Node
 
 ::Attribute labels           -- Label clauses that identify this clause
 ::Attribute nullClauses      -- Null clauses preceding this clause
@@ -162,13 +186,6 @@
 ::Method setParent
   Expose parent
   Use Strict Arg parent
-
--- children -- The nodes that this clause contains, in source order (see
--- TreeChildren). childAttributes names the attributes that hold them; each
--- class that adds children redefines it.
-::Constant childAttributes ""
-::Method children
-  Return TreeChildren( self )
 
 ::Method makeArray
   Use Strict Arg indent = 0
@@ -334,7 +351,7 @@ Return
   If value == .Nil             Then Return
   If value~isA(.String)        Then Return
   If value~isA(.Element)       Then Return
-  If \value~hasMethod("CHILDREN") Then Do
+  If \value~isA(.Rexx.Node) Then Do
     If value~isA(.Array) Then Do item Over value
       Call TreeCollect item, kids, seen, node
     End

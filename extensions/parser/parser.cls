@@ -108,6 +108,7 @@
 /*                  Rexx.Package~endOfSource                                  */
 /* 20261124         Rexx.Package~children. calledRoutineNames holds pairs     */
 /*                  (name, arguments), not symbols or strings                 */
+/* 20261124         Rexx.Package inherits Rexx.Node                           */
 /*                                                                            */
 /******************************************************************************/
 
@@ -619,7 +620,7 @@ CheckThatUseLocalIsValid:
 
 --------------------------------------------------------------------------------
 
-::Class Rexx.Package Public
+::Class Rexx.Package Public Inherit Rexx.Node
 
 ::Attribute options                 -- Global options, when NetRexxOptions = 1
 ::Attribute Clauser                 -- The clauser
