@@ -320,6 +320,21 @@ RoutineClass *PackageManager::resolveRoutine(RexxString *function, RexxString *p
         return func;
     }
 
+    // if the library is an ooRexx package, an entry that it defines as a
+    // new-style routine cannot be called as a registered (classic) function:
+    // the symbol of that name has another signature, and calling it crashed
+    // (bug #2188).
+    // RxFuncAdd() never gets here for a package library.
+    LibraryPackage *package = loadLibrary(packageName);
+    if (package != OREF_NULL)
+    {
+        RexxRoutineEntry *entry = package->locateRoutineEntry(procedure);
+        if (entry != NULL && entry->style != ROUTINE_CLASSIC_STYLE)
+        {
+            return OREF_NULL;
+        }
+    }
+
     const char *functionName = function->getStringData();
     const char *libraryName = packageName->getStringData();
     const char *procedureName = procedure->getStringData();
