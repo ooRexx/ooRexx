@@ -102,6 +102,8 @@
 /* 20261123         No table constructors ("[...]", inspired by NetRexx and   */
 /*                  Lua, with EXPERIMENTAL): an experiment that was not       */
 /*                  followed                                                  */
+/* 20261124         Rexx.Clause~parent, and AdoptChildren and AdoptClause,    */
+/*                  which set it; the end of a clause knows its clause        */
 /*                                                                            */
 /******************************************************************************/
 
@@ -131,21 +133,32 @@
 ::Attribute begin            -- First element in clause (a semicolon)
 ::Attribute end              -- Last element in clause (a semicolon)
 ::Attribute package          -- The package we are currently parsing
+::Attribute parent Get       -- The block instruction, body, directive or
+                             -- package we are in (see setParent)
 ::Method Init
 
-  Expose package begin end labels nullClauses docComment
+  Expose package begin end labels nullClauses docComment parent
 
   Use Strict Arg package, begin, end
 
   labels      = Array()
   nullClauses = Array()
   docComment  = .Nil
+  parent      = .Nil
 
   body = package~currentBodies~top
 
   -- body may be .Nil at the start of a body scan
-  If \self~isA(.Block.Instruction) Then
+  If \self~isA(.Block.Instruction) Then Do
     If body \== .Nil Then body~clauses~append( self )
+    If end \== .Nil Then end~setOwnerClause( self )
+  End
+
+-- setParent -- For the parser: the parent is set when the node that
+-- contains this clause is built (see AdoptChildren)
+::Method setParent
+  Expose parent
+  Use Strict Arg parent
 
 ::Method makeArray
   Use Strict Arg indent = 0
@@ -230,6 +243,43 @@ Return
 -- Create collections in a more intuitive way
 
 ::Routine Array       Public; Return Arg(1,"A")
+
+/******************************************************************************/
+/* AdoptChildren( parent, child, ... ) -- Make parent the parent of every     */
+/*   clause among the children, looking inside arrays (instruction lists,     */
+/*   WHEN/THEN triples, CATCH sections). Labels and null clauses go with the  */
+/*   clause they precede. Blocks are built inside out, so an outer block      */
+/*   overwrites what an inner one said of the labels they share.              */
+/******************************************************************************/
+
+::Routine AdoptChildren Public
+  Use Strict Arg parent, ...
+  Do i = 2 To Arg()
+    If \Arg(i, "E") Then Iterate
+    child = Arg(i)
+    Select
+      When child~isA(.Array)       Then
+        Do item Over child
+          Call AdoptChildren parent, item
+        End
+      When child~isA(.Rexx.Clause) Then Call AdoptClause parent, child
+      Otherwise Nop
+    End
+  End
+
+-- AdoptClause( parent, clause ) -- One clause, with its labels and its null
+-- clauses (they are its siblings).
+
+::Routine AdoptClause Public
+  Use Strict Arg parent, clause
+  clause~setParent( parent )
+  Do theLabel Over clause~labels
+    theLabel~setParent( parent )
+  End
+  Do null Over clause~nullClauses
+    null~setParent( parent )
+  End
+
 ::Routine Set         Public; Return .Set~sendWith("of",Arg(1,"A"))
 ::Routine StringTable Public
   If Arg() == 0 Then Return .StringTable~new

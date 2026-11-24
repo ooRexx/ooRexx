@@ -56,6 +56,8 @@
 /*                  Language Association, as the rest of ooRexx (RFE #878)    */
 /* 20261122         StringOrSymbol.Element~term removed: it was set only for  */
 /*                  compound variables, and nobody read it                    */
+/* 20261124         element~clause: the clause of an element (ownerClause,    */
+/*                  in its EL.END_OF_CLAUSE)                                  */
 /*                                                                            */
 /******************************************************************************/
 
@@ -148,9 +150,10 @@
 
 ::Method init
   Expose next prev from to category subcategory source value -
-    ignorable assigned assignment closing continuation
+    ignorable assigned assignment closing continuation ownerClause
 
   self~init:super
+  ownerClause = .Nil
   next        = .Nil
   prev        = .Nil
   from        = ""
@@ -163,6 +166,27 @@
   ignorable   = 0
   closing     = .Nil
   continuation = 0
+
+-- clause -- The clause this element belongs to. A clause ends with its
+-- EL.END_OF_CLAUSE, and what comes after it belongs to the next clause.
+-- Only the EL.END_OF_CLAUSE elements store their clause (ownerClause, set by
+-- Rexx.Clause~init with setOwnerClause); the others look for the next one.
+
+::Attribute ownerClause Get
+
+::Method setOwnerClause
+  Expose ownerClause
+  Use Strict Arg ownerClause
+
+::Method clause
+  Expose ownerClause
+  If ownerClause \== .Nil Then Return ownerClause
+  element = self~next
+  Loop While element \== .Nil, element~ownerClause == .Nil
+    element = element~next
+  End
+  If element == .Nil Then Return .Nil
+  Return element~ownerClause
 
 ::Method isAssigned
   Expose assigned

@@ -97,6 +97,8 @@
 /* 20261121         Common Public License 1.0, and copyright also of the Rexx */
 /*                  Language Association, as the rest of ooRexx (RFE #878)    */
 /* 20261122         The implicit EXIT is terminating, as EXIT and RETURN      */
+/* 20261124         The clauses and instructions of DO, LOOP, IF and SELECT   */
+/*                  have the block instruction as their parent                */
 /*                                                                            */
 /******************************************************************************/
 
@@ -2266,6 +2268,7 @@ Done:
     catchSections = ( Array() )
   self~catchSections = catchSections
   self~init:super(package, doClause~begin, endClause~end)
+  Call AdoptChildren self, doClause, instructions, endClause, catchSections
 ::Method labels
   Expose doClause
   Return doClause~labels
@@ -2299,6 +2302,8 @@ Done:
     self~init:super( package, ifClause~begin, thenInstruction~end )
   Else
     self~init:super( package, ifClause~begin, elseInstruction~end )
+  Call AdoptChildren self, ifClause, thenClause, thenInstruction, -
+    elseClause, elseInstruction
 
 /******************************************************************************/
 /* LOOP Instruction                                                           */
@@ -2316,6 +2321,7 @@ Done:
     catchSections = ( Array() )
   self~catchSections = catchSections
   self~init:super( package, loopClause~begin, endClause~end )
+  Call AdoptChildren self, loopClause, instructions, endClause, catchSections
 ::Method labels
   Expose loopClause
   Return loopClause~labels
@@ -2354,6 +2360,8 @@ Done:
   self~catchSections = catchSections
 
   self~init:super(package, selectClause~begin, endClause~end )
+  Call AdoptChildren self, selectClause, whenThenInstructions, -
+    otherwiseClause, otherwiseSequence, endClause, catchSections
 
 ::Method labels
   Expose selectClause

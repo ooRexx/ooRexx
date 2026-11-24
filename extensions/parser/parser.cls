@@ -102,6 +102,10 @@
 /*                  or routine, and for the target of ::ANNOTATE, built the   */
 /*                  union of the private and public ones every time (O(n^2)   */
 /*                  for a package with many). Noted by the ooRexx bugs chain  */
+/* 20261124         The tree, upwards: the parent of a body is its directive  */
+/*                  (the prolog's, the package); of a directive and of the    */
+/*                  End.Of.Source, the package, whose parent is .nil.         */
+/*                  Rexx.Package~endOfSource                                  */
 /*                                                                            */
 /******************************************************************************/
 
@@ -320,6 +324,9 @@
   End
 
   body = .Code.Body~new( package, directive )
+  -- The parent of a body is its directive; that of the prolog, the package
+  If directive == .Nil Then body~setParent( package )
+  Else                      body~setParent( directive )
   If inAMethodBody Then
     body~isAMethodBody = .True
   package~currentBodies~push(body)
@@ -528,6 +535,7 @@ CheckThatUseLocalIsValid:
   self~end = instruction~end
 
   instructions~append( instruction )
+  Call AdoptClause self, instruction
 
 ::Method isEmpty
   Expose instructions
@@ -569,7 +577,11 @@ CheckThatUseLocalIsValid:
 
     Select Case directive~class
 
-      When       .End.Of.Source Then Leave
+      When       .End.Of.Source Then Do
+        directive~setParent( package )
+        package~setEndOfSource( directive )
+        Leave
+      End
 
       When  .Annotate.Directive  Then Call Annotate   package, directive
       When .Attribute.Directive  Then Call Attribute  package, directive
@@ -656,7 +668,8 @@ CheckThatUseLocalIsValid:
     blockInstructionsStacks -
     resources               -
     sourceLiteralStack      -
-    scannerStack
+    scannerStack            -
+    endOfSource
 
   Use Strict Arg name, source
 
@@ -675,6 +688,7 @@ CheckThatUseLocalIsValid:
   currentBodies           = .Stack~new
   constantCalls           = .Array~new
   directives              =  Array()
+  endOfSource             = .Nil
   blockInstructionsStacks = .Stack~new
   options                 = .Set~new
   sourceLiteralStack      = .Stack~new
@@ -685,10 +699,20 @@ CheckThatUseLocalIsValid:
   Use Strict Arg name, class
   privateClasses[name] = class
 
+::Method parent -- The package is the root of the tree
+  Return .Nil
+
+::Attribute endOfSource Get -- The End.Of.Source clause
+
+::Method setEndOfSource
+  Expose endOfSource
+  Use Strict Arg endOfSource
+
 ::Method addDirective
   Expose directives
   Use Strict Arg directive
   directives~append( directive )
+  directive~setParent( self )
 
 ::Method addMethod -- Add a floating method, attribute or constant
   Expose definedMethods
