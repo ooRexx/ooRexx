@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2026 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -196,6 +196,8 @@ class MemoryObject : public RexxInternalObject
     void        collectAndUninit(bool clearStack);
     void        lastChanceUninit();
     inline StringTable *getGlobalStrings() { return globalStrings; }
+    // the bytes of live objects in the normal segment set at the last collection
+    inline size_t normalLiveBytes() { return newSpaceNormalSegments.liveBytes(); }
     void        addWeakReference(WeakReference *ref);
     void        checkWeakReferences();
     void        addGlobalReference(RexxInternalObject *obj);

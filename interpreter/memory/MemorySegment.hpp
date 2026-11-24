@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2021 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2026 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -270,6 +270,9 @@ class MemorySegmentSet
       static const size_t SegmentDeadSpace;
       // space available in a larger allocation.
       static const size_t LargeSegmentDeadSpace;
+
+      // the bytes of live objects found by the last sweep
+      inline size_t liveBytes() { return liveObjectBytes; }
 
   protected:
 
@@ -570,6 +573,7 @@ protected:
     MemorySegment *allocateSegment(size_t requestLength, size_t minimumLength) override;
     size_t suggestMemoryExpansion() override;
     void expandSegmentSet(size_t allocationLength);
+    void ensureFreeSpace();
     void prepareForSweep() override;
     void completeSweepOperation() override;
 
@@ -577,6 +581,9 @@ protected:
 
     // the threshold to trigger expansion of the normal segment set.
     static const double LargeMemoryExpansionThreshold;
+    // the free space this set keeps after a collection it has started, as a
+    // fraction of the live bytes of the normal segment set.
+    static const double LargeMinimumFreeRatio;
     inline size_t recommendedMemorySize() { return (size_t)((float)liveObjectBytes/(1.0 - LargeMemoryExpansionThreshold)); }
 
     RexxInternalObject *findObject(size_t allocationLength);

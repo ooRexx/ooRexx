@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2026 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -162,10 +162,6 @@ class DeadObjectPool
 #endif
     }
 
-    // the threshold for deciding the large object chain is getting fragmented.
-    // this tells us we need to move larger blocks to the front of the chain.
-    #define ReorderThreshold 100
-
     inline void  setID(const char *poolID) { this->id = poolID; }
     inline void  empty() { anchor.reset(); }
     inline bool  isEmpty() { return anchor.next->isReal(); }
@@ -232,40 +228,34 @@ class DeadObjectPool
     /* from the pool before return.                                               */
     /******************************************************************************/
     {
+        // Every block we pass is too small for this request, and it is moved to
+        // the tail of the chain.  Without this, the small remainders that
+        // splitting leaves at the front pile up there, and every later search
+        // has to walk past all of them: the cost of an allocation grows with
+        // the number of blocks, and a program that allocates many of them is
+        // quadratic.  We stop after the block that was last when we started,
+        // so that each block is examined at most once.
+        DeadObject *lastObject = anchor.previous;
         DeadObject *newObject = anchor.next;
-        size_t newLength;
-        int probes = 1;
-        for (newLength = newObject->getObjectSize(); newLength != 0; newLength = newObject->getObjectSize()) {
-            if (newLength >= length) {
-                // we had to examine a lot of objects to get a match.
-                // it's worthwhile percolating the larger objects on the rest of the
-                // chain toward the front.  We only do this when we're starting to have problems
-                // allocating objects because of fragmentation.
-                DeadObject *tailObject = newObject->next;
-
+        while (newObject->isReal())
+        {
+            DeadObject *nextObject = newObject->next;
+            size_t newLength = newObject->getObjectSize();
+            if (newLength >= length)
+            {
                 newObject->remove();
                 logHit();
                 *realLength = newLength;
-                if (probes > ReorderThreshold)
-                {
-                    for (size_t tailLength = tailObject->getObjectSize(); tailLength != 0; tailLength = tailObject->getObjectSize())
-                    {
-                        // the size we just had problems with is a good marker for
-                        // selecting candidates to move toward the front.  The will guarantee
-                        // that a similar request for the same size will succeed faster in the future.
-                        DeadObject *nextObject = tailObject->next;
-                        if (tailLength > length)
-                        {
-                            tailObject->remove();
-                            add(tailObject);
-                        }
-                        tailObject = nextObject;
-                    }
-                }
                 return newObject;
             }
-            probes++;
-            newObject = newObject->next;
+            bool wasLast = newObject == lastObject;
+            newObject->remove();
+            anchor.insertBefore(newObject);
+            if (wasLast)
+            {
+                break;
+            }
+            newObject = nextObject;
         }
         logMiss();
         return NULL;

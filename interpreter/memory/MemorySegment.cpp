@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2026 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -52,6 +52,9 @@ const double NormalSegmentSet::NormalMemoryExpansionThreshold = .30;
 // tend to be large blocks and can be frequently longer lived, we try to run with
 // a little more head room than the normal set
 const double LargeSegmentSet::LargeMemoryExpansionThreshold = .40;
+// after a collection started by the large segment set, the free space it keeps
+// as a fraction of the live bytes of the normal segment set.
+const double LargeSegmentSet::LargeMinimumFreeRatio = .05;
 // the absolute smallest segment we will allocate.
 const size_t MemorySegmentSet::MinimumSegmentSize = (MemorySegment::SegmentSize/2);
 // amount of usable space in a minimum sized segment
@@ -1224,6 +1227,7 @@ RexxInternalObject *LargeSegmentSet::handleAllocationFailure(size_t allocationLe
     // Step 2, now that we have good GC data, decide if we need to adjust
     // the heap size.
     adjustMemorySize();
+    ensureFreeSpace();
     // Step 2, see if can allocate now
     RexxInternalObject *newObject = findObject(allocationLength);
     // Nothing in the current space?
@@ -1258,6 +1262,28 @@ RexxInternalObject *LargeSegmentSet::handleAllocationFailure(size_t allocationLe
     }
     // return our allocated object
     return newObject;
+}
+
+
+/**
+ * After a collection started by this segment set, make sure it
+ * has free space in proportion to the live data of the normal
+ * segment set.  A collection marks the whole heap, so its cost
+ * grows with the live data of the normal set.  This set can stay
+ * small (its expansion threshold looks only at its own free
+ * percentage), and then it fills again after a few requests: a
+ * program that keeps asking for blocks of this size runs a
+ * collection of the whole heap for every few of them, and the
+ * total cost grows with the square of its live data.
+ */
+void LargeSegmentSet::ensureFreeSpace()
+{
+    size_t wanted = (size_t)((double)memory->normalLiveBytes() * LargeMinimumFreeRatio);
+    if (deadObjectBytes < wanted)
+    {
+        memory->verboseMessage("Expanding %s by %zu bytes" line_end, name, wanted - deadObjectBytes);
+        addSegments(wanted - deadObjectBytes);
+    }
 }
 
 
