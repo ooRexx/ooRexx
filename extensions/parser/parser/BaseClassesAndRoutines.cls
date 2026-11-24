@@ -104,6 +104,9 @@
 /*                  followed                                                  */
 /* 20261124         Rexx.Clause~parent, and AdoptChildren and AdoptClause,    */
 /*                  which set it; the end of a clause knows its clause        */
+/* 20261124         children (TreeChildren, from the childAttributes of each  */
+/*                  class) and the parent of the nodes that are not clauses   */
+/*                  (TreeParent, found from their clause)                     */
 /*                                                                            */
 /******************************************************************************/
 
@@ -160,6 +163,13 @@
   Expose parent
   Use Strict Arg parent
 
+-- children -- The nodes that this clause contains, in source order (see
+-- TreeChildren). childAttributes names the attributes that hold them; each
+-- class that adds children redefines it.
+::Constant childAttributes ""
+::Method children
+  Return TreeChildren( self )
+
 ::Method makeArray
   Use Strict Arg indent = 0
   Return Array(self~string(indent))
@@ -182,6 +192,7 @@
 /******************************************************************************/
 
 ::Class Rexx.Directive Public SubClass Rexx.Clause
+::Constant childAttributes "BODY"
 ::Attribute body
 
 /******************************************************************************/
@@ -279,6 +290,100 @@ Return
   Do null Over clause~nullClauses
     null~setParent( parent )
   End
+
+/******************************************************************************/
+/* TreeChildren( node ) -- The children of a node, in source order: the      */
+/*   nodes among the values of the attributes that its childAttributes names */
+/*   (and, for a template, among its items), looking inside arrays. A node   */
+/*   is an object that understands CHILDREN; elements are not children (they */
+/*   are in the chain, between them). A clause is a child only when its      */
+/*   parent is the node, and its labels and null clauses come with it (they  */
+/*   are its siblings).                                                      */
+/******************************************************************************/
+
+::Routine TreeChildren Public
+  Use Strict Arg node
+  kids = .Array~new
+  seen = .IdentityTable~new
+  If node~isA(.Array) Then Do item Over node
+    Call TreeCollect item, kids, seen, node
+  End
+  Do name Over node~childAttributes~makeArray(" ")
+    Call TreeCollect node~send(name), kids, seen, node
+  End
+  If kids~items < 2 Then Return kids
+  -- In the order of the chain (positions are not enough: inserted elements
+  -- may have the position of what follows them): walk the chain from the
+  -- first element of the node, and take each child at its first element.
+  -- The body of a directive comes after the directive, so the walk may go
+  -- beyond the end of the node.
+  byFirst = .IdentityTable~new
+  Do kid Over kids
+    byFirst[ TreeFirstElement( kid ) ] = kid
+  End
+  ordered = .Array~new
+  element = TreeFirstElement( node )
+  Loop While element \== .Nil, ordered~items < kids~items
+    If byFirst~hasIndex( element ) Then ordered~append( byFirst[element] )
+    element = element~next
+  End
+  Return ordered
+
+::Routine TreeCollect
+  Use Strict Arg value, kids, seen, node
+  If value == .Nil             Then Return
+  If value~isA(.String)        Then Return
+  If value~isA(.Element)       Then Return
+  If \value~hasMethod("CHILDREN") Then Do
+    If value~isA(.Array) Then Do item Over value
+      Call TreeCollect item, kids, seen, node
+    End
+    Return
+  End
+  If seen~hasIndex(value) Then Return
+  If value~isA(.Rexx.Clause), value~parent \== node Then Return
+  seen[value] = 1
+  kids~append(value)
+  If value~isA(.Rexx.Clause) Then Do
+    Call TreeCollect value~labels,      kids, seen, node
+    Call TreeCollect value~nullClauses, kids, seen, node
+  End
+
+/******************************************************************************/
+/* TreeFirstElement( node ) -- The first element of a node: a clause begins  */
+/*   after its "begin" (the EL.END_OF_CLAUSE before it); any other node, at  */
+/*   its "begin".                                                             */
+/******************************************************************************/
+
+::Routine TreeFirstElement Public
+  Use Strict Arg node
+  If \node~isA(.Rexx.Clause) Then Return node~begin
+  begin = node~begin
+  If begin == .Nil Then Return .Nil
+  Return begin~next
+
+/******************************************************************************/
+/* TreeParent( node ) -- The parent of a node that is not a clause (an       */
+/*   expression, a term, a template): it is not stored, but found walking    */
+/*   down from the clause of its first element.                              */
+/******************************************************************************/
+
+::Routine TreeParent Public
+  Use Strict Arg node
+  first = TreeFirstElement( node )
+  If first == .Nil Then Return .Nil
+  holder = first~clause
+  If holder == .Nil Then Return .Nil
+  Return TreeFind( holder, node )
+
+::Routine TreeFind
+  Use Strict Arg holder, node
+  Do kid Over holder~children
+    If kid == node Then Return holder
+    found = TreeFind( kid, node )
+    If found \== .Nil Then Return found
+  End
+  Return .Nil
 
 ::Routine Set         Public; Return .Set~sendWith("of",Arg(1,"A"))
 ::Routine StringTable Public

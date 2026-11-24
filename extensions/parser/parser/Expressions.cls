@@ -83,6 +83,9 @@
 /* 20261123         No table constructors ("[...]", inspired by NetRexx and   */
 /*                  Lua, with EXPERIMENTAL): an experiment that was not       */
 /*                  followed                                                  */
+/* 20261124         childAttributes, children and parent of expressions and   */
+/*                  terms. Source.Literal~endClause; a source literal adopts  */
+/*                  its instructions and its end clause                       */
 /*                                                                            */
 /******************************************************************************/
 
@@ -127,6 +130,14 @@
 /******************************************************************************/
 
 ::Class Rexx.Expression      Public
+::Constant childAttributes ""
+-- children, parent -- The nodes it contains, in source order, and the
+-- node that contains it, found from its clause (see TreeChildren and
+-- TreeParent)
+::Method children
+  Return TreeChildren( self )
+::Method parent
+  Return TreeParent( self )
 ::Constant isEmpty 0
 
 /******************************************************************************/
@@ -134,6 +145,7 @@
 /******************************************************************************/
 
 ::Class NAry.Expression SubClass Rexx.Expression
+::Constant childAttributes "ARGS"
 ::Constant items 1
 ::Attribute args Get
 ::Method arg
@@ -279,6 +291,7 @@ EndNamed:
 --------------------------------------------------------------------------------
 
 ::Class Arguments Public SubClass Rexx.Expression
+::Constant childAttributes "ARGS NAMEDARGUMENTS"
 ::Attribute positionalArguments
 ::Attribute namedArguments
 ::Attribute begin
@@ -450,6 +463,7 @@ Missing: Syntax( missing, Arg(1) )
 --------------------------------------------------------------------------------
 
 ::Class Expression.List Public SubClass Rexx.Expression
+::Constant childAttributes "ARGS"
 ::Attribute expressions
 ::Attribute begin
 ::Attribute end
@@ -553,7 +567,7 @@ Missing: Syntax( missing, Arg(1) )
   preClauser~begin = old[1]
   preClauser~end   = old[2]
 
-  Source.Literal = .Source.Literal~new( begin, end, instructions )
+  Source.Literal = .Source.Literal~new( begin, end, instructions, instruction )
 
   Return Source.Literal
 
@@ -574,12 +588,16 @@ Missing: Syntax( missing, Arg(1) )
 --------------------------------------------------------------------------------
 
 ::Class Source.Literal Public SubClass Rexx.Expression
+::Constant childAttributes "INSTRUCTIONS ENDCLAUSE"
 ::Attribute begin
 ::Attribute end
 ::Attribute instructions
+::Attribute endClause Get -- The Source.Literal.End clause, ending at "}"
 ::Method init
-  Expose         begin  end  instructions
-  Use Strict Arg begin, end, instructions
+  Expose         begin  end  instructions  endClause
+  Use Strict Arg begin, end, instructions, endClause
+  -- Its instructions and its end clause are its children
+  Call AdoptChildren self, instructions, endClause
 
 /******************************************************************************/
 /* OR.EXPRESSION                                                              */
@@ -869,6 +887,7 @@ Missing: Syntax( missing, Arg(1) )
 --------------------------------------------------------------------------------
 
 ::Class Prefix.Expression Public SubClass Rexx.Expression
+::Constant childAttributes "TERM"
 ::Attribute begin
 ::Attribute end
 ::Attribute prefixes
@@ -893,6 +912,14 @@ Missing: Syntax( missing, Arg(1) )
 /******************************************************************************/
 
 ::Class Rexx.Term Public
+::Constant childAttributes ""
+-- children, parent -- The nodes it contains, in source order, and the
+-- node that contains it, found from its clause (see TreeChildren and
+-- TreeParent)
+::Method children
+  Return TreeChildren( self )
+::Method parent
+  Return TreeParent( self )
 ::Method arg
   Arg n, option +1
   If Arg() == 0 Then Return 1
@@ -1016,6 +1043,7 @@ Missing: Syntax( missing, Arg(1) )
 --------------------------------------------------------------------------------
 
 ::Class Array.Term Public SubClass Rexx.Term
+::Constant childAttributes "EXPRESSION_LIST"
 ::Attribute expression_list Get
 ::Method Init
   Expose expression_list
@@ -1119,6 +1147,7 @@ Missing: Syntax( missing, Arg(1) )
 --------------------------------------------------------------------------------
 
 ::Class SubExpression Public SubClass Rexx.Term
+::Constant childAttributes "SUBEXPRESSION"
 ::Attribute begin
 ::Attribute end
 ::Attribute subExpression Get
@@ -1469,6 +1498,7 @@ Return
 --------------------------------------------------------------------------------
 
 ::Class Function.Call.Term Public SubClass Rexx.Term
+::Constant childAttributes "ARGUMENTLIST TRAILINGBLOCK"
 ::Attribute argumentList
 ::Attribute trailingBlock
 ::Attribute begin
@@ -1485,6 +1515,7 @@ Return
 --------------------------------------------------------------------------------
 
 ::Class NameSpace.Qualified.Function.Call Public SubClass Rexx.Term
+::Constant childAttributes "ARGUMENTS TRAILINGBLOCK"
 ::Attribute nameSpace
 ::Attribute name
 ::Attribute arguments
@@ -1568,6 +1599,7 @@ Return
 --------------------------------------------------------------------------------
 
 ::Class Indexed.Or.Invoked.Term Public SubClass Rexx.Term
+::Constant childAttributes "TERM ARGUMENTS TRAILINGBLOCK"
 ::Attribute bracket
 ::Attribute begin
 ::Attribute end
@@ -1664,6 +1696,7 @@ Return
 --------------------------------------------------------------------------------
 
 ::Class Message.Term Public SubClass Rexx.Term
+::Constant childAttributes "TERM ARGUMENTS TRAILINGBLOCK"
 ::Attribute begin
 ::Attribute end
 ::Attribute term

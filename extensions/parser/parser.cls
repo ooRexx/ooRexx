@@ -106,6 +106,8 @@
 /*                  (the prolog's, the package); of a directive and of the    */
 /*                  End.Of.Source, the package, whose parent is .nil.         */
 /*                  Rexx.Package~endOfSource                                  */
+/* 20261124         Rexx.Package~children. calledRoutineNames holds pairs     */
+/*                  (name, arguments), not symbols or strings                 */
 /*                                                                            */
 /******************************************************************************/
 
@@ -428,6 +430,7 @@ CheckThatUseLocalIsValid:
 --------------------------------------------------------------------------------
 
 ::Class Code.Body SubClass Block.Instruction
+::Constant childAttributes "INSTRUCTIONS"
 
 ::Constant tree "instructions"
 
@@ -441,7 +444,7 @@ CheckThatUseLocalIsValid:
 ::Attribute local               -- The body local directory
 ::Attribute isAMethodBody       -- This is a METHOD body
 ::Attribute classMethod         -- True when this is a CLASS method
-::Attribute calledRoutineNames  -- Symbols or strings
+::Attribute calledRoutineNames  -- Pairs (name, arguments) of the calls
 ::Attribute instructions        -- Array of instructions
 ::Attribute directive           -- .Nil for the prolog
 ::Attribute blockID             -- Used to identify DO/LOOP/SELECT blocks
@@ -701,6 +704,17 @@ CheckThatUseLocalIsValid:
 
 ::Method parent -- The package is the root of the tree
   Return .Nil
+
+-- children -- The body of the prolog, the directives, in order, and the
+-- End.Of.Source clause
+::Method children
+  Expose prolog directives endOfSource
+  kids = Array( prolog~body )
+  Do directive Over directives
+    kids~append( directive )
+  End
+  If endOfSource \== .Nil Then kids~append( endOfSource )
+  Return kids
 
 ::Attribute endOfSource Get -- The End.Of.Source clause
 

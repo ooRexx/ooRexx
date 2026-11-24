@@ -87,6 +87,7 @@
 /*                  resource data (toLine < fromLine when it is empty; they   */
 /*                  were not exposed, nor set). The three attributes returned */
 /*                  their own names                                           */
+/* 20261124         Constant.Directive~childAttributes: its value             */
 /*                                                                            */
 /******************************************************************************/
 
@@ -595,6 +596,7 @@ SignedNumber:
 --------------------------------------------------------------------------------
 
 ::Class Constant.Directive Public SubClass Rexx.Directive
+::Constant childAttributes "BODY VALUE"
 ::Attribute name    Get
 ::Attribute value   Get
 ::Attribute constant

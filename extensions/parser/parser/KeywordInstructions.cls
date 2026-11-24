@@ -133,6 +133,8 @@
 /* 20261124         Prefixed.Template~begin works (init did not expose it,    */
 /*                  and the attribute returned its own name), and it is the   */
 /*                  prefix, not the element after it                          */
+/* 20261124         childAttributes of the instructions; children and parent  */
+/*                  of the templates                                          */
 /*                                                                            */
 /******************************************************************************/
 
@@ -342,6 +344,7 @@ Done:
 --------------------------------------------------------------------------------
 
 ::Class Address.Instruction Public SubClass Rexx.Instruction
+::Constant childAttributes "ENV_EXPRESSION EXPRESSION"
 ::Attribute begin          Get
 ::Attribute end            Get
 ::Attribute environment    Get
@@ -523,6 +526,7 @@ ProcessArguments:
 --  A simple call, i.e. call name args                                        --
 
 ::Class Call.Instruction Public SubClass Rexx.Instruction
+::Constant childAttributes "ARGUMENTS"
 ::Attribute begin     Get
 ::Attribute end       Get
 ::Attribute name      Get
@@ -535,6 +539,7 @@ ProcessArguments:
 -- A namespace-qualified call, i.e. call namespace:name args
 
 ::Class NameSpace.Qualified.Call.Instruction Public SubClass Rexx.Instruction
+::Constant childAttributes "ARGUMENTS"
 ::Attribute nameSpace
 ::Attribute name
 ::Attribute arguments
@@ -546,6 +551,7 @@ ProcessArguments:
 -- Call (expression) args                                                     --
 
 ::Class Call.Value.Instruction Public SubClass Rexx.Instruction
+::Constant childAttributes "EXPRESSION ARGUMENTS"
 ::Attribute expression
 ::Attribute arguments
 ::Method init
@@ -737,6 +743,7 @@ ProcessArguments:
 --------------------------------------------------------------------------------
 
 ::Class Drop.Instruction Public SubClass Rexx.Instruction
+::Constant childAttributes "NAMELIST"
 ::Attribute nameList
 ::Method init
   Expose nameList
@@ -860,6 +867,7 @@ ProcessArguments:
 --------------------------------------------------------------------------------
 
 ::Class Expose.Instruction Public SubClass Rexx.Instruction
+::Constant childAttributes "EXPOSED"
 ::Attribute exposed
 ::Method init
   Expose exposed
@@ -1009,6 +1017,7 @@ Done:
 --------------------------------------------------------------------------------
 
 ::Class Forward.Instruction Public SubClass Rexx.Instruction
+::Constant childAttributes "TO THECLASS MESSAGE ARGUMENTS ARRAY NAMEDARGUMENTS"
 ::Attribute Continue       Get
 ::Attribute Arguments      Get
 ::Attribute NamedArguments Get
@@ -1096,6 +1105,7 @@ Done:
 --------------------------------------------------------------------------------
 
 ::Class Guard.Instruction Public SubClass Rexx.Instruction
+::Constant childAttributes "EXPRESSION"
 ::Attribute on         Get -- 1 for GUARD ON, 0 for GUARD OFF
 ::Attribute expression
 ::Method init
@@ -1177,6 +1187,7 @@ IsExposed:
 --------------------------------------------------------------------------------
 
 ::Class Interpret.Instruction Public SubClass Rexx.Instruction
+::Constant childAttributes "EXPRESSION"
 ::Attribute expression Get
 ::Method init
   Expose expression
@@ -1544,6 +1555,7 @@ Expression:
 --------------------------------------------------------------------------------
 
 ::Class Numeric.Instruction Public SubClass Rexx.Instruction
+::Constant childAttributes "EXPRESSION"
 ::Attribute option     Get
 ::Attribute expression Get
 ::Method init
@@ -1581,6 +1593,7 @@ Expression:
 --------------------------------------------------------------------------------
 
 ::Class Optional.Expression.Instruction Public SubClass Rexx.Instruction
+::Constant childAttributes "EXPRESSION"
 ::Attribute expression Get
 ::Method init
   Expose expression
@@ -1612,6 +1625,7 @@ Expression:
 --------------------------------------------------------------------------------
 
 ::Class Options.Instruction Public SubClass Rexx.Instruction
+::Constant childAttributes "EXPRESSION"
 ::Attribute expression Get
 ::Method init
   Expose expression
@@ -1740,6 +1754,7 @@ Templates:
 --------------------------------------------------------------------------------
 
 ::Class Parse.Instruction Public SubClass Rexx.Instruction
+::Constant childAttributes "EXPRESSION VARIABLE TEMPLATES"
 ::Attribute Upper      Get
 ::Attribute Lower      Get
 ::Attribute Caseless   Get
@@ -1802,6 +1817,7 @@ Templates:
 --------------------------------------------------------------------------------
 
 ::Class Procedure.Instruction Public SubClass Rexx.Instruction
+::Constant childAttributes "EXPOSED"
 ::Attribute exposed
 ::Method init
   Expose exposed
@@ -2076,6 +2092,7 @@ Expression:
 --------------------------------------------------------------------------------
 
 ::Class Raise.Instruction Public SubClass Rexx.Instruction
+::Constant childAttributes "ADDITIONAL ARRAY DESCRIPTION EXIT RETURN"
 ::Constant instructionName "RAISE"
 
 ::Attribute Condition     Get
@@ -2272,6 +2289,7 @@ Expression:
 --------------------------------------------------------------------------------
 
 ::Class Signal.Value.Instruction Public SubClass Rexx.Instruction
+::Constant childAttributes "EXPRESSION"
 ::Attribute expression
 ::Method init
   Expose expression
@@ -2529,6 +2547,7 @@ Done:
 --------------------------------------------------------------------------------
 
 ::Class Trace.Instruction Public SubClass Rexx.Instruction
+::Constant childAttributes "EXPRESSION"
 ::Attribute number     Get
 ::Attribute sign       Get    -- The "-" or "+" of TRACE -n / +n, or .Nil
 ::Attribute theString  Get
@@ -2570,6 +2589,7 @@ Done:
 --------------------------------------------------------------------------------
 
 ::Class Upper.Instruction Public SubClass Rexx.Instruction
+::Constant childAttributes "NAMELIST"
 ::Attribute nameList
 ::Method init
   Expose nameList
@@ -2837,6 +2857,7 @@ NextElement:
 --------------------------------------------------------------------------------
 
 ::Class Use.Arg.Instruction Public SubClass Rexx.Instruction
+::Constant childAttributes "ARGUMENTS"
 ::Attribute strict    Get
 ::Attribute auto      Get
 ::Attribute named     Get
@@ -3039,6 +3060,7 @@ GetASymbol:
 --------------------------------------------------------------------------------
 
 ::Class Optional.Template.List Public SubClass Rexx.Instruction
+::Constant childAttributes "TEMPLATES"
 ::Attribute templates
 ::Method init
   Expose templates
@@ -3100,6 +3122,14 @@ GetASymbol:
 --------------------------------------------------------------------------------
 
 ::Class Template.List SubClass Array
+::Constant childAttributes ""
+-- children, parent -- The nodes it contains, in source order, and the
+-- node that contains it, found from its clause (see TreeChildren and
+-- TreeParent)
+::Method children
+  Return TreeChildren( self )
+::Method parent
+  Return TreeParent( self )
 ::Attribute begin
 ::Attribute end
 
@@ -3245,6 +3275,14 @@ GetASymbol:
 --------------------------------------------------------------------------------
 
 ::Class Template SubClass Array
+::Constant childAttributes ""
+-- children, parent -- The nodes it contains, in source order, and the
+-- node that contains it, found from its clause (see TreeChildren and
+-- TreeParent)
+::Method children
+  Return TreeChildren( self )
+::Method parent
+  Return TreeParent( self )
 ::Attribute begin
 ::Attribute end
 
@@ -3293,6 +3331,14 @@ GetASymbol:
 --------------------------------------------------------------------------------
 
 ::Class Prefixed.Template Public
+::Constant childAttributes "ELEMENTORSUBEXPRESSION"
+-- children, parent -- The nodes it contains, in source order, and the
+-- node that contains it, found from its clause (see TreeChildren and
+-- TreeParent)
+::Method children
+  Return TreeChildren( self )
+::Method parent
+  Return TreeParent( self )
 ::Attribute prefix Get
 ::Attribute elementOrSubExpression Get
 ::Attribute begin

@@ -58,6 +58,9 @@
 /*                  compound variables, and nobody read it                    */
 /* 20261124         element~clause: the clause of an element (ownerClause,    */
 /*                  in its EL.END_OF_CLAUSE)                                  */
+/* 20261124         element~clause in a source literal (Executor): its        */
+/*                  clauses are inside another clause, and what comes before  */
+/*                  the "{" (and the "{") belongs to that one                 */
 /*                                                                            */
 /******************************************************************************/
 
@@ -171,6 +174,9 @@
 -- EL.END_OF_CLAUSE, and what comes after it belongs to the next clause.
 -- Only the EL.END_OF_CLAUSE elements store their clause (ownerClause, set by
 -- Rexx.Clause~init with setOwnerClause); the others look for the next one.
+-- The clauses of a source literal (Executor) are inside another clause, and
+-- the first of them begins at the "{": an element at or before the "begin"
+-- of the clause found is outside it, and belongs to a later one.
 
 ::Attribute ownerClause Get
 
@@ -181,12 +187,32 @@
 ::Method clause
   Expose ownerClause
   If ownerClause \== .Nil Then Return ownerClause
+  -- Only after a "{" can the clause found begin after this element
+  nested  = self < .EL.LEFT_CURLY_BRACKET
   element = self~next
-  Loop While element \== .Nil, element~ownerClause == .Nil
+  Loop While element \== .Nil
+    owner = element~ownerClause
+    If owner \== .Nil Then Do
+      If \nested                         Then Return owner
+      If \self~reaches( owner~begin, element ) Then Return owner
+    End
+    If element < .EL.LEFT_CURLY_BRACKET Then nested = 1
     element = element~next
   End
-  If element == .Nil Then Return .Nil
-  Return element~ownerClause
+  Return .Nil
+
+-- reaches( target, last ) -- Is target this element, or one of the elements
+-- after it, up to last? An EL.END_OF_CLAUSE that ends no clause (the head of
+-- the chain) begins the next clause, and belongs to it: it does not count.
+::Method reaches Private
+  Use Strict Arg target, last
+  element = self
+  If self < .EL.END_OF_CLAUSE Then element = self~next
+  Loop
+    If element == target Then Return 1
+    If element == last   Then Return 0
+    element = element~next
+  End
 
 ::Method isAssigned
   Expose assigned

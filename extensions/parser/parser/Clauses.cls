@@ -99,6 +99,7 @@
 /* 20261122         The implicit EXIT is terminating, as EXIT and RETURN      */
 /* 20261124         The clauses and instructions of DO, LOOP, IF and SELECT   */
 /*                  have the block instruction as their parent                */
+/* 20261124         childAttributes of the clauses and block instructions     */
 /*                                                                            */
 /******************************************************************************/
 
@@ -1059,6 +1060,7 @@ Incomplete:
 --------------------------------------------------------------------------------
 
 ::Class Assignment.Instruction Public SubClass Rexx.Instruction
+::Constant childAttributes "SYMBOL EXPRESSION"
 ::Attribute symbol     Get
 ::Attribute operator   Get
 ::Attribute expression Get
@@ -1089,6 +1091,7 @@ Incomplete:
 --------------------------------------------------------------------------------
 
 ::Class Command.Instruction Public SubClass Rexx.Instruction
+::Constant childAttributes "EXPRESSION"
 ::Attribute expression Get
 ::Method init
   Expose expression
@@ -1227,6 +1230,7 @@ Done:
 --------------------------------------------------------------------------------
 
 ::Class If.Clause Public SubClass Rexx.Clause
+::Constant childAttributes "EXPRESSIONS"
 ::Attribute expressions
 ::Method init
   Expose expressions
@@ -1618,6 +1622,8 @@ Keyword:
 --------------------------------------------------------------------------------
 
 ::Class Iterative.Clause Public SubClass Rexx.Clause
+::Constant childAttributes ( "COLLECTION EXPRB EXPRF EXPRI EXPRR EXPRT" -
+  "EXPRU EXPRW SUPPLIER" )
 ::Attribute name       Get
 ::Attribute ctr        Get
 ::Attribute exprr      Get
@@ -1775,6 +1781,7 @@ Message.Instruction:
 --------------------------------------------------------------------------------
 
 ::Class Message.Instruction Public SubClass Rexx.Instruction
+::Constant childAttributes "EXPRESSION"
 ::Attribute expression
 ::Method init
   Expose expression
@@ -1784,6 +1791,7 @@ Message.Instruction:
 --------------------------------------------------------------------------------
 
 ::Class Message.Assignment.Instruction Public SubClass Rexx.Instruction
+::Constant childAttributes "LHS RHS"
 ::Attribute lhs      Get
 ::Attribute operator Get
 ::Attribute rhs      Get
@@ -2018,6 +2026,7 @@ DigitsOnly: Return Verify( Arg(1), "0123456789" ) == 0
 --------------------------------------------------------------------------------
 
 ::Class Catch.Clause Public SubClass Rexx.Clause
+::Constant childAttributes "VARIABLE"
 ::Attribute variable   Get -- A Symbol.Term (the "variable" of "variable ="), or .Nil
 ::Attribute conditions Get -- An array of Catch.Condition objects
 ::Attribute owner          -- The DO, LOOP or SELECT clause of the block
@@ -2138,6 +2147,7 @@ Done:
 --------------------------------------------------------------------------------
 
 ::Class Select.Clause Public SubClass Rexx.Clause
+::Constant childAttributes "CASE"
 ::Attribute name Get
 ::Attribute case Get
 ::Attribute id   Get
@@ -2199,6 +2209,7 @@ Done:
 --------------------------------------------------------------------------------
 
 ::Class When.Clause Public SubClass Rexx.Clause
+::Constant childAttributes "EXPRESSIONS"
 ::Attribute expressions Get
 ::Method init
   Expose expressions
@@ -2259,6 +2270,7 @@ Done:
 /******************************************************************************/
 
 ::Class Do.Instruction Public SubClass Iterative.Instruction
+::Constant childAttributes "DOCLAUSE INSTRUCTIONS ENDCLAUSE CATCHSECTIONS"
 ::Attribute doClause
 ::Attribute instructions
 ::Attribute endClause
@@ -2281,6 +2293,8 @@ Done:
 /******************************************************************************/
 
 ::Class If.Instruction Public SubClass Block.Instruction
+::Constant childAttributes ( "IFCLAUSE THENCLAUSE THENINSTRUCTION" -
+  "ELSECLAUSE ELSEINSTRUCTION" )
 ::Method labels
   Expose ifClause
   Return ifClause~labels
@@ -2310,6 +2324,7 @@ Done:
 /******************************************************************************/
 
 ::Class Loop.Instruction Public SubClass Iterative.Instruction
+::Constant childAttributes "LOOPCLAUSE INSTRUCTIONS ENDCLAUSE CATCHSECTIONS"
 ::Attribute loopClause
 ::Method doClause -- Simplifies code
   Return self~loopClause
@@ -2334,6 +2349,8 @@ Done:
 /******************************************************************************/
 
 ::Class Select.Instruction Public SubClass Block.Instruction
+::Constant childAttributes ( "SELECTCLAUSE WHENTHENINSTRUCTIONS" -
+  "OTHERWISECLAUSE OTHERWISESEQUENCE ENDCLAUSE CATCHSECTIONS" )
 
 ::Attribute SelectClause           Get
 ::Attribute   WhenThenInstructions Get
