@@ -130,6 +130,9 @@
 /*                  Language Association, as the rest of ooRexx (RFE #878)    */
 /* 20261122         Forward.Instruction~namedArguments works (init did not    */
 /*                  expose it, and the attribute returned its own name)       */
+/* 20261124         Prefixed.Template~begin works (init did not expose it,    */
+/*                  and the attribute returned its own name), and it is the   */
+/*                  prefix, not the element after it                          */
 /*                                                                            */
 /******************************************************************************/
 
@@ -3295,16 +3298,14 @@ GetASymbol:
 ::Attribute begin
 ::Attribute end
 ::Method init
-  Expose prefix elementOrSubExpression end
+  Expose prefix elementOrSubExpression begin end
   Use Strict Arg prefix, elementOrSubExpression
-  If elementOrSubExpression~isA( .Element ) Then Do
-    begin = elementOrSubExpression
+  -- A prefixed template begins at its prefix ("+", "-", "=", "<", ">")
+  begin = prefix
+  If elementOrSubExpression~isA( .Element ) Then
     end   = TheElementAfter( elementOrSubExpression )
-  End
-  Else Do
-    begin = elementOrSubExpression~begin
+  Else
     end   = elementOrSubExpression~end
-  End
 
 /******************************************************************************/
 /* SUBEXPRESSION.TEMPLATE                                                     */
