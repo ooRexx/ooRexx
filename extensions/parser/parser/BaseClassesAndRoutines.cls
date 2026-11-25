@@ -113,6 +113,9 @@
 /* 20261125         Rexx.Node~firstElement and ~lastElement: the first and    */
 /*                  the last element of every node, both included, in the     */
 /*                  same sense in all of them (NodeElements)                  */
+/* 20261125         Directive.Clause, the clause of a directive, as the       */
+/*                  doClause of a DO: Rexx.Directive~directiveClause is the   */
+/*                  first child of the directive, and owns its semicolon      */
 /*                                                                            */
 /******************************************************************************/
 
@@ -126,6 +129,7 @@
       "or later (THROW); this is r"revision )
 
  .environment~Lambda.Do.Block  = .Lambda.Do.Block
+ .environment~Directive.Clause = .Directive.Clause
  .environment~Rexx.Clause      = .Rexx.Clause
  .environment~Rexx.Directive   = .Rexx.Directive
  .environment~Rexx.Instruction = .Rexx.Instruction
@@ -194,8 +198,9 @@
 
   body = package~currentBodies~top
 
-  -- body may be .Nil at the start of a body scan
-  If \self~isA(.Block.Instruction) Then Do
+  -- body may be .Nil at the start of a body scan. A block instruction and a
+  -- directive are not stored: their clauses are (see Directive.Clause)
+  If \self~isA(.Block.Instruction), \self~isA(.Rexx.Directive) Then Do
     If body \== .Nil Then body~clauses~append( self )
     If end \== .Nil Then end~setOwnerClause( self )
   End
@@ -227,9 +232,41 @@
 /* A Directive                                                                */
 /******************************************************************************/
 
+-- A directive goes from its clause to the end of its body, as a block
+-- instruction goes from its first clause to its END. Its clause is a node of
+-- its own, directiveClause (see Directive.Clause), which owns its semicolon.
+-- The nodes that are inside that clause (the value of a ::CONSTANT) are
+-- children of the clause: clauseChildAttributes names them.
+
 ::Class Rexx.Directive Public SubClass Rexx.Clause
-::Constant childAttributes "BODY"
+::Constant childAttributes       "DIRECTIVECLAUSE BODY"
+::Constant clauseChildAttributes ""
 ::Attribute body
+::Attribute directiveClause Get
+::Method init
+  Expose directiveClause
+  Use Strict Arg package, begin, end
+  self~init:super( package, begin, end )
+  directiveClause = .Directive.Clause~new( package, begin, end, self )
+  directiveClause~setParent( self )
+
+/******************************************************************************/
+/* The clause of a directive                                                  */
+/******************************************************************************/
+
+-- From the element after the end of the previous clause to the semicolon
+-- that ends the directive. Its children are the nodes of the directive that
+-- are inside it (see Rexx.Directive).
+
+::Class Directive.Clause Public SubClass Rexx.Clause
+::Attribute directive Get
+::Method init
+  Expose directive
+  Use Strict Arg package, begin, end, directive
+  self~init:super( package, begin, end )
+::Method children
+  Expose directive
+  Return TreeChildren( self, directive, directive~clauseChildAttributes )
 
 /******************************************************************************/
 /* ArgArray                                                                   */
@@ -334,25 +371,25 @@ Return
 /*   is an object that understands CHILDREN; elements are not children (they  */
 /*   are in the chain, between them). A clause is a child only when its       */
 /*   parent is the node, and its labels and null clauses come with it (they   */
-/*   are its siblings).                                                       */
+/*   are its siblings). The attributes may be of another object, holder,      */
+/*   and other names: the clause of a directive takes the nodes of its        */
+/*   directive that are inside it (see Directive.Clause).                     */
 /******************************************************************************/
 
 ::Routine TreeChildren Public
-  Use Strict Arg node
+  Use Strict Arg node, holder = (node), names = (node~childAttributes)
   kids = .Array~new
   seen = .IdentityTable~new
-  If node~isA(.Array) Then Do item Over node
+  If holder~isA(.Array) Then Do item Over holder
     Call TreeCollect item, kids, seen, node
   End
-  Do name Over node~childAttributes~makeArray(" ")
-    Call TreeCollect node~send(name), kids, seen, node
+  Do name Over names~makeArray(" ")
+    Call TreeCollect holder~send(name), kids, seen, node
   End
   If kids~items < 2 Then Return kids
   -- In the order of the chain (positions are not enough: inserted elements
   -- may have the position of what follows them): walk the chain from the
   -- first element of the node, and take each child at its first element.
-  -- The body of a directive comes after the directive, so the walk may go
-  -- beyond the end of the node.
   byFirst = .IdentityTable~new
   Do kid Over kids
     byFirst[ TreeFirstElement( kid ) ] = kid

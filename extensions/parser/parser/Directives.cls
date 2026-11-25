@@ -88,6 +88,8 @@
 /*                  were not exposed, nor set). The three attributes returned */
 /*                  their own names                                           */
 /* 20261124         Constant.Directive~childAttributes: its value             */
+/* 20261125         Constant.Directive~clauseChildAttributes: its value is a  */
+/*                  child of its clause (directiveClause)                     */
 /*                                                                            */
 /******************************************************************************/
 
@@ -596,7 +598,7 @@ SignedNumber:
 --------------------------------------------------------------------------------
 
 ::Class Constant.Directive Public SubClass Rexx.Directive
-::Constant childAttributes "BODY VALUE"
+::Constant clauseChildAttributes "VALUE"
 ::Attribute name    Get
 ::Attribute value   Get
 ::Attribute constant
