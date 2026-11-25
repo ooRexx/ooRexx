@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2024 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2026 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -100,6 +100,44 @@ bool SysLibrary::load(
         }
     }
     return true;     // loaded successfully
+}
+
+
+/**
+ * Find the ooRexx package loader (RexxGetPackage) of the library that
+ * contains an address, if that library is an ooRexx package.
+ *
+ * @param address An address in code, e.g. a resolved entry point.
+ *
+ * @return The library's RexxGetPackage entry point, or NULL if the address is
+ *         not in a library, the library is not an ooRexx package, or this
+ *         cannot be found out on this system.
+ */
+void *SysLibrary::getPackageLoader(void *address)
+{
+#ifdef HAVE_DLADDR
+    Dl_info info;
+    if (dladdr(address, &info) == 0 || info.dli_fname == NULL)
+    {
+        return NULL;
+    }
+    // the library is already loaded (the address is in it): this only gets
+    // a handle for it, and the dlclose() below gives that handle back
+#ifdef RTLD_NOLOAD
+    void *handle = dlopen(info.dli_fname, RTLD_LAZY | RTLD_NOLOAD);
+#else
+    void *handle = dlopen(info.dli_fname, RTLD_LAZY);
+#endif
+    if (handle == NULL)
+    {
+        return NULL;
+    }
+    void *loader = dlsym(handle, "RexxGetPackage");
+    dlclose(handle);
+    return loader;
+#else
+    return NULL;
+#endif
 }
 
 

@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2008-2025 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2008-2026 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -434,6 +434,16 @@ RexxMethod1(int,                        // Return type
     return retc;
 }
 
+RexxMethod3(int,                        // Return type
+            TestRegisterFunctionDll,    // Method name
+            CSTRING, name,              // function name
+            CSTRING, module,            // library name
+            CSTRING, procedure)         // entry point name
+{
+    RexxReturnCode retc = RexxRegisterFunctionDll(name, module, procedure);
+    return retc;
+}
+
 RexxMethod1(int,                        // Return type
             TestDeregisterFunction,    // Method name
             CSTRING, name)              // function name
@@ -470,6 +480,7 @@ RexxMethodEntry orxtest_methods[] = {
     REXX_METHOD(TestReorderMacro,       TestReorderMacro),
     REXX_METHOD(TestClearMacroSpace,    TestClearMacroSpace),
     REXX_METHOD(TestRegisterFunctionExe,TestRegisterFunctionExe),
+    REXX_METHOD(TestRegisterFunctionDll,TestRegisterFunctionDll),
     REXX_METHOD(TestDeregisterFunction, TestDeregisterFunction),
     REXX_METHOD(TestQueryFunction, TestQueryFunction),
     REXX_LAST_METHOD()

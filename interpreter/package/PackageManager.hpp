@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2019 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2026 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -77,6 +77,7 @@ public:
     static RoutineClass *loadRoutine(RexxString *packageName, RexxString *function);
     static RoutineClass *resolveRoutine(RexxString *function);
     static RoutineClass *createRegisteredRoutine(RexxString *function);
+    static bool isNewStyleRoutineEntry(void *entry);
     static RoutineClass *getLoadedRoutine(RexxString *function);
     static bool isRetiredRoutine(RexxString *name);
     static PNATIVEMETHOD resolveMethodEntry(RexxString *package, RexxString *name);

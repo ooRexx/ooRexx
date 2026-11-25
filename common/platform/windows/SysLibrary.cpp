@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2014 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2026 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -47,6 +47,21 @@
 SysLibrary::SysLibrary()
 {
     libraryHandle = NULL;
+}
+
+
+/**
+ * Find the ooRexx package loader of the library that contains an address.
+ * Not needed on Windows: a package DLL does not export the entry points of
+ * its routines by name, so a registered function never resolves to one.
+ *
+ * @param address An address in code.
+ *
+ * @return Always NULL.
+ */
+void *SysLibrary::getPackageLoader(void *address)
+{
+    return NULL;
 }
 
 

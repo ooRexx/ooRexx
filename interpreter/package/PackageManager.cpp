@@ -508,11 +508,74 @@ RoutineClass *PackageManager::createRegisteredRoutine(RexxString *function)
         return OREF_NULL;
     }
 
+    // an entry point that an ooRexx package defines as a new-style routine
+    // cannot be called as a registered (classic) function: it has another
+    // signature, and calling it crashed (bug #2188).  The registration may
+    // not be the one a ::ROUTINE directive asks for (rxapi keeps
+    // registrations between processes, and a host can make them), so check
+    // the entry point that was actually resolved.
+    if (isNewStyleRoutineEntry((void *)entry))
+    {
+        return OREF_NULL;
+    }
+
     // create a code handler and add to the cache
     RoutineClass *func = new RoutineClass(function, new RegisteredRoutine(function, (RexxRoutineHandler *)entry));
     registeredRoutines->put(func, function->upper());
     // we got this
     return func;
+}
+
+
+/**
+ * Check whether a package table defines an entry point as a routine that is
+ * not classic style.
+ *
+ * @param package The package table (may be NULL).
+ * @param entry   The entry point.
+ *
+ * @return true if the table has this entry point as a new-style routine.
+ */
+static bool isNewStyleIn(RexxPackageEntry *package, void *entry)
+{
+    if (package == NULL || package->routines == NULL)
+    {
+        return false;
+    }
+    for (RexxRoutineEntry *routine = package->routines; routine->style != 0; routine++)
+    {
+        if (routine->entryPoint == entry)
+        {
+            return routine->style != ROUTINE_CLASSIC_STYLE;
+        }
+    }
+    return false;
+}
+
+
+/**
+ * Check whether an entry point is a new-style (not classic) routine of an
+ * ooRexx package: one of the packages already loaded (the internal ones
+ * included), or the package of the library that contains it.
+ *
+ * @param entry  The entry point.
+ *
+ * @return true if a package defines this entry point as a routine that is not
+ *         classic style.
+ */
+bool PackageManager::isNewStyleRoutineEntry(void *entry)
+{
+    for (HashContents::TableIterator iterator = packages->iterator(); iterator.isAvailable(); iterator.next())
+    {
+        LibraryPackage *package = (LibraryPackage *)iterator.value();
+        if (isNewStyleIn(package->getPackageEntry(), entry))
+        {
+            return true;
+        }
+    }
+
+    PACKAGE_LOADER loader = (PACKAGE_LOADER)SysLibrary::getPackageLoader(entry);
+    return loader != NULL && isNewStyleIn((*loader)(), entry);
 }
 
 
