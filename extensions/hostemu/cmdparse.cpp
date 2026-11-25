@@ -72,7 +72,7 @@
 
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2009-2010 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2009-2026 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -133,7 +133,7 @@
 int yylex (
    void);                        /* no arguments                      */
 void yyerror (
-   char * token);                /* token string                      */
+   const char * token);                /* token string                      */
 int kwsearch (
    char * token);                /* token string                      */
 bool isnumeric (
@@ -1868,7 +1868,7 @@ int yylex (
 /*--------------------------------------------------------------------*/
 
 void yyerror (
-   char * token)                 /* token string                      */
+   const char * token)                 /* token string                      */
    {
 
    fprintf (stderr, "hostemu: bad PLIST, token \"%s\"\n", token);
