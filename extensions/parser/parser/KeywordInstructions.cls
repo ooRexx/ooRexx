@@ -137,6 +137,8 @@
 /*                  of the templates                                          */
 /* 20261124         Template.List, Template and Prefixed.Template inherit     */
 /*                  Rexx.Node                                                 */
+/* 20261125         Address.Instruction~redirectionTargets; the targets of    */
+/*                  STREAM and USING are children of the instruction          */
 /*                                                                            */
 /******************************************************************************/
 
@@ -346,7 +348,7 @@ Done:
 --------------------------------------------------------------------------------
 
 ::Class Address.Instruction Public SubClass Rexx.Instruction
-::Constant childAttributes "ENV_EXPRESSION EXPRESSION"
+::Constant childAttributes "ENV_EXPRESSION EXPRESSION REDIRECTIONTARGETS"
 ::Attribute begin          Get
 ::Attribute end            Get
 ::Attribute environment    Get
@@ -382,6 +384,10 @@ Done:
 --                               stream that was not specified.
 --   redirectionOption(stream)-- "APPEND" or "REPLACE" when specified (OUTPUT
 --                               and ERROR only), "" otherwise.
+--   redirectionTargets       -- An array with the targets of the streams that
+--                               were specified, INPUT, OUTPUT and ERROR in
+--                               that order (children puts them in source
+--                               order).
 --------------------------------------------------------------------------------
 
 ::Method with
@@ -412,6 +418,14 @@ Done:
   If options.~hasIndex(stream"_APPEND")  Then Return "APPEND"
   If options.~hasIndex(stream"_REPLACE") Then Return "REPLACE"
   Return ""
+
+::Method redirectionTargets
+  targets = Array()
+  Do stream Over .Array~of("INPUT", "OUTPUT", "ERROR")
+    target = self~redirectionTarget(stream)
+    If target \== .Nil Then targets~append(target)
+  End
+  Return targets
 
 /******************************************************************************/
 /* ARG instruction                                                            */
