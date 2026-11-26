@@ -72,6 +72,10 @@ In `parser/modules/`:
 - `Load.Parser.Module.rex` ... the loader of the parser's modules: a module
                                adds methods to the parser's classes, and
                                calls the loader to define them
+- `print.cls`              ... the print module: it makes the nodes of the
+                               tree printable, as normalized source
+                               (`node~string`, `instruction~makeArray`,
+                               `package~makeArray`)
 - `identity.cls`           ... the identity compiler: it compiles a program,
                                through the parser's tree, to an identical copy
                                of itself, and so it is a skeleton for other
@@ -92,6 +96,16 @@ In `parser/modules/`:
                                `EnableExperimentalFeatures.rex`, which a
                                translated program calls to add the methods
                                to their classes
+
+A program uses the print module with
+
+```rexx
+::Requires "parser.cls"
+::Requires "parser/modules/print.cls"
+```
+
+and, for a `parser = .Rexx.Parser~new(name, source)`, prints the program,
+one line per element of the array, with `parser~package~makeArray`.
 
 A program uses the identity compiler with
 
