@@ -69,6 +69,9 @@
 /*                   raises for a mistake in the document                     */
 /* 20261121         Common Public License 1.0, and copyright also of the Rexx */
 /*                  Language Association, as the rest of ooRexx (RFE #878)    */
+/* 20261126    1.0  The mistakes in a document are a Rexx.Parser.             */
+/*                  DocumentError, thrown as USER REXX.PARSER.DOCUMENTERROR:  */
+/*                  new ReportDocumentError; IsAParseError is gone            */
 /*                                                                            */
 /******************************************************************************/
 
@@ -122,31 +125,24 @@
 
 /******************************************************************************/
 /*                                                                            */
-/* IsAParseError(co, itrace) -- An error that FencedCode found in a document  */
+/* ReportDocumentError(error, itrace) -- Report a Rexx.Parser.DocumentError   */
 /*                                                                            */
-/* For the RexxPub pipelines, in a CATCH clause of SYNTAX. A SYNTAX 88.900    */
-/* raised by FencedCode is a mistake in the document (a bad option, a block   */
-/* with no end), not a bug: it is said in one line, without a traceback       */
-/* (Rony, 18/10/2026), and the routine returns 1. Anything else returns 0,    */
-/* and the caller should propagate it. (The errors of the parser are not      */
-/* SYNTAX any more: see ReportParseError.)                                    */
-/*                                                                            */
-/* Usage:                                                                     */
-/*    If \IsAParseError( ... ) Then Raise Propagate -- Application error      */
-/*    -- Error already handled                                                */
+/* For the utilities and the RexxPub pipelines, in a CATCH clause of the      */
+/* condition USER REXX.PARSER.DOCUMENTERROR: a mistake in a document (a bad   */
+/* option, a block with no end), not a bug. Displays the error on .Error,     */
+/* "file:line: message" and the line in error, without a traceback (Rony,     */
+/* 18/10/2026), and, if itrace, the stack frames where it was found.          */
 /*                                                                            */
 /******************************************************************************/
 
-::Routine IsAParseError Public
-  Use Strict Arg co, itrace
-
-  If co~code \== "88.900" Then Return 0
-  If \co~program~caselessEndsWith("FencedCode.cls") Then Return 0
- .Error~Say( "Error:" co~additional~lastItem )
+::Routine ReportDocumentError Public
+  Use Strict Arg error, itrace
+  Do line Over error~report
+   .Error~Say( line )
+  End
   If itrace Then Do
    .Error~Say
    .Error~Say( "Trace follows:"         )
    .Error~Say( Copies("-",80)           )
-   .Error~Say( co~stackFrames~makeArray )
+   .Error~Say( error~stackFrames~makeArray )
   End
-  Return 1

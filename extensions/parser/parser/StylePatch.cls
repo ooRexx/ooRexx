@@ -57,6 +57,8 @@
 /*                  is a set of names (BUILTIN) patches each one; every       */
 /*                  colour is rrggbbaa, as those of GetHighlight (#rgb gave   */
 /*                  rrggbb, and a named colour rrggbbaa)                      */
+/* 20261126    1.0  Every mistake in a patch is a SYNTAX 88.900 (a bad        */
+/*                  colour, alpha or "no" was 93.900)                         */
 /*                                                                            */
 /******************************************************************************/
 
@@ -277,19 +279,19 @@ NormalizeAlpha:
   Return
 
 BadAlpha:
-  Raise Syntax 93.900 Additional("Bad alpha '"alpha"'")
+  Raise Syntax 88.900 Additional("Bad alpha '"alpha"'")
 
 BadNo:
-  Raise Syntax 93.900 Additional("Invalid option 'no "option"'")
+  Raise Syntax 88.900 Additional("Invalid option 'no "option"'")
 
 BadFinalNo:
-  Raise Syntax 93.900 Additional("Invalid option 'no'")
+  Raise Syntax 88.900 Additional("Invalid option 'no'")
 
 BadOption:
-  Raise Syntax 93.900 Additional("Invalid option '"option"'")
+  Raise Syntax 88.900 Additional("Invalid option '"option"'")
 
 BadColor:
-  Raise Syntax 93.900 Additional("Invalid color '"color"'")
+  Raise Syntax 88.900 Additional("Invalid color '"color"'")
 
 BadBackground:
-  Raise Syntax 93.900 Additional("Invalid background color '"background"'")
+  Raise Syntax 88.900 Additional("Invalid background color '"background"'")

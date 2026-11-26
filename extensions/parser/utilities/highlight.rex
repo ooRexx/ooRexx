@@ -95,6 +95,8 @@
 /*                  it; no more links to rexx.epbcn.com and file:////. -l     */
 /*                  without RexxPub's LaTeX driver says so, without a         */
 /*                  traceback                                                 */
+/* 20261126    1.0  A bad --patch or --patchfile is said in one line, without */
+/*                  a traceback                                               */
 /*                                                                            */
 /******************************************************************************/
 
@@ -163,7 +165,7 @@ Main:
       When "--patch"           Then Do
         If args~size == 0 Then
           Call Error "Missing value after '"option"' option."
-        patch = .StylePatch~of( args[1] )
+        patch = Patch( args[1], option )
         args~delete(1)
       End
       When "--patchfile"       Then Do
@@ -173,8 +175,7 @@ Main:
         args~delete(1)
         file = Stream(value,"C", "Q Exists")
         If file == "" Then Call Error "File '"value"' not found."
-        value = File2Array( file )
-        patch = .StylePatch~of( value )
+        patch = Patch( File2Array( file ), option "'"value"'" )
       End
 
       When "--startfrom"         Then options.startFrom    = Natural(value)
@@ -289,6 +290,15 @@ Natural:
 Error:
  .Error~Say(Arg(1))
   Exit 1
+
+-- A patch that cannot be read is a mistake in the command line: said in
+-- one line, without a traceback
+Patch:
+  Do
+    Return .StylePatch~of( Arg(1) )
+  Catch co = Syntax 88.900
+    Call Error "Error in" Arg(2)":" co~additional~lastItem
+  End
 
 --------------------------------------------------------------------------------
 

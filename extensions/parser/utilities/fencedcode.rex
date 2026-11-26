@@ -63,6 +63,9 @@
 /*                  links a rexx-STYLE.css of the current directory after     */
 /*                  it, as highlight; no more links to rexx.epbcn.com and     */
 /*                  file:////                                                 */
+/* 20261126    1.0  A mistake in the document is a Rexx.Parser.DocumentError  */
+/*                  (USER REXX.PARSER.DOCUMENTERROR), reported by             */
+/*                  ReportDocumentError; IsAParseError is gone                */
 /*                                                                            */
 /******************************************************************************/
 
@@ -75,15 +78,12 @@
   Catch co = User Rexx.Parser.Error -- An error in FILE, found by the parser
     Call ReportParseError co~additional, options.itrace == 1
     Exit - co~additional~major
-  Catch co = Syntax
-    -- A mistake in the document that FencedCode found is reported; anything
-    -- else is an error of this program
-    If \IsAParseError( co, options.itrace == 1 ) Then Do
-     .Error~Say( "Error" co~code "in" co~program", line" co~position":" )
-      Raise Propagate
-    End
-    Parse Value co~code With major"."
-    Exit -major
+  Catch co = User Rexx.Parser.DocumentError -- A mistake in the document
+    Call ReportDocumentError co~additional, options.itrace == 1
+    Exit -88
+  Catch co = Syntax                         -- An error of this program
+   .Error~Say( "Error" co~code "in" co~program", line" co~position":" )
+    Raise Propagate
   End
 
   Exit
