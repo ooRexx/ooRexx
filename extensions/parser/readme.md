@@ -20,7 +20,7 @@ history, its publications and the RexxPub publishing framework that uses it:
 is all a program needs. `parser.cls` is the only file that has to be found in
 the search path; it finds everything else in its `parser/` directory, next to
 it. The version is `.Rexx.Parser~version` (a release and a refresh date,
-`"0.7 20261121"`).
+`"1.0 20261126"`).
 
 The parser needs ooRexx 5.3.0 r13562 or later (THROW).
 

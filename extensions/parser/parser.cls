@@ -113,6 +113,8 @@
 /*                  decided in the review of the Element and Tree APIs; the   */
 /*                  attributes that only the parser writes are read-only      */
 /*                  (set... methods)                                          */
+/* 20261126    1.0  Version 1.0. Rexx.Package~options is gone: an empty set   */
+/*                  that nobody filled (what remained of NetRexxOptions)      */
 /*                                                                            */
 /******************************************************************************/
 
@@ -147,7 +149,7 @@
 ::Class Rexx.Parser Public
 
 -- The version of the parser: the release and the refresh (YYYYMMDD), as in
--- "The current release is beta 0.7, refresh 20261121." of the readme.md of
+-- "The current release is 1.0, refresh 20261126." of the readme.md of
 -- the project. Two words, so that a client can say
 --
 --   Parse Value .Rexx.Parser~version With release refresh
@@ -156,7 +158,7 @@
 -- ****  Change it with every refresh, as the line of the readme.  ****
 -- (A test of RexxPub, in Md2slidesVersion.testGroup, checks that both say
 -- the same.)
-::Constant version "0.7 20261122"
+::Constant version "1.0 20261126"
 
 ::Attribute package Get
 
@@ -634,7 +636,6 @@ CheckThatUseLocalIsValid:
 
 ::Class Rexx.Package Public Inherit Rexx.Node
 
-::Attribute options Get             -- Global options, when NetRexxOptions = 1
 ::Attribute clauser Get             -- The clauser
 ::Attribute preClauser Get          -- The preClauser
 ::Attribute scanner Get             -- The scanner
@@ -668,8 +669,7 @@ CheckThatUseLocalIsValid:
 
 ::Method init
   Expose name source        -
-    options                 -
-    Clauser                 -
+    clauser                 -
     preclauser              -
     scanner                 -
     privateClasses          -
@@ -691,9 +691,9 @@ CheckThatUseLocalIsValid:
 
   self~init:super
 
-  Clauser                 = .Clauser~new( self )
-  preClauser              =  Clauser~preClauser
-  scanner                 =  Clauser~scanner
+  clauser                 = .Clauser~new( self )
+  preClauser              =  clauser~preClauser
+  scanner                 =  clauser~scanner
   definedMethods          = .StringTable~new
   privateClasses          = .StringTable~new
   publicClasses           = .StringTable~new
@@ -706,7 +706,6 @@ CheckThatUseLocalIsValid:
   directives              =  Array()
   endOfSource             = .Nil
   blockInstructionsStacks = .Stack~new
-  options                 = .Set~new
   sourceLiteralStack      = .Stack~new
   scannerStack            = .Stack~new
 
