@@ -129,6 +129,9 @@
 /*                  line, and no longer a SYNTAX 88.900. A bad patch= or      */
 /*                  patchfile= stopped with a traceback, and said neither     */
 /*                  the file nor the line                                     */
+/* 20261126         A style= that names no style is a mistake in the          */
+/*                  document (StyleFile): the block had no colours, and       */
+/*                  nothing said why                                          */
 /*                                                                            */
 /******************************************************************************/
 
@@ -295,6 +298,7 @@ End
 ::Requires "Highlighter.cls"
 ::Requires "StylePatch.cls"
 ::Requires "HTMLClasses.cls"
+::Requires "StyleSheet.cls"
 
 --------------------------------------------------------------------------------
 -- Main routine                                                               --
@@ -2067,6 +2071,7 @@ MissingEndMarker:
         When "patchfile"    Then Options.patchfile    = value
         When "patch"        Then Options.patch        = value
         When "style"        Then Do
+          Call StyleIsKnown value
           Options.style              = value
           Options.["STYLE-EXPLICIT"] = 1  -- author asked for this style
         End
@@ -2172,6 +2177,26 @@ BadValue:
   Raise Syntax 88.900 Additional("Invalid value '"value"'")
 BadOptions:
   Raise Syntax 88.900 Additional("Invalid options '"options"'")
+
+--------------------------------------------------------------------------------
+-- StyleIsKnown - a style= that names no style is a mistake in the document:  --
+-- a SYNTAX 88.900, that ParseOptions' callers make a DocumentError, with     --
+-- the line. A style is looked for as StyleFile looks for it: the parser's    --
+-- styles, REXX_PARSER_STYLE_PATH (RexxPub adds its css/ there) and the       --
+-- styles of the author's own (LocalStyle). The page linked                   --
+-- rexx-NAME.css, which did not exist, and the block had no colours.          --
+-- A file name (a "/", or ".css") is left as it was: it is not checked.       --
+--------------------------------------------------------------------------------
+
+::Routine StyleIsKnown Private
+  Use Strict Arg style
+  If Pos("/", style) + Pos("\", style) > 0 | style~caselessEndsWith(".css") Then
+    Return
+  Do
+    Call StyleFile style
+  Catch co = Syntax 98.900
+    Raise Syntax 88.900 Additional( co~additional[1] )
+  End
 
 --------------------------------------------------------------------------------
 -- FenceOptions - ParseOptions for the fence at line `lineNo` of `filename`:  --
