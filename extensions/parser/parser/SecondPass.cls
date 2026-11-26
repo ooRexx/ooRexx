@@ -64,6 +64,10 @@
 /*                  ::ROUTINE, then external).                                */
 /* 20261121         Common Public License 1.0, and copyright also of the Rexx */
 /*                  Language Association, as the rest of ooRexx (RFE #878)    */
+/* 20261125         The cut of the tree API: the names, types and attributes  */
+/*                  decided in the review of the Element and Tree APIs; the   */
+/*                  attributes that only the parser writes are read-only      */
+/*                  (set... methods)                                          */
 /*                                                                            */
 /******************************************************************************/
 
@@ -129,8 +133,8 @@
 
   label = clause~label
   If label == .Nil Then Do -- SIGNAL ON only
-    label = clause~condition
-    If label~value == "USER" Then label = clause~userCondition
+    label = clause~condition~name
+    If label~value == "USER" Then label = clause~condition~userCondition
   End
   If \bodyLabels~hasIndex( label~value ) Then Signal 16.001
 
@@ -167,7 +171,7 @@
           When "FUNCTION" Then subCategory = .INTERNAL.FUNCTION.NAME
           When "CALL"     Then subCategory = .INTERNAL.SUBROUTINE.NAME
         End
-        name~labelFor = bodyLabels[label]~labelFor
+        name~setTargetLabel( bodyLabels[label] )
       End
       When .Parser.BIF[ label ] \== .Nil     Then Do
         Select Case type
@@ -203,4 +207,4 @@
     labels = .Parser.Options~interpret
     If labels~isA( .Collection ) Then Return labels
   End
-  Return body~labels
+  Return body~targetLabels

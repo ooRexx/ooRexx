@@ -100,6 +100,10 @@
 /* 20261123         No Catch of SYNTAX in parse: it wrote an error header to  */
 /*                  .ERROR even when the caller caught the condition, and a   */
 /*                  utility that prints its own printed it twice              */
+/* 20261125         The cut of the tree API: the names, types and attributes  */
+/*                  decided in the review of the Element and Tree APIs; the   */
+/*                  attributes that only the parser writes are read-only      */
+/*                  (set... methods)                                          */
 /*                                                                            */
 /******************************************************************************/
 
@@ -394,11 +398,11 @@ Exit
 --------------------------------------------------------------------------------
 
 BlockComments:
-  comment = element~source
+  comment = element~sourceLines
   lines   = comment~items
   tag = HTMLClass[ element~category ]
   padding = options.pad
-  Do Counter c line Over element~source
+  Do Counter c line Over comment
     If c > 1 Then Do
       currentline += 1
       displayLine = currentLine + options.startFrom - 1

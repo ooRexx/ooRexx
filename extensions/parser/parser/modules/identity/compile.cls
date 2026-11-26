@@ -58,6 +58,10 @@
 /*                  bin/parser/modules/identity/ (RFE #878: everything but    */
 /*                  parser.cls lives in parser/); its requires and the call   */
 /*                  to the loader, relative to this file                      */
+/* 20261125         The cut of the tree API: the names, types and attributes  */
+/*                  decided in the review of the Element and Tree APIs; the   */
+/*                  attributes that only the parser writes are read-only      */
+/*                  (set... methods)                                          */
 /*                                                                            */
 /******************************************************************************/
 
@@ -90,7 +94,7 @@
   If \element~isInserted Then Do
     If element < .ALL.COMMENTS, -- Special case: multi-line block comments
       element~from~word(1) \== element~to~word(1) Then Do
-      a = element~source~makeArray
+      a = element~sourceLines
       n = a~items
       Loop Counter c l Over a
         If c < n Then stream~Say(l)

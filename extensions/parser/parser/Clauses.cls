@@ -100,10 +100,14 @@
 /* 20261124         The clauses and instructions of DO, LOOP, IF and SELECT   */
 /*                  have the block instruction as their parent                */
 /* 20261124         childAttributes of the clauses and block instructions     */
+/* 20261125         The cut of the tree API: the names, types and attributes  */
+/*                  decided in the review of the Element and Tree APIs; the   */
+/*                  attributes that only the parser writes are read-only      */
+/*                  (set... methods)                                          */
 /*                                                                            */
 /******************************************************************************/
 
- .environment~                  End.Of.Source =                  .End.Of.Source
+ .environment~           End.Of.Source.Clause =           .End.Of.Source.Clause
 
  .environment~                      Do.Clause =                      .Do.Clause
  .environment~                 Do.Over.Clause =                 .Do.Over.Clause
@@ -116,7 +120,10 @@
  .environment~               Simple.Do.Clause =               .Simple.Do.Clause
  .environment~                     End.Clause =                     .End.Clause
  .environment~                   Catch.Clause =                   .Catch.Clause
- .environment~                Catch.Condition =                .Catch.Condition
+ .environment~            Condition.Reference =            .Condition.Reference
+ .environment~                   When.Section =                   .When.Section
+ .environment~                  Catch.Section =                  .Catch.Section
+ .environment~                Finally.Section =                .Finally.Section
  .environment~                    Else.Clause =                    .Else.Clause
  .environment~                 Finally.Clause =                 .Finally.Clause
  .environment~                      If.Clause =                      .If.Clause
@@ -131,7 +138,7 @@
  .environment~         Loop.Controlled.Clause =         .Loop.Controlled.Clause
  .environment~             Simple.Loop.Clause =             .Simple.Loop.Clause
  .environment~                    Null.Clause =                    .Null.Clause
- .environment~               Iterative.Clause =               .Iterative.Clause
+ .environment~              Do.Or.Loop.Clause =              .Do.Or.Loop.Clause
  .environment~               Otherwise.Clause =               .Otherwise.Clause
  .environment~                  Select.Clause =                  .Select.Clause
  .environment~                    Then.Clause =                    .Then.Clause
@@ -142,7 +149,7 @@
  .environment~                 Do.Instruction =                 .Do.Instruction
  .environment~                 If.Instruction =                 .If.Instruction
  .environment~      Implicit.Exit.Instruction =      .Implicit.Exit.Instruction
- .environment~          Iterative.Instruction =          .Iterative.Instruction
+ .environment~         Do.Or.Loop.Instruction =         .Do.Or.Loop.Instruction
  .environment~               Loop.Instruction =               .Loop.Instruction
  .environment~ Message.Assignment.Instruction = .Message.Assignment.Instruction
  .environment~            Message.Instruction =            .Message.Instruction
@@ -150,7 +157,7 @@
 
  .environment~              Block.Instruction =              .Block.Instruction
  .environment~               Instruction.List =               .Instruction.List
- .environment~             Source.Literal.End =             .Source.Literal.End
+ .environment~      Source.Literal.End.Clause =      .Source.Literal.End.Clause
 
 ::Requires "BaseClassesAndRoutines.cls"
 ::Requires "KeywordInstructions.cls"
@@ -167,8 +174,8 @@
 
 ::Class Clauser Public
 
-::Attribute scanner
-::Attribute preClauser
+::Attribute scanner Get
+::Attribute preClauser Get
 
 /******************************************************************************/
 /* INIT                                                                       */
@@ -271,12 +278,11 @@
     clause    = self~nextClause
   End
 
-  clause~labels      = labels
-  clause~nullClauses = nullClauses
+  clause~setLabels( labels )
+  clause~setNullClauses( nullClauses )
 
   Do i = 1 To labels~items
-    labels[i]~labelFor       = clause
-    labels[i]~label~labelFor = clause
+    labels[i]~setLabelFor( clause )
   End
 
   Return clause
@@ -364,7 +370,7 @@ LabelError:
     When .Coactivity.Directive Then
       If Source.Literal        Then Return clause
       Else                          Signal 99.916
-    When   .Source.Literal.End Then
+    When   .Source.Literal.End.Clause Then
       If Source.Literal        Then Return clause
       Else                          Signal 90.900
     Otherwise
@@ -428,8 +434,9 @@ LabelError:
   DO     = TheElementAfter( doClause~begin )
   doLine = DO~from~word(1)
 
-  instructions  = Array()
-  catchSections = Array()
+  instructions   = Array()
+  catchSections  = Array()
+  finallySection = .Nil
 
   ENDClauseIsOK = 1
 
@@ -450,9 +457,9 @@ LabelError:
         Signal 14.005
       End
       When .Use.Arg.Instruction, .Arg.Instruction
-                                      Then currentBody~signature = .Nil
+                                      Then currentBody~setSignature( .Nil )
       When .Parse.Instruction Then If instruction~variant == "ARG"
-                                      Then currentBody~signature = .Nil
+                                      Then currentBody~setSignature( .Nil )
       Otherwise Nop
     End
     instructions~append( instruction )
@@ -461,22 +468,24 @@ LabelError:
 
 Catch:
   sections      = self~Catch.Sections( doClause, instruction )
-  catchSections = sections[1]
-  instruction   = sections[2]
+  catchSections  = sections[1]
+  finallySection = sections[2]
+  instruction    = sections[3]
 
 End.Clause:
   END = TheElementAfter( instruction~begin )
   name = instruction~name
-  If name \== "" Then Do
-    doLabel = doClause~name
+  If name \== .Nil Then Do
+    doLabel = doClause~label
     If doLabel == .Nil        Then Do
       doLabel = doClause~control
       If doLabel == .Nil Then Signal 10.003
     End
-    If name \== doLabel~value  Then Signal 10.002
+    If name~value \== doLabel~value  Then Signal 10.002
   End
   Return .Do.Instruction~new( -
-    package, doClause, instructions, instruction, catchSections -
+    package, doClause, instructions, instruction, catchSections, -
+    finallySection                                                -
   )
 
 -- Symbol following END ("&1") must match block specification name ("&2")
@@ -530,9 +539,9 @@ End.Clause:
     When .Implicit.Exit.Instruction Then Signal 14.003
     When .Expose.Instruction        Then Call 99.907 thenInstruction
     When .Use.Arg.Instruction, .Arg.Instruction
-                                    Then currentBody~signature = .Nil
+                                    Then currentBody~setSignature( .Nil )
     When .Parse.Instruction Then If thenInstruction~variant == "ARG"
-                                    Then currentBody~signature = .Nil
+                                    Then currentBody~setSignature( .Nil )
 
     Otherwise Nop
   End
@@ -558,9 +567,9 @@ End.Clause:
     When .Implicit.Exit.Instruction Then Signal 14.004
     When .Expose.Instruction Then Call 99.907 elseInstruction
     When .Use.Arg.Instruction, .Arg.Instruction
-                                    Then currentBody~signature = .Nil
+                                    Then currentBody~setSignature( .Nil )
     When .Parse.Instruction Then If elseInstruction~variant == "ARG"
-                                    Then currentBody~signature = .Nil
+                                    Then currentBody~setSignature( .Nil )
     Otherwise Nop
   End
 
@@ -601,8 +610,9 @@ NoLabels:
   LOOP     = TheElementAfter( loopClause~begin )
   loopLine = LOOP~from~word(1)
 
-  instructions  = Array()
-  catchSections = Array()
+  instructions   = Array()
+  catchSections  = Array()
+  finallySection = .Nil
 
   ENDClauseIsOK = 1
 
@@ -619,9 +629,9 @@ NoLabels:
       When .Expose.Instruction        Then Signal 99.907
       When .Implicit.Exit.Instruction Then Signal 14.005
       When .Use.Arg.Instruction, .Arg.Instruction
-                                      Then currentBody~signature = .Nil
+                                      Then currentBody~setSignature( .Nil )
       When .Parse.Instruction Then If instruction~variant == "ARG"
-                                      Then currentBody~signature = .Nil
+                                      Then currentBody~setSignature( .Nil )
       Otherwise Nop
     End
     instructions~append( instruction )
@@ -630,22 +640,24 @@ NoLabels:
 
 Catch:
   sections      = self~Catch.Sections( loopClause, instruction )
-  catchSections = sections[1]
-  instruction   = sections[2]
+  catchSections  = sections[1]
+  finallySection = sections[2]
+  instruction    = sections[3]
 
 End.Clause:
   END = TheElementAfter(instruction~begin)
   name = instruction~name
-  If name \== "" Then Do
-    loopLabel = loopClause~name
+  If name \== .Nil Then Do
+    loopLabel = loopClause~label
     If loopLabel == .Nil   Then Do
       loopLabel = loopClause~control
       If loopLabel == .Nil Then Signal 10.003
     End
-    If name \== loopLabel~value  Then Signal 10.002
+    If name~value \== loopLabel~value  Then Signal 10.002
   End
   Return .Loop.Instruction~new( -
-    package, loopClause, instructions, instruction, catchSections -
+    package, loopClause, instructions, instruction, catchSections, -
+    finallySection                                                  -
   )
 
 -- Symbol following END ("&1") must match block specification name ("&2")
@@ -677,13 +689,15 @@ End.Clause:
   SELECT               = TheElementAfter( selectClause~begin )
   selectLine           = SELECT~from~word(1)
 
-  whenThenInstructions = Array()
+  whenSections = Array()
 
   otherwiseClause      = .Nil
 
-  otherwiseSequence    = Array()
+  otherwiseInstructions    = Array()
 
   catchSections        = Array()
+
+  finallySection       = .Nil
 
   whenClause = self~Next.Instruction.Fragment( .Array~of( 47.004 ) )
 
@@ -731,13 +745,14 @@ End.Clause:
       When .Implicit.Exit.Instruction Then Signal 14.003
       When .Expose.Instruction Then Call 99.907 thenInstruction
       When .Use.Arg.Instruction, .Arg.Instruction
-                                      Then currentBody~signature = .Nil
+                                      Then currentBody~setSignature( .Nil )
       When .Parse.Instruction Then If thenInstruction~variant == "ARG"
-                                      Then currentBody~signature = .Nil
+                                      Then currentBody~setSignature( .Nil )
       Otherwise Nop
     End
 
-    whenThenInstructions~append( (whenClause, thenClause, thenInstruction) )
+    whenSections~append( -
+      .When.Section~of( whenClause, thenClause, thenInstruction ) )
 
     next = self~Next.Instruction.Fragment( .Array~of( 47.004 ) )
 
@@ -778,38 +793,40 @@ Otherwise:
       When .Implicit.Exit.Instruction Then Signal 14.901
       When .Expose.Instruction        Then Call 99.907 next
       When .Use.Arg.Instruction, .Arg.Instruction
-                                      Then currentBody~signature = .Nil
+                                      Then currentBody~setSignature( .Nil )
       When .Parse.Instruction Then If next~variant == "ARG"
-                                      Then currentBody~signature = .Nil
+                                      Then currentBody~setSignature( .Nil )
       Otherwise Nop
     End
-    otherwiseSequence~append( next )
+    otherwiseInstructions~append( next )
     last = next
   End
 
 Catch:
-  sections      = self~Catch.Sections( selectClause, next )
-  catchSections = sections[1]
-  next          = sections[2]
+  sections       = self~Catch.Sections( selectClause, next )
+  catchSections  = sections[1]
+  finallySection = sections[2]
+  next           = sections[3]
 
 End:
   END = TheElementAfter( next~begin )
   name = next~name
-  If name \== "" Then Do
-    selectLabel = selectClause~name
+  If name \== .Nil Then Do
+    selectLabel = selectClause~label
     If selectLabel == .Nil  Then Signal 10.007
-    If name \== selectLabel~value Then Signal 10.004
+    If name~value \== selectLabel~value Then Signal 10.004
   End
-  If whenThenInstructions~isEmpty Then Signal 7.001
+  If whenSections~isEmpty Then Signal 7.001
 
   Return .Select.Instruction~new( -
     package,                      -
     selectClause,                 -
-    whenThenInstructions,         -
+    whenSections,         -
     otherwiseClause,              -
-    otherwiseSequence,            -
+    otherwiseInstructions,            -
     next,                         -
-    catchSections                 -
+    catchSections,                -
+    finallySection                -
   )
 
 NoLabels:
@@ -853,8 +870,9 @@ NoLabels:
 /*                                                                            */
 /*   The CATCH and FINALLY clauses of a DO, LOOP or SELECT, with their code,  */
 /*   up to the END of the block. "clause" is the first CATCH or FINALLY       */
-/*   clause, already parsed. Returns an array: the sections (an array of      */
-/*   (clause, instructions) pairs, in source order) and the END clause.       */
+/*   clause, already parsed. Returns an array: the CATCH sections (an array   */
+/*   of Catch.Section objects, in source order), the FINALLY section (a       */
+/*   Finally.Section, or .Nil) and the END clause.                            */
 /*                                                                            */
 /*   While the code of a clause is parsed, the clause is on the block         */
 /*   instructions stack, just above its block: LEAVE and ITERATE see that     */
@@ -871,8 +889,9 @@ NoLabels:
   BLOCK     = TheElementAfter( blockClause~begin )
   blockLine = BLOCK~from~word(1)
 
-  sections    = Array()
-  stack       = package~blockInstructionsStacks~top
+  catchSections  = Array()
+  finallySection = .Nil
+  stack          = package~blockInstructionsStacks~top
   currentBody = package~currentBodies~top
   finally     = .Nil
 
@@ -910,18 +929,22 @@ NoLabels:
         When .Expose.Instruction            Then Signal 99.907
         When .Implicit.Exit.Instruction     Then Signal Incomplete
         When .Use.Arg.Instruction, .Arg.Instruction
-                                            Then currentBody~signature = .Nil
+                                    Then currentBody~setSignature( .Nil )
         When .Parse.Instruction Then If instruction~variant == "ARG"
-                                            Then currentBody~signature = .Nil
+                                    Then currentBody~setSignature( .Nil )
         Otherwise Nop
       End
       instructions~append( instruction )
     End
 
-    sections~append( ( clause, instructions ) )
+    If clause~isA( .Finally.Clause ) Then
+      finallySection = .Finally.Section~of( clause, instructions )
+    Else
+      catchSections~append( .Catch.Section~of( clause, instructions ) )
 
     -- The END clause has already popped the clause and the block.
-    If instruction~isA( .End.Clause ) Then Return ( sections, instruction )
+    If instruction~isA( .End.Clause ) Then
+      Return ( catchSections, finallySection, instruction )
 
     stack~pop
     clause = instruction
@@ -1031,18 +1054,14 @@ Incomplete:
 
   Call PrepareExpression package, element
 
-  expression = Expression.List( package, element, .EL.END_OF_CLAUSE )
+  expression = Expression.Or.Array.Term( package, element, .EL.END_OF_CLAUSE )
 
   -- Allow empty assignments when the "emptyassignments" option
   -- has been specified with a value of "1".
-  If expression~isEmpty Then Do
+  If expression == .Nil Then Do
     If .Features.Empty.Assignments Then Nop
     Else Signal 35.918
   End
-
-  -- In this context, an expression list is an array term.
-  If expression~isA(.Expression.List) Then
-    expression = .Array.Term~new( expression )
 
   Return .Assignment.Instruction~new(                 -
     package, begin, end, symbol, operator, expression -
@@ -1060,13 +1079,13 @@ Incomplete:
 --------------------------------------------------------------------------------
 
 ::Class Assignment.Instruction Public SubClass Rexx.Instruction
-::Constant childAttributes "SYMBOL EXPRESSION"
-::Attribute symbol     Get
+::Constant childAttributes "TARGET EXPRESSION"
+::Attribute target     Get -- The variable term
 ::Attribute operator   Get
-::Attribute expression Get
+::Attribute expression Get -- The expression, or .Nil (empty assignment)
 ::Method init
-  Expose symbol operator expression
-  Use Strict Arg package, begin, end, symbol, operator, expression
+  Expose target operator expression
+  Use Strict Arg package, begin, end, target, operator, expression
   self~init:super( package, begin, end )
 
 /******************************************************************************/
@@ -1084,7 +1103,7 @@ Incomplete:
 
   executorCommand = Copies(executorCommand,.Options.Executor)
 
-  expression = Expression.List( package, element,, executorCommand)
+  expression = Expression.Or.Array.Term( package, element,, executorCommand)
 
   Return .Command.Instruction~new( package, begin, end, expression )
 
@@ -1104,12 +1123,12 @@ Incomplete:
 
 ::Routine Do.Clause Public
   Use Strict Arg package, begin, end, elements
-  Return Iterative.Clause( package, .Do.Clause, begin, end, elements )
+  Return Do.Or.Loop.Clause( package, .Do.Clause, begin, end, elements )
 
 --------------------------------------------------------------------------------
 
-::Class Do.Clause Public SubClass Iterative.Clause
-::Constant InstructionName "DO"
+::Class Do.Clause Public SubClass Do.Or.Loop.Clause
+::Constant instructionName "DO"
 
 --------------------------------------------------------------------------------
 
@@ -1155,7 +1174,7 @@ Incomplete:
   If name \< .ALL.SYMBOLS Then Signal 20.909
   Call SetConstantName name, .BLOCK.INSTRUCTION.NAME
 
-  options.["NAME"] = name~value
+  options.["NAME"] = name
 
   element = TheElementAfter( name, ignoreBlanks )
 
@@ -1185,11 +1204,11 @@ Done:
 --------------------------------------------------------------------------------
 
 ::Class End.Clause Public SubClass Rexx.Clause
-::Attribute name Get
+::Attribute name Get -- The element of the name after END, or .Nil
 ::Method init
   Expose name options.
   Use Strict Arg package, begin, end, options.
-  name = ""
+  name = .Nil
   If options.~hasIndex("NAME") Then name = options.["NAME"]
   self~init:super( package, begin, end )
 
@@ -1197,14 +1216,14 @@ Done:
 /* END OF SOURCE                                                              */
 /******************************************************************************/
 
-::Routine End.Of.Source Public
+::Routine End.Of.Source.Clause Public
   Use Strict Arg package, begin, end, elements
 
-  Return .End.Of.Source~new( package, begin, end )
+  Return .End.Of.Source.Clause~new( package, begin, end )
 
 --------------------------------------------------------------------------------
 
-::Class End.Of.Source Public SubClass Null.Clause
+::Class End.Of.Source.Clause Public SubClass Null.Clause
 
 /******************************************************************************/
 /* IF Clause                                                                  */
@@ -1221,7 +1240,7 @@ Done:
 
   -- The expression has already been prepared by the preparser
 
-  expressions = Expression.List( package, element, terminators, "logical" )
+  expressions = Logical.Expression.List( package, element, terminators )
 
   end = expressions~end
 
@@ -1231,7 +1250,7 @@ Done:
 
 ::Class If.Clause Public SubClass Rexx.Clause
 ::Constant childAttributes "EXPRESSIONS"
-::Attribute expressions
+::Attribute expressions Get
 ::Method init
   Expose expressions
   Use Strict Arg package, begin, end, expressions
@@ -1252,14 +1271,14 @@ Done:
 ::Method init
   Use Strict Arg package, begin, end
   self~init:super( package, begin, end )
-  self~terminating = .True
+  self~setTerminating( .True )
 
 /******************************************************************************/
-/* ITERATIVE.CLAUSE                                                           */
+/* DO.OR.LOOP.CLAUSE                                                          */
 /*   Code common to the DO and LOOP clauses                                   */
 /******************************************************************************/
 
-::Routine Iterative.Clause
+::Routine Do.Or.Loop.Clause
 
   Use Strict Arg package, class, begin, end, elements
 
@@ -1318,12 +1337,12 @@ Continue:
   Call SetCategory next, .EL.ASG.EQUAL
   element = TheElementAfter( next, ignoreBlanks ) -- Consume "="
   Call PrepareExpression package, element, "TO BY FOR WHILE UNTIL"
-  expression = Expression.List( package, element )
-  If expression~isEmpty Then Signal 35.904
+  expression = Expression.Or.Array.Term( package, element )
+  If expression == .Nil Then Signal 35.904
   options.["="] = expression
   seen. = 0
   Loop
-    element = expression~end
+    element = EndOfExpression( expression, element )
     If element < .EL.END_OF_CLAUSE Then Signal Done
     tValue = element~value
     Select Case tValue
@@ -1336,9 +1355,9 @@ Continue:
         Call SetSubkeyword element
         element = TheElementAfter( element )
         Call PrepareExpression package, element, "TO BY FOR WHILE UNTIL"
-        expression = Expression.List( package, element )
-        element = expression~end
-        If expression~isEmpty Then Select Case tValue
+        expression = Expression.Or.Array.Term( package, element )
+        element = EndOfExpression( expression, element )
+        If expression == .Nil Then Select Case tValue
           When "BY"  Then Signal 35.905
           When "TO"  Then Signal 35.906
           When "FOR" Then Signal 35.907
@@ -1354,12 +1373,12 @@ Continue:
   Call ControlVariable
   element = TheElementAfter( next, ignoreBlanks ) -- Consume "OVER"
   Call PrepareExpression package, element, "FOR WHILE UNTIL"
-  expression = Expression.List( package, element )
-  If expression~isEmpty Then Signal 35.911
+  expression = Expression.Or.Array.Term( package, element )
+  If expression == .Nil Then Signal 35.911
   options.collection = expression
   for = 0
   Loop
-    element = expression~end
+    element = EndOfExpression( expression, element )
     If element < .EL.END_OF_CLAUSE Then Signal Done
     tValue = element~value
     Select Case tValue
@@ -1371,9 +1390,9 @@ Continue:
         Call SetSubkeyword element
         element = TheElementAfter( element )
         Call PrepareExpression package, element, "FOR WHILE UNTIL"
-        expression = Expression.List( package, element )
-        element = expression~end
-        If expression~isEmpty Then Signal 35.907
+        expression = Expression.Or.Array.Term( package, element )
+        element = EndOfExpression( expression, element )
+        If expression == .Nil Then Signal 35.907
         options.["FOR"] = expression
       End
     End
@@ -1383,12 +1402,12 @@ Continue:
   -- The symbol the look ahead passed is the start of the expression: the
   -- blanks after it are not ignorable (they are concatenations).
   Do blank Over lookaheadBlanks
-    blank~ignorable = 0
+    blank~setIgnorable( 0 )
   End
   Call PrepareExpression package, element, "WHILE UNTIL"
-  expression = Expression.List( package, element )
+  expression = Expression.Or.Array.Term( package, element )
   options.exprr = expression
-  element = expression~end
+  element = EndOfExpression( expression, element )
   Signal Conditional
 
 -- The element after Arg(1), blanks ignored. TheElementAfter marks those
@@ -1421,7 +1440,7 @@ Conditional:
   Call SetSubkeyword element
   element = TheElementAfter( element )
   Call PrepareExpression package, element, "WHILE UNTIL"
-  expression = Expression.List( package, element, "", "logical" )
+  expression = Logical.Expression.List( package, element, "" )
   options.while = expression
   element = expression~end
   conditional = 1
@@ -1432,7 +1451,7 @@ Conditional:
   Call SetSubkeyword element
   element = TheElementAfter( element )
   Call PrepareExpression package, element, "WHILE UNTIL"
-  expression = Expression.List( package, element, "", "logical" )
+  expression = Logical.Expression.List( package, element, "" )
   options.until = expression
   element = expression~end
   conditional = 1
@@ -1554,18 +1573,18 @@ Keyword:
   End
   element = TheElementAfter( element )
   Call PrepareExpression package, element, "FOR WHILE UNTIL"
-  expression = Expression.List( package, element )
-  If expression~isEmpty Then Signal 35.911
+  expression = Expression.Or.Array.Term( package, element )
+  If expression == .Nil Then Signal 35.911
   options.supplier = expression
-  element = expression~end
+  element = EndOfExpression( expression, element )
   If element < .ALL.SYMBOLS_AND_KEYWORDS, element~value == "FOR" Then Do
     Call SetSubkeyword element
     element = TheElementAfter( element )
     Call PrepareExpression package, element, "FOR WHILE UNTIL"
-    expression = Expression.List( package, element )
-    If expression~isEmpty Then Signal 35.907
+    expression = Expression.Or.Array.Term( package, element )
+    If expression == .Nil Then Signal 35.907
     options.["FOR"] = expression
-    element = expression~end
+    element = EndOfExpression( expression, element )
     If element < .ALL.SYMBOLS_AND_KEYWORDS, element~value == "FOR" Then
       Call 27.902 element
   End
@@ -1621,66 +1640,68 @@ Keyword:
 
 --------------------------------------------------------------------------------
 
-::Class Iterative.Clause Public SubClass Rexx.Clause
-::Constant childAttributes ( "COLLECTION EXPRB EXPRF EXPRI EXPRR EXPRT" -
-  "EXPRU EXPRW SUPPLIER" )
-::Attribute name       Get
-::Attribute ctr        Get
-::Attribute exprr      Get
-::Attribute control    Get
-::Attribute forever    Get
-::Attribute exprw      Get
-::Attribute expru      Get
-::Attribute collection Get
-::Attribute supplier   Get
-::Attribute index      Get
-::Attribute item       Get
-::Attribute expri      Get
-::Attribute exprt      Get
-::Attribute exprb      Get
-::Attribute exprf      Get
-::Attribute order      Get -- Of TO, BY and FOR
-::Attribute id         Get
+::Class Do.Or.Loop.Clause Public SubClass Rexx.Clause
+::Constant childAttributes ( "COLLECTION BYEXPRESSION FOREXPRESSION"     -
+  "INITIALEXPRESSION REPEATEXPRESSION TOEXPRESSION UNTILEXPRESSIONS"   -
+  "WHILEEXPRESSIONS SUPPLIER" )
+::Attribute label             Get
+::Attribute counter           Get
+::Attribute repeatExpression  Get
+::Attribute control           Get
+::Attribute forever           Get
+::Attribute whileExpressions  Get
+::Attribute untilExpressions  Get
+::Attribute collection        Get
+::Attribute supplier          Get
+::Attribute index             Get
+::Attribute item              Get
+::Attribute initialExpression Get
+::Attribute toExpression      Get
+::Attribute byExpression      Get
+::Attribute forExpression     Get
+::Attribute order             Get -- Of TO, BY and FOR
+::Attribute id                Get
 ::Method init
-  Expose name ctr expri exprt exprb exprf exprr order control forever -
-    exprw expru type collection supplier item index id
+  Expose label counter initialExpression toExpression byExpression       -
+    forExpression repeatExpression order control forever whileExpressions -
+    untilExpressions type collection supplier item index id
   Use Strict Arg package, begin, end, options.
 
   -- ID and ORDER are always calculated
-  id         = options.id
-  order      = Strip(options.order)
+  id                = options.id
+  order             = Strip(options.order)
 
-  name       = .Nil                     -- LABEL name
-  ctr        = .Nil                     -- COUNTER ctr
-  control    = .Nil
-  expri      = .Nil                     -- expression after "="
-  exprt      = .Nil                     -- expression after "TO"
-  exprb      = .Nil                     -- expression after "BY"
-  exprf      = .Nil                     -- expression after "FOR"
-  exprw      = .Nil                     -- expression after "WHILE"
-  expru      = .Nil                     -- expression after "UNTIL"
-  collection = .Nil
-  supplier   = .Nil
-  item       = .Nil
-  index      = .Nil
-  exprr      = .Nil
-  forever    = 0
+  label             = .Nil              -- LABEL name
+  counter           = .Nil              -- COUNTER name
+  control           = .Nil
+  initialExpression = .Nil              -- expression after "="
+  toExpression      = .Nil              -- expression after "TO"
+  byExpression      = .Nil              -- expression after "BY"
+  forExpression     = .Nil              -- expression after "FOR"
+  whileExpressions  = .Nil              -- expressions after "WHILE"
+  untilExpressions  = .Nil              -- expressions after "UNTIL"
+  collection        = .Nil
+  supplier          = .Nil
+  item              = .Nil
+  index             = .Nil
+  repeatExpression  = .Nil              -- DO expression (the repetitor)
+  forever           = 0
 
-  If HasOption("label")      Then name       = Option("label")
-  If HasOption("counter")    Then ctr        = Option("counter")
-  If HasOption("control")    Then control    = Option("control")
-  If HasOption("=")          Then expri      = Option("=")
-  If HasOption("to")         Then exprt      = Option("to")
-  If HasOption("by")         Then exprb      = Option("by")
-  If HasOption("for")        Then exprf      = Option("for")
-  If HasOption("while")      Then exprw      = Option("while")
-  If HasOption("until")      Then expru      = Option("until")
-  If HasOption("exprr")      Then exprr      = Option("exprr")
-  If HasOption("collection") Then collection = Option("collection")
-  If HasOption("supplier")   Then supplier   = Option("supplier")
-  If HasOption("index")      Then index      = Option("index")
-  If HasOption("item")       Then item       = Option("item")
-  If HasOption("forever")    Then forever    = 1
+  If HasOption("label")      Then label             = Option("label")
+  If HasOption("counter")    Then counter           = Option("counter")
+  If HasOption("control")    Then control           = Option("control")
+  If HasOption("=")          Then initialExpression = Option("=")
+  If HasOption("to")         Then toExpression      = Option("to")
+  If HasOption("by")         Then byExpression      = Option("by")
+  If HasOption("for")        Then forExpression     = Option("for")
+  If HasOption("while")      Then whileExpressions  = Option("while")
+  If HasOption("until")      Then untilExpressions  = Option("until")
+  If HasOption("exprr")      Then repeatExpression  = Option("exprr")
+  If HasOption("collection") Then collection        = Option("collection")
+  If HasOption("supplier")   Then supplier          = Option("supplier")
+  If HasOption("index")      Then index             = Option("index")
+  If HasOption("item")       Then item              = Option("item")
+  If HasOption("forever")    Then forever           = 1
 
   self~init:super( package, begin, end )
   Return
@@ -1704,16 +1725,23 @@ Option:    Return options.[         Upper(Arg(1))]
 --------------------------------------------------------------------------------
 
 ::Class Label.Clause Public SubClass Rexx.Clause
-::Attribute labelFor
-::Attribute label
-::Attribute traceOnly
+::Attribute labelFor  Get -- The clause that the label identifies
+::Attribute label     Get -- The element of the label
+::Attribute traceOnly Get -- True when no CALL or SIGNAL can reach it
 ::Method init
   Expose label labelFor traceOnly
   Use Strict Arg package, begin, end, label
   labelFor        = .Nil
   traceOnly       = .True
-  label~traceOnly = .True
   self~init:super( package, begin, end )
+
+-- setLabelFor, setTraceOnly -- For the parser
+::Method setLabelFor
+  Expose labelFor
+  Use Strict Arg labelFor
+::Method setTraceOnly
+  Expose traceOnly
+  Use Strict Arg traceOnly
 
 
 /******************************************************************************/
@@ -1722,12 +1750,12 @@ Option:    Return options.[         Upper(Arg(1))]
 
 ::Routine Loop.Clause Public
   Use Strict Arg package, begin, end, elements
-  Return Iterative.Clause( package, .LOOP.Clause, begin, end, elements )
+  Return Do.Or.Loop.Clause( package, .LOOP.Clause, begin, end, elements )
 
 --------------------------------------------------------------------------------
 
-::Class Loop.Clause Public SubClass Iterative.Clause
-::Constant InstructionName "LOOP"
+::Class Loop.Clause Public SubClass Do.Or.Loop.Clause
+::Constant instructionName "LOOP"
 
 --------------------------------------------------------------------------------
 
@@ -1752,9 +1780,9 @@ Option:    Return options.[         Upper(Arg(1))]
 
   -- The expression has already been prepared by the preparser
 
-  expression = Expression.List( package, element )
+  expression = Expression.Or.Array.Term( package, element )
 
-  element = expression~end
+  element = EndOfExpression( expression, element )
 
   If element \< .ALL.ASSIGNMENTS Then Signal Message.Instruction
 
@@ -1765,9 +1793,7 @@ MessageAssignment:
   operator = element
   element  = TheElementAfter( operator )
   If element < .EL.END_OF_CLAUSE Then Signal 35.001
-  rhs = Expression.List( package, element )
-  -- In this context, an expression list is an array term.
-  If rhs~isA(.Expression.List) Then rhs = .Array.Term~new( rhs )
+  rhs = Expression.Or.Array.Term( package, element )
   Return .Message.Assignment.Instruction~new( -
     package, begin, end, lhs, operator, rhs   -
   )
@@ -1782,7 +1808,7 @@ Message.Instruction:
 
 ::Class Message.Instruction Public SubClass Rexx.Instruction
 ::Constant childAttributes "EXPRESSION"
-::Attribute expression
+::Attribute expression Get
 ::Method init
   Expose expression
   Use Strict Arg package, begin, end, expression
@@ -1791,13 +1817,13 @@ Message.Instruction:
 --------------------------------------------------------------------------------
 
 ::Class Message.Assignment.Instruction Public SubClass Rexx.Instruction
-::Constant childAttributes "LHS RHS"
-::Attribute lhs      Get
-::Attribute operator Get
-::Attribute rhs      Get
+::Constant childAttributes "TARGET EXPRESSION"
+::Attribute target     Get -- The message term
+::Attribute operator   Get
+::Attribute expression Get
 ::Method init
-  Expose lhs operator rhs
-  Use Strict Arg package, begin, end, lhs, operator, rhs
+  Expose target operator expression
+  Use Strict Arg package, begin, end, target, operator, expression
   self~init:super( package, begin, end )
 
 /******************************************************************************/
@@ -1963,7 +1989,7 @@ Message.Instruction:
     End
 
     conditions~append( -
-      .Catch.Condition~new( condition, userCondition, sign, code ) -
+      .Condition.Reference~of( condition, userCondition, sign, code ) -
     )
 
   If element < .EL.END_OF_CLAUSE Then Leave
@@ -2028,25 +2054,34 @@ DigitsOnly: Return Verify( Arg(1), "0123456789" ) == 0
 ::Class Catch.Clause Public SubClass Rexx.Clause
 ::Constant childAttributes "VARIABLE"
 ::Attribute variable   Get -- A Symbol.Term (the "variable" of "variable ="), or .Nil
-::Attribute conditions Get -- An array of Catch.Condition objects
+::Attribute conditions Get -- An array of Condition.Reference objects
 ::Attribute owner          -- The DO, LOOP or SELECT clause of the block
 ::Method init
   Expose variable conditions
   Use Strict Arg package, begin, end, variable, conditions
   self~init:super( package, begin, end )
 
---------------------------------------------------------------------------------
--- One condition of a CATCH clause                                            --
---------------------------------------------------------------------------------
+/******************************************************************************/
+/* Condition.Reference -- A condition, as CATCH, CALL ON/OFF, SIGNAL ON/OFF,  */
+/*   RAISE and THROW name it: an array with named accessors (it is not a      */
+/*   node, but its code may be one)                                           */
+/*                                                                            */
+/*   name           the condition keyword element (SYNTAX, ANY...)            */
+/*   userCondition  the USER condition name element, or .Nil                  */
+/*   sign           the sign element of an ERROR or FAILURE code, or .Nil     */
+/*   code           the code (SYNTAX, ERROR, FAILURE): an element, a          */
+/*                  SubExpression.Term (RAISE, THROW), or .Nil                */
+/******************************************************************************/
 
-::Class Catch.Condition Public
-::Attribute condition     Get -- The condition keyword element (SYNTAX, ANY...)
-::Attribute userCondition Get -- The USER condition name element, or .Nil
-::Attribute sign          Get -- The sign of an ERROR or FAILURE code, or .Nil
-::Attribute code          Get -- The code element (SYNTAX, ERROR, FAILURE), or .Nil
-::Method init
-  Expose condition userCondition sign code
-  Use Strict Arg condition, userCondition, sign, code
+::Class Condition.Reference Public SubClass Array
+::Method name
+  Return self[1]
+::Method userCondition
+  Return self[2]
+::Method sign
+  Return self[3]
+::Method code
+  Return self[4]
 
 /******************************************************************************/
 /* FINALLY Clause (RFE #31)                                                   */
@@ -2124,7 +2159,7 @@ DigitsOnly: Return Verify( Arg(1), "0123456789" ) == 0
   If element < .EL.END_OF_CLAUSE Then Signal 35.933
 
   Call PrepareExpression package, element
-  options.case = Expression.List( package, element )
+  options.case = Expression.Or.Array.Term( package, element )
   element = end                         -- The clause ends after the expression
 
 Done:
@@ -2148,19 +2183,19 @@ Done:
 
 ::Class Select.Clause Public SubClass Rexx.Clause
 ::Constant childAttributes "CASE"
-::Attribute name Get
-::Attribute case Get
-::Attribute id   Get
+::Attribute label Get
+::Attribute case  Get
+::Attribute id    Get
 ::Method init
-  Expose name case id
+  Expose label case id
   Use Strict Arg package, begin, end, options.
 
-  id   = options.id
+  id    = options.id
 
-  name = .Nil
-  case = .Nil
+  label = .Nil
+  case  = .Nil
 
-  If options.~hasIndex("NAME") Then name = options.["NAME"]
+  If options.~hasIndex("NAME") Then label = options.["NAME"]
   If options.~hasIndex("CASE") Then case = options.["CASE"]
 
   self~init:super( package, begin, end )
@@ -2169,14 +2204,14 @@ Done:
 /* Source Literal End                                                         */
 /******************************************************************************/
 
-::Routine Source.Literal.End
+::Routine Source.Literal.End.Clause
   Use Strict Arg package, begin, end, elements
 
-  Return .Source.Literal.End~new( package, begin, end )
+  Return .Source.Literal.End.Clause~new( package, begin, end )
 
 --------------------------------------------------------------------------------
 
-::Class Source.Literal.End Public SubClass Rexx.Clause
+::Class Source.Literal.End.Clause Public SubClass Rexx.Clause
 ::Method init
   Use Strict Arg package, begin, end
   self~init:super( package, begin, end )
@@ -2197,12 +2232,13 @@ Done:
   Call PrepareExpression package, element, "THEN"
 
   -- In a SELECT CASE, a missing expression is 35.934, not 35.929.
-  options = "logical"
+  options = ""
   blocks  = package~blockInstructionsStacks~top
   If blocks~items > 0, blocks~top~isA( .Select.Clause ) Then
-    If blocks~top~case \== .Nil Then options = "logical case"
+    If blocks~top~case \== .Nil Then options = "case"
 
-  expressions = Expression.List(package, element, .EL.END_OF_CLAUSE, options)
+  expressions = -
+    Logical.Expression.List( package, element, .EL.END_OF_CLAUSE, options )
 
   Return .When.Clause~new( package, begin, end, expressions )
 
@@ -2229,25 +2265,52 @@ Done:
 ::Class Block.Instruction Public SubClass Rexx.Instruction
 ::Constant isBlockInstruction 1
 
--- The CATCH and FINALLY clauses of a DO, LOOP or SELECT (RFE #31): an array
--- of (clause, instructions) pairs, in source order, FINALLY last. Empty when
--- the block has none (and always for an IF).
+-- The CATCH sections of a DO, LOOP or SELECT (RFE #31): an array of
+-- Catch.Section objects, in source order. Empty when the block has none
+-- (and always for an IF).
 ::Method catchSections
   Expose catchSections
   If Var( "catchSections" ) Then Return catchSections
   Return Array()
 
-::Method "CATCHSECTIONS="
-  Expose catchSections
-  Use Strict Arg catchSections
-
--- The FINALLY clause of the block, or .Nil
-::Method finallyClause
-  sections = self~catchSections
-  If sections~isEmpty Then Return .Nil
-  clause = sections~lastItem[1]
-  If clause~isA( .Finally.Clause ) Then Return clause
+-- The FINALLY section of a DO, LOOP or SELECT (RFE #31): a Finally.Section,
+-- or .Nil when the block has none (and always for an IF).
+::Method finallySection
+  Expose finallySection
+  If Var( "finallySection" ) Then Return finallySection
   Return .Nil
+
+::Method setSections -- Scaffolding: not part of the API
+  Expose catchSections finallySection
+  Use Strict Arg catchSections, finallySection
+
+/******************************************************************************/
+/* Sections: arrays with named accessors (they are not nodes)                 */
+/*                                                                            */
+/*   When.Section     (whenClause, thenClause, thenInstruction), as in IF     */
+/*   Catch.Section    (catchClause, instructions)                             */
+/*   Finally.Section  (finallyClause, instructions)                           */
+/******************************************************************************/
+
+::Class When.Section Public SubClass Array
+::Method whenClause
+  Return self[1]
+::Method thenClause
+  Return self[2]
+::Method thenInstruction
+  Return self[3]
+
+::Class Catch.Section Public SubClass Array
+::Method catchClause
+  Return self[1]
+::Method instructions
+  Return self[2]
+
+::Class Finally.Section Public SubClass Array
+::Method finallyClause
+  Return self[1]
+::Method instructions
+  Return self[2]
 
 /******************************************************************************/
 /* An instruction list is an array with some additional methods               */
@@ -2263,24 +2326,26 @@ Done:
 /* Methods common to Do.Instruction and Loop.Instruction                      */
 /******************************************************************************/
 
-::Class Iterative.Instruction Public SubClass Block.Instruction
+::Class Do.Or.Loop.Instruction Public SubClass Block.Instruction
 
 /******************************************************************************/
 /* DO Instruction                                                             */
 /******************************************************************************/
 
-::Class Do.Instruction Public SubClass Iterative.Instruction
-::Constant childAttributes "DOCLAUSE INSTRUCTIONS ENDCLAUSE CATCHSECTIONS"
-::Attribute doClause
-::Attribute instructions
-::Attribute endClause
+::Class Do.Instruction Public SubClass Do.Or.Loop.Instruction
+::Constant childAttributes ( "DOCLAUSE INSTRUCTIONS ENDCLAUSE"     -
+  "CATCHSECTIONS FINALLYSECTION" )
+::Attribute doClause     Get
+::Attribute instructions Get
+::Attribute endClause    Get
 ::Method init
   Expose                   doClause  instructions  endClause
   Use Strict Arg  package, doClause, instructions, endClause, -
-    catchSections = ( Array() )
-  self~catchSections = catchSections
+    catchSections = ( Array() ), finallySection = .Nil
+  self~setSections( catchSections, finallySection )
   self~init:super(package, doClause~begin, endClause~end)
-  Call AdoptChildren self, doClause, instructions, endClause, catchSections
+  Call AdoptChildren self, doClause, instructions, endClause, -
+    catchSections, finallySection
 ::Method labels
   Expose doClause
   Return doClause~labels
@@ -2323,20 +2388,20 @@ Done:
 /* LOOP Instruction                                                           */
 /******************************************************************************/
 
-::Class Loop.Instruction Public SubClass Iterative.Instruction
-::Constant childAttributes "LOOPCLAUSE INSTRUCTIONS ENDCLAUSE CATCHSECTIONS"
-::Attribute loopClause
-::Method doClause -- Simplifies code
-  Return self~loopClause
-::Attribute instructions
-::Attribute endClause
+::Class Loop.Instruction Public SubClass Do.Or.Loop.Instruction
+::Constant childAttributes ( "LOOPCLAUSE INSTRUCTIONS ENDCLAUSE"   -
+  "CATCHSECTIONS FINALLYSECTION" )
+::Attribute loopClause   Get
+::Attribute instructions Get
+::Attribute endClause    Get
 ::Method init
   Expose loopClause instructions endClause
   Use Strict Arg package, loopClause, instructions, endClause, -
-    catchSections = ( Array() )
-  self~catchSections = catchSections
+    catchSections = ( Array() ), finallySection = .Nil
+  self~setSections( catchSections, finallySection )
   self~init:super( package, loopClause~begin, endClause~end )
-  Call AdoptChildren self, loopClause, instructions, endClause, catchSections
+  Call AdoptChildren self, loopClause, instructions, endClause, -
+    catchSections, finallySection
 ::Method labels
   Expose loopClause
   Return loopClause~labels
@@ -2349,36 +2414,38 @@ Done:
 /******************************************************************************/
 
 ::Class Select.Instruction Public SubClass Block.Instruction
-::Constant childAttributes ( "SELECTCLAUSE WHENTHENINSTRUCTIONS" -
-  "OTHERWISECLAUSE OTHERWISESEQUENCE ENDCLAUSE CATCHSECTIONS" )
+::Constant childAttributes ( "SELECTCLAUSE WHENSECTIONS OTHERWISECLAUSE"   -
+  "OTHERWISEINSTRUCTIONS ENDCLAUSE CATCHSECTIONS FINALLYSECTION" )
 
-::Attribute SelectClause           Get
-::Attribute   WhenThenInstructions Get
-::Attribute   OtherwiseClause      Get
-::Attribute     OtherwiseSequence  Get
-::Attribute EndClause              Get
+::Attribute selectClause          Get
+::Attribute whenSections          Get
+::Attribute otherwiseClause       Get
+::Attribute otherwiseInstructions Get
+::Attribute endClause             Get
 
 ::Method init
-  Expose                    -
-    selectClause            -
-      whenThenInstructions  -
-      otherwiseClause       -
-        otherwiseSequence   -
+  Expose                          -
+    selectClause                  -
+      whenSections                -
+      otherwiseClause             -
+        otherwiseInstructions     -
     endClause
-  Use Strict Arg            -
-    package,                -
-    selectClause,           -
-      whenThenInstructions, -
-      otherwiseClause,      -
-        otherwiseSequence,  -
-    endClause,              -
-    catchSections = ( Array() )
+  Use Strict Arg                  -
+    package,                      -
+    selectClause,                 -
+      whenSections,               -
+      otherwiseClause,            -
+        otherwiseInstructions,    -
+    endClause,                    -
+    catchSections = ( Array() ),  -
+    finallySection = .Nil
 
-  self~catchSections = catchSections
+  self~setSections( catchSections, finallySection )
 
   self~init:super(package, selectClause~begin, endClause~end )
-  Call AdoptChildren self, selectClause, whenThenInstructions, -
-    otherwiseClause, otherwiseSequence, endClause, catchSections
+  Call AdoptChildren self, selectClause, whenSections, -
+    otherwiseClause, otherwiseInstructions, endClause, catchSections, -
+    finallySection
 
 ::Method labels
   Expose selectClause

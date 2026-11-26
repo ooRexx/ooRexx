@@ -90,6 +90,10 @@
 /* 20261124         Constant.Directive~childAttributes: its value             */
 /* 20261125         Constant.Directive~clauseChildAttributes: its value is a  */
 /*                  child of its clause (directiveClause)                     */
+/* 20261125         The cut of the tree API: the names, types and attributes  */
+/*                  decided in the review of the Element and Tree APIs; the   */
+/*                  attributes that only the parser writes are read-only      */
+/*                  (set... methods)                                          */
 /*                                                                            */
 /******************************************************************************/
 
@@ -105,6 +109,8 @@
 .environment ~   Resource.Directive =   .Resource.Directive
 .environment ~          R.Directive =          .R.Directive -- Executor
 .environment ~    Routine.Directive =    .Routine.Directive
+.environment ~           Annotation =           .Annotation
+.environment ~      Class.Reference =      .Class.Reference
 
 ::Requires "BaseClassesAndRoutines.cls"
 ::Requires "Expressions.cls"
@@ -171,7 +177,7 @@
     Else sign = .Nil
     If value \< .ALL.SYMBOLS_AND_STRINGS Then Call 19.923 value
     Call SetConstantName value, .ANNOTATION.VALUE
-    options.pairs~append( (name, sign, value) )
+    options.pairs~append( .Annotation~of( name, sign, value ) )
     name = TheElementAfter( value, ignoreBlanks )
   End
 
@@ -199,11 +205,44 @@ Done:
 --------------------------------------------------------------------------------
 
 ::Class Annotate.Directive Public SubClass Rexx.Directive
-::Attribute options. Get
+::Attribute kind        Get -- CLASS, METHOD, ROUTINE, ATTRIBUTE, CONSTANT,
+                            -- or PACKAGE
+::Attribute name        Get -- The name element of the target, or .Nil
+::Attribute annotations Get -- An array of Annotation objects
+::Attribute options.    Get -- Scaffolding
 ::Method init
-  Expose options.
+  Expose kind name annotations options.
   Use Strict Arg package, begin, end, options.
+  kind        = options.directive
+  name        = options.["NAME"]
+  annotations = options.pairs
   self~init:super( package, begin, end )
+
+/******************************************************************************/
+/* Annotation -- One annotation of ::ANNOTATE: an array with named accessors  */
+/*   (it is not a node). name and value are elements; sign is the sign        */
+/*   element of a signed number, or .Nil.                                     */
+/******************************************************************************/
+
+::Class Annotation Public SubClass Array
+::Method name
+  Return self[1]
+::Method sign
+  Return self[2]
+::Method value
+  Return self[3]
+
+/******************************************************************************/
+/* Class.Reference -- A class name, maybe qualified by a namespace, as        */
+/*   ::CLASS and ::EXTENSION name them: an array with named accessors (it is  */
+/*   not a node). namespace and name are elements; namespace may be .Nil.     */
+/******************************************************************************/
+
+::Class Class.Reference Public SubClass Array
+::Method namespace
+  Return self[1]
+::Method name
+  Return self[2]
 
 /******************************************************************************/
 /* ATTRIBUTE Directive                                                        */
@@ -339,12 +378,33 @@ Done:
 --------------------------------------------------------------------------------
 
 ::Class Attribute.Directive Public SubClass Rexx.Directive
-::Attribute name     Get
-::Attribute options. Get
-::Attribute attribute
+::Attribute name          Get
+::Attribute isClassMethod Get
+::Attribute isGuarded     Get
+::Attribute isProtected   Get
+::Attribute isAbstract    Get
+::Attribute isPackage     Get
+::Attribute isPrivate     Get
+::Attribute delegateName  Get -- The DELEGATE symbol element, or .Nil
+::Attribute external      Get -- The EXTERNAL specification, or .Nil
+::Attribute hasGetter     Get
+::Attribute hasSetter     Get
+::Attribute options.      Get -- Scaffolding
 ::Method init
-  Expose name options.
+  Expose name options. isClassMethod isGuarded isProtected isAbstract -
+    isPackage isPrivate delegateName external hasGetter hasSetter
   Use Strict Arg package, begin, end, name, options.
+  isClassMethod = options.class
+  isGuarded     = options.guarded
+  isProtected   = options.protected
+  isAbstract    = options.abstract
+  isPackage     = options.visibility == "PACKAGE"
+  isPrivate     = options.visibility == "PRIVATE"
+  delegateName  = options.delegateName
+  If delegateName == "" Then delegateName = .Nil
+  external      = options.external
+  hasGetter     = options.get
+  hasSetter     = options.set
   self~init:super( package, begin, end )
 
 /******************************************************************************/
@@ -394,14 +454,14 @@ Done:
       When "METACLASS" Then Do
         metaClass = TheElementAfter( keyword, ignoreBlanks )
         Call ExpectClassName metaClass, 19.906
-        options.kValue = ( nameSpace, className )
+        options.kValue = .Class.Reference~of( namespace, className )
         keyword = TheElementAfter( className, ignoreBlanks )
       End
       When "SUBCLASS", "MIXINCLASS" Then Do
         option = TheElementAfter( keyword, ignoreBlanks )
         If kValue == "SUBCLASS" Then Call ExpectClassName option, 19.907
         Else                         Call ExpectClassName option, 19.913
-        options.kValue = ( nameSpace, className )
+        options.kValue = .Class.Reference~of( namespace, className )
         allOptions~~remove("MIXINCLASS")~~remove("SUBCLASS")
         keyword = TheElementAfter( className, ignoreBlanks )
       End
@@ -410,7 +470,7 @@ Done:
         Loop
           Call ExpectClassName inherit, 19.908
           If options.kValue == .Nil Then options.kValue = Array()
-          options.kValue~append( ( nameSpace, className ) )
+          options.kValue~append( .Class.Reference~of( namespace, className ) )
           inherit = TheElementAfter( className, ignoreBlanks )
           If inherit < .EL.END_OF_CLAUSE Then Signal Done
         End
@@ -432,12 +492,12 @@ Done:
   Exit .Class.Directive~new( package, begin, end, name, options. )
 
 ExpectClassName:
-  nameSpace = .Nil
-  Use Arg element, code, nameSpaceAllowed = .True
-  If nameSpaceAllowed, element < .ALL.SYMBOLS Then Do
+  namespace = .Nil
+  Use Arg element, code, namespaceAllowed = .True
+  If namespaceAllowed, element < .ALL.SYMBOLS Then Do
     next = TheElementAfter( element )
     If next < .EL.COLON Then Do
-      nameSpace = element
+      namespace = element
       Call SetConstantName element, .NAMESPACE.NAME
       element   = TheElementAfter( next )
       If element \< .ALL.SYMBOLS Then Signal 20.921
@@ -473,12 +533,27 @@ Return
 --------------------------------------------------------------------------------
 
 ::Class Class.Directive Public SubClass Rexx.Directive
-::Attribute name     Get
-::Attribute options. Get
-::Attribute theClass
+::Attribute name         Get
+::Attribute isPrivate    Get -- 1 unless PUBLIC
+::Attribute isAbstract   Get
+::Attribute metaclass    Get -- A Class.Reference, or .Nil
+::Attribute superclass   Get -- A Class.Reference (SUBCLASS or MIXINCLASS),
+                             -- or .Nil
+::Attribute isMixinClass Get
+::Attribute inherits     Get -- An array of Class.Reference objects
+::Attribute options.     Get -- Scaffolding
 ::Method init
-  Expose name options.
+  Expose name options. isPrivate isAbstract metaclass superclass -
+    isMixinClass inherits
   Use Strict Arg package, begin, end, name, options.
+  isPrivate    = \options.public
+  isAbstract   = options.abstract == 1
+  metaclass    = options.metaclass
+  isMixinClass = options.mixinclass \== .Nil
+  If isMixinClass Then superclass = options.mixinclass
+  Else                 superclass = options.subclass
+  inherits     = options.inherit
+  If inherits == .Nil Then inherits = Array()
   self~init:super( package, begin, end )
 
 /******************************************************************************/
@@ -508,10 +583,10 @@ Return
 --------------------------------------------------------------------------------
 
 ::Class Coactivity.Directive Public SubClass Rexx.Directive
-::Attribute directive Get
+::Attribute keyword Get -- The element of the keyword (COACTIVITY or CO)
 ::Method init
-  Expose         package  begin  end  directive
-  Use Strict Arg package, begin, end, directive
+  Expose         package  begin  end  keyword
+  Use Strict Arg package, begin, end, keyword
   self~init:super( package, begin, end )
 
 /******************************************************************************/
@@ -549,7 +624,7 @@ Return
     If first < .EL.END_OF_CLAUSE | first < .EL.RIGHT_PARENTHESIS Then
       Signal 35.936
     Call PrepareExpression package, next, ")"
-    expression = SubExpression( package, next, "" )
+    expression = SubExpression.Term( package, next, "" )
     element = expression~end
     Call NoMoreDataAfter element
     If package~inTheProlog Then Signal 99.906
@@ -601,9 +676,8 @@ SignedNumber:
 ::Constant clauseChildAttributes "VALUE"
 ::Attribute name    Get
 ::Attribute value   Get
-::Attribute constant
 ::Method init
-  Expose name value expression sign number
+  Expose name value
   Use Strict Arg        -
     package, begin, end, name, value = .Nil
   self~init:super( package, begin, end )
@@ -630,7 +704,7 @@ SignedNumber:
 
   keyword = TheElementAfter( name, ignoreBlanks )
 
-  inherit = .Nil
+  inheritList = .Nil
 
   If keyword \< .EL.END_OF_CLAUSE Then Do
 
@@ -641,22 +715,24 @@ SignedNumber:
     next = TheElementAfter( keyword, ignoreBlanks )
     Loop Until next < .EL.END_OF_CLAUSE
       Call ExpectClassName next, 19.908
-      If inherit == .Nil Then inherit = Array()
-      inherit~append( ( nameSpace, className ) )
+      If inheritList == .Nil Then inheritList = Array()
+      inheritList~append( .Class.Reference~of( namespace, className ) )
       next = TheElementAfter( className, ignoreBlanks )
     End
 
   End
 
+  options.inherit = inheritList
+
   Exit .Extension.Directive~new( package, begin, end, name, options. )
 
 ExpectClassName:
-  nameSpace = .Nil
-  Use Arg element, code, nameSpaceAllowed = .True
-  If nameSpaceAllowed, element < .ALL.SYMBOLS Then Do
+  namespace = .Nil
+  Use Arg element, code, namespaceAllowed = .True
+  If namespaceAllowed, element < .ALL.SYMBOLS Then Do
     next = TheElementAfter( element )
     If next < .EL.COLON Then Do
-      nameSpace = element
+      namespace = element
       Call SetConstantName element, .NAMESPACE.NAME
       element   = TheElementAfter( next )
       If element \< .ALL.SYMBOLS Then Signal 20.921
@@ -684,11 +760,13 @@ Return
 
 ::Class Extension.Directive Public SubClass Rexx.Directive
 ::Attribute name     Get
-::Attribute options. Get
-::Attribute extension
+::Attribute inherits Get -- An array of Class.Reference objects
+::Attribute options. Get -- Scaffolding
 ::Method init
-  Expose name options.
+  Expose name options. inherits
   Use Strict Arg package, begin, end, name, options.
+  inherits = options.inherit
+  If inherits == .Nil Then inherits = Array()
   self~init:super( package, begin, end )
 
 
@@ -769,7 +847,7 @@ Return
       When "EXTENDS", "OVERRIDES" Then Do -- Experimental
         className = TheElementAfter( keyword )
         Call ExpectClassName className, 20.900
-        options.kValue = ( nameSpace, className )
+        options.kValue = ( namespace, className )
         ignoreBlanksToTheRight = 1
         keyword = TheElementAfter( className, ignoreBlanksToTheRight )
         Iterate -- Jump directly to next keyword, if any
@@ -810,12 +888,12 @@ Done:
   Return .Method.Directive~new( package, begin, end, name, options. )
 
 ExpectClassName:
-  nameSpace = .Nil
+  namespace = .Nil
   Use Arg element, code
   If element < .ALL.SYMBOLS Then Do
     next = TheElementAfter( element )
     If next < .EL.COLON Then Do
-      nameSpace = element
+      namespace = element
       Call SetConstantName element, .NAMESPACE.NAME
       element   = TheElementAfter( next )
       If element \< .ALL.SYMBOLS Then Signal 20.921
@@ -854,7 +932,6 @@ Return
 ::Attribute name          Get
 ::Attribute isAbstract    Get
 ::Attribute isAttribute   Get
-::Attribute isConstant    Get
 ::Attribute isClassMethod Get
 ::Attribute isGuarded     Get
 ::Attribute isPackage     Get
@@ -865,15 +942,11 @@ Return
 ::Attribute extends       Get -- Experimental
 ::Attribute overrides     Get -- Experimental
 
--- A .Rexx.Method, set when parsing the directive
-::Attribute method
 
 ::Method init
   Expose name isAbstract isAttribute isClassMethod isGuarded -
-    isPackage isPrivate isProtected delegateName external extends overrides -
-    isConstant
+    isPackage isPrivate isProtected delegateName external extends overrides
   Use Strict Arg package, begin, end, name, options.
-  isConstant    = 0 -- A ::METHOD is never a constant (see ::CONSTANT)
   isAttribute   = options.isAttribute
   isAbstract    = options.isAbstract
   isClassMethod = options.isClassMethod
@@ -1046,22 +1119,22 @@ Done:
 --------------------------------------------------------------------------------
 
 ::Class Options.Directive Public SubClass Rexx.Directive
-::Attribute Commands   -- Executor only
-::Attribute Macrospace -- Executor only
-::Attribute Prolog
+::Attribute commands   Get -- Executor only
+::Attribute macrospace Get -- Executor only
+::Attribute prolog     Get
 -- The settings, in the order given: an Array of (NAME, value) pairs. NAME
 -- is DIGITS, FUZZ, FORM, TRACE, NUMERIC (INHERIT or NOINHERIT), PROLOG (1 or
 -- 0), or a condition (ALL, ERROR, FAILURE, LOSTDIGITS, NOSTRING, NOTREADY,
 -- NOVALUE: SYNTAX or CONDITION; NOVALUE ERROR too, the old form of SYNTAX).
-::Attribute Settings
+::Attribute settings   Get
 ::Method init
-  Expose Commands Macrospace
+  Expose commands macrospace prolog settings
   Use Strict Arg package, begin, end, options.
 
-  self~commands   = options.commands
-  self~macrospace = options.macrospace
-  self~prolog     = options.prolog
-  self~settings   = options.settings
+  commands   = options.commands
+  macrospace = options.macrospace
+  prolog     = options.prolog
+  settings   = options.settings
 
   self~init:super( package, begin, end )
 
@@ -1112,7 +1185,7 @@ Done:
 
   If element \< .ALL.SYMBOLS Then Signal 20.920
   If element~value == "REXX"  Then Signal 99.944
-  options.nameSpace = element
+  options.namespace = element
 
   Call SetConstantName element, .NAMESPACE.NAME
 
@@ -1141,12 +1214,12 @@ Done:
 
 ::Class Requires.Directive Public SubClass Rexx.Directive
 ::Attribute programName Get
-::Attribute nameSpace   Get
+::Attribute namespace   Get
 ::Attribute library     Get
 ::Method init
-  Expose programName nameSpace library
+  Expose programName namespace library
   Use Strict Arg package, begin, end, programName, options.
-  nameSpace = options.namespace
+  namespace = options.namespace
   library   = options.library
   self~init:super( package, begin, end )
 
@@ -1256,10 +1329,10 @@ Done:
 --------------------------------------------------------------------------------
 
 ::Class R.Directive Public SubClass Rexx.Directive
-::Attribute directive Get
+::Attribute keyword Get -- The element of the keyword
 ::Method init
-  Expose         package  begin  end  directive
-  Use Strict Arg package, begin, end, directive
+  Expose         package  begin  end  keyword
+  Use Strict Arg package, begin, end, keyword
   self~init:super( package, begin, end )
 
 /******************************************************************************/
@@ -1357,15 +1430,12 @@ Done:
 --------------------------------------------------------------------------------
 
 ::Class Routine.Directive Public SubClass Rexx.Directive
-::Attribute body
-::Attribute routine
 ::Method init
-  Expose name  private  spec
-  Use Strict Arg package, begin, end, name, private, spec = .Nil
-  body = .Nil
+  Expose name  isPrivate  spec
+  Use Strict Arg package, begin, end, name, isPrivate, spec = .Nil
   self~init:super( package, begin, end )
-::Attribute name     Get
-::Attribute private  Get
+::Attribute name      Get
+::Attribute isPrivate Get
 ::Method external
   Expose spec
   Return spec

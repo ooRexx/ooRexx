@@ -116,6 +116,10 @@
 /* 20261125         Directive.Clause, the clause of a directive, as the       */
 /*                  doClause of a DO: Rexx.Directive~directiveClause is the   */
 /*                  first child of the directive, and owns its semicolon      */
+/* 20261125         The cut of the tree API: the names, types and attributes  */
+/*                  decided in the review of the Element and Tree APIs; the   */
+/*                  attributes that only the parser writes are read-only      */
+/*                  (set... methods)                                          */
 /*                                                                            */
 /******************************************************************************/
 
@@ -128,7 +132,6 @@
     Raise Syntax 98.900 Array( "The Rexx Parser needs ooRexx 5.3.0 r13562" -
       "or later (THROW); this is r"revision )
 
- .environment~Lambda.Do.Block  = .Lambda.Do.Block
  .environment~Directive.Clause = .Directive.Clause
  .environment~Rexx.Clause      = .Rexx.Clause
  .environment~Rexx.Directive   = .Rexx.Directive
@@ -177,12 +180,12 @@
 
 ::Class Rexx.Clause Public Inherit Rexx.Node
 
-::Attribute labels           -- Label clauses that identify this clause
-::Attribute nullClauses      -- Null clauses preceding this clause
-::Attribute docComment       -- Documentation comment preceding this clause
+::Attribute labels Get       -- Label clauses that identify this clause
+::Attribute nullClauses Get  -- Null clauses preceding this clause
+::Attribute docComment Get   -- Documentation comment preceding this clause
 ::Attribute begin            -- First element in clause (a semicolon)
 ::Attribute end              -- Last element in clause (a semicolon)
-::Attribute package          -- The package we are currently parsing
+::Attribute package Get      -- The package we are currently parsing
 ::Attribute parent Get       -- The block instruction, body, directive or
                              -- package we are in (see setParent)
 ::Method Init
@@ -211,9 +214,13 @@
   Expose parent
   Use Strict Arg parent
 
-::Method makeArray
-  Use Strict Arg indent = 0
-  Return Array(self~string(indent))
+-- setLabels, setNullClauses -- For the parser
+::Method setLabels
+  Expose labels
+  Use Strict Arg labels
+::Method setNullClauses
+  Expose nullClauses
+  Use Strict Arg nullClauses
 
 /******************************************************************************/
 /* A Rexx Instruction                                                         */
@@ -221,12 +228,16 @@
 
 ::Class Rexx.Instruction Public SubClass Rexx.Clause
 ::Constant isBlockInstruction 0
-::Attribute terminating -- True when all branches end with EXIT or RETURN
+::Attribute terminating Get -- True when all branches end with EXIT or RETURN
 ::Method init
   Expose terminating
   Use Strict Arg package, begin, end
   self~init:super( package, begin, end )
   terminating = 0
+-- setTerminating -- For the parser
+::Method setTerminating
+  Expose terminating
+  Use Strict Arg terminating
 
 /******************************************************************************/
 /* A Directive                                                                */
@@ -241,14 +252,27 @@
 ::Class Rexx.Directive Public SubClass Rexx.Clause
 ::Constant childAttributes       "DIRECTIVECLAUSE BODY"
 ::Constant clauseChildAttributes ""
-::Attribute body
+::Attribute body            Get -- The Code.Body, or .Nil
+::Attribute definition      Get -- The object of the package that the
+                                -- directive defines (a Rexx.Class, a
+                                -- Rexx.Method...), or .Nil
 ::Attribute directiveClause Get
 ::Method init
-  Expose directiveClause
+  Expose directiveClause body definition
   Use Strict Arg package, begin, end
+  body       = .Nil
+  definition = .Nil
   self~init:super( package, begin, end )
   directiveClause = .Directive.Clause~new( package, begin, end, self )
   directiveClause~setParent( self )
+
+-- setBody, setDefinition -- For the parser
+::Method setBody
+  Expose body
+  Use Strict Arg body
+::Method setDefinition
+  Expose definition
+  Use Strict Arg definition
 
 /******************************************************************************/
 /* The clause of a directive                                                  */
@@ -414,7 +438,8 @@ Return
     Return
   End
   If seen~hasIndex(value) Then Return
-  If value~isA(.Rexx.Clause), value~parent \== node Then Return
+  If value~isA(.Rexx.Clause) | value~isA(.Code.Body), -
+    value~parent \== node Then Return
   seen[value] = 1
   kids~append(value)
   If value~isA(.Rexx.Clause) Then Do
@@ -430,7 +455,7 @@ Return
 
 ::Routine TreeFirstElement Public
   Use Strict Arg node
-  If \node~isA(.Rexx.Clause) Then Return node~begin
+  If \node~isA(.Rexx.Clause), \node~isA(.Code.Body) Then Return node~begin
   begin = node~begin
   If begin == .Nil Then Return .Nil
   Return begin~next
@@ -456,7 +481,8 @@ Return
 
   If node~isA(.Rexx.Package) Then Return Array( begin, end )
 
-  If node~isA(.Rexx.Clause) Then Do
+  -- A body goes from its first clause to its last one, as a clause
+  If node~isA(.Rexx.Clause) | node~isA(.Code.Body) Then Do
     If node~isA(.Rexx.Directive), node~body \== .Nil Then Do
       last = NodeElements( node~body )[2]
       If last \== .Nil Then end = last
@@ -817,10 +843,10 @@ Return
   element = first
   Loop
     If \element~isInserted, \element~isA(.Error.Element) Then Do
-      source = element~source
-      -- A multi-line comment is an array of lines
-      If source~isA(.Array) Then source = source~makeString("L", "")
-      text ||= source
+      -- The lines of a multi-line element, with nothing in between
+      Do line Over element~sourceLines
+        text ||= line
+      End
       lastTo = element~to
     End
     If element == last Then Leave
@@ -984,7 +1010,7 @@ Return prev
       Internal.Error( "TheElementAfter was about to return .Nil" )
     element = next
     If ignoreBlanks, element < .ALL.WHITESPACE_LIKE Then
-      element~ignorable = 1
+      element~setIgnorable( 1 )
   End
   -- An error was detected by the scanner?
   If element~isA( .Error.Element ) Then Signal Error
@@ -1032,10 +1058,10 @@ Error:
   Call SetCategory keyword, .EL.KEYWORD
 
   before = TheElementBefore( keyword )
-  If before < .ALL.WHITESPACE_LIKE Then before~ignorable = 1
+  If before < .ALL.WHITESPACE_LIKE Then before~setIgnorable( 1 )
 
   after  = TheElementAfter(  keyword )
-  If after  < .ALL.WHITESPACE_LIKE Then after ~ignorable = 1
+  If after  < .ALL.WHITESPACE_LIKE Then after~setIgnorable( 1 )
 
 --------------------------------------------------------------------------------
 
@@ -1045,10 +1071,10 @@ Error:
   Call SetCategory keyword, .EL.SUBKEYWORD
 
   before = TheElementBefore( keyword )
-  If before < .ALL.WHITESPACE_LIKE Then before~ignorable = 1
+  If before < .ALL.WHITESPACE_LIKE Then before~setIgnorable( 1 )
 
   after  = TheElementAfter(  keyword )
-  If after  < .ALL.WHITESPACE_LIKE Then after ~ignorable = 1
+  If after  < .ALL.WHITESPACE_LIKE Then after~setIgnorable( 1 )
 
 --------------------------------------------------------------------------------
 
@@ -1058,10 +1084,10 @@ Error:
   Call SetCategory keyword, .EL.DIRECTIVE_KEYWORD
 
   before = TheElementBefore( keyword )
-  If before < .ALL.WHITESPACE_LIKE Then before~ignorable = 1
+  If before < .ALL.WHITESPACE_LIKE Then before~setIgnorable( 1 )
 
   after  = TheElementAfter(  keyword )
-  If after  < .ALL.WHITESPACE_LIKE Then after~ignorable = 1
+  If after  < .ALL.WHITESPACE_LIKE Then after~setIgnorable( 1 )
 
 --------------------------------------------------------------------------------
 
@@ -1071,10 +1097,10 @@ Error:
   Call SetCategory keyword, .EL.DIRECTIVE_SUBKEYWORD
 
   before = TheElementBefore( keyword )
-  If before < .ALL.WHITESPACE_LIKE Then before~ignorable = 1
+  If before < .ALL.WHITESPACE_LIKE Then before~setIgnorable( 1 )
 
   after  = TheElementAfter(  keyword )
-  If after  < .ALL.WHITESPACE_LIKE Then after~ignorable = 1
+  If after  < .ALL.WHITESPACE_LIKE Then after~setIgnorable( 1 )
 
 /******************************************************************************/
 /* SetCategory -- A routine to set the category of an element                 */
@@ -1083,7 +1109,7 @@ Error:
 ::Routine SetCategory Public
   Use Strict Arg element, category
 
-  element~category = category
+  element~setCategory( category )
 
 /******************************************************************************/
 /* SetConstantName                                                            */
@@ -1092,8 +1118,8 @@ Error:
 ::Routine SetConstantName Public
   Use Strict Arg element, subCategory
 
-  element~   category = .EL.TAKEN_CONSTANT
-  element~subCategory =  subCategory
+  element~setCategory( .EL.TAKEN_CONSTANT )
+  element~setSubCategory( subCategory )
 
 /******************************************************************************/
 /* PRINTLABELS                                                                */
@@ -1233,9 +1259,9 @@ Error:
           discard = element~splitAfterFirst
         -- A continuation that is the blank operator too: it is still shown
         -- as the continuation it is in the source (Element~continuation)
-        If element < .EL.CONTINUATION Then element~continuation = 1
+        If element < .EL.CONTINUATION Then element~setContinuation( 1 )
         Call SetCategory element, .EL.OP.BLANK
-        element~value = " "
+        element~setValue( " " )
       End
       Otherwise
         Call CheckAbuttal
@@ -1389,14 +1415,14 @@ InsertAbuttal:
   -- Do not insert an abuttal operator before a keyword
   If checkKeyword, nesting == "", IsAKeyword(element) Then Return
   Call InsertAfter predecessor, .EL.OP.ABUTTAL
-  result~value = ""
+  result~setValue( "" )
 Return
 
 InsertExecutorAbuttal:
   -- No check for keywords, see
   -- https://github.com/JosepMariaBlasco/rexx-parser/discussions/22#discussioncomment-15085682
   Call InsertAfter predecessor, .EL.OP.EXECUTOR.ABUTTAL
-  result~value = ""
+  result~setValue( "" )
 Return
 
 IsAKeyword:
@@ -1418,80 +1444,6 @@ IsAKeyword:
 36.902: Syntax( 36.902, lastItem, pos, line )
 
 --------------------------------------------------------------------------------
--- Lambda.Do.Block                                                            --
---------------------------------------------------------------------------------
-
-::Routine Lambda.Do.Block Public
-
-  Use Arg package, DO
-
-  Call SetCategory DO, .EL.KEYWORD
-
-  element = TheElementAfter(DO)
-
-  If element \< .EL.END_OF_CLAUSE Then Signal 21.900
-
-  instructions = Array()
-
-  ENDClauseIsOK = 1
-
-  lastInstruction = .Nil
-
-  package~blockInstructionsStacks~push(.Stack~new())
-  package~blockInstructionsStacks~top~push(DO)
-
-  Loop
-    instruction = package~clauser~Next.Instruction( ENDClauseIsOK, , -
-      .Array~of( 47.002 ) )
-    If \instruction~labels~isEmpty Then Signal 47.002
-    instrClass = instruction~class
-    Select Case instrClass
-      When .End.Clause                Then Signal End.Clause
-      When .Expose.Instruction        Then Signal 99.907
-      When .Implicit.Exit.Instruction Then Signal 14.001
-      Otherwise Nop
-    End
-    instructions~append( instruction )
-    lastInstruction = instruction
-  End
-
-End.Clause:
-  END = TheElementAfter( instruction~begin )
-
-  package~blockInstructionsStacks~pop
-
-  Lambda.Do.Block = .Lambda.Do.Block~new( DO, END, instructions )
-
-  DO~Lambda.Do.Block = Lambda.Do.Block
-
-  Return Lambda.Do.Block
-
-
--- DO instruction on line &1 requires matching END.
-14.001: Syntax( 14.001, instruction~end, doLine )
-
-
-21.900: Syntax( 21.900, DO, "Data must not follow the DO keyword;",
-   "found "element~source".")
-
--- Labels are not allowed within a DO/LOOP block; found "&1".
-47.002: Syntax( 47.002, instruction~end, instruction~labels[1]~label )
-
--- EXPOSE must be the first instruction executed after a method invocation.
-99.907: Syntax( 99.907, DO )
-
---------------------------------------------------------------------------------
-
-::Class Lambda.Do.Block Public
-::Attribute DO
-::Attribute END
-::Method begin; Return self~DO
-::Attribute instructions
-::Method Init
-  Expose  DO  END  instructions
-  Use Arg DO, END, instructions
-
---------------------------------------------------------------------------------
 -- InsertSemicolonAfter                                                       --
 --------------------------------------------------------------------------------
 
@@ -1507,16 +1459,16 @@ End.Clause:
 
   next           = element~next
 
-  semicolon~next = next
-  semicolon~prev = element
-  element~next     = semicolon
-  next~prev      = semicolon
+  semicolon~setNext( next )
+  semicolon~setPrev( element )
+  element~setNext( semicolon )
+  next~setPrev( semicolon )
 
   -- Apply Rexx whitespace rules
   left           = TheElementBefore( semicolon )
   right          = TheElementAfter(  semicolon )
-  If left  < .ALL.WHITESPACE_LIKE Then left ~ignorable = 1
-  If right < .ALL.WHITESPACE_LIKE Then right~ignorable = 1
+  If left  < .ALL.WHITESPACE_LIKE Then left~setIgnorable( 1 )
+  If right < .ALL.WHITESPACE_LIKE Then right~setIgnorable( 1 )
 
   Return semicolon
 
@@ -1536,16 +1488,16 @@ End.Clause:
 
   left           = element~prev
 
-  semicolon~next = element
-  semicolon~prev = left
-  left~next      = semicolon
-  element~prev   = semicolon
+  semicolon~setNext( element )
+  semicolon~setPrev( left )
+  left~setNext( semicolon )
+  element~setPrev( semicolon )
 
   -- Apply Rexx whitespace rules
   left           = TheElementBefore( semicolon )
   right          = TheElementAfter(  semicolon )
-  If left  < .ALL.WHITESPACE_LIKE Then left ~ignorable = 1
-  If right < .ALL.WHITESPACE_LIKE Then right~ignorable = 1
+  If left  < .ALL.WHITESPACE_LIKE Then left~setIgnorable( 1 )
+  If right < .ALL.WHITESPACE_LIKE Then right~setIgnorable( 1 )
 
   Return semicolon
 
@@ -1570,7 +1522,7 @@ End.Clause:
 
   -- And ignore whitespace to its right when necessary
   next = TheElementAfter( element )
-  If next~category < .ALL.WHITESPACE_LIKE Then next~ignorable = 1
+  If next~category < .ALL.WHITESPACE_LIKE Then next~setIgnorable( 1 )
 
   Return 1
 
@@ -1582,10 +1534,10 @@ End.Clause:
   Use Strict Arg source, first, last
 
   resource_data          = .Resource.Data~new
-  resource_data~category = .EL.RESOURCE_DATA
-  resource_data~from     = first 1
-  resource_data~to       = last (Length(source[last])+1)
-  resource_data~source   = source
+  resource_data~setCategory( .EL.RESOURCE_DATA )
+  resource_data~setFrom( first 1 )
+  resource_data~setTo( last (Length(source[last])+1) )
+  resource_data~setLines( source~section( first, Max( 0, last - first + 1 ) ) )
   Return                   resource_data
 
 --------------------------------------------------------------------------------
@@ -1604,10 +1556,10 @@ End.Clause:
 
   next          = element~next
 
-  inserted~next = next
-  inserted~prev = element
-  element~next  = inserted
-  next~prev     = inserted
+  inserted~setNext( next )
+  inserted~setPrev( element )
+  element~setNext( inserted )
+  next~setPrev( inserted )
 
   Return          inserted
 

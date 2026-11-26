@@ -55,6 +55,10 @@
 /*                  bin/parser/modules/identity/ (RFE #878: everything but    */
 /*                  parser.cls lives in parser/); its requires and the call   */
 /*                  to the loader, relative to this file                      */
+/* 20261125         The cut of the tree API: the names, types and attributes  */
+/*                  decided in the review of the Element and Tree APIs; the   */
+/*                  attributes that only the parser writes are read-only      */
+/*                  (set... methods)                                          */
 /*                                                                            */
 /******************************************************************************/
 
@@ -111,8 +115,8 @@
     element = Clone( element, stream, context )
   End
 
-  -- Compile exprb
-  element = self~exprb~compile( element, stream, context )
+  -- Compile byExpression
+  element = self~byExpression~compile( element, stream, context )
 
   -- Skip ignorables
   Loop While element~ignorable
@@ -154,7 +158,7 @@
   Use Strict Arg self, element, stream, context
 
   -- No FOR phrase? Nothing to do
-  If self~exprf == .Nil Then Return element
+  If self~forExpression == .Nil Then Return element
 
   -- Clone the "FOR" keyword
   element = Clone( element, stream, context )
@@ -164,8 +168,8 @@
     element = Clone( element, stream, context )
   End
 
-  -- Compile exprf
-  element = self~exprf~compile( element, stream, context )
+  -- Compile forExpression
+  element = self~forExpression~compile( element, stream, context )
 
   -- Skip ignorables
   Loop While element~ignorable
@@ -215,8 +219,8 @@
     element = Clone( element, stream, context )
   End
 
-  -- Compile exprt
-  element = self~exprt~compile( element, stream, context )
+  -- Compile toExpression
+  element = self~toExpression~compile( element, stream, context )
 
   -- Skip ignorables
   Loop While element~ignorable
@@ -233,7 +237,7 @@
   Use Strict Arg self, element, stream, context
 
   -- No UNTIL phrase? Nothing to do
-  If self~expru == .Nil Then Return element
+  If self~untilExpressions == .Nil Then Return element
 
   -- Clone the "UNTIL" keyword
   element = Clone( element, stream, context )
@@ -243,8 +247,8 @@
     element = Clone( element, stream, context )
   End
 
-  -- Compile expru
-  element = self~expru~compile( element, stream, context )
+  -- Compile untilExpressions
+  element = self~untilExpressions~compile( element, stream, context )
 
   -- Skip ignorables
   Loop While element~ignorable
@@ -261,7 +265,7 @@
   Use Strict Arg self, element, stream, context
 
   -- No WHILE phrase? Nothing to do
-  If self~exprw == .Nil Then Return element
+  If self~whileExpressions == .Nil Then Return element
 
   -- Clone the "WHILE" keyword
   element = Clone( element, stream, context )
@@ -271,8 +275,8 @@
     element = Clone( element, stream, context )
   End
 
-  -- Compile exprw
-  element = self~exprw~compile( element, stream, context )
+  -- Compile whileExpressions
+  element = self~whileExpressions~compile( element, stream, context )
 
   -- Skip ignorables
   Loop While element~ignorable
@@ -307,8 +311,8 @@
     element = Clone( element, stream, context )
   End
 
-  -- Compile expri
-  element = self~expri~compile( element, stream, context )
+  -- Compile initialExpression
+  element = self~initialExpression~compile( element, stream, context )
 
   -- Skip ignorables
   Loop While element~ignorable
@@ -489,8 +493,8 @@
 
   element = InitBlock( self, element, stream, context )
 
-  -- Compile exprr
-  element = self~exprr~compile( element, stream, context )
+  -- Compile repeatExpression
+  element = self~repeatExpression~compile( element, stream, context )
 
   -- Skip ignorables
   Loop While element~ignorable

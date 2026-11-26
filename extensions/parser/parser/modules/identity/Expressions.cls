@@ -57,6 +57,10 @@
 /*                  bin/parser/modules/identity/ (RFE #878: everything but    */
 /*                  parser.cls lives in parser/); its requires and the call   */
 /*                  to the loader, relative to this file                      */
+/* 20261125         The cut of the tree API: the names, types and attributes  */
+/*                  decided in the review of the Element and Tree APIs; the   */
+/*                  attributes that only the parser writes are read-only      */
+/*                  (set... methods)                                          */
 /*                                                                            */
 /******************************************************************************/
 
@@ -76,7 +80,7 @@
 ::Method "Addition.Expression::Compile"
   Use Strict Arg element, stream, context
 
-  args  = self~args
+  args  = self~sequence
   nArgs = args~items
 
   Loop i = 1 By 2 To nArgs
@@ -85,7 +89,7 @@
     -- Now if i < nArgs, args[i+1] is an addition operator
     If i < nArgs Then Do
       -- Clone everything until the start of the next argument
-      begin = args[i+2]~begin
+      begin = args[i+2]~firstElement
       Loop While element \== begin
         element = Clone( element, stream, context )
       End
@@ -101,7 +105,7 @@
 ::Method "And.Expression::Compile"
   Use Strict Arg element, stream, context
 
-  args  = self~args
+  args  = self~sequence
   nArgs = args~items
 
   Loop i = 1 By 2 To nArgs
@@ -110,7 +114,7 @@
     -- Now if i < nArgs, args[i+1] is an and operator
     If i < nArgs Then Do
       -- Clone everything until the start of the next argument
-      begin = args[i+2]~begin
+      begin = args[i+2]~firstElement
       Loop While element \== begin
         element = Clone( element, stream, context )
       End
@@ -131,7 +135,7 @@
   If self~isEmpty, namedArguments~isEmpty == .Nil Then Return element
 
   first = 1
-  Loop arg Over self~args
+  Loop arg Over self~sequence
     first = 0
     Loop While element~ignorable
       element = Clone( element, stream, context )
@@ -193,7 +197,16 @@
 ::Method "Array.Term::Compile"
   Use Strict Arg element, stream, context
 
-  Return self~expression_list~compile( element, stream, context )
+  Loop arg Over self~sequence
+    Loop While element~ignorable
+      element = Clone( element, stream, context )
+    End
+    If arg~isA( .Special.Character.Sequence ) Then
+      element = Clone( element, stream, context )
+    Else element = arg~compile( element, stream, context )
+  End
+
+  Return element
 
 /******************************************************************************/
 /* COMPOUND VARIABLE TERMS                                                    */
@@ -213,7 +226,7 @@
 ::Method "Comparison.Expression::Compile"
   Use Strict Arg element, stream, context
 
-  args  = self~args
+  args  = self~sequence
   nArgs = args~items
 
   Loop i = 1 By 2 To nArgs
@@ -222,7 +235,7 @@
     -- Now if i < nArgs, args[i+1] is a comparison operator
     If i < nArgs Then Do
       -- Clone everything until the start of the next argument
-      begin = args[i+2]~begin
+      begin = args[i+2]~firstElement
       Loop While element \== begin
         element = Clone( element, stream, context )
       End
@@ -238,7 +251,7 @@
 ::Method "Concatenation.Expression::Compile"
   Use Strict Arg element, stream, context
 
-  args  = self~args
+  args  = self~sequence
   nArgs = args~items
 
   Loop i = 1 By 2 To nArgs
@@ -247,7 +260,7 @@
     -- Now if i < nArgs, args[i+1] is a concatenation operator
     If i < nArgs Then Do
       -- Clone everything until the start of the next argument
-      begin = args[i+2]~begin
+      begin = args[i+2]~firstElement
       Loop While element \== begin
         element = Clone( element, stream, context )
       End
@@ -260,12 +273,10 @@
 /* EXPRESSION LISTS                                                           */
 /******************************************************************************/
 
-::Method "Expression.List::Compile"
+::Method "Logical.Expression.List::Compile"
   Use Strict Arg element, stream, context
 
-  If self~isEmpty Then Return element
-
-  Loop arg Over self~args
+  Loop arg Over self~sequence
     Loop While element~ignorable
       element = Clone( element, stream, context )
     End
@@ -285,7 +296,7 @@
   Use Strict Arg element, stream, context
 
   name          = self~name
-  argumentList  = self~argumentList
+  argumentList  = self~arguments
   trailingBlock = self~trailingBlock
 
   -- Name
@@ -417,7 +428,7 @@
 ::Method "Multiplication.Expression::Compile"
   Use Strict Arg element, stream, context
 
-  args  = self~args
+  args  = self~sequence
   nArgs = args~items
 
   Loop i = 1 By 2 To nArgs
@@ -426,7 +437,7 @@
     -- Now if i < nArgs, args[i+1] is a multiplication operator
     If i < nArgs Then Do
       -- Clone everything until the start of the next argument
-      begin = args[i+2]~begin
+      begin = args[i+2]~firstElement
       Loop While element \== begin
         element = Clone( element, stream, context )
       End
@@ -439,14 +450,14 @@
 /* NAMESPACE QUALIFIED CLASSNAME                                              */
 /******************************************************************************/
 
-::Method "Namespace.Qualified.Classname::Compile"
+::Method "Namespace.Qualified.ClassName.Term::Compile"
   Use Strict Arg element, stream, context
 
   classname     = self~classname
-  nameSpace     = self~nameSpace
+  namespace     = self~namespace
 
   -- Namespace
-  element = nameSpace~compile( element, stream, context )
+  element = namespace~compile( element, stream, context )
 
   -- Ignorable stuff
   Loop While element~ignorable
@@ -470,16 +481,16 @@
 /* NAMESPACE QUALIFIED FUNCTION CALLS                                         */
 /******************************************************************************/
 
-::Method "Namespace.Qualified.Function.Call::Compile"
+::Method "Namespace.Qualified.Function.Call.Term::Compile"
   Use Strict Arg element, stream, context
 
   name          = self~name
-  nameSpace     = self~nameSpace
+  namespace     = self~namespace
   arguments     = self~arguments
   trailingBlock = self~trailingBlock
 
   -- Namespace
-  element = nameSpace~compile( element, stream, context )
+  element = namespace~compile( element, stream, context )
 
   -- Ignorable stuff
   Loop While element~ignorable
@@ -527,7 +538,7 @@
 ::Method "Or.Expression::Compile"
   Use Strict Arg element, stream, context
 
-  args  = self~args
+  args  = self~sequence
   nArgs = args~items
 
   Loop i = 1 By 2 To nArgs
@@ -536,7 +547,7 @@
     -- Now if i < nArgs, args[i+1] is a or operator
     If i < nArgs Then Do
       -- Clone everything until the start of the next argument
-      begin = args[i+2]~begin
+      begin = args[i+2]~firstElement
       Loop While element \== begin
         element = Clone( element, stream, context )
       End
@@ -552,7 +563,7 @@
 ::Method "Power.Expression::Compile"
   Use Strict Arg element, stream, context
 
-  args  = self~args
+  args  = self~sequence
   nArgs = args~items
 
   Loop i = 1 By 2 To nArgs
@@ -561,7 +572,7 @@
     -- Now if i < nArgs, args[i+1] is a power operator
     If i < nArgs Then Do
       -- Clone everything until the start of the next argument
-      begin = args[i+2]~begin
+      begin = args[i+2]~firstElement
       Loop While element \== begin
         element = Clone( element, stream, context )
       End
@@ -578,7 +589,7 @@
   Use Strict Arg element, stream, context
 
   term  = self~term
-  begin = term~begin
+  begin = term~firstElement
 
   -- Skip over prefixes
   Loop While element \== begin
@@ -597,8 +608,8 @@
 
   Use Strict Arg element, stream, context
 
-  begin        = self~begin
-  end          = self~end
+  begin        = self~firstElement
+  end          = self~lastElement~next
   instructions = self~instructions
 
   element = Clone( begin,   stream, context)  -- "{" -> (inserted) ";"
@@ -637,19 +648,19 @@
   Return element
 
 /******************************************************************************/
-/* SUBEXPRESSIONS                                                             */
+/* SUBEXPRESSION TERMS                                                        */
 /******************************************************************************/
 
-::Method "SubExpression::Compile"
+::Method "SubExpression.Term::Compile"
   Use Strict Arg element, stream, context
 
-  subExpression = self~subExpression
+  subExpression = self~expression
 
   -- "("
   element = Clone( element, stream, context )
 
   -- Skip until the subexpression proper begins
-  begin = subExpression~begin
+  begin = subExpression~firstElement
   Loop While element \== begin
     element = Clone( element, stream, context )
   End

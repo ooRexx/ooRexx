@@ -139,6 +139,10 @@
 /*                  Rexx.Node                                                 */
 /* 20261125         Address.Instruction~redirectionTargets; the targets of    */
 /*                  STREAM and USING are children of the instruction          */
+/* 20261125         The cut of the tree API: the names, types and attributes  */
+/*                  decided in the review of the Element and Tree APIs; the   */
+/*                  attributes that only the parser writes are read-only      */
+/*                  (set... methods)                                          */
 /*                                                                            */
 /******************************************************************************/
 
@@ -148,8 +152,8 @@
  .environment~          Call.Value.Instruction =          .Call.Value.Instruction
  .environment~            Call.Off.Instruction =            .Call.Off.Instruction
  .environment~             Call.On.Instruction =             .Call.On.Instruction
- .environment~ NameSpace.Qualified.Call.Instruction = -
-                                             .NameSpace.Qualified.Call.Instruction
+ .environment~ Namespace.Qualified.Call.Instruction = -
+                                             .Namespace.Qualified.Call.Instruction
 
  .environment~                Drop.Instruction =                .Drop.Instruction
  .environment~                Exit.Instruction =                .Exit.Instruction
@@ -182,10 +186,13 @@
  .environment~               Upper.Instruction =               .Upper.Instruction
  .environment~             Use.Arg.Instruction =             .Use.Arg.Instruction
  .environment~           Use.Local.Instruction =           .Use.Local.Instruction
+ .environment~                    Use.Argument =                    .Use.Argument
+ .environment~             Address.Redirection =             .Address.Redirection
 
  .environment~                        Template =                        .Template
  .environment~                   Template.List =                   .Template.List
- .environment~          Optional.Template.List =          .Optional.Template.List
+ .environment~ Optional.Template.List.Instruction = -
+                                           .Optional.Template.List.Instruction
  .environment~               Prefixed.Template =               .Prefixed.Template
 
  .environment~                  Trap.Arguments =                  .Trap.Arguments
@@ -223,9 +230,9 @@
 
   Call Prepare
 
-  expression = Expression.List( package, element )
+  expression = Expression.Or.Array.Term( package, element )
   options.["EXPRESSION"] = expression
-  element = expression~end
+  element = EndOfExpression( expression, element )
   If element < .EL.END_OF_CLAUSE Then Signal Done
   Signal With
 
@@ -239,8 +246,9 @@ Value:
 AfterValue:
   Call Prepare
 ValueExpression:
-  options.env_expression = Expression.List( package, element )
-  element = options.env_expression~end
+  options.environmentExpression = -
+    Expression.Or.Array.Term( package, element )
+  element = EndOfExpression( options.environmentExpression, element )
   If element < .EL.END_OF_CLAUSE Then Signal Done
   Signal With
 
@@ -298,7 +306,7 @@ With:
         Else Do
           If element \< .EL.LEFT_PARENTHESIS Then Signal 35.001
           Call prepareExpression package, element, "INPUT OUTPUT ERROR"
-          subExpression = SubExpression( package, element )
+          subExpression = SubExpression.Term( package, element )
           options.[tValue"_"eValue] = subExpression
           element = subExpression~end
           If element < .EL.END_OF_CLAUSE Then Signal Done
@@ -348,84 +356,73 @@ Done:
 --------------------------------------------------------------------------------
 
 ::Class Address.Instruction Public SubClass Rexx.Instruction
-::Constant childAttributes "ENV_EXPRESSION EXPRESSION REDIRECTIONTARGETS"
-::Attribute begin          Get
-::Attribute end            Get
-::Attribute environment    Get
-::Attribute expression     Get
-::Attribute env_expression Get
-::Attribute options.       Get
+::Constant childAttributes ( "ENVIRONMENTEXPRESSION EXPRESSION"   -
+  "INPUT OUTPUT ERROR" )
+::Attribute begin                 Get
+::Attribute end                   Get
+::Attribute environment           Get -- The environment name element, or .Nil
+::Attribute expression            Get -- The command, or .Nil
+::Attribute environmentExpression Get -- The VALUE expression, or .Nil
+::Attribute input                 Get -- An Address.Redirection, or .Nil
+::Attribute output                Get -- An Address.Redirection, or .Nil
+::Attribute error                 Get -- An Address.Redirection, or .Nil
+::Attribute options.              Get -- Scaffolding
 
 ::Method init
-  Expose begin end environment expression env_expression options.
+  Expose begin end environment expression environmentExpression -
+    input output error options.
   Use Strict Arg package, begin, end, options.
   self~init:super(package, begin, end)
   If options.~hasIndex(environment)
-    Then environment     = options.environment
-    Else environment     = .Nil
+    Then environment           = options.environment
+    Else environment           = .Nil
   If options.~hasIndex(expression)
-    Then expression      = options.expression
-    Else expression      = .Nil
-  If options.~hasIndex(env_expression)
-    Then env_expression  = options.env_expression
-    Else env_expression  = .Nil
+    Then expression            = options.expression
+    Else expression            = .Nil
+  If options.~hasIndex(environmentExpression)
+    Then environmentExpression = options.environmentExpression
+    Else environmentExpression = .Nil
+  input  = Redirection( "INPUT"  )
+  output = Redirection( "OUTPUT" )
+  error  = Redirection( "ERROR"  )
+  Return
 
---------------------------------------------------------------------------------
--- Redirection accessors (ADDRESS ... WITH ...)
---
--- 'stream' is one of INPUT, OUTPUT or ERROR (case does not matter).
---
---   with                     -- .True when the instruction has a WITH clause.
---   redirectionType(stream)  -- "NORMAL", "STEM", "STREAM" or "USING" when the
---                               stream was specified, "" when it was not.
---   redirectionTarget(stream)-- The target: a stem element (STEM), a string or
---                               constant symbol element, or a subexpression
---                               (STREAM and USING). .Nil for NORMAL and for a
---                               stream that was not specified.
---   redirectionOption(stream)-- "APPEND" or "REPLACE" when specified (OUTPUT
---                               and ERROR only), "" otherwise.
---   redirectionTargets       -- An array with the targets of the streams that
---                               were specified, INPUT, OUTPUT and ERROR in
---                               that order (children puts them in source
---                               order).
---------------------------------------------------------------------------------
+Redirection:
+  stream = Arg(1)
+  type   = ""
+  Do aType Over .Array~of("NORMAL", "STEM", "STREAM", "USING")
+    If options.~hasIndex(stream"_"aType) Then type = aType
+  End
+  If type == "" Then Return .Nil
+  target = .Nil
+  If type \== "NORMAL" Then target = options.[stream"_"type]
+  option = ""
+  If options.~hasIndex(stream"_APPEND")  Then option = "APPEND"
+  If options.~hasIndex(stream"_REPLACE") Then option = "REPLACE"
+  Return .Address.Redirection~of( type, target, option )
 
+-- with -- .True when the instruction has a WITH clause.
 ::Method with
   Expose options.
   Return options.~hasIndex("WITH")
 
-::Method redirectionType
-  Expose options.
-  Use Strict Arg stream
-  stream = Upper(stream)
-  Do type Over .Array~of("NORMAL", "STEM", "STREAM", "USING")
-    If options.~hasIndex(stream"_"type) Then Return type
-  End
-  Return ""
+/******************************************************************************/
+/* Address.Redirection -- one stream of ADDRESS ... WITH (INPUT, OUTPUT or    */
+/*   ERROR): an array with named accessors (it is not a node)                 */
+/*                                                                            */
+/*   type    "NORMAL", "STEM", "STREAM" or "USING"                            */
+/*   target  the stem element (STEM), a string or constant symbol element,    */
+/*           or a SubExpression.Term (STREAM and USING); .Nil for NORMAL      */
+/*   option  "APPEND" or "REPLACE" (OUTPUT and ERROR), or ""                  */
+/******************************************************************************/
 
-::Method redirectionTarget
-  Expose options.
-  Use Strict Arg stream
-  stream = Upper(stream)
-  type   = self~redirectionType(stream)
-  If type == "" | type == "NORMAL" Then Return .Nil
-  Return options.[stream"_"type]
-
-::Method redirectionOption
-  Expose options.
-  Use Strict Arg stream
-  stream = Upper(stream)
-  If options.~hasIndex(stream"_APPEND")  Then Return "APPEND"
-  If options.~hasIndex(stream"_REPLACE") Then Return "REPLACE"
-  Return ""
-
-::Method redirectionTargets
-  targets = Array()
-  Do stream Over .Array~of("INPUT", "OUTPUT", "ERROR")
-    target = self~redirectionTarget(stream)
-    If target \== .Nil Then targets~append(target)
-  End
-  Return targets
+::Class Address.Redirection Public SubClass Array
+::Method type
+  Return self[1]
+::Method target
+  Return self[2]
+::Method option
+  Return self[3]
 
 /******************************************************************************/
 /* ARG instruction                                                            */
@@ -433,13 +430,13 @@ Done:
 
 ::Routine Arg.Instruction Public
   Use Strict Arg package, begin, end, elements
-  Return Optional.Template.List(                   -
+  Return Optional.Template.List.Instruction(                   -
     package, .Arg.Instruction, begin, end, elements  -
   )
 
 --------------------------------------------------------------------------------
 
-::Class Arg.Instruction Public SubClass Optional.Template.List
+::Class Arg.Instruction Public SubClass Optional.Template.List.Instruction
 ::Constant instructionName "ARG"
 
 /******************************************************************************/
@@ -465,12 +462,12 @@ Done:
   If element < .EL.LEFT_PARENTHESIS, .Features.Evaluated.Call Then Signal GetExpression
   If element \< .ALL.SYMBOLS_AND_STRINGS Then Signal 19.002
 
-  nameSpace = .Nil
+  namespace = .Nil
   name = element
   If element < .ALL.SYMBOLS Then Do
     next = TheElementAfter( element, ignoreBlanks )
     If .Features.Namespace.Qualified.Symbols, next < .EL.COLON Then Do
-      nameSpace = element
+      namespace = element
       name = TheElementAfter( next, ignoreBlanks )
       If name \< .ALL.SYMBOLS Then Signal 20.922
       element = TheElementAfter( name, ignoreBlanks )
@@ -496,7 +493,7 @@ GetExpression:
       Call SetCategory element, .EL.CONTINUATION       -- Demote, ..
     Else
       Call SetCategory element, .EL.WHITESPACE         -- Demote, ..
-    element~ignorable = 1                              -- .. make ignorable..
+    element~setIgnorable( 1 )                              -- .. make ignorable..
     element = TheElementAfter( element, ignoreBlanks ) -- .. and skip.
   End
   Signal ProcessArguments
@@ -509,18 +506,18 @@ ProcessArguments:
 
   element = arguments~end
   If expression~isNil Then Do
-    If nameSpace == .Nil Then Do
-      name~invocationType = "CALL"
+    If namespace == .Nil Then Do
+      name~setInvocationType( "CALL" )
       package~currentBodies~top~calledRoutineNames~append( (name, arguments) )
       -- We don't need to assign a subcategory here, because we
       -- will assign a finer subcategory in the second pass.
       Return .Call.Instruction~new( package, begin, element, name, arguments )
     End
     Else Do
-      Call SetConstantName nameSpace, .NAMESPACE.NAME
+      Call SetConstantName namespace, .NAMESPACE.NAME
       Call SetConstantName name     , .EXTERNAL.PACKAGE.SUBROUTINE.NAME
-      Return .NameSpace.Qualified.Call.Instruction~new(      -
-        package, begin, element, nameSpace, name, arguments -
+      Return .Namespace.Qualified.Call.Instruction~new(      -
+        package, begin, element, namespace, name, arguments -
       )
     End
   End
@@ -554,22 +551,22 @@ ProcessArguments:
 
 -- A namespace-qualified call, i.e. call namespace:name args
 
-::Class NameSpace.Qualified.Call.Instruction Public SubClass Rexx.Instruction
+::Class Namespace.Qualified.Call.Instruction Public SubClass Rexx.Instruction
 ::Constant childAttributes "ARGUMENTS"
-::Attribute nameSpace
-::Attribute name
-::Attribute arguments
+::Attribute namespace Get
+::Attribute name Get
+::Attribute arguments Get
 ::Method init
-  Expose nameSpace name arguments
-  Use Strict Arg package, begin, end, nameSpace , name, arguments
+  Expose namespace name arguments
+  Use Strict Arg package, begin, end, namespace , name, arguments
   self~init:super(package, begin, end)
 
 -- Call (expression) args                                                     --
 
 ::Class Call.Value.Instruction Public SubClass Rexx.Instruction
 ::Constant childAttributes "EXPRESSION ARGUMENTS"
-::Attribute expression
-::Attribute arguments
+::Attribute expression Get
+::Attribute arguments Get
 ::Method init
   Expose expression arguments
   Use Strict Arg package, begin, end, expression, arguments
@@ -636,11 +633,11 @@ ProcessArguments:
 --------------------------------------------------------------------------------
 
 ::Class Call.Off.Instruction Public SubClass Rexx.Instruction
-::Attribute condition     Get  -- the condition keyword element (ERROR, ANY...)
-::Attribute userCondition Get  -- the USER condition name element, or .Nil
+::Attribute condition Get -- A Condition.Reference
 ::Method init
-  Expose condition userCondition
-  Use Strict Arg package, begin, end, condition, userCondition = .Nil
+  Expose condition
+  Use Strict Arg package, begin, end, name, userCondition = .Nil
+  condition = .Condition.Reference~of( name, userCondition, .Nil, .Nil )
   self~init:super( package, begin, end )
 
 /******************************************************************************/
@@ -699,7 +696,7 @@ ProcessArguments:
 
   If trapName \< .ALL.SYMBOLS_AND_STRINGS Then Signal 19.003
 
-  trapName~invocationType = "CALL"
+  trapName~setInvocationType( "CALL" )
 
   package~currentBodies~top~calledRoutineNames~append( -
     (trapName, .Trap.Arguments~new)              -
@@ -735,13 +732,13 @@ ProcessArguments:
 --------------------------------------------------------------------------------
 
 ::Class Call.On.Instruction Public SubClass Rexx.Instruction
-::Attribute condition     Get  -- the condition keyword element (ERROR, ANY...)
-::Attribute userCondition Get  -- the USER condition name element, or .Nil
-::Attribute trapName      Get  -- the NAME element (symbol or string), or .Nil
+::Attribute condition Get -- A Condition.Reference
+::Attribute trapName  Get -- the NAME element (symbol or string), or .Nil
 ::Method init
-  Expose condition userCondition trapName
-  Use Strict Arg package, begin, end, condition, -
+  Expose condition trapName
+  Use Strict Arg package, begin, end, name, -
     userCondition = .Nil, trapName = .Nil
+  condition = .Condition.Reference~of( name, userCondition, .Nil, .Nil )
   self~init:super( package, begin, end )
 
 /******************************************************************************/
@@ -760,7 +757,7 @@ ProcessArguments:
 
 ::Class Drop.Instruction Public SubClass Rexx.Instruction
 ::Constant childAttributes "NAMELIST"
-::Attribute nameList
+::Attribute nameList Get
 ::Method init
   Expose nameList
   Use Strict Arg package, begin, end, nameList
@@ -786,7 +783,7 @@ ProcessArguments:
 ::Method init
   Use Strict Arg package, begin, end, expression = .Nil
   self~init:super( package, begin, end, expression )
-  self~terminating = .True
+  self~setTerminating( .True )
 
 /******************************************************************************/
 /* EXPOSE instruction                                                         */
@@ -884,7 +881,7 @@ ProcessArguments:
 
 ::Class Expose.Instruction Public SubClass Rexx.Instruction
 ::Constant childAttributes "EXPOSED"
-::Attribute exposed
+::Attribute exposed Get
 ::Method init
   Expose exposed
   Use Strict Arg package, begin, end, exposed
@@ -962,7 +959,7 @@ ProcessArguments:
         Else Do
           If element \< .EL.LEFT_PARENTHESIS Then Signal 35.001
           Call PrepareExpression package, element, keywords
-          subExpression = SubExpression( package, element )
+          subExpression = SubExpression.Term( package, element )
           options.tValue = subExpression
           element = subExpression~end
         End
@@ -1034,33 +1031,33 @@ Done:
 
 ::Class Forward.Instruction Public SubClass Rexx.Instruction
 ::Constant childAttributes "TO THECLASS MESSAGE ARGUMENTS ARRAY NAMEDARGUMENTS"
-::Attribute Continue       Get
-::Attribute Arguments      Get
-::Attribute NamedArguments Get
-::Attribute Array          Get
-::Attribute Message        Get
+::Attribute continue       Get
+::Attribute arguments      Get
+::Attribute namedArguments Get
+::Attribute array          Get
+::Attribute message        Get
 ::Attribute theClass       Get
-::Attribute To             Get
+::Attribute to             Get
 ::Method init
-  Expose Continue Arguments NamedArguments Array Message theClass To
+  Expose continue arguments namedArguments array message theClass to
 
   Use Strict Arg package, begin, end, options.
 
-  If options.~hasIndex("CONTINUE")  Then Continue  = options.continue
-  Else                                   Continue  = .Nil
-  If options.~hasIndex("ARGUMENTS") Then Arguments = options.arguments
-  Else                                   Arguments = .Nil
+  If options.~hasIndex("CONTINUE")  Then continue  = options.continue
+  Else                                   continue  = .Nil
+  If options.~hasIndex("ARGUMENTS") Then arguments = options.arguments
+  Else                                   arguments = .Nil
   If options.~hasIndex("NAMEDARGUMENTS") Then
-    NamedArguments = options.namedArguments
-  Else                                   NamedArguments = .Nil
-  If options.~hasIndex("ARRAY")     Then Array     = options.array
-  Else                                   Array     = .Nil
-  If options.~hasIndex("MESSAGE")   Then Message   = options.message
-  Else                                   Message   = .Nil
+    namedArguments = options.namedArguments
+  Else                                   namedArguments = .Nil
+  If options.~hasIndex("ARRAY")     Then array     = options.array
+  Else                                   array     = .Nil
+  If options.~hasIndex("MESSAGE")   Then message   = options.message
+  Else                                   message   = .Nil
   If options.~hasIndex("CLASS")     Then theClass  = options.class
   Else                                   theClass  = .Nil
-  If options.~hasIndex("TO")        Then To        = options.to
-  Else                                   To        = .Nil
+  If options.~hasIndex("TO")        Then to        = options.to
+  Else                                   to        = .Nil
 
   self~init:super( package, begin, end )
 
@@ -1098,7 +1095,7 @@ Done:
   element = TheElementAfter( when )
 
   Call PrepareExpression package, element
-  expression = Expression.List( package, element, , "logical")
+  expression = Logical.Expression.List( package, element )
 
   If \GuardRefersToExposed( package, element ) Then Signal 99.913
 
@@ -1121,12 +1118,12 @@ Done:
 --------------------------------------------------------------------------------
 
 ::Class Guard.Instruction Public SubClass Rexx.Instruction
-::Constant childAttributes "EXPRESSION"
-::Attribute on         Get -- 1 for GUARD ON, 0 for GUARD OFF
-::Attribute expression
+::Constant childAttributes "WHENEXPRESSIONS"
+::Attribute on              Get -- 1 for GUARD ON, 0 for GUARD OFF
+::Attribute whenExpressions Get -- A Logical.Expression.List, or .Nil
 ::Method init
-  Expose on expression
-  Use Strict Arg package, begin, end, on, expression = .Nil
+  Expose on whenExpressions
+  Use Strict Arg package, begin, end, on, whenExpressions = .Nil
   self~init:super( package, begin, end )
 
 --------------------------------------------------------------------------------
@@ -1193,7 +1190,7 @@ IsExposed:
 
   Call PrepareExpression package, element
 
-  expression = Expression.List( package, element, .EL.END_OF_CLAUSE )
+  expression = Expression.Or.Array.Term( package, element, .EL.END_OF_CLAUSE )
 
   Return .Interpret.Instruction~new( package, begin, end, expression )
 
@@ -1279,7 +1276,7 @@ IsExposed:
       owner = instruction~owner
       Iterate
     End
-    blockLabel = instruction~name
+    blockLabel = instruction~label
     If blockLabel == .Nil, \instruction~isA(.Select.Clause) Then
       blockLabel = instruction~control
     If blockLabel \== .Nil, blockLabel~value == label~value Then Do
@@ -1336,11 +1333,11 @@ Done:
 --------------------------------------------------------------------------------
 
 ::Class Iterate.Instruction Public SubClass Rexx.Instruction
-::Attribute name
-::Attribute iteration
+::Attribute name       Get -- The symbol after the keyword, or .Nil
+::Attribute loopClause Get -- The clause of the target block, or .Nil
 ::Method init
-  Expose name iteration
-  Use Strict Arg package, begin, end, name, iteration
+  Expose name loopClause
+  Use Strict Arg package, begin, end, name, loopClause
   self~init:super( package, begin, end )
 
 /******************************************************************************/
@@ -1416,7 +1413,7 @@ Done:
       owner = instruction~owner
       Iterate
     End
-    blockLabel = instruction~name
+    blockLabel = instruction~label
     If blockLabel == .Nil, \instruction~isA(.Select.Clause) Then
       blockLabel = instruction~control
     If blockLabel \== .Nil, blockLabel~value == label~value Then Do
@@ -1459,11 +1456,11 @@ Done:
 --------------------------------------------------------------------------------
 
 ::Class Leave.Instruction Public SubClass Rexx.Instruction
-::Attribute name
-::Attribute iteration
+::Attribute name       Get -- The symbol after the keyword, or .Nil
+::Attribute loopClause Get -- The clause of the target block, or .Nil
 ::Method init
-  Expose name iteration
-  Use Strict Arg package, begin, end, name, iteration
+  Expose name loopClause
+  Use Strict Arg package, begin, end, name, loopClause
   self~init:super( package, begin, end )
 
 /******************************************************************************/
@@ -1545,7 +1542,7 @@ Expression:
   If element < .EL.END_OF_CLAUSE Then expression = .Nil
   Else Do
     Call PrepareExpression package, element
-    expression = Expression.List( package, element )
+    expression = Expression.Or.Array.Term( package, element )
   End
 
   Exit .Numeric.Instruction~new( package, begin, end, Arg(1), expression )
@@ -1598,10 +1595,8 @@ Expression:
   Else Do
     element = elements[2]
     Call PrepareExpression package, element
-    expression = Expression.List( package, element, .EL.END_OF_CLAUSE )
-    -- In this context, an expression list is an array term
-    If expression~isA(.Expression.List) Then
-      expression = .Array.Term~new( expression )
+    expression = Expression.Or.Array.Term( package, element, -
+      .EL.END_OF_CLAUSE )
   End
 
   Return class~new( package, begin, end, expression )
@@ -1631,7 +1626,7 @@ Expression:
 
   Call PrepareExpression package, element
 
-  expression = Expression.List( package, element, .EL.END_OF_CLAUSE )
+  expression = Expression.Or.Array.Term( package, element, .EL.END_OF_CLAUSE )
 
   Return .Options.Instruction~new( package, begin, end, expression )
 
@@ -1703,7 +1698,6 @@ Var:
   If c == "."             Then Signal 31.003
   If c >>= "0", c <<= "9" Then Signal 31.002
   options.variant = "VAR"
-  options.["VARNAME"] = name
   name~setAssigned
 
   -- Ensure that compound variable parts are collected if necessary
@@ -1718,9 +1712,9 @@ Value:
   If element < .EL.END_OF_CLAUSE Then Signal 38.003
   Call PrepareExpression package, element, "WITH"
   options.variant = "VALUE"
-  expression = Expression.List( package, element )
+  expression = Expression.Or.Array.Term( package, element )
   options.["EXPRESSION"] = expression
-  element = expression~end
+  element = EndOfExpression( expression, element )
   If element < .EL.END_OF_CLAUSE Then Signal 38.003
   -- Now element is a .ALL.VAR_SYMBOLS with a value of WITH for sure
   Call SetSubkeyword keyword
@@ -1771,35 +1765,32 @@ Templates:
 
 ::Class Parse.Instruction Public SubClass Rexx.Instruction
 ::Constant childAttributes "EXPRESSION VARIABLE TEMPLATES"
-::Attribute Upper      Get
-::Attribute Lower      Get
-::Attribute Caseless   Get
-::Attribute Variant    Get
-::Attribute VarName    Get
-::Attribute Variable    Get
-::Attribute Expression Get
-::Attribute Templates Get
+::Attribute upper      Get
+::Attribute lower      Get
+::Attribute caseless   Get
+::Attribute variant    Get
+::Attribute variable   Get -- The Symbol.Term of PARSE VAR, or .Nil
+::Attribute expression Get -- The expression of PARSE VALUE, or .Nil
+::Attribute templates  Get
 ::Method init
-  Expose Upper Lower Caseless Variant VarName Variable Expression Templates
+  Expose upper lower caseless variant variable expression templates
 
-  Use Strict Arg package, begin, end, options., Templates
+  Use Strict Arg package, begin, end, options., templates
 
   self~init:super( package, begin, end )
 
-  Upper      =  0
-  Lower      =  0
-  Caseless   =  0
-  VarName    = .Nil
-  Variable   = .Nil
-  Expression = .Nil
+  upper      =  0
+  lower      =  0
+  caseless   =  0
+  variable   = .Nil
+  expression = .Nil
 
-  If options.~hasIndex("UPPER")    Then Upper    = 1
-  If options.~hasIndex("LOWER")    Then Lower    = 1
-  If options.~hasIndex("CASELESS") Then Caseless = 1
-  Variant = options.["VARIANT"]
-  If Variant == "VAR"   Then VarName    = options.["VARNAME"]
-  If options.~hasIndex("VARIABLE") Then Variable = options.["VARIABLE"]
-  If Variant == "VALUE" Then Expression = options.["EXPRESSION"]
+  If options.~hasIndex("UPPER")    Then upper    = 1
+  If options.~hasIndex("LOWER")    Then lower    = 1
+  If options.~hasIndex("CASELESS") Then caseless = 1
+  variant = options.["VARIANT"]
+  If options.~hasIndex("VARIABLE") Then variable = options.["VARIABLE"]
+  If variant == "VALUE" Then expression = options.["EXPRESSION"]
 
 /******************************************************************************/
 /* PROCEDURE instruction                                                      */
@@ -1834,7 +1825,7 @@ Templates:
 
 ::Class Procedure.Instruction Public SubClass Rexx.Instruction
 ::Constant childAttributes "EXPOSED"
-::Attribute exposed
+::Attribute exposed Get
 ::Method init
   Expose exposed
   Use Strict Arg package, begin, end, exposed
@@ -1846,13 +1837,13 @@ Templates:
 
 ::Routine Pull.Instruction Public
   Use Strict Arg package, begin, end, elements
-  Return Optional.Template.List(                    -
+  Return Optional.Template.List.Instruction(                    -
     package, .Pull.Instruction, begin, end, elements  -
   )
 
 --------------------------------------------------------------------------------
 
-::Class Pull.Instruction Public SubClass Optional.Template.List
+::Class Pull.Instruction Public SubClass Optional.Template.List.Instruction
 ::Constant instructionName "PULL"
 
 /******************************************************************************/
@@ -2050,7 +2041,7 @@ Expression:
   Else If element \< .EL.LEFT_PARENTHESIS Then Signal 35.001
   Else Do
     Call PrepareExpression package, element, options~makeArray~makeString("L"," ")
-    expression = SubExpression( package, element, .EL.RIGHT_PARENTHESIS )
+    expression = SubExpression.Term( package, element, .EL.RIGHT_PARENTHESIS )
     element = expression~end
     Return expression
   End
@@ -2108,54 +2099,50 @@ Expression:
 --------------------------------------------------------------------------------
 
 ::Class Raise.Instruction Public SubClass Rexx.Instruction
-::Constant childAttributes "ADDITIONAL ARRAY DESCRIPTION EXIT RETURN"
+::Constant childAttributes ( "ADDITIONAL ARRAY CONDITION DESCRIPTION" -
+  "EXIT RETURN" )
 ::Constant instructionName "RAISE"
 
-::Attribute Condition     Get
-::Attribute Code          Get
-::Attribute UserCondition Get
-::Attribute Propagate     Get
-::Attribute Additional    Get
-::Attribute Array         Get
-::Attribute Description   Get
-::Attribute Return        Get
-::Attribute Exit          Get
+::Attribute condition   Get -- A Condition.Reference, or .Nil (PROPAGATE)
+::Attribute propagate   Get
+::Attribute additional  Get
+::Attribute array       Get
+::Attribute description Get
+::Attribute return      Get
+::Attribute exit        Get
 
 ::Method init
 
-  Expose Condition Code UserCondition Propagate Additional Array -
-    Description Return Exit
+  Expose condition propagate additional array description return exit
 
-  Condition     = .Nil
-  Code          = .Nil
-  UserCondition = .Nil
-  Propagate     = .False
-  Additional    = .Nil
-  Array         = .Nil
-  Description   = .Nil
-  Return        = .Nil
-  Exit          = .Nil
+  condition   = .Nil
+  propagate   = .False
+  additional  = .Nil
+  array       = .Nil
+  description = .Nil
+  return      = .Nil
+  exit        = .Nil
 
   Use Strict Arg package, begin, end, cond, options.
 
   If cond~items == 1 Then Do
-    cond = cond[1]
-    If cond~value == "PROPAGATE" Then Propagate = 1
-    Else                              Condition = cond
+    If cond[1]~value == "PROPAGATE" Then propagate = 1
+    Else condition = .Condition.Reference~of( cond[1], .Nil, .Nil, .Nil )
   End
   Else Do
-    Condition = cond[1]
-    If Condition~value == "USER" Then UserCondition = cond[2]
-    Else                              Code          = cond[2]
+    If cond[1]~value == "USER" Then
+      condition = .Condition.Reference~of( cond[1], cond[2], .Nil, .Nil )
+    Else
+      condition = .Condition.Reference~of( cond[1], .Nil, .Nil, cond[2] )
   End
 
   self~init:super( package, begin, end )
 
-  If options.~hasIndex("ADDITIONAL")  Then Additional  =  options.["ADDITIONAL" ]
-  If options.~hasIndex("ARRAY")       Then Array       =  options.["ARRAY"      ]
-  If options.~hasIndex("DESCRIPTION") Then Description =  options.["DESCRIPTION"]
-  If options.~hasIndex("EXIT")        Then Exit        =  options.["EXIT"       ]
-  If options.~hasIndex("RETURN")      Then Return      =  options.["RETURN"     ]
+  If options.~hasIndex("ADDITIONAL")  Then additional  =  options.["ADDITIONAL" ]
+  If options.~hasIndex("ARRAY")       Then array       =  options.["ARRAY"      ]
+  If options.~hasIndex("DESCRIPTION") Then description =  options.["DESCRIPTION"]
+  If options.~hasIndex("EXIT")        Then exit        =  options.["EXIT"       ]
+  If options.~hasIndex("RETURN")      Then return      =  options.["RETURN"     ]
 
 --------------------------------------------------------------------------------
 
@@ -2209,7 +2196,7 @@ Expression:
 ::Method init
   Use Strict Arg package, begin, end, expression = .Nil
   self~init:super( package, begin, end, expression )
-  self~terminating = .True
+  self~setTerminating( .True )
 
 /******************************************************************************/
 /* SAY instruction                                                            */
@@ -2276,8 +2263,8 @@ Expression:
 
 Expression:
   Call PrepareExpression package, element
-  expression = Expression.List( package, element )
-  element = expression~end
+  expression = Expression.Or.Array.Term( package, element )
+  element = EndOfExpression( expression, element )
 
   -- SIGNAL must not leave a FINALLY clause (RFE #31)
   Call FinallyExitCheck package, SIGNAL, "SIGNAL"
@@ -2296,7 +2283,7 @@ Expression:
 --------------------------------------------------------------------------------
 
 ::Class Signal.Instruction Public SubClass Rexx.Instruction -- SIGNAL labelName
-::Attribute label
+::Attribute label Get
 ::Method init
   Expose label
   Use Strict Arg package, begin, end, label
@@ -2306,7 +2293,7 @@ Expression:
 
 ::Class Signal.Value.Instruction Public SubClass Rexx.Instruction
 ::Constant childAttributes "EXPRESSION"
-::Attribute expression
+::Attribute expression Get
 ::Method init
   Expose expression
   Use Strict Arg package, begin, end, expression
@@ -2369,11 +2356,11 @@ Expression:
 --------------------------------------------------------------------------------
 
 ::Class Signal.Off.Instruction Public SubClass Rexx.Instruction
-::Attribute condition     Get  -- the condition keyword element (ERROR, ANY...)
-::Attribute userCondition Get  -- the USER condition name element, or .Nil
+::Attribute condition Get -- A Condition.Reference
 ::Method init
-  Expose condition userCondition
-  Use Strict Arg package, begin, end, condition, userCondition = .Nil
+  Expose condition
+  Use Strict Arg package, begin, end, name, userCondition = .Nil
+  condition = .Condition.Reference~of( name, userCondition, .Nil, .Nil )
   self~init:super( package, begin, end )
 
 /******************************************************************************/
@@ -2456,13 +2443,13 @@ Expression:
 --------------------------------------------------------------------------------
 
 ::Class Signal.On.Instruction Public SubClass Rexx.Instruction
-::Attribute label
-::Attribute condition
-::Attribute userCondition
+::Attribute label     Get -- the NAME element (symbol or string), or .Nil
+::Attribute condition Get -- A Condition.Reference
 ::Method init
-  Expose condition userCondition label
-  Use Strict Arg package, begin, end, condition, -
+  Expose condition label
+  Use Strict Arg package, begin, end, name, -
     userCondition = .Nil, label = .Nil
+  condition = .Condition.Reference~of( name, userCondition, .Nil, .Nil )
   self~init:super( package, begin, end )
 
 /******************************************************************************/
@@ -2526,9 +2513,9 @@ Expression:
 
   If element < .EL.LEFT_PARENTHESIS Then Do
     Call PrepareExpression package, element, ")"
-    expression = Expression.List( package, element )
+    expression = Expression.Or.Array.Term( package, element )
     options.value = expression
-    element = expression~end
+    element = EndOfExpression( expression, element )
     Signal Processed
   End
 
@@ -2537,7 +2524,7 @@ Value:
   element = TheElementAfter( element, ignoreBlanks )
   If element < .EL.END_OF_CLAUSE Then Signal 35.916
   Call PrepareExpression package, element
-  expression = Expression.List( package, element )
+  expression = Expression.Or.Array.Term( package, element )
   options.value = expression
   Signal Done
 
@@ -2606,7 +2593,7 @@ Done:
 
 ::Class Upper.Instruction Public SubClass Rexx.Instruction
 ::Constant childAttributes "NAMELIST"
-::Attribute nameList
+::Attribute nameList Get
 ::Method init
   Expose nameList
   Use Strict Arg package, begin, end, nameList
@@ -2681,6 +2668,7 @@ Done:
   Use Strict Arg package, begin, keyword, strict, auto, named
 
   arguments      =  Array()
+  ellipsis       = .Nil
   ignoreBlanks   = .True
   argProcessed   = .False
   continue       = .EL.COMMA || .EL.END_OF_CLAUSE
@@ -2723,7 +2711,7 @@ Done:
         Call SkipBlank
         If element < continue Then Do
           N += 1
-          arguments[N] = Array(term)
+          arguments[N] = .Use.Argument~of( term, .Nil )
           Call BackTrack
         End
         Else Do
@@ -2735,9 +2723,9 @@ Done:
           If element < .EL.END_OF_CLAUSE Then Signal 35.930
           If \( element < afterEqualSign ) Then Signal 35.001
           If element < .EL.LEFT_PARENTHESIS Then Do
-            subExpression = SubExpression( package, element, "" )
+            subExpression = SubExpression.Term( package, element, "" )
             N += 1
-            arguments[N] = term, subExpression
+            arguments[N] = .Use.Argument~of( term, subExpression )
             element = subExpression~end
             -- After the ")", only "," or the end (ooRexx: 35.930, v388)
             Call SkipBlank
@@ -2746,12 +2734,12 @@ Done:
           Else If element < .EL.LEFT_CURLY_BRACKET Then Do
             literal = Source.Literal( package, element, "" )
             N += 1
-            arguments[N] = term, literal
+            arguments[N] = .Use.Argument~of( term, literal )
             element = literal~end
           End
           Else Do
             N += 1
-            arguments[N] = term, element
+            arguments[N] = .Use.Argument~of( term, element )
             Call NextElement
             If \( element < continue ) Then Signal 35.930
           End
@@ -2765,7 +2753,7 @@ Done:
         element~setAssigned
         reference = .Variable.Reference.Term~new(operator, element)
         N += 1
-        arguments[N] = Array(reference)
+        arguments[N] = .Use.Argument~of( reference, .Nil )
         Call NextElement
         Call SkipBlank
         If element < .EL.OP.EQUAL Then Signal 99.950
@@ -2793,16 +2781,11 @@ Return:
 Done:
 
   -- USE STRICT AUTO NAMED ARG requires ... at the end
-  If strict, auto, named Then Do
-    If arguments~isEmpty       Then Signal 99.900
-    last = arguments~lastItem
-    If last~items > 1          Then Signal 99.900
-    If \last[1]~isA(.Element)  Then Signal 99.900
-    If last[1] \< .EL.ELLIPSIS Then Signal 99.900
-  End
+  If strict, auto, named, ellipsis == .Nil Then Signal 99.900
 
   Return .Use.Arg.Instruction~new(                                 -
-    package, begin, element, strict, auto, named, arguments, count -
+    package, begin, element, strict, auto, named, arguments, count, -
+    ellipsis                                                        -
   )
 
 -- "..." is not a position
@@ -2810,8 +2793,7 @@ Ellipsis:
   Call SetCategory element, .EL.ELLIPSIS
   argProcessed = .True
   count = N
-  N += 1
-  arguments[N] = Array(element)
+  ellipsis = element
   element = TheElementAfter( element, ignoreBlanks )
   If element \< .EL.END_OF_CLAUSE Then Signal 99.930
   Signal Done
@@ -2822,7 +2804,7 @@ BackTrack:
 
 SkipBlank:
   If element < .ALL.WHITESPACE_LIKE | element < .EL.OP.BLANK Then Do
-    element~ignorable = 1
+    element~setIgnorable( 1 )
     element = TheElementAfter( element )
   End
   Return
@@ -2877,12 +2859,29 @@ NextElement:
 ::Attribute strict    Get
 ::Attribute auto      Get
 ::Attribute named     Get
-::Attribute arguments Get
+::Attribute arguments Get               -- Use.Argument objects, with holes
 ::Attribute count     Get               -- Positions ("..." apart)
+::Attribute ellipsis  Get               -- The "..." element, or .Nil
 ::Method init
-  Expose strict auto named arguments count
-  Use Strict Arg package, begin, end, strict, auto, named, arguments, count
+  Expose strict auto named arguments count ellipsis
+  Use Strict Arg package, begin, end, strict, auto, named, arguments, -
+    count, ellipsis
   self~init:super( package, begin, end )
+
+/******************************************************************************/
+/* Use.Argument -- One argument of USE ARG: an array with named accessors     */
+/*   (it is not a node)                                                       */
+/*                                                                            */
+/*   target        the Symbol.Term, message term or Variable.Reference.Term   */
+/*   defaultValue  the default value (an element, a SubExpression.Term or a   */
+/*                 Source.Literal), or .Nil                                   */
+/******************************************************************************/
+
+::Class Use.Argument Public SubClass Array
+::Method target
+  Return self[1]
+::Method defaultValue
+  Return self[2]
 
 /******************************************************************************/
 /* USE LOCAL instruction                                                      */
@@ -2906,7 +2905,7 @@ NextElement:
 
   body          = package~currentBodies~top
   UseLocal      = Set()
-  body~UseLocal = UseLocal
+  body~setUseLocal( UseLocal )
   locals        = body~locals
 
   Loop
@@ -2952,7 +2951,7 @@ NextElement:
 --------------------------------------------------------------------------------
 
 ::Class Use.Local.Instruction Public SubClass Rexx.Instruction
-::Attribute local
+::Attribute local Get
 ::Method init
   Expose local
   Use Strict Arg package, begin, end, local
@@ -3054,12 +3053,12 @@ GetASymbol:
 46.901: Syntax( 46.901, keyword )
 
 /******************************************************************************/
-/* OPTIONAL.TEMPLATE.LIST                                                     */
+/* OPTIONAL.TEMPLATE.LIST.INSTRUCTION                                         */
 /*   Code common to all instructions that consist of a single keyword         */
 /*   followed by an optional template list, like ARG or PULL                  */
 /******************************************************************************/
 
-::Routine Optional.Template.List Public
+::Routine Optional.Template.List.Instruction Public
 
   Use Strict Arg package, class, begin, end, elements
 
@@ -3075,9 +3074,9 @@ GetASymbol:
 
 --------------------------------------------------------------------------------
 
-::Class Optional.Template.List Public SubClass Rexx.Instruction
+::Class Optional.Template.List.Instruction Public SubClass Rexx.Instruction
 ::Constant childAttributes "TEMPLATES"
-::Attribute templates
+::Attribute templates Get
 ::Method init
   Expose templates
   Use Strict Arg package, begin, end, templates = .Nil
@@ -3118,7 +3117,7 @@ GetASymbol:
     -- A template that ends in an element (a "." or a string) ends just
     -- after it: blanks may come before the comma.
     If element < .ALL.WHITESPACE_LIKE Then Do
-      element~ignorable = 1
+      element~setIgnorable( 1 )
       element = TheElementAfter( element, ignoreBlanks )
     End
 
@@ -3196,7 +3195,7 @@ GetASymbol:
 
         -- Consume blanks after ")" and "]"
         If element < .ALL.WHITESPACE_LIKE Then Do
-          element~ignorable = 1
+          element~setIgnorable( 1 )
           ignoreBlanks = .True
           element = TheElementAfter( element, ignoreBlanks )
         End
@@ -3221,7 +3220,7 @@ GetASymbol:
           term = Simple.Message.Term( package, term )
           element = term~end
           If element < .ALL.WHITESPACE_LIKE Then Do
-            element~ignorable = 1
+            element~setIgnorable( 1 )
             ignoreBlanks = .True
             element = TheElementAfter( element, ignoreBlanks )
           End
@@ -3356,7 +3355,7 @@ GetASymbol:
 
   Call PrepareExpression package, lParen, ")"
 
-  subExpression = SubExpression( package, lParen )
+  subExpression = SubExpression.Term( package, lParen )
 
   element = subExpression~end
 
@@ -3366,7 +3365,7 @@ GetASymbol:
 
   If element < .ALL.WHITESPACE_LIKE Then Do
     next = TheElementAfter( element )
-    element~ignorable = 1
+    element~setIgnorable( 1 )
     subExpression~end = next
   End
 

@@ -54,6 +54,10 @@
 /*                  Language Association, as the rest of ooRexx (RFE #878)    */
 /* 20261123         Moved from bin/ to bin/parser/modules/experimental/ (RFE  */
 /*                  #878)                                                     */
+/* 20261125         The cut of the tree API: the names, types and attributes  */
+/*                  decided in the review of the Element and Tree APIs; the   */
+/*                  attributes that only the parser writes are read-only      */
+/*                  (set... methods)                                          */
 /*                                                                            */
 /******************************************************************************/
 
@@ -82,12 +86,12 @@ If .ClassExtensions~hasIndex( callerPackage ) Then Return
 --
 -- where class is
 --
---   [nameSpace:]className
+--   [namespace:]className
 --
 -- The compiler for Experimental features removes the EXTENDS or
 -- OVERRIDES phrase, and replaces the method name by
 --
---   '"'methodName"<"sep">"[nameSpace:]className'"',
+--   '"'methodName"<"sep">"[namespace:]className'"',
 --
 -- where sep is "+" for EXTENDS and "*" for OVERRIDES.
 --
@@ -101,13 +105,13 @@ Do name Over methods
   Select
     When Pos(extends,   name) > 0 Then Do
       Parse Var name methodName(extends)className
-      Call ProcessNameSpaceAndFindClass
+      Call ProcessNamespaceAndFindClass
       If HasMethod( class, methodName ) Then
         Raise Syntax 99.900 Array("Method" methodName "already defined in class" className)
     End
     When Pos(overrides, name) > 0 Then Do
       Parse Var name methodName(overrides)className
-      Call ProcessNameSpaceAndFindClass
+      Call ProcessNamespaceAndFindClass
     End
     Otherwise Iterate
   End
@@ -125,13 +129,13 @@ Do With item containingClass Over callerPackage~classes
     Select
       When Pos(extends,   name) > 0 Then Do
         Parse Var name methodName(extends)className
-        Call ProcessNameSpaceAndFindClass
+        Call ProcessNamespaceAndFindClass
         If HasMethod( class, methodName ) Then
           Raise Syntax 99.900 Array("Method" methodName "already defined in class" className)
       End
       When Pos(overrides, name) > 0 Then Do
         Parse Var name methodName(overrides)className
-        Call ProcessNameSpaceAndFindClass
+        Call ProcessNamespaceAndFindClass
       End
       Otherwise Iterate
     End
@@ -144,12 +148,12 @@ End
 
 Exit
 
-ProcessNameSpaceAndFindClass:
+ProcessNamespaceAndFindClass:
   If Pos(":", className) > 0 Then Do
-    Parse Var className nameSpace":"className
-    package = callerPackage~findNameSpace( nameSpace)
+    Parse Var className namespace":"className
+    package = callerPackage~findNamespace( namespace)
     If package == .Nil Then
-      Raise Syntax 98.987 Array(nameSpace, callerPackage~name)
+      Raise Syntax 98.987 Array(namespace, callerPackage~name)
   End
   Else package = callerPackage
   class = package~findClass(className)

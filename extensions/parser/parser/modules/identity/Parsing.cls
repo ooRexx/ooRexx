@@ -55,6 +55,10 @@
 /*                  bin/parser/modules/identity/ (RFE #878: everything but    */
 /*                  parser.cls lives in parser/); its requires and the call   */
 /*                  to the loader, relative to this file                      */
+/* 20261125         The cut of the tree API: the names, types and attributes  */
+/*                  decided in the review of the Element and Tree APIs; the   */
+/*                  attributes that only the parser writes are read-only      */
+/*                  (set... methods)                                          */
 /*                                                                            */
 /******************************************************************************/
 
@@ -130,8 +134,8 @@
   End
 
   If self~variant == "VAR" Then Do
-    -- Compile varname
-    element = self~varname~compile( element, stream, context )
+    -- Compile the variable
+    element = self~variable~compile( element, stream, context )
     -- Skip ignorables
     Loop While element~ignorable
       element = Clone( element, stream, context )

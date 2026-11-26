@@ -87,11 +87,15 @@
 /*                  terms. Source.Literal~endClause; a source literal adopts  */
 /*                  its instructions and its end clause                       */
 /* 20261124         Rexx.Expression and Rexx.Term inherit Rexx.Node           */
+/* 20261125         The cut of the tree API: the names, types and attributes  */
+/*                  decided in the review of the Element and Tree APIs; the   */
+/*                  attributes that only the parser writes are read-only      */
+/*                  (set... methods)                                          */
 /*                                                                            */
 /******************************************************************************/
 
  .environment ~ Concatenation.Expression   = .Concatenation.Expression
- .environment ~ Expression.List            = .Expression.List
+ .environment ~ Logical.Expression.List    = .Logical.Expression.List
  .environment ~ Arguments                  = .Arguments
  .environment ~ And.Expression             = .And.Expression
  .environment ~ NAry.Expression            = .NAry.Expression
@@ -100,15 +104,13 @@
  .environment ~ Multiplication.Expression  = .Multiplication.Expression
  .environment ~ Or.Expression              = .Or.Expression
  .environment ~ Source.Literal             = .Source.Literal
- .environment ~ Lambda.Expression          = .Lambda.Expression
  .environment ~ Prefix.Expression          = .Prefix.Expression
  .environment ~ Power.Expression           = .Power.Expression
- .environment ~ SubExpression              = .SubExpression
 
- .environment ~ NameSpace.Qualified.ClassName = -
-   .NameSpace.Qualified.ClassName
- .environment ~ NameSpace.Qualified.Function.Call = -
-   .NameSpace.Qualified.Function.Call
+ .environment ~ Namespace.Qualified.ClassName.Term = -
+   .Namespace.Qualified.ClassName.Term
+ .environment ~ Namespace.Qualified.Function.Call.Term = -
+   .Namespace.Qualified.Function.Call.Term
 
  .environment ~               Rexx.Term  =               .Rexx.Term
 
@@ -120,6 +122,7 @@
  .environment ~            Message.Term  =            .Message.Term
  .environment ~      Stem.Variable.Term  =      .Stem.Variable.Term
  .environment ~             Symbol.Term  =             .Symbol.Term
+ .environment ~      SubExpression.Term  =      .SubExpression.Term
  .environment ~ Variable.Reference.Term  = .Variable.Reference.Term
 
 ::Requires "BaseClassesAndRoutines.cls"
@@ -138,9 +141,9 @@
 /******************************************************************************/
 
 ::Class NAry.Expression SubClass Rexx.Expression
-::Constant childAttributes "ARGS"
+::Constant childAttributes "SEQUENCE"
 ::Constant items 1
-::Attribute args Get
+::Attribute sequence Get -- The operands and the operators, in source order
 ::Method arg
   Arg n, option +1
   If Arg() == 0 Then Return 1
@@ -151,10 +154,10 @@
 ::Attribute begin
 ::Attribute end
 ::Method init
-  Expose args begin end
-  args = arg(1, "A")
-  begin = args[1]~begin
-  end = args~lastItem~end
+  Expose sequence begin end
+  sequence = arg(1, "A")
+  begin = sequence[1]~begin
+  end = sequence~lastItem~end
 
 /******************************************************************************/
 /* ARGUMENTS                                                                  */
@@ -283,13 +286,16 @@ EndNamed:
 
 --------------------------------------------------------------------------------
 
-::Class Arguments Public SubClass Rexx.Expression
-::Constant childAttributes "ARGS NAMEDARGUMENTS"
-::Attribute positionalArguments
-::Attribute namedArguments
+-- An argument list is not an expression: it is a node of its own.
+
+::Class Arguments Public Inherit Rexx.Node
+::Constant childAttributes "SEQUENCE NAMEDARGUMENTS"
+::Attribute positionalArguments Get -- The expressions, with holes
+::Attribute namedArguments      Get -- (name, expression) pairs (Executor)
 ::Attribute begin
 ::Attribute end
-::Attribute args
+::Attribute sequence            Get -- The expressions and the commas, in
+                                    -- source order, or .Nil
 ::Method arg
   Expose positionalArguments
   Arg n, option +1
@@ -303,18 +309,18 @@ EndNamed:
       End
   End
 ::Method isEmpty
-  Expose args
-  Return args == .Nil
+  Expose sequence
+  Return sequence == .Nil
 ::Method init
-  Expose namedArguments args positionalArguments begin end
+  Expose namedArguments sequence positionalArguments begin end
 
-  Use Strict Arg begin, end, args, namedArguments
+  Use Strict Arg begin, end, sequence, namedArguments
   positionalArguments = Array()
 
-  If args == .Nil Then Return
+  If sequence == .Nil Then Return
 
   -- Calculate begin
-  first = args~firstItem
+  first = sequence~firstItem
   If first == .Nil Then begin = end
   Else If first~isA( .Special.Character.Sequence ) Then
     begin = first
@@ -322,41 +328,124 @@ EndNamed:
 
   -- Calculate the number of positionalArguments
   argN = 1
-  Do i = 1 To args~items
-    If args[i]~isA( .Special.Character.Sequence ) Then argN += 1
-    Else positionalArguments[argN] = args[i]
+  Do i = 1 To sequence~items
+    If sequence[i]~isA( .Special.Character.Sequence ) Then argN += 1
+    Else positionalArguments[argN] = sequence[i]
   End
 
 /******************************************************************************/
-/* EXPRESSION LIST                                                            */
+/* LOGICAL.EXPRESSION.LIST                                                    */
+/*                                                                            */
+/*   expression ("," expression) *                                            */
+/*                                                                            */
+/*   The logical expression list of IF, WHEN (also the WHEN of SELECT CASE),  */
+/*   WHILE, UNTIL and GUARD ... WHEN. No expression can be omitted: 35.929,   */
+/*   or 35.934 in the WHEN of a SELECT CASE (the "case" option). It is not    */
+/*   an expression.                                                           */
+/******************************************************************************/
+
+::Routine Logical.Expression.List Public
+
+  Use Strict Arg package, begin, terminators = "", options = ""
+
+  -- The WHEN of a SELECT CASE: 35.934 instead of 35.929
+  missing         = 35.929
+  If options~caselessContainsWord( "case" ) Then missing = 35.934
+
+  sequence = ExpressionSequence( package, begin, terminators, -
+    .Nil, missing )
+
+  Return .Logical.Expression.List~new( sequence[1], begin, sequence[2] )
+
+--------------------------------------------------------------------------------
+
+::Class Logical.Expression.List Public Inherit Rexx.Node
+::Constant childAttributes "SEQUENCE"
+::Constant isEmpty 0
+::Attribute expressions Get -- The expressions
+::Attribute begin
+::Attribute end
+::Attribute sequence    Get -- The expressions and the commas, in source order
+::Method arg
+  Expose expressions
+  Arg n, option +1
+  Select Case Arg()
+    When 0 Then Return expressions~items
+    When 1 Then Return expressions[n]
+    Otherwise
+      Select Case option
+        When "E" Then Return  expressions~hasIndex(n)
+        When "O" Then Return \expressions~hasIndex(n)
+      End
+  End
+::Method init
+  Expose sequence expressions begin end
+  Use Strict Arg sequence, begin, end
+  expressions = Array()
+  first = sequence[1]
+  begin = first~begin
+  Do item Over sequence
+    If \item~isA( .Element ) Then expressions~append( item )
+  End
+
+/******************************************************************************/
+/* EXPRESSION.OR.ARRAY.TERM                                                   */
 /*                                                                            */
 /*   One of:                                                                  */
 /*                                                                            */
 /*     expression                           -- A classic expression, or...    */
 /*     [expression] ("," [expression]) *    -- ...an array term.              */
 /*                                                                            */
-/*   A classic expression, or an array term (where trailing commas are        */
-/*   meaningful), or an argument list (where trailing commas are discarded).  */
+/*   Returns the expression, an Array.Term when there are commas (trailing    */
+/*   commas are meaningful), or .Nil when there is nothing.                   */
+/*                                                                            */
+/*   Options: "executorcommand" (Executor commands can end in "=" or "==").   */
 /******************************************************************************/
 
-::Routine Expression.List Public
+::Routine Expression.Or.Array.Term Public
 
   Use Strict Arg package, begin, terminators = "", options = ""
-
-  -- Logical expression lists can not have omitted expressions
-  logical         = options~caselessContainsWord( "logical" )
-
-  -- The WHEN of a SELECT CASE: 35.934 instead of 35.929
-  missing         = 35.929
-  If options~caselessContainsWord( "case" ) Then missing = 35.934
-
-  -- Argument lists don't count final commas, contrary to array terms
-  arguments       = options~caselessContainsWord( "arguments" )
 
   -- Executor commands can end in "=" or "=="
   executorCommand = options~caselessContainsWord( "executorcommand" )
 
-  expressions     = Array()
+  res = ExpressionSequence( package, begin, terminators, executorCommand )
+
+  sequence    = res[1]
+  end         = res[2]
+  commasFound = res[3]
+
+  Select
+    When sequence~items == 0          Then Return .Nil
+    When sequence~items == 1, \commasFound Then Return sequence[1]
+    Otherwise Return .Array.Term~new( sequence, end )
+  End
+
+/******************************************************************************/
+/* EndOfExpression( expression, begin ) -- Where parsing goes on after what   */
+/*   Expression.Or.Array.Term returned: its end, or begin when it was .Nil.   */
+/******************************************************************************/
+
+::Routine EndOfExpression Public
+  Use Strict Arg expression, begin
+  If expression == .Nil Then Return begin
+  Return expression~end
+
+/******************************************************************************/
+/* ExpressionSequence -- The expressions and the commas of a list, in source  */
+/*   order. Returns (sequence, end, commasFound). "missing" is the error of   */
+/*   an omitted expression in a logical list, or .Nil (array terms).          */
+/*   "executorCommand" is .Nil for a logical list.                            */
+/******************************************************************************/
+
+::Routine ExpressionSequence
+
+  Use Strict Arg package, begin, terminators, executorCommand, missing = .Nil
+
+  logical         = missing \== .Nil
+  If logical Then executorCommand = .False
+
+  sequence        = Array()
   element         = begin
   trailingComma   = 0
   stopParsing     =                        -
@@ -382,7 +471,7 @@ EndNamed:
       If \.Features.Array.Terms Then Signal 37.001
       commasFound = 1
       If logical Then Call Missing element
-      expressions~append( element )
+      sequence~append( element )
       element = TheElementAfter( element )
       trailingComma = 1
     End
@@ -395,7 +484,7 @@ EndNamed:
 
     newOrExpression = Or.Expression( package, element, newTerminators )
     element = newOrExpression~end
-    expressions~append( newOrExpression )
+    sequence~append( newOrExpression )
 
     end = element
 
@@ -403,7 +492,7 @@ EndNamed:
 
     If \.Features.Array.Terms Then Signal 37.001
 
-    expressions~append( element )
+    sequence~append( element )
 
     element = TheElementAfter( element )
 
@@ -419,32 +508,15 @@ EndNamed:
 
   -- No expression at all (IF, WHEN, WHILE, UNTIL, GUARD ... WHEN): 35.929,
   -- as ooRexx.
-  If logical, expressions~items == 0 Then Call Missing begin
+  If logical, sequence~items == 0 Then Call Missing begin
 
-  If arguments Then Do
-    Do While expressions~lastItem~isA(.Element)
-      expressions~delete( expressions~last )
-    End
-  End
+  If .Options.Executor, end < .ALL.EXECUTOR.FINAL Then
+    end = TheElementAfter( end )
 
-  final = .Nil
-  If .Options.Executor, end < .ALL.EXECUTOR.FINAL Then Do
-    final = end
-    end   = TheElementAfter( end )
-  End
-
-  Select Case expressions~items
-    When 0 Then Return .Expression.List~new(.Nil, begin, end, final)
-    -- Only one expression and no commas? --> A classic expression
-    When 1 Then If \logical, \commasFound Then Return expressions[1]
-    Otherwise Nop
-  End
-
-  Return .Expression.List~new(expressions, begin, end, final)
+  Return ( sequence, end, commasFound )
 
 -- Incorrect expression detected at "&1".
 35.001: Syntax( 35.001, element, Arg(1) )
-
 
 -- Missing expression in logical expression list (35.929), or in WHEN case
 -- expression list (35.934).
@@ -452,56 +524,6 @@ Missing: Syntax( missing, Arg(1) )
 
 -- Unexpected ",".
 37.001: Syntax( 37.001, element)
-
---------------------------------------------------------------------------------
-
-::Class Expression.List Public SubClass Rexx.Expression
-::Constant childAttributes "ARGS"
-::Attribute expressions
-::Attribute begin
-::Attribute end
-::Attribute final
-::Attribute args
-::Method arg
-  Expose expressions count
-  Arg n, option +1
-  Select Case Arg()
-    -- The number of expressions, counting the omitted ones at the end (an
-    -- array term: ("a", ) has two items, as in ooRexx).
-    When 0 Then Return count
-    When 1 Then Return expressions[n]
-    Otherwise
-      Select Case option
-        When "E" Then Return  expressions~hasIndex(n)
-        When "O" Then Return \expressions~hasIndex(n)
-      End
-  End
-::Method isEmpty
-  Expose args
-  Return args == .Nil
-::Method init
-  Expose args expressions begin end final count
-  Use Strict Arg args, begin, end, final
-  expressions = Array()
-  count       = 0
-
-  If args \== .Nil Then Do
-
-    -- Calculate begin
-    first = args~firstItem
-    If first~isA( .Special.Character.Sequence ) Then
-      begin = first
-    Else begin = first~begin
-
-    -- Calculate the number of expressions (for argument lists)
-    argN = 1
-    Do i = 1 To args~items
-      If args[i]~isA( .Special.Character.Sequence ) Then argN += 1
-      Else expressions[argN] = args[i]
-    End
-    count = argN
-
-  End
 
 /******************************************************************************/
 /* SOURCE.LITERAL                                                             */
@@ -543,7 +565,7 @@ Missing: Syntax( missing, Arg(1) )
         If instrNo \== 1 + coactivity Then Signal 99.900b
       End
       When .End.Clause                Then Signal 10.001
-      When .Source.Literal.End        Then Leave
+      When .Source.Literal.End.Clause        Then Leave
       Otherwise Nop
     End
     instructions~append( instruction )
@@ -584,8 +606,8 @@ Missing: Syntax( missing, Arg(1) )
 ::Constant childAttributes "INSTRUCTIONS ENDCLAUSE"
 ::Attribute begin
 ::Attribute end
-::Attribute instructions
-::Attribute endClause Get -- The Source.Literal.End clause, ending at "}"
+::Attribute instructions Get
+::Attribute endClause Get -- The Source.Literal.End.Clause clause, ending at "}"
 ::Method init
   Expose         begin  end  instructions  endClause
   Use Strict Arg begin, end, instructions, endClause
@@ -883,8 +905,8 @@ Missing: Syntax( missing, Arg(1) )
 ::Constant childAttributes "TERM"
 ::Attribute begin
 ::Attribute end
-::Attribute prefixes
-::Attribute term
+::Attribute prefixes Get
+::Attribute term Get
 ::Method arg
   Arg n, option +1
   If Arg() == 0 Then Return 1
@@ -904,7 +926,7 @@ Missing: Syntax( missing, Arg(1) )
 /******************************************************************************/
 /******************************************************************************/
 
-::Class Rexx.Term Public Inherit Rexx.Node
+::Class Rexx.Term Public SubClass Rexx.Expression
 ::Method arg
   Arg n, option +1
   If Arg() == 0 Then Return 1
@@ -960,7 +982,7 @@ Missing: Syntax( missing, Arg(1) )
     When begin < .EL.LEFT_CURLY_BRACKET Then
       Exit Source.Literal( package, begin, "" )
     When begin < .EL.LEFT_PARENTHESIS Then
-      Exit SubExpression( package, begin, terminators )
+      Exit SubExpression.Term( package, begin, terminators )
     When begin < .ALL.SYMBOLS Then Do
       symbol = begin
 
@@ -1027,22 +1049,40 @@ Missing: Syntax( missing, Arg(1) )
 -- ARRAY.TERM                                                                 --
 --------------------------------------------------------------------------------
 
+-- "(a, , b)", "a, b" after "=": the expressions and the commas. The
+-- omitted expressions are holes in expressionList, and they count at the
+-- end (("a", ) has two items, as in ooRexx).
+
 ::Class Array.Term Public SubClass Rexx.Term
-::Constant childAttributes "EXPRESSION_LIST"
-::Attribute expression_list Get
+::Constant childAttributes "SEQUENCE"
+::Attribute expressionList Get -- The expressions, with holes
+::Attribute sequence       Get -- The expressions and the commas
+::Attribute begin
+::Attribute end
 ::Method Init
-  Expose expression_list
-  Use Strict Arg expression_list
-::Method begin
-  Forward To (self~expression_list)
-::Method end
-  Forward To (self~expression_list)
+  Expose expressionList sequence begin end count
+  Use Strict Arg sequence, end
+  first = sequence[1]
+  If first~isA( .Element ) Then begin = first
+  Else                          begin = first~begin
+  expressionList = Array()
+  count = 1
+  Do item Over sequence
+    If item~isA( .Element ) Then count += 1
+    Else expressionList[count] = item
+  End
 ::Method arg
-  Forward To (self~expression_list)
-::Method args
-  Forward To (self~expression_list)
-::Method isEmpty
-  Forward To (self~expression_list)
+  Expose expressionList count
+  Arg n, option +1
+  Select Case Arg()
+    When 0 Then Return count
+    When 1 Then Return expressionList[n]
+    Otherwise
+      Select Case option
+        When "E" Then Return  expressionList~hasIndex(n)
+        When "O" Then Return \expressionList~hasIndex(n)
+      End
+  End
 
 --------------------------------------------------------------------------------
 -- LITERAL.STRING.FUNCTION.CALL                                               --
@@ -1068,7 +1108,7 @@ Missing: Syntax( missing, Arg(1) )
   If left < .EL.LEFT_CURLY_BRACKET Then
     trailingBlock = Source.Literal( package, left, "" )
 
-  name~invocationType = Function
+  name~setInvocationType( Function )
 
   -- A ::CONSTANT expression is in no body: its calls are kept by the
   -- package, and SecondPass resolves them with no labels, as ooRexx.
@@ -1095,10 +1135,10 @@ Missing: Syntax( missing, Arg(1) )
   end = TheElementAfter( string )
 
 /******************************************************************************/
-/* SUBEXPRESSION                                                              */
+/* SUBEXPRESSION.TERM                                                         */
 /******************************************************************************/
 
-::Routine SubExpression Public
+::Routine SubExpression.Term Public
 
   Use Strict Arg package, begin, terminators = ""
 
@@ -1109,36 +1149,31 @@ Missing: Syntax( missing, Arg(1) )
   If next < .EL.RIGHT_PARENTHESIS Then Signal 35.001
 
 
-  subExpression = Expression.List(   -
-    package,                         -
-    TheElementAfter( begin ),        - -- Where to begin parsing
-    .EL.RIGHT_PARENTHESIS            - -- Clear terminators: only ")"
+  expression = Expression.Or.Array.Term(   -
+    package,                               -
+    TheElementAfter( begin ),              - -- Where to begin parsing
+    .EL.RIGHT_PARENTHESIS                  - -- Clear terminators: only ")"
   )
 
-  -- subExpression~begin = lParen
-  rParen = subExpression~end
-
-  -- In this context, an expression list is an array term.
-  If subExpression~isA(.Expression.List) Then
-    subExpression = .Array.Term~new( subExpression )
+  rParen = expression~end
 
   Call ExpectParenPair lParen, rParen
 
-  Return .SubExpression~new( lParen, subExpression, rParen )
+  Return .SubExpression.Term~new( lParen, expression, rParen )
 
 -- Incorrect expression detected at "&1".
 35.001: Syntax( 35.001, begin, lParen )
 
 --------------------------------------------------------------------------------
 
-::Class SubExpression Public SubClass Rexx.Term
-::Constant childAttributes "SUBEXPRESSION"
+::Class SubExpression.Term Public SubClass Rexx.Term
+::Constant childAttributes "EXPRESSION"
 ::Attribute begin
 ::Attribute end
-::Attribute subExpression Get
+::Attribute expression Get -- What is inside the parentheses
 ::Method init
-  Expose subExpression begin end
-  Use Strict Arg begin, subExpression, rParen
+  Expose expression begin end
+  Use Strict Arg begin, expression, rParen
   end = TheElementAfter( rParen )
 
 --------------------------------------------------------------------------------
@@ -1212,7 +1247,7 @@ Return
 --------------------------------------------------------------------------------
 
 ::Class Symbol.Term Public SubClass Rexx.Term
-::Attribute symbol
+::Attribute symbol Get
 ::Attribute begin
 ::Attribute end
 ::Constant tree "symbol"
@@ -1288,7 +1323,7 @@ Return
 
   term = .Compound.Variable.Term~new( variable, parts )
 
-  variable~parts = parts
+  variable~setParts( parts )
 
   Exit term
 
@@ -1341,8 +1376,8 @@ Return
 --------------------------------------------------------------------------------
 
 ::Class Compound.Variable.Term Public SubClass Rexx.Term
-::Attribute symbol
-::Attribute parts
+::Attribute symbol Get
+::Attribute parts Get
 ::Attribute begin
 ::Attribute end
 ::Method init
@@ -1393,30 +1428,27 @@ Return
 ::Constant items 1
 ::Attribute begin
 ::Attribute end
-::Attribute stem
-::Method symbol
-  Expose stem
-  Return stem
+::Attribute symbol Get -- The stem element
 ::Method init
-  Expose stem begin end
-  Use Strict Arg stem
-  begin = stem
-  end   = TheElementAfter( stem )
+  Expose symbol begin end
+  Use Strict Arg symbol
+  begin = symbol
+  end   = TheElementAfter( symbol )
 
 --------------------------------------------------------------------------------
 -- Namespace-qualified symbols                                                --
 --------------------------------------------------------------------------------
 
 ::Routine Namespace.Qualified.Symbol Public
-  Use Strict Arg package, nameSpace, colon
+  Use Strict Arg package, namespace, colon
 
-  Call SetConstantName nameSpace, .NAMESPACE.NAME
+  Call SetConstantName namespace, .NAMESPACE.NAME
 
   symbol    = TheElementAfter( colon )
   If symbol \< .ALL.SYMBOLS Then Signal 20.923
   element = TheElementAfter( symbol )
   If element \< .EL.LEFT_PARENTHESIS, element \< .EL.LEFT_CURLY_BRACKET Then
-    Exit .NameSpace.Qualified.ClassName~new( nameSpace, symbol )
+    Exit .Namespace.Qualified.ClassName.Term~new( namespace, symbol )
 
   arguments     = .Nil
   trailingBlock = .Nil
@@ -1436,8 +1468,8 @@ Return
   If element < .EL.LEFT_CURLY_BRACKET Then
     trailingBlock = Source.Literal( package, element, "" )
 
-  Exit .NameSpace.Qualified.Function.Call~new(       -
-    nameSpace, routineName, arguments, trailingBlock -
+  Exit .Namespace.Qualified.Function.Call.Term~new(       -
+    namespace, routineName, arguments, trailingBlock -
   )
 
 -- Symbol expected as a name of namespace-qualified symbol.
@@ -1468,7 +1500,7 @@ Return
   If left < .EL.LEFT_CURLY_BRACKET Then
     trailingBlock = Source.Literal( package, left, "" )
 
-  name~invocationType = Function
+  name~setInvocationType( Function )
 
   -- A ::CONSTANT expression is in no body: its calls are kept by the
   -- package, and SecondPass resolves them with no labels, as ooRexx.
@@ -1483,50 +1515,50 @@ Return
 --------------------------------------------------------------------------------
 
 ::Class Function.Call.Term Public SubClass Rexx.Term
-::Constant childAttributes "ARGUMENTLIST TRAILINGBLOCK"
-::Attribute argumentList
-::Attribute trailingBlock
+::Constant childAttributes "ARGUMENTS TRAILINGBLOCK"
+::Attribute arguments     Get
+::Attribute trailingBlock Get
 ::Attribute begin
 ::Attribute end
-::Attribute name
+::Attribute name          Get
 ::Method init
-  Expose name argumentList trailingBlock begin end
-  Use Strict Arg name, argumentList, trailingBlock
+  Expose name arguments trailingBlock begin end
+  Use Strict Arg name, arguments, trailingBlock
   begin = name
   If trailingBlock \== .Nil Then
     end = trailingBlock~end
-  Else end   = TheElementAfter( argumentList~end )
+  Else end   = TheElementAfter( arguments~end )
 
 --------------------------------------------------------------------------------
 
-::Class NameSpace.Qualified.Function.Call Public SubClass Rexx.Term
+::Class Namespace.Qualified.Function.Call.Term Public SubClass Rexx.Term
 ::Constant childAttributes "ARGUMENTS TRAILINGBLOCK"
-::Attribute nameSpace
-::Attribute name
-::Attribute arguments
-::Attribute trailingBlock
+::Attribute namespace Get
+::Attribute name Get
+::Attribute arguments Get
+::Attribute trailingBlock Get
 ::Attribute begin
 ::Attribute end
 ::Method init
-  Expose nameSpace name arguments trailingBlock begin end
-  Use Strict Arg nameSpace, name, arguments, trailingBlock
-  begin = nameSpace
+  Expose namespace name arguments trailingBlock begin end
+  Use Strict Arg namespace, name, arguments, trailingBlock
+  begin = namespace
   If trailingBlock \== .Nil Then end = trailingBlock~end
   Else end = TheElementAfter(arguments~end)
 
 --------------------------------------------------------------------------------
 
-::Class NameSpace.Qualified.ClassName Public SubClass Rexx.Term
-::Attribute nameSpace
-::Attribute className
+::Class Namespace.Qualified.ClassName.Term Public SubClass Rexx.Term
+::Attribute namespace Get
+::Attribute className Get
 ::Attribute begin
 ::Attribute end
 ::Method init
-  Expose nameSpace className begin end
-  Use Strict Arg nameSpace, className
-  Call SetConstantName nameSpace, .NAMESPACE.NAME
+  Expose namespace className begin end
+  Use Strict Arg namespace, className
+  Call SetConstantName namespace, .NAMESPACE.NAME
   Call SetConstantName className, .CLASS.NAME
-  begin = nameSpace
+  begin = namespace
   end   = TheElementAfter( className )
 
 --------------------------------------------------------------------------------
@@ -1585,7 +1617,7 @@ Return
 
 ::Class Indexed.Or.Invoked.Term Public SubClass Rexx.Term
 ::Constant childAttributes "TERM ARGUMENTS TRAILINGBLOCK"
-::Attribute bracket
+::Attribute bracket Get
 ::Attribute begin
 ::Attribute end
 ::Attribute term          Get
@@ -1684,12 +1716,12 @@ Return
 ::Constant childAttributes "TERM ARGUMENTS TRAILINGBLOCK"
 ::Attribute begin
 ::Attribute end
-::Attribute term
-::Attribute operator
-::Attribute messageName
-::Attribute scope
-::Attribute arguments
-::Attribute trailingBlock
+::Attribute term Get
+::Attribute operator Get
+::Attribute messageName Get
+::Attribute scope Get
+::Attribute arguments Get
+::Attribute trailingBlock Get
 ::Constant tree "term operator messagename arguments"
 ::Method init
   Expose term operator messageName scope arguments trailingBlock begin end
@@ -1734,14 +1766,14 @@ FindEnd:
 
 ::Class Variable.Reference.Term Public SubClass Rexx.Term
 ::Attribute operator Get
-::Attribute variable Get
+::Attribute symbol   Get -- The variable element
 ::Attribute begin
 ::Attribute end
 ::Method init
-  Expose operator variable begin end
-  Use Strict Arg operator, variable
+  Expose operator symbol begin end
+  Use Strict Arg operator, symbol
   begin = operator
-  end = TheElementAfter( variable )
+  end = TheElementAfter( symbol )
 
 --------------------------------------------------------------------------------
 -- ExpectParenPair                                                            --

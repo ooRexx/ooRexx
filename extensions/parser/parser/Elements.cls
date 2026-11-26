@@ -61,6 +61,10 @@
 /* 20261124         element~clause in a source literal (Executor): its        */
 /*                  clauses are inside another clause, and what comes before  */
 /*                  the "{" (and the "{") belongs to that one                 */
+/* 20261125         The cut of the tree API: the names, types and attributes  */
+/*                  decided in the review of the Element and Tree APIs; the   */
+/*                  attributes that only the parser writes are read-only      */
+/*                  (set... methods)                                          */
 /*                                                                            */
 /******************************************************************************/
 
@@ -91,63 +95,108 @@
 
 -- Elements are stored in a doubly-linked list
 
-::Attribute next
-::Attribute prev
+::Attribute next Get
+::Method setNext -- For the parser
+  Expose next
+  Use Strict Arg next
+::Attribute prev Get
+::Method setPrev -- For the parser
+  Expose prev
+  Use Strict Arg prev
 
 -- remove -- Remove an element from the chain by unlinking it
 -- The element must not be the head or the tail of the chain (not checked)
 
 ::Method remove
-  self~next~prev = self~prev
-  self~prev~next = self~next
+  self~next~setPrev( self~prev )
+  self~prev~setNext( self~next )
 
 -- Every element has a starting ("from") and an ending position ("to").
 
-::Attribute from
-::Attribute to
+::Attribute from Get
+::Method setFrom -- For the parser
+  Expose from
+  Use Strict Arg from
+::Attribute to Get
+::Method setTo -- For the parser
+  Expose to
+  Use Strict Arg to
 
 -- Every element has a value and a source, which may be identical or not.
 -- The source is generally the element as it appears in the source file
 -- The value is interpreted. For example, symbols are uppercased,
 -- strings have double quotes removed, etc.
+--
+-- source is always a string. An element that spans several lines (a
+-- comment, a doc-comment, a resource, a string in CMS) has them joined
+-- with a line feed ("0a"x); sourceLines is the array of its lines (one
+-- item for an element on one line), and isMultiLine says whether it has
+-- more than one.
 
-::Attribute source
-::Attribute value
+::Attribute source Get
+::Method setSource -- For the parser
+  Expose source
+  Use Strict Arg source
+::Attribute value Get
+::Method setValue -- For the parser
+  Expose value
+  Use Strict Arg value
+::Method sourceLines
+  Return .Array~of( self~source )
+::Method isMultiLine
+  Return self~sourceLines~items > 1
 
 -- All elements have a category, and, additionally, taken constants have a
 -- subcategory. Categories and subcategories are defined in Globals.cls.
 
-::Attribute category
-::Attribute subCategory
+::Attribute category Get
+::Method setCategory -- For the parser
+  Expose category
+  Use Strict Arg category
+::Attribute subCategory Get
+::Method setSubCategory -- For the parser
+  Expose subCategory
+  Use Strict Arg subCategory
 
 -- Parentheses, brackets and braces are paired
 -- We also use this attribute to store the end of a ::RESOURCE in the
 -- directive marker "::".
 
-::Attribute closing
+::Attribute closing Get
+::Method setClosing -- For the parser
+  Expose closing
+  Use Strict Arg closing
 
 -- Shebangs, comments, and some form of whitespace can be ignored (but may
 -- act as separators)
 
-::Attribute ignorable
+::Attribute ignorable Get
+::Method setIgnorable -- For the parser
+  Expose ignorable
+  Use Strict Arg ignorable
 
 -- When a variable starts a term that is being assigned a value,
 -- in assignment instructions, but also in some other contexts, like
--- PARSE or USE ARG instructions, we mark is as "assigned".
-
-::Attribute assigned
+-- PARSE or USE ARG instructions, we mark is as "assigned" (see
+-- isAssigned and setAssigned).
 
 -- An approximate value. It is used to determine if an opening brace is
 -- (incorrectly) paired with a closing brace in another clause.
 
-::Attribute clauseNumber
+::Attribute clauseNumber Get
+::Method setClauseNumber -- For the parser
+  Expose clauseNumber
+  Use Strict Arg clauseNumber
 
 -- A continuation character ("-" or ",") at the end of a line can also be the
 -- blank concatenation operator ("say 1 -" / "2" is "say 1 2"): the parser
 -- makes it an EL.OP.BLANK, and this says that, in the source, it is the
 -- continuation (Rony, 25-Oct-2026: the highlighter showed it as an operator)
 
-::Attribute continuation
+::Attribute continuation Get
+::Method setContinuation -- For the parser
+  Expose continuation
+  Use Strict Arg continuation
 
 --
 
@@ -270,20 +319,34 @@
   If element~isA(.Element) Then
     Parse Value element~from element~to With line col endLine endCol
   Else Parse Var element line col endLine endCol
-  self~from       =  line col
-  self~to         =  endLine endCol
-  self~category   = .EL.SYNTAX_ERROR
+  self~setFrom( line col )
+  self~setTo( endLine endCol )
+  self~setCategory( .EL.SYNTAX_ERROR )
   self~code       =  code
   self~additional =  additional
 
 --------------------------------------------------------------------------------
 
 ::Class Resource.Data Public SubClass Element
+-- The lines of the resource, from the line after the directive to the one
+-- before the delimiter (none for an empty resource)
+::Method sourceLines
+  Expose lines
+  Return lines
+::Method source
+  Expose lines
+  Return lines~makeString( "L", "0a"x )
+::Method setLines -- For the parser
+  Expose lines
+  Use Strict Arg lines
 
 --------------------------------------------------------------------------------
 
 ::Class Standard.Comment Public subclass Element
-::Attribute parts
+::Attribute parts Get
+::Method setParts -- For the parser
+  Expose parts
+  Use Strict Arg parts
 ::Method value -- A placeholder
   If self~category == .EL.STANDARD_COMMENT Then Return "/* A COMMENT */"
   Else Return "/* A DOC-COMMENT */"
@@ -291,15 +354,17 @@
   Expose         package  startLine  startCol  endLine  endCol parts
   self~init:super
   Use Strict Arg package, startLine, startCol, endLine, endCol
-  self~parts      = .Array~new
-  self~category   = .EL.STANDARD_COMMENT
-  self~ignorable  = 1 -- Classic comments are always ignorable
-  self~from       = startLine startCol
-  self~to         = endLine   endCol
+  self~setParts( .Array~new )
+  self~setCategory( .EL.STANDARD_COMMENT )
+  self~setIgnorable( 1 ) -- Classic comments are always ignorable
+  self~setFrom( startLine startCol )
+  self~setTo( endLine   endCol )
 ::Method isMultiLine
   Expose startLine endLine
   Return startLine \== endLine
 ::Method source
+  Return self~sourceLines~makeString( "L", "0a"x )
+::Method sourceLines
   Expose         package  startLine  startCol  endLine  endCol
   Do lineNo = startLine To endLine
     line = package~source[lineNo]
@@ -317,20 +382,25 @@
 --------------------------------------------------------------------------------
 
 ::Class Line.Comment Public subclass Element
-::Attribute parts
+::Attribute parts Get
+::Method setParts -- For the parser
+  Expose parts
+  Use Strict Arg parts
 ::Method init
   Expose package line start end
   self~init:super
   Use Strict Arg package, line, start, endLine, end
-  self~parts      = .Array~new
-  self~category   = .EL.LINE_COMMENT
-  self~ignorable  = 1 -- Line comments are always ignorable
-  self~from       = line    start
-  self~to         = endLine end
+  self~setParts( .Array~new )
+  self~setCategory( .EL.LINE_COMMENT )
+  self~setIgnorable( 1 ) -- Line comments are always ignorable
+  self~setFrom( line    start )
+  self~setTo( endLine end )
 ::Method source
+  Return self~sourceLines~makeString( "L", "0a"x )
+::Method sourceLines
   Expose package line start endLine end
   If self~category == .EL.LINE_COMMENT Then
-    Return package~source[line][start, end-start]
+    Return .Array~of( package~source[line][start, end-start] )
   Parse Value self~from With startLine  startCol
   Parse Value self~to   With endLine    endCol
   Do lineNo = startLine To endLine
@@ -359,12 +429,16 @@
 -- "value" is the current value of this character sequence. Initially, it
 -- is the same value as "source", but it may change, for example when
 -- encountering certain sequences that denote compound operators.
-::Attribute value
+::Attribute value Get
+::Method setValue -- For the parser
+  Expose value
+  Use Strict Arg value
 
 ::Method init
   Expose                        line  start  end  source  value
   self~init:super
-  Use Strict Arg self~category, line, start, end, source
+  Use Strict Arg category, line, start, end, source
+  self~setCategory( category )
   value = source
 
 ::Method from
@@ -379,18 +453,28 @@
 
 ::Class Special.Character.Sequence Public subclass Element
 
-::Attribute from
-::Attribute source
+::Attribute from Get
+::Method setFrom -- For the parser
+  Expose from
+  Use Strict Arg from
+::Attribute source Get
+::Method setSource -- For the parser
+  Expose source
+  Use Strict Arg source
 
 -- "value" is the current value of this character sequence. Initially, it
 -- is the same value as "source", but it may change, for example when
 -- encountering certain sequences, like ": :"
-::Attribute value
+::Attribute value Get
+::Method setValue -- For the parser
+  Expose value
+  Use Strict Arg value
 
 ::Method init
   Expose                        line  start  end  source  value from
   self~init:super
-  Use Strict Arg self~category, line, start, end, source
+  Use Strict Arg category, line, start, end, source
+  self~setCategory( category )
   value = source
   from = line start
 
@@ -406,7 +490,8 @@
 ::Method init
   Expose                        line  col source
   self~init:super
-  Use Strict Arg self~category, line, col
+  Use Strict Arg category, line, col
+  self~setCategory( category )
 ::Method from
   Expose line col
   Return line col
@@ -417,12 +502,22 @@
 --------------------------------------------------------------------------------
 
 ::Class StringOrSymbol.Element Public subclass Element
-::Attribute invocationType
-::Attribute traceOnly                   -- For labels
-::Attribute labelFor                    -- For labels
-::Attribute parts                       -- of a compound variable
+::Attribute invocationType Get
+::Method setInvocationType -- For the parser
+  Expose invocationType
+  Use Strict Arg invocationType
+::Attribute targetLabel Get            -- Of an internal CALL or function
+                                        -- name: the Label.Clause
+::Attribute parts Get                   -- of a compound variable
+::Method setParts -- For the parser
+  Expose parts
+  Use Strict Arg parts
 ::Method value
-  source = self~source
+  -- The lines of a multi-line string (CMS) are joined with nothing
+  source = ""
+  Do line Over self~sourceLines
+    source ||= line
+  End
   If self~isAString Then Do -- Strings
     length = Length( source )
     c = Upper( Right(source,1) )
@@ -438,31 +533,28 @@
     Return Upper( source )
   End
 ::Method init
-  Expose                        source  startLine  startCol  endLine  endCol
+  Expose                        source  startLine  startCol  endLine  endCol -
+    targetLabel
   self~init:super
-  Use Strict Arg self~category, source, startLine, startCol, endLine, endCol
-  self~traceOnly = 0
-  self~parts = .Array~new
+  Use Strict Arg category, source, startLine, startCol, endLine, endCol
+  self~setCategory( category )
+  targetLabel = .Nil
+  self~setParts( .Array~new )
+-- setTargetLabel -- For the parser (see targetLabel)
+::Method setTargetLabel
+  Expose targetLabel
+  Use Strict Arg targetLabel
 ::Method isMultiLine
   Expose startLine endLine
   Return startLine \== endLine
 -- "source" returns the full source text of the element, with the quotes
--- included. For a multi-line string the contents of each line are
--- concatenated with no line separator (record-oriented semantics).
+-- included. For a multi-line string (CMS) its lines are joined with a line
+-- feed; the value joins them with nothing (record-oriented semantics).
 ::Method source
   Expose source startLine startCol endLine endCol
   If startLine == endLine Then
     Return source[startLine][ startCol, endCol-startCol ]
-  ret = ""
-  Do lineNo = startLine To endLine
-    line = source[lineNo]
-    Select Case lineNo
-      When startLine Then ret =       SubStr( line, startCol )
-      When endLine   Then ret = ret || line[1, endCol-1]
-      Otherwise           ret = ret || line
-    End
-  End
-  Return ret
+  Return self~sourceLines~makeString( "L", "0a"x )
 -- "sourceLines" returns an array with the source text of the element on
 -- each of the lines it spans (quotes and suffix included, in their real
 -- positions). For a single-line element the array has just one item.
@@ -516,7 +608,7 @@
   Expose         line  start  end  sourceLine
   self~init:super
   Use Strict Arg line, start, end, sourceLine
-  self~category = .EL.WHITESPACE
+  self~setCategory( .EL.WHITESPACE )
 ::Method from
   Expose line start
   Return line start
@@ -533,11 +625,11 @@
   If end - start <= 1 Then Return .Nil
   rest = .WhiteSpace.Element~new( line, start + 1, end, sourceLine )
   end  = start + 1
-  rest~ignorable = 1
-  rest~prev = self
-  rest~next = self~next
-  If self~next \== .Nil Then self~next~prev = rest
-  self~next = rest
+  rest~setIgnorable( 1 )
+  rest~setPrev( self )
+  rest~setNext( self~next )
+  If self~next \== .Nil Then self~next~setPrev( rest )
+  self~setNext( rest )
   Return rest
 
 --------------------------------------------------------------------------------
@@ -548,7 +640,7 @@
   Expose package line start end
   self~init:super
   Use Strict Arg package, line, start, end
-  self~ignorable = 1 -- Shebangs are always ignorable
+  self~setIgnorable( 1 ) -- Shebangs are always ignorable
 ::Method source
   Expose package line start end
   Return package~source[line][start, end-start]
@@ -568,19 +660,20 @@
   Parse Value element ~ from With line col
   new = self~new(line, col)
   next = element~next
-  element~next = new
-  new  ~prev = element
+  element~setNext( new )
+  new~setPrev( element )
   If next \== .Nil Then Do
-    next~prev = new
-    new ~next = next
+    next~setPrev( new )
+    new~setNext( next )
   End
   Return new
 ::Method init
   Expose                        line  col
   self~init:super
-  Use Strict Arg self~category, line, col
-  self~from = line col
-  self~to   = line col
+  Use Strict Arg category, line, col
+  self~setCategory( category )
+  self~setFrom( line col )
+  self~setTo( line col )
 
 --------------------------------------------------------------------------------
 

@@ -77,6 +77,10 @@
 /* 20261118         THROW (RFE #31, proposed), not under CMS or Executor      */
 /* 20261121         Common Public License 1.0, and copyright also of the Rexx */
 /*                  Language Association, as the rest of ooRexx (RFE #878)    */
+/* 20261125         The cut of the tree API: the names, types and attributes  */
+/*                  decided in the review of the Element and Tree APIs; the   */
+/*                  attributes that only the parser writes are read-only      */
+/*                  (set... methods)                                          */
 /*                                                                            */
 /******************************************************************************/
 
@@ -229,8 +233,9 @@
   Else Do -- c == 1
     Select
       When isAKeyword Then Exit self~Keyword.Clause
-      When t1Cat == .EL.RIGHT_CURLY_BRACKET Then Exit self~Source.Literal.End
-      When t1Cat == .EL.END_OF_SOURCE Then Exit self~End.Of.Source
+      When t1Cat == .EL.RIGHT_CURLY_BRACKET Then
+        Exit self~Source.Literal.End.Clause
+      When t1Cat == .EL.END_OF_SOURCE Then Exit self~End.Of.Source.Clause
       Otherwise Exit self~Command.Instruction
     End
   End
@@ -239,7 +244,7 @@
   If t1Cat == .EL.DIRECTIVE_START Then Exit self~directive
 
   -- Case 1.2: The End-of-source marker
-  If t1Cat == .EL.END_OF_SOURCE Then Exit self~End.Of.Source
+  If t1Cat == .EL.END_OF_SOURCE Then Exit self~End.Of.Source.Clause
 
   ------------------------------------------------------------------------------
   -- 2. OK, we have at least two tokens in the elements array.                --
@@ -457,25 +462,25 @@ Error:
 /* SOURCE LITERAL END                                                         */
 /******************************************************************************/
 
-::Method Source.Literal.End
+::Method Source.Literal.End.Clause
   Expose lastClauseWas
 
   If lastClauseWas \== Implicit.Exit.Instruction Then
     Exit self~Implicit.Exit.Instruction
 
-  Return self~return( Source.Literal.End )
+  Return self~return( Source.Literal.End.Clause )
 
 /******************************************************************************/
 /* END OF SOURCE                                                              */
 /******************************************************************************/
 
-::Method End.Of.Source
+::Method End.Of.Source.Clause
   Expose lastClauseWas
 
   If lastClauseWas \== Implicit.Exit.Instruction Then
     Exit self~Implicit.Exit.Instruction
 
-  Return self~return( End.Of.Source )
+  Return self~return( End.Of.Source.Clause )
 
 /******************************************************************************/
 /* NULL CLAUSES                                                               */

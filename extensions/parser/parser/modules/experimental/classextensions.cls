@@ -58,6 +58,10 @@
 /* 20261123         The new name of the method, from the value of its name    */
 /*                  ("a STRINGORSYMBOL.ELEMENT<+>THING" without print.cls,    */
 /*                  which gave the element a string method)                   */
+/* 20261125         The cut of the tree API: the names, types and attributes  */
+/*                  decided in the review of the Element and Tree APIs; the   */
+/*                  attributes that only the parser writes are read-only      */
+/*                  (set... methods)                                          */
 /*                                                                            */
 /******************************************************************************/
 
@@ -84,7 +88,7 @@
   --
   -- We first compute the new method name as
   --
-  --   methodName'<'sep'>'[nameSpace':']classname,
+  --   methodName'<'sep'>'[namespace':']classname,
   --
   -- where sep is "+" for EXTENDS, and "*" for OVERRIDES
   --
@@ -94,14 +98,14 @@
   If extends Then array = self~extends
   Else            array = self~overrides
 
-  nameSpace = array[1]
+  namespace = array[1]
   className = array[2]
 
   If extends Then separator = "<+>"
   Else            separator = "<*>"
 
-  If nameSpace \== .Nil Then
-    newName = self~name~value || separator || nameSpace~value":"className~value
+  If namespace \== .Nil Then
+    newName = self~name~value || separator || namespace~value":"className~value
   Else
     newName = self~name~value || separator || className~value
 
@@ -127,7 +131,7 @@
 
   Call CommentOut                       -- Comment out subkeyword
 
-  If nameSpace \== .Nil Then Do
+  If namespace \== .Nil Then Do
     -- Look for a namespace taken_constant and comment it out
     Call CloneUntilNameIsAndThenCommentOut .NAMESPACE.NAME
     -- Now look for a colon element and comment it out

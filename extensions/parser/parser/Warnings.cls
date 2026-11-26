@@ -50,6 +50,10 @@
 /* 20260930    0.7  First version (GitHub issue #39)                          */
 /* 20261121         Common Public License 1.0, and copyright also of the Rexx */
 /*                  Language Association, as the rest of ooRexx (RFE #878)    */
+/* 20261125         The cut of the tree API: the names, types and attributes  */
+/*                  decided in the review of the Element and Tree APIs; the   */
+/*                  attributes that only the parser writes are read-only      */
+/*                  (set... methods)                                          */
 /*                                                                            */
 /******************************************************************************/
 
@@ -145,12 +149,10 @@
   classes = package~classes
   Do directive Over package~directives
     If \directive~isA( .Class.Directive ) Then Iterate
-    inherit = directive~options.["INHERIT"]
-    If inherit == .Nil Then Iterate
-    Do pair Over inherit
-      nameSpace = pair[1]
-      name      = pair[2]
-      If nameSpace \== .Nil               Then Iterate
+    Do reference Over directive~inherits
+      namespace = reference~namespace
+      name      = reference~name
+      If namespace \== .Nil               Then Iterate
       If IsAString( name )                Then Iterate
       value = name~value
       If WordPos( value, options ) == 0   Then Iterate

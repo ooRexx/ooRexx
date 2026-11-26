@@ -57,6 +57,10 @@
 /*                  bin/parser/modules/identity/ (RFE #878: everything but    */
 /*                  parser.cls lives in parser/); its requires and the call   */
 /*                  to the loader, relative to this file                      */
+/* 20261125         The cut of the tree API: the names, types and attributes  */
+/*                  decided in the review of the Element and Tree APIs; the   */
+/*                  attributes that only the parser writes are read-only      */
+/*                  (set... methods)                                          */
 /*                                                                            */
 /******************************************************************************/
 
@@ -106,14 +110,14 @@
     End
   End
 
-  If self~env_expression \== .Nil Then Do
+  If self~environmentExpression \== .Nil Then Do
     If element < .EL.SUBKEYWORD Then Do -- VALUE
       element = Clone( element, stream, context )
       Loop While element~ignorable
         element = Clone( element, stream, context )
       End
     End
-    element = self~env_expression~compile( element, stream, context )
+    element = self~environmentExpression~compile( element, stream, context )
     Loop While element~ignorable
       element = Clone( element, stream, context )
     End
@@ -126,8 +130,6 @@
   Loop While element~ignorable
     element = Clone( element, stream, context )
   End
-
-  options. = self~options.
 
   Loop While element \< .EL.END_OF_CLAUSE
     -- INPUT, OUTPUT, ERROR
@@ -151,7 +153,8 @@
     End
 
     If option \== "NORMAL" Then Do
-      element = options.[redir"_"option]~compile( element, stream, context )
+      redirection = self~send( redir )      -- input, output or error
+      element = redirection~target~compile( element, stream, context )
       Loop While element~ignorable
         element = Clone( element, stream, context )
       End
@@ -173,18 +176,18 @@
 
   -- Now element is the lhs variable
 
-  element = self~symbol~compile( element, stream, context )
+  element = self~target~compile( element, stream, context )
 
   expression = self~expression
 
-  If expression~isEmpty Then Do -- When "x =;" is allowed
+  If expression == .Nil Then Do -- When "x =;" is allowed
     Loop While element \< .EL.END_OF_CLAUSE
       element = Clone( element, stream, context )
     End
     Return element
   End
 
-  begin = expression~begin
+  begin = expression~firstElement
   Loop While element \== begin
     element = Clone( element, stream, context )
   End
@@ -511,7 +514,7 @@
   End
 
   -- Compile expression
-  element = self~expression~compile( element, stream, context )
+  element = self~whenExpressions~compile( element, stream, context )
 
   -- Skip ignorables
   Loop While element~ignorable
@@ -642,11 +645,11 @@
   element = PrepareClause( element, stream, context )
 
   -- Compile the lhs
-  element = self~lhs~compile( element, stream, context )
+  element = self~target~compile( element, stream, context )
 
-  -- Clone everything until rgs begins
-  rhs   = self~rhs
-  begin = rhs~begin
+  -- Clone everything until the expression begins
+  rhs   = self~expression
+  begin = rhs~firstElement
   Loop While element \== begin
     element = Clone( element, stream, context )
   End
@@ -912,15 +915,17 @@
   -- Skip subkeyword (condition name or PROPAGATE)
   element = Clone( element, stream, context )
 
-  If self~code \== .Nil Then Do
+  condition = self~condition
+  If condition == .Nil Then Nop               -- PROPAGATE
+  Else If condition~code \== .Nil Then Do
     -- Skip ignorables
     Loop While element~ignorable
       element = Clone( element, stream, context )
     End
     -- Compile code
-    element = self~code~compile( element, stream, context )
+    element = condition~code~compile( element, stream, context )
   End
-  Else If self~UserCondition \== .Nil Then Do
+  Else If condition~userCondition \== .Nil Then Do
     -- Skip ignorables
     Loop While element~ignorable
       element = Clone( element, stream, context )
@@ -1079,10 +1084,10 @@
 
    element = self~selectClause~compile( element, stream, context )
 
-  Do WhenThenInstruction Over self~whenThenInstructions
-    whenClause      = WhenThenInstruction[1]
-    thenClause      = WhenThenInstruction[2]
-    thenInstruction = WhenThenInstruction[3]
+  Do section Over self~whenSections
+    whenClause      = section~whenClause
+    thenClause      = section~thenClause
+    thenInstruction = section~thenInstruction
 
     element         = whenClause~compile(      element, stream, context )
     element         = thenClause~compile(      element, stream, context )
@@ -1093,7 +1098,7 @@
   If otherwiseClause \== .Nil Then Do
     element = otherwiseClause~compile( element, stream, context )
 
-    Do instruction Over self~otherwiseSequence
+    Do instruction Over self~otherwiseInstructions
       element = instruction~compile(   element, stream, context )
     End
   End
@@ -1319,10 +1324,10 @@
   Do Counter c argument Over arguments
 
     -- Compile name
-    name    = argument[1]
+    name    = argument~target
     element = name~compile( element, stream, context )
 
-    If argument~items == 2 Then Do
+    If argument~defaultValue \== .Nil Then Do
       -- Skip ignorables until "="
       Loop While element~ignorable
         element = Clone( element, stream, context )
@@ -1334,7 +1339,7 @@
         element = Clone( element, stream, context )
       End
       -- Compile exp
-      expr    = argument[2]
+      expr    = argument~defaultValue
       element = expr~compile( element, stream, context )
    End
 
@@ -1351,6 +1356,12 @@
       End
     End
   End
+
+  -- The ellipsis ("..."), and the comma before it
+  If self~ellipsis \== .Nil Then
+    Loop While element \< .EL.END_OF_CLAUSE
+      element = Clone( element, stream, context )
+    End
 
   Return element
 
@@ -1379,9 +1390,11 @@
 ::Routine CompileCatchSections
   Use Strict Arg block, element, stream, context
 
-  Do section Over block~catchSections
+  sections = block~catchSections~copy
+  If block~finallySection \== .Nil Then sections~append( block~finallySection )
+  Do section Over sections
     element = section[1]~compile( element, stream, context )
-    Do instruction Over section[2]
+    Do instruction Over section~instructions
       element = instruction~compile( element, stream, context )
     End
   End

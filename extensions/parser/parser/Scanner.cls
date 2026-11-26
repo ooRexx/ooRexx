@@ -101,6 +101,10 @@
 /*                  so that a 35.1 says "::", as ooRexx ("x: ::routine r").   */
 /* 20261121         Common Public License 1.0, and copyright also of the Rexx */
 /*                  Language Association, as the rest of ooRexx (RFE #878)    */
+/* 20261125         The cut of the tree API: the names, types and attributes  */
+/*                  decided in the review of the Element and Tree APIs; the   */
+/*                  attributes that only the parser writes are read-only      */
+/*                  (set... methods)                                          */
 /*                                                                            */
 /******************************************************************************/
 
@@ -658,7 +662,7 @@ Return 0                                -- 0: Error encountered
     previous = TheElementBefore( previous )
   End
   If previous < .ALL.WHITESPACE_LIKE Then Do
-    previous~ignorable = 1
+    previous~setIgnorable( 1 )
     previous = TheElementBefore( previous )
   End
 
@@ -677,9 +681,9 @@ Return 0                                -- 0: Error encountered
   -- it is created before recognizing the Parser options.
   If line < lines | \.Options.CMS, previous < .ALL.CONTINUATION_CHARACTERS, -
     (.Features.Continuation.Minus | previous < .EL.COMMA) Then Do
-    previous~category = .EL.CONTINUATION
+    previous~setCategory( .EL.CONTINUATION )
     If TheElementBefore( previous ) < .IGNORE_WHITESPACE_AFTER Then
-      previous~ignorable = 1
+      previous~setIgnorable( 1 )
     If line < lines Then Return -- Do not generate an end-of-clause
   End
 
@@ -717,7 +721,7 @@ InsertSemicolon:
   -- A semicolon eats blanks at the left
   beforeSemicolon = TheElementBefore( semicolon )
   If beforeSemicolon < .ALL.WHITESPACE_LIKE Then
-    beforeSemicolon~ignorable = 1
+    beforeSemicolon~setIgnorable( 1 )
 
   -- Special case: check if this is a ::RESOURCE directive
   self~checkResource
@@ -865,7 +869,7 @@ EndDelimiterFound:
 
   lastEndOfClause = semicolon
 
-  marker~closing  = semicolon
+  marker~setClosing( semicolon )
 
   Return
 
@@ -873,11 +877,11 @@ IgnoredData: Procedure
   Use Strict Arg source, line, start
 
   ignored_data           = .Element~new
-  ignored_data~category  = .EL.RESOURCE_IGNORED_DATA
-  ignored_data~from      = line start
-  ignored_data~to        = line (Length(source[line])+1)
-  ignored_data~source    = SubStr( source[line], start )
-  ignored_data~ignorable = 1
+  ignored_data~setCategory( .EL.RESOURCE_IGNORED_DATA )
+  ignored_data~setFrom( line start )
+  ignored_data~setTo( line (Length(source[line])+1) )
+  ignored_data~setSource( SubStr( source[line], start ) )
+  ignored_data~setIgnorable( 1 )
   Return                   ignored_data
 
 99.943: self~error(99.943, marker, delimiter, name)
@@ -960,7 +964,7 @@ NormalLineComment:
 
   -- Set the right category. This applies when we look at the element
   -- as a whole.
-  comment~category = .EL.DOC_COMMENT_MARKDOWN
+  comment~setCategory( .EL.DOC_COMMENT_MARKDOWN )
 
   -- We now perform a rough parsing of the whole doc-comment, and store
   -- its parts in the "parts" attribute.
@@ -1257,7 +1261,7 @@ Done:
 
   -- Set the right category. This applies when we look at the element
   -- as a whole.
-  comment~category = .EL.DOC_COMMENT
+  comment~setCategory( .EL.DOC_COMMENT )
 
   Parse Value comment~from With first firstCol
   Parse Value comment~to   With last  lastCol
@@ -1331,7 +1335,7 @@ Done:
   -- Now apply Rexx rules about ignoring whitespace before operator chars
   predecessor = TheElementBefore( element )
   If predecessor < .ALL.WHITESPACE_LIKE Then Do
-    predecessor~ignorable = 1
+    predecessor~setIgnorable( 1 )
     -- Recalculate predecessor
     predecessor = TheElementBefore(predecessor)
   End
@@ -1347,7 +1351,7 @@ Done:
     If \assignmentSequence~hasItem(sequence) Then Return element
     -- An extended assignment
     category = assignmentClass[sequence]
-    predecessor~category = category
+    predecessor~setCategory( category )
     -- If this is a three-character extended assignment sequence,
     -- we need to get to the intermediate (i.e., second) character
     -- to set its category
@@ -1357,16 +1361,16 @@ Done:
   Else Do -- A compound operator
     -- If this is a three-character operator sequence, we need to get to the
     -- intermediate (i.e., second) character to set its category.
-    predecessor~category = category
+    predecessor~setCategory( category )
     If predecessor < .ALL.OPS.3CHARS Then
       Call SetMiddlecategory
   End
 
 -- Common path for compound operators and extended assignments
 CompoundOperatorOrExtendedAssignment:
-  predecessor~value = sequence
-  element~category  = category
-  element~ignorable = 1
+  predecessor~setValue( sequence )
+  element~setCategory( category )
+  element~setIgnorable( 1 )
 
 Return element
 
@@ -1375,7 +1379,7 @@ SetMiddlecategory:
   Do While second \< .ALL.OPERATORS
     second = second~prev
   End
-  second~category = category
+  second~setCategory( category )
 Return
 
 /******************************************************************************/
@@ -1401,7 +1405,7 @@ Return
   -- Whitespace not before an opening bracket is ignorable
   If element < .ALL.LEFT_BRACES Then Nop
   Else If predecessor < .ALL.WHITESPACE_LIKE Then Do
-    predecessor~ignorable = 1
+    predecessor~setIgnorable( 1 )
     -- Recalculate predecessor
     predecessor = TheElementBefore( predecessor )
   End
@@ -1409,12 +1413,12 @@ Return
   -- See that brackets are correctly paired
   Select Case element~category
     When .EL.LEFT_PARENTHESIS, .EL.LEFT_BRACKET Then Do
-      element~clauseNumber = clauseNumber
+      element~setClauseNumber( clauseNumber )
       bracketStack~push( element )
       Return
     End
     When .EL.LEFT_CURLY_BRACKET Then Do
-      element~clauseNumber = clauseNumber
+      element~setClauseNumber( clauseNumber )
       bracketStack~push( element )
       -- Add an extra semicolon after "{"
       Parse Value element~to With line col
@@ -1425,8 +1429,8 @@ Return
       -- See that "(" and ")" are paired
       If bracketStack~isEmpty           Then Signal 37.002
       If bracketStack~top~value \== "(" Then Signal 37.002
-      element~clauseNumber = clauseNumber
-      bracketStack~top~closing = element
+      element~setClauseNumber( clauseNumber )
+      bracketStack~top~setClosing( element )
       bracketStack~pop
       Return
     End
@@ -1434,8 +1438,8 @@ Return
       -- See that "[" and "]" are paired
       If bracketStack~isEmpty           Then Signal 37.901
       If bracketStack~top~value \== "[" Then Signal 37.901
-      element~clauseNumber = clauseNumber
-      bracketStack~top~closing = element
+      element~setClauseNumber( clauseNumber )
+      bracketStack~top~setClosing( element )
       bracketStack~pop
       Return
     End
@@ -1443,8 +1447,8 @@ Return
       -- See that "{" and "}" are paired
       If bracketStack~isEmpty           Then Signal 37.900
       If bracketStack~top~value \== "{" Then Signal 37.900
-      element~clauseNumber = clauseNumber
-      bracketStack~top~closing = element
+      element~setClauseNumber( clauseNumber )
+      bracketStack~top~setClosing( element )
       bracketStack~pop
       -- Add an extra semicolon before "}"
       Parse Value element~to With line col
@@ -1476,22 +1480,22 @@ Return
 
   -- Handle "::"
   If ch == ":", .Features.Directive.Start, predecessor < .EL.COLON Then Do
-    element~category = .EL.DIRECTIVE_START
+    element~setCategory( .EL.DIRECTIVE_START )
     -- In the most common case, the two colons will be adjacent.
     -- We generate a new "::" element and remove the predecessor element.
     If predecessor~to == element~from Then Do
-      element~from   = predecessor~from
-      element~source = "::"
-      element~value  = "::"
+      element~setFrom( predecessor~from )
+      element~setSource( "::" )
+      element~setValue( "::" )
       predecessor~remove
     End
     Else Do
       -- Its value is "::", as ooRexx shows it in a 35.1 ("x: ::routine r":
       -- the label's colon and the next one make the "::"); the source keeps
       -- the ":" that is written there.
-      element~ignorable = 1
-      predecessor~category = .EL.DIRECTIVE_START
-      predecessor~value    = "::"
+      element~setIgnorable( 1 )
+      predecessor~setCategory( .EL.DIRECTIVE_START )
+      predecessor~setValue( "::" )
     End
   End
 
@@ -1531,7 +1535,7 @@ Return
   -- Apply Rexx rules about ignoring posterior whitespace
 
   If TheElementBefore( element ) < .IGNORE_WHITESPACE_AFTER Then
-    element~ignorable = 1
+    element~setIgnorable( 1 )
 
   Return
 
@@ -1958,11 +1962,11 @@ UString:
 ::Method insertAfter
   Use Strict Arg element, new
 
-  new~next      = element~next
-  new~prev      = element
+  new~setNext( element~next )
+  new~setPrev( element )
 
-  element~next  = new
-  new~next~prev = new
+  element~setNext( new )
+  new~next~setPrev( new )
 
 /******************************************************************************/
 /*                                                                            */
@@ -1974,11 +1978,11 @@ UString:
 ::Method insertBefore
   Use Strict Arg element, new
 
-  new~next          = element
-  new~prev          = element~prev
+  new~setNext( element )
+  new~setPrev( element~prev )
 
-  element~prev~next = new
-  element~prev      = new
+  element~prev~setNext( new )
+  element~setPrev( new )
 
 /******************************************************************************/
 /*                                                                            */
@@ -1993,8 +1997,8 @@ UString:
 
   -- Insert the element into the chain
 
-  tail~next    = element                -- tail~next was .Nil
-  element~prev = tail                   --
+  tail~setNext( element )                -- tail~next was .Nil
+  element~setPrev( tail )                   --
 
   -- Update tail
 

@@ -109,6 +109,10 @@
 /* 20261124         Rexx.Package~children. calledRoutineNames holds pairs     */
 /*                  (name, arguments), not symbols or strings                 */
 /* 20261124         Rexx.Package inherits Rexx.Node                           */
+/* 20261125         The cut of the tree API: the names, types and attributes  */
+/*                  decided in the review of the Element and Tree APIs; the   */
+/*                  attributes that only the parser writes are read-only      */
+/*                  (set... methods)                                          */
 /*                                                                            */
 /******************************************************************************/
 
@@ -154,7 +158,7 @@
 -- the same.)
 ::Constant version "0.7 20261122"
 
-::Attribute package
+::Attribute package Get
 
 ::Method firstElement
   Return self~package~firstElement
@@ -321,9 +325,8 @@
     --   No GET, no SET -> No body
     --   GET or SET     -> Body is optional
     --   ABSTRACT       -> No body
-    options. = directive~options.
-    If options.get | options.set Then inAMethodBody = 1
-    If options.abstract          Then inAMethodBody = 1
+    If directive~hasGetter | directive~hasSetter Then inAMethodBody = 1
+    If directive~isAbstract                      Then inAMethodBody = 1
   End
 
   body = .Code.Body~new( package, directive )
@@ -331,7 +334,7 @@
   If directive == .Nil Then body~setParent( package )
   Else                      body~setParent( directive )
   If inAMethodBody Then
-    body~isAMethodBody = .True
+    body~setIsAMethodBody( .True )
   package~currentBodies~push(body)
   package~blockInstructionsStacks~push(.Stack~new())
 
@@ -372,8 +375,8 @@
   Return body
 
 ProcessUseArg:
-  If n == 1 | (n == 2 & ExposeFound) Then body~signature =  instruction
-  Else                                    body~signature = .Nil
+  If n == 1 | (n == 2 & ExposeFound) Then body~setSignature( instruction )
+  Else                                    body~setSignature( .Nil )
 Return
 
 CheckThatGuardIsValid:
@@ -427,28 +430,32 @@ CheckThatUseLocalIsValid:
 
 --------------------------------------------------------------------------------
 -- The CODE.BODY class                                                        --
---   We implement it as a form of block instruction                           --
+--   A node of its own, not a clause: the body of a routine or a method, or  --
+--   the prolog. It goes from its first clause to its last one.              --
 --------------------------------------------------------------------------------
 
-::Class Code.Body SubClass Block.Instruction
+::Class Code.Body Inherit Rexx.Node
 ::Constant childAttributes "INSTRUCTIONS"
 
-::Constant tree "instructions"
-
-::Attribute labels              -- All non trace-only labels
-::Attribute clauses             -- All clauses
-::Attribute exposed             -- Explicitly EXPOSEd variables
-::Attribute exposedSymbols      -- Those of them that are symbols of the
+::Attribute begin               -- Scaffolding: see firstElement
+::Attribute end                 -- Scaffolding: see lastElement
+::Attribute package       Get   -- The package
+::Attribute parent        Get   -- The directive, or the package (prolog)
+::Attribute targetLabels  Get   -- The labels that CALL and SIGNAL reach:
+                                -- a StringTable, by label value
+::Attribute clauses       Get   -- All clauses
+::Attribute exposed       Get   -- Explicitly EXPOSEd variables
+::Attribute exposedSymbols Get  -- Those of them that are symbols of the
                                 -- EXPOSE list, not "(x)" (the GUARD check)
-::Attribute uselocal            -- USE LOCAL variables (.Nil -> no USE LOCAL)
-::Attribute locals              -- All local variables
-::Attribute local               -- The body local directory
-::Attribute isAMethodBody       -- This is a METHOD body
-::Attribute classMethod         -- True when this is a CLASS method
-::Attribute calledRoutineNames  -- Pairs (name, arguments) of the calls
-::Attribute instructions        -- Array of instructions
-::Attribute directive           -- .Nil for the prolog
-::Attribute blockID             -- Used to identify DO/LOOP/SELECT blocks
+::Attribute uselocal      Get   -- USE LOCAL variables (.Nil -> no USE LOCAL)
+::Attribute locals        Get   -- All local variables
+::Attribute local         Get   -- Scaffolding: the body local directory
+::Attribute isAMethodBody Get   -- This is a METHOD body
+::Attribute classMethod   Get   -- True when this is a CLASS method
+::Attribute calledRoutineNames Get -- Pairs (name, arguments) of the calls
+::Attribute instructions  Get   -- Array of instructions
+::Attribute directive     Get   -- .Nil for the prolog
+::Attribute blockID             -- Scaffolding: identifies DO/LOOP/SELECT
 
 -- The "signature" attribute is a simple aid for compiler and transpiler
 -- implementors. If the body contains only a single USE ARG instruction,
@@ -456,21 +463,38 @@ CheckThatUseLocalIsValid:
 -- EXPOSE, in the case of method bodies), AND the body does not have
 -- any ARG or PARSE ARG instruction, then "signature" contains that
 -- USE ARG instruction. Otherwise, "signature" is Nil.
-::Attribute signature
+::Attribute signature Get
 
 ::Method "[]"
   Expose instructions
   Use Strict Arg index
   Return instructions[index]
 
+-- setParent, setIsAMethodBody -- Scaffolding: for the parser
+::Method setParent
+  Expose parent
+  Use Strict Arg parent
+
+::Method setIsAMethodBody
+  Expose isAMethodBody
+  Use Strict Arg isAMethodBody
+
+::Method setUseLocal
+  Expose useLocal
+  Use Strict Arg useLocal
+
+::Method setSignature
+  Expose signature
+  Use Strict Arg signature
+
 ::Method init
-  Expose instructions labels clauses calledRoutineNames -
+  Expose instructions targetLabels clauses calledRoutineNames -
     exposed exposedSymbols useLocal classMethod isAMethodBody -
-    usesExitInstruction signature directive blockID locals local
+    signature directive blockID locals local package begin end parent
 
   Use Strict Arg package, directive
 
-  labels              = .StringTable~new
+  targetLabels        = .StringTable~new
   clauses             = Array()
   calledRoutineNames  = Array()
   instructions        = .Instruction.List~new()
@@ -483,12 +507,14 @@ CheckThatUseLocalIsValid:
   blockID             = 0
   locals              = .StringTable~new
   local               = .Directory~new
+  parent              = .Nil
 
   If directive~class == .Method.Directive Then
     classMethod = directive~isClassMethod
 
-  -- Set begin and end to nil, will be updated by addInstruction
-  self~init:super( package, .Nil, .Nil )
+  -- begin and end are updated by addInstruction
+  begin               = .Nil
+  end                 = .Nil
 
 ::Method addInstruction
   Expose instructions exposed useLocal
@@ -497,19 +523,18 @@ CheckThatUseLocalIsValid:
 
   -- This is directly called only for top-level instructions.
   --
-  -- We update the body labels stringtable with all the non-trace-only
+  -- We update the target labels stringtable with all the non-trace-only
   -- top-level labels.
 
   labels     = instruction~labels       -- Our labels
-  bodyLabels = self~labels              -- Pool of non trace-only labels
+  bodyLabels = self~targetLabels        -- Pool of non trace-only labels
   Loop theLabel Over labels             -- One by one...
     value  = theLabel~label~value       -- ...pick the value (may be lowercase)
     If bodyLabels~hasIndex(value) Then  -- Duplicate label? That is allowed,...
       Nop                               -- ... but this is trace-only.
     Else Do                             -- A new, non trace-only label
       bodyLabels[value] = theLabel      -- Store it in the body label pool...
-      theLabel~traceOnly = .False       -- ...and mark as not trace-only.
-      theLabel~label~traceOnly = .False -- Mark the element itself too.
+      theLabel~setTraceOnly( .False )   -- ...and mark as not trace-only.
     End
   End
 
@@ -548,19 +573,6 @@ CheckThatUseLocalIsValid:
   -- Only 1 instruction (implicit exit) + no labels: empty
   Return instructions[1]~labels~isEmpty
 
-::Method makeString
-  Return self~makeArray
-::Method makeArray
-  Expose instructions
-  Use Strict Arg indent = 0
-  array = Array()
-  Do i = 1 To instructions~items
-    instruction = instructions[i]~makeArray(indent)
-    Do j = 1 To instruction~items
-      array~append(instruction[j])
-    End
-  End
-  Return array
 
 /******************************************************************************/
 /* REXX.PACKAGE                                                               */
@@ -572,7 +584,7 @@ CheckThatUseLocalIsValid:
 
   -- The package prolog is the first code body
   prolog = Code.Body( package, .Nil )
-  package~addProlog( .Rexx.Routine~new("", prolog, .Nil ) )
+  package~addProlog( .Rexx.Routine~new( .Nil, prolog, .Nil ) )
   package~begin = prolog~begin
 
   Loop
@@ -581,7 +593,7 @@ CheckThatUseLocalIsValid:
 
     Select Case directive~class
 
-      When       .End.Of.Source Then Do
+      When       .End.Of.Source.Clause Then Do
         directive~setParent( package )
         package~setEndOfSource( directive )
         Leave
@@ -622,26 +634,26 @@ CheckThatUseLocalIsValid:
 
 ::Class Rexx.Package Public Inherit Rexx.Node
 
-::Attribute options                 -- Global options, when NetRexxOptions = 1
-::Attribute Clauser                 -- The clauser
-::Attribute preClauser              -- The preClauser
-::Attribute scanner                 -- The scanner
+::Attribute options Get             -- Global options, when NetRexxOptions = 1
+::Attribute clauser Get             -- The clauser
+::Attribute preClauser Get          -- The preClauser
+::Attribute scanner Get             -- The scanner
 ::Attribute currentClass            -- Current class (.Nil --> prolog)
-::Attribute currentBodies           -- Stack of bodies being currently parsed
-::Attribute constantCalls           -- Function calls in ::CONSTANT exprs
-::Attribute directives              -- Sequential list of directives
-::Attribute source                  -- [Similar to the ooRexx Package class]
-::Attribute prolog                  -- [Similar to the ooRexx Package class]
-::Attribute name                    -- [Similar to the ooRexx Package class]
-::Attribute resources               -- [Similar to the ooRexx Package class]
-::Attribute publicClasses           -- [Similar to the ooRexx Package class]
-::Attribute privateClasses
-::Attribute publicRoutines          -- [Similar to the ooRexx Package class]
-::Attribute privateRoutines
-::Attribute definedMethods          -- [Similar to the ooRexx Package class]
-::Attribute blockInstructionsStacks -- Stack of stacks of active block instructions
-::Attribute sourceLiteralStack      -- Stack of active source literals
-::Attribute scannerStack            --
+::Attribute currentBodies Get       -- Stack of bodies being currently parsed
+::Attribute constantCalls Get       -- Function calls in ::CONSTANT exprs
+::Attribute directives Get          -- Sequential list of directives
+::Attribute source Get              -- [Similar to the ooRexx Package class]
+::Attribute prolog Get              -- [Similar to the ooRexx Package class]
+::Attribute name Get                -- [Similar to the ooRexx Package class]
+::Attribute resources Get           -- [Similar to the ooRexx Package class]
+::Attribute publicClasses Get       -- [Similar to the ooRexx Package class]
+::Attribute privateClasses Get
+::Attribute publicRoutines Get      -- [Similar to the ooRexx Package class]
+::Attribute privateRoutines Get
+::Attribute definedMethods Get      -- [Similar to the ooRexx Package class]
+::Attribute blockInstructionsStacks Get -- Stack of stacks of active blocks
+::Attribute sourceLiteralStack Get  -- Stack of active source literals
+::Attribute scannerStack Get        --
 ::Attribute begin
 ::Attribute end
 
@@ -707,7 +719,7 @@ CheckThatUseLocalIsValid:
   Return .Nil
 
 -- children -- The body of the prolog, the directives, in order, and the
--- End.Of.Source clause
+-- End.Of.Source.Clause clause
 ::Method children
   Expose prolog directives endOfSource
   kids = Array( prolog~body )
@@ -717,7 +729,7 @@ CheckThatUseLocalIsValid:
   If endOfSource \== .Nil Then kids~append( endOfSource )
   Return kids
 
-::Attribute endOfSource Get -- The End.Of.Source clause
+::Attribute endOfSource Get -- The End.Of.Source.Clause clause
 
 ::Method setEndOfSource
   Expose endOfSource
@@ -793,13 +805,12 @@ CheckThatUseLocalIsValid:
 
 ::Routine Annotate
   Use Strict Arg package, directive
-  options. = directive~options.
-  type = options.["DIRECTIVE"]
+  type = directive~kind
   If type \== "PACKAGE" Then Do
-    name = Upper( options.["NAME"]~value )
+    name = Upper( directive~name~value )
     If \AnnotationTargetExists( package, type, name ) Then Signal 99.945
   End
-  directive~body = Empty.Body( package, directive )
+  directive~setBody( Empty.Body( package, directive ) )
   package~addDirective(directive)
   Return
 
@@ -835,13 +846,13 @@ CheckThatUseLocalIsValid:
     When "CONSTANT" Then Do
       method = instanceMethods[ name ]
       If method == .Nil Then method = classMethods[ name ]
-      Return method~isA( .Constant.Method )
+      Return method~isA( .Rexx.Constant.Method )
     End
     When "ATTRIBUTE" Then
       Do methods Over .Array~of( instanceMethods, classMethods )
         Do n Over .Array~of( name, name"=" )
           method = methods[ n ]
-          If method~isA( .Attribute.Method ) Then Return .True
+          If method~isA( .Rexx.Attribute.Method ) Then Return .True
           If method~isA( .Rexx.Method ), method~directive~isAttribute Then
             Return .True
         End
@@ -856,28 +867,28 @@ CheckThatUseLocalIsValid:
 ::Routine Attribute
   Use Strict Arg package, directive
   codeBody = Code.Body( package, directive )
-  options. = directive~options.
   If \codeBody~isEmpty Then Do
     instructionBegin = TheElementAfter( codeBody~instructions[1]~begin )
-    If options.get & options.set        Then Signal 99.937
-    Else If options.abstract            Then Signal 99.940
-    Else If options.delegateName \== "" Then Signal 99.947
-    Else If options.external \== .Nil   Then Signal 99.935
+    If directive~hasGetter & directive~hasSetter Then Signal 99.937
+    Else If directive~isAbstract                 Then Signal 99.940
+    Else If directive~delegateName \== .Nil      Then Signal 99.947
+    Else If directive~external \== .Nil          Then Signal 99.935
   End
   -- The EXTERNAL specification, after the body (ooRexx's order).
-  If options.external \== .Nil, \ExternalSpecIsValid( options.external ) Then
+  external = directive~external
+  If external \== .Nil, \ExternalSpecIsValid( external ) Then
     Signal 99.917
   name = directive~name
-  attribute = .Attribute.Method~new(name, directive, codeBody)
+  attribute = .Rexx.Attribute.Method~new(name, directive, codeBody)
   name = Upper( name~value )
-  If options.get Then Do
+  If directive~hasGetter Then Do
     If package~inTheProlog Then Do
       If package~definedMethods~hasIndex(name) Then Signal 99.931
       package~addMethod( name, attribute )
     End
     Else Do
       lastClass = package~currentClass
-      If options.["CLASS"] Then Do
+      If directive~isClassMethod Then Do
         If lastClass~classMethods~hasIndex(name) Then Signal 99.931
         lastClass~addClassMethod( name, attribute )
       End
@@ -887,7 +898,7 @@ CheckThatUseLocalIsValid:
       End
     End
   End
-  If options.set Then Do
+  If directive~hasSetter Then Do
     name = name"="
     If package~inTheProlog Then Do
       If package~definedMethods~hasIndex(name) Then Signal 99.931
@@ -895,7 +906,7 @@ CheckThatUseLocalIsValid:
     End
     Else Do
       lastClass = package~currentClass
-      If options.["CLASS"] Then Do
+      If directive~isClassMethod Then Do
         If lastClass~classMethods~hasIndex(name) Then Signal 99.931
         lastClass~addClassMethod( name, attribute )
       End
@@ -905,8 +916,8 @@ CheckThatUseLocalIsValid:
       End
     End
   End
-  directive~body = codeBody
-  directive~attribute = attribute
+  directive~setBody( codeBody )
+  directive~setDefinition( attribute )
   package~addDirective( directive )
 Return
 
@@ -914,7 +925,7 @@ Return
 99.931: Syntax( 99.931, TheElementAfter( directive~begin ) )
 
 -- Incorrect external name specification "&1".
-99.917: Syntax( 99.917, TheElementAfter( directive~begin ), options.external )
+99.917: Syntax( 99.917, TheElementAfter( directive~begin ), external )
 
 -- External attributes cannot have a method body.
 99.935: Syntax( 99.935, instructionBegin )
@@ -931,7 +942,7 @@ Return
 
 --------------------------------------------------------------------------------
 
-::Class Attribute.Method
+::Class Rexx.Attribute.Method
 
 ::Attribute name      Get
 ::Attribute body      Get
@@ -951,14 +962,11 @@ Return
   class = .Rexx.Class~new( directive~name, directive, body )
   package~currentClass = class
   name = Upper( directive~name~value )
-  options. = directive~options.
   If package~hasClass( name ) Then Signal 99.901
-  Select Case options.public
-    When 1 Then package~addPublicClass( name, class )
-    When 0 Then package~addClass(       name, class )
-  End
-  directive~body = body
-  directive~theClass = class
+  If directive~isPrivate Then package~addClass(       name, class )
+  Else                        package~addPublicClass( name, class )
+  directive~setBody( body )
+  directive~setDefinition( class )
   package~addDirective( directive )
   Return
 
@@ -999,7 +1007,7 @@ Return
     instructionBegin = TheElementAfter( codeBody~instructions[1]~begin )
     Signal 99.938
   End
-  constant = .Constant.Method~new(directive~name, directive, codeBody)
+  constant = .Rexx.Constant.Method~new(directive~name, directive, codeBody)
   name = Upper( directive~name~value )
   If package~inTheProlog Then Do
     If package~definedMethods~hasIndex(name) Then Signal 99.932
@@ -1012,8 +1020,8 @@ Return
     If lastClass~instanceMethods~hasIndex(name) Then Signal 99.932
     lastClass~addInstanceMethod( name, constant )
   End
-  directive~body     = codeBody
-  directive~constant = constant
+  directive~setBody( codeBody )
+  directive~setDefinition( constant )
   package~addDirective( directive )
   Return
 
@@ -1025,7 +1033,7 @@ Return
 
 --------------------------------------------------------------------------------
 
-::Class Constant.Method
+::Class Rexx.Constant.Method
 ::Method init
   Expose         name  directive  body
   Use Strict Arg name, directive, body
@@ -1044,8 +1052,8 @@ Return
   package~currentClass = extension
   name = Upper( directive~name~value )
   options. = directive~options.
-  directive~body      = body
-  directive~extension = extension
+  directive~setBody( body )
+  directive~setDefinition( extension )
   package~addDirective( directive )
   Return
 
@@ -1119,8 +1127,8 @@ Return
       End
     End
   End
-  directive~body = codeBody
-  directive~method = method
+  directive~setBody( codeBody )
+  directive~setDefinition( method )
   package~addDirective( directive )
 Return
 
@@ -1162,7 +1170,7 @@ CheckExternal:
 ::Routine Options
   Use Strict Arg package, directive
   body = Empty.Body( package, directive )
-  directive~body = body
+  directive~setBody( body )
   package~addDirective( directive )
 
 /******************************************************************************/
@@ -1172,7 +1180,7 @@ CheckExternal:
 ::Routine Requires
   Use Strict Arg package, directive
   body = Empty.Body( package, directive )
-  directive~body = body
+  directive~setBody( body )
   package~addDirective( directive )
 
 /******************************************************************************/
@@ -1183,7 +1191,7 @@ CheckExternal:
   Use Strict Arg package, directive
   --package~scanner~resource.data( package, directive )
   body = Empty.Body( package, directive )
-  directive~body = body
+  directive~setBody( body )
   package~addDirective( directive )
 
   name = Upper( directive~name~value )
@@ -1210,11 +1218,11 @@ CheckExternal:
   routine = .Rexx.Routine~new( name, codeBody, directive )
   name = Upper( name~value )
   If package~hasRoutine( name ) Then Signal 99.903
-  If directive~private Then package~addRoutine(name, routine)
+  If directive~isPrivate Then package~addRoutine(name, routine)
   Else                      package~addPublicRoutine(name, routine)
 
-  directive~body    = codeBody
-  directive~routine = routine
+  directive~setBody( codeBody )
+  directive~setDefinition( routine )
 
   package~addDirective( directive )
 
