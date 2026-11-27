@@ -143,6 +143,9 @@
 /*                  decided in the review of the Element and Tree APIs; the   */
 /*                  attributes that only the parser writes are read-only      */
 /*                  (set... methods)                                          */
+/* 20261127         RAISE and THROW ERROR/FAILURE: a number with a sign, as   */
+/*                  in CATCH (feature request #892); the sign is the          */
+/*                  condition's sign                                          */
 /*                                                                            */
 /******************************************************************************/
 
@@ -1941,6 +1944,19 @@ Templates:
       condition = ( condition, element )
       Call NextElement
     End
+    -- ERROR and FAILURE: also a number with a sign, as in CATCH (feature
+    -- request #892): "THROW ERROR -3" is caught by "CATCH ERROR -3". The
+    -- sign must be followed by a number; anything else is 35.1 at it.
+    When cValue \== "SYNTAX", element < .ALL.OPS.ADDITIVE Then Do
+      sign = element
+      If sign < .EL.OP.MINUS Then Call SetCategory sign, .EL.OP.PREFIX.MINUS
+      Else                        Call SetCategory sign, .EL.OP.PREFIX.PLUS
+      Call NextElement
+      If element \< .ALL.NUMBERS Then Signal 35.001
+      code = element
+      Call NextElement
+      condition = ( condition, code, sign )
+    End
     When WordPos( cValue, expectCode ) > 0 Then Do
       condition = ( condition, Expression() )
     End
@@ -2132,6 +2148,8 @@ Expression:
   Else Do
     If cond[1]~value == "USER" Then
       condition = .Condition.Reference~of( cond[1], cond[2], .Nil, .Nil )
+    Else If cond~items == 3 Then -- ERROR or FAILURE with a signed number
+      condition = .Condition.Reference~of( cond[1], .Nil, cond[3], cond[2] )
     Else
       condition = .Condition.Reference~of( cond[1], .Nil, .Nil, cond[2] )
   End

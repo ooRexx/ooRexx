@@ -61,6 +61,8 @@
 /*                  decided in the review of the Element and Tree APIs; the   */
 /*                  attributes that only the parser writes are read-only      */
 /*                  (set... methods)                                          */
+/* 20261127         RAISE and THROW: the sign of an ERROR or FAILURE code     */
+/*                  (feature request #892)                                    */
 /*                                                                            */
 /******************************************************************************/
 
@@ -921,6 +923,13 @@
     -- Skip ignorables
     Loop While element~ignorable
       element = Clone( element, stream, context )
+    End
+    -- The sign of an ERROR or FAILURE code (feature request #892)
+    If condition~sign \== .Nil Then Do
+      element = Clone( element, stream, context )
+      Loop While element~ignorable
+        element = Clone( element, stream, context )
+      End
     End
     -- Compile code
     element = condition~code~compile( element, stream, context )

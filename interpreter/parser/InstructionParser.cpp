@@ -3814,8 +3814,27 @@ RexxInstruction *LanguageParser::raiseNew(bool isThrow)
                 flags[raise_syntax] = true;
             }
 
-            // this is a constant expression form.
-            rcValue = parseConstantExpression();
+            // ERROR and FAILURE also take a signed number, as CATCH does
+            // (THROW ERROR -3 is caught by CATCH ERROR -3).  The sign must
+            // be right before a constant symbol that is a number.
+            token = nextReal();
+            if (conditionType != CONDITION_SYNTAX &&
+                (token->isOperator(OPERATOR_SUBTRACT) || token->isOperator(OPERATOR_PLUS)))
+            {
+                bool negative = token->isOperator(OPERATOR_SUBTRACT);
+                token = nextToken();
+                if (!token->isSymbol() || !token->isSubtype(SYMBOL_CONSTANT) || token->value()->numberString() == OREF_NULL)
+                {
+                    syntaxError(Error_Invalid_expression_general, token);
+                }
+                rcValue = commonString(negative ? token->value()->concatToCstring("-") : token->value());
+            }
+            else
+            {
+                previousToken();
+                // this is a constant expression form.
+                rcValue = parseConstantExpression();
+            }
             // this is required.  If not found, use the terminator
             // token to report the error location
             if (rcValue == OREF_NULL)
